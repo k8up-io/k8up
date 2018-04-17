@@ -1,0 +1,52 @@
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+  name: crd-creator
+rules:
+- apiGroups:
+    - apiextensions.k8s.io
+  resources:
+    - customresourcedefinitions
+  verbs:
+    - get
+    - watch
+    - list
+    - create
+    - edit
+    - patch
+- apiGroups:
+  - appuio.ch
+  resources:
+    - backups
+  verbs:
+    - '*'
+- apiGroups:
+  - ''
+  resources:
+  - pods
+  - persistentvolumeclaims
+  - events
+  verbs:
+  - '*'
+- apiGroups:
+  - "batch"
+  resources:
+  - jobs
+  verbs:
+  - '*'
+
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+  name: crd-creator-global
+subjects:
+- kind: ServiceAccount
+  namespace: myproject
+  name: backup-account
+  apiGroup:
+roleRef:
+  kind: ClusterRole
+  name: crd-creator
+  apiGroup: rbac.authorization.k8s.io
