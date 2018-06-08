@@ -112,3 +112,56 @@ kubectl apply -f manifest/baas-exampler.yaml
 You may need to adjust the namespace in `service-account.yaml` and `role-bindings.yaml`.
 
 Please see the example resource here in the readme for an explanation of the various settings.
+
+# Manual restore
+To manually restore you'll need:
+* Linux machine with restic https://github.com/restic/restic
+* Fuse
+
+Let's take the `backend` part of the above example resource:
+```yaml
+backend:
+    password: asdf # The restic encryption password
+    s3: # Self explaining
+      endpoint: http://10.144.1.133:9000
+      bucket: baas
+      username: 8U0UDNYPNUDTUS1LIAF3
+      password: ip3cdrkXcHmH4S7if7erKPNoxDn27V0vrg6CHHem
+```
+**Note:** future versions may move the credentials to the Kubernetes/OpenShift secrets store.
+
+You can use these key/value pairs to configure restic:
+
+```bash
+export RESTIC_REPOSITORY=s3:http://10.144.1.133:9000/baas
+export RESTIC_PASSWORD=asdf
+export AWS_ACCESS_KEY_ID=8U0UDNYPNUDTUS1LIAF3
+export AWS_SECRET_ACCESS_KEY=ip3cdrkXcHmH4S7if7erKPNoxDn27V0vrg6CHHem
+```
+Now you can use Restic to browse and restore snapshots:
+
+```bash
+# List snapshots
+restic snapshots
+repository dec6d66c opened successfully, password is correct
+ID        Date                 Host                Tags        Directory
+----------------------------------------------------------------------
+5ed64a2d  2018-06-08 09:18:34  macbook-vshn.local              /Users/simonbeck/go/src/git.vshn.net/vshn/baas/vendor
+----------------------------------------------------------------------
+1 snapshots
+
+# Or mount the repository for convenient restores
+restic mount ~/Desktop/mount
+repository dec6d66c opened successfully, password is correct
+Now serving the repository at /Users/simonbeck/Desktop/mount/
+Dont forget to umount after quitting!
+
+ll ~/Desktop/mount
+total 0
+dr-xr-xr-x  1 simonbeck  staff    0 Jun  8 09:21 .
+drwx------+ 6 simonbeck  staff  192 Jun  8 09:15 ..
+dr-xr-xr-x  1 simonbeck  staff    0 Jun  8 09:21 hosts
+dr-xr-xr-x  1 simonbeck  staff    0 Jun  8 09:21 ids
+dr-xr-xr-x  1 simonbeck  staff    0 Jun  8 09:21 snapshots
+dr-xr-xr-x  1 simonbeck  staff    0 Jun  8 09:21 tags
+```
