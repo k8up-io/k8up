@@ -3,6 +3,8 @@ package baas
 import (
 	"sync"
 
+	"git.vshn.net/vshn/baas/monitoring"
+
 	"git.vshn.net/vshn/baas/log"
 
 	backupv1alpha1 "git.vshn.net/vshn/baas/apis/backup/v1alpha1"
@@ -62,9 +64,11 @@ func (b *Baas) EnsureBackup(backup *backupv1alpha1.Backup) error {
 		}
 	}
 
+	metrics := newOperatorMetrics(monitoring.GetInstance())
+
 	// Create a Backup.
 	backupCopy := backup.DeepCopy()
-	bck = NewPVCBackupper(backupCopy, b.k8sCli, b.baasCLI, b.logger, b.cron)
+	bck = NewPVCBackupper(backupCopy, b.k8sCli, b.baasCLI, b.logger, b.cron, metrics)
 	b.reg.Store(name, bck)
 	return bck.Start()
 }

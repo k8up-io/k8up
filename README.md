@@ -95,6 +95,7 @@ Various things can be configured via environment variables:
 * `BACKUP_JOBNAME` names for the backup job objects in OpenShift, default: `backupjob`
 * `BACKUP_PODNAME` names for the backup pod objects in OpenShift, default: `backupjob-pod`
 * `BACKUP_RESTARTPOLICY` set the RestartPolicy for the backup jobs, default: `OnFailure`
+* `BACKUP_METRICBIND` set the bind address for the prometheus endpoint, default: `:8080`
 
 You only need to adjust `BACKUP_IMAGE` everything else can be left default.
 

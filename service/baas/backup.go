@@ -45,6 +45,7 @@ type PVCBackupper struct {
 	cronID      cron.EntryID
 	checkCronID cron.EntryID
 	config      config
+	metrics     *operatorMetrics
 }
 
 type config struct {
@@ -70,7 +71,13 @@ func (p *PVCBackupper) Stop() error {
 }
 
 // NewPVCBackupper returns a new PVCBackupper
-func NewPVCBackupper(backup *backupv1alpha1.Backup, k8sCLI kubernetes.Interface, baasCLI baas8scli.Interface, log log.Logger, cron *cron.Cron) Backupper {
+func NewPVCBackupper(
+	backup *backupv1alpha1.Backup,
+	k8sCLI kubernetes.Interface,
+	baasCLI baas8scli.Interface,
+	log log.Logger,
+	cron *cron.Cron,
+	metrics *operatorMetrics) Backupper {
 	tmp := &PVCBackupper{
 		backup:  backup,
 		k8sCLI:  k8sCLI,
@@ -78,6 +85,7 @@ func NewPVCBackupper(backup *backupv1alpha1.Backup, k8sCLI kubernetes.Interface,
 		log:     log,
 		mutex:   sync.Mutex{},
 		cron:    cron,
+		metrics: metrics,
 	}
 	tmp.initDefaults()
 	conf := config{
@@ -237,6 +245,8 @@ func (p *PVCBackupper) runJob(volumes []apiv1.Volume, check bool) error {
 
 	count := 0
 
+	p.metrics.RunningBackups.Inc()
+	defer p.metrics.RunningBackups.Dec()
 	for job.Status.Active > 0 || job.Status.StartTime == nil {
 		//TODO: use select case and channels for more responsivenes
 		//or maybe a controller that observes that job?
@@ -282,7 +292,7 @@ func (p *PVCBackupper) runJob(volumes []apiv1.Volume, check bool) error {
 
 	p.backup.Status.LastBackupDuration = time.Since(startTime.Time).Seconds()
 
-	defer p.updateCRD()
+	defer p.updateMetrics()
 
 	return returnVal
 }
@@ -312,6 +322,11 @@ func (p *PVCBackupper) podErrors(filter string) bool {
 	}
 
 	return false
+}
+
+func (p *PVCBackupper) updateMetrics() {
+	p.updateCRD()
+	p.updatePrometheus()
 }
 
 func (p *PVCBackupper) updateCRD() {
@@ -368,4 +383,8 @@ func (p *PVCBackupper) containsAccessMode(s []apiv1.PersistentVolumeAccessMode, 
 		}
 	}
 	return false
+}
+
+func (p *PVCBackupper) updatePrometheus() {
+	// TODO: TBD
 }

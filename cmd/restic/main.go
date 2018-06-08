@@ -2,10 +2,12 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"os"
 	"os/exec"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -21,6 +23,8 @@ const (
 	keepMonthlyEnv = "KEEP_MONTHLY"
 	keepYearlyEnv  = "KEEP_YEARLY"
 	keepTagEnv     = "KEEP_TAG"
+	promURLEnv     = "PROM_URL"
+	backupDirEnv   = "BACKUP_DIR"
 	//Arguments for restic
 	keepLastArg    = "--keep-last"
 	keepHourlyArg  = "--keep-hourly"
@@ -34,6 +38,8 @@ var (
 	check = flag.Bool("check", false, "Set if the container should run a check")
 
 	commandError error
+	metrics      *resticMetrics
+	backupDir    string
 )
 
 // snapshot models a restic a single snapshot from the
@@ -63,19 +69,26 @@ func initRepository() {
 func listSnapshots() ([]snapshot, error) {
 	args := []string{"snapshots", "--json", "-q"}
 	output := genericCommand(args, false)
+	if strings.Contains(string(output), "following location?") {
+		commandError = nil
+		return nil, errors.New("Not initialised yet")
+	}
 	snapList := make([]snapshot, 0)
 	err := json.Unmarshal(output, &snapList)
 	if err != nil {
 		return nil, err
 	}
-	fmt.Printf("%v command:\n%v Snapshots\n", args[0], len(snapList))
+	availableSnapshots := len(snapList)
+	fmt.Printf("%v command:\n%v Snapshots\n", args[0], availableSnapshots)
+	metrics.AvailableSnapshots.Set(float64(availableSnapshots))
+	metrics.Trigger <- metrics.AvailableSnapshots
 	return snapList, nil
 }
 
 func backup() {
 	fmt.Println("backing up...")
-	args := []string{"backup", "/data", "--hostname", os.Getenv(hostname)}
-	genericCommand(args, true)
+	args := []string{"backup", backupDir, "--hostname", os.Getenv(hostname)}
+	parseBackupOutput(genericCommand(args, true))
 }
 func forget() {
 	args := []string{"forget", "--prune"}
@@ -130,14 +143,28 @@ func genericCommand(args []string, print bool) []byte {
 
 func checkCommand() {
 	args := []string{"check"}
-	genericCommand(args, true)
+	parseCheckOutput(genericCommand(args, true))
 }
 
 func main() {
 	//TODO: locking management if f.e. a backup gets interrupted and the lock not
 	//cleaned
 
+	exit := 0
+
 	flag.Parse()
+
+	startMetrics()
+
+	defer func() {
+		metrics.BackupEndTimestamp.SetToCurrentTime()
+		metrics.Trigger <- metrics.BackupEndTimestamp
+		// Block a second to transmit the metrics
+		time.Sleep(1 * time.Second)
+		os.Exit(exit)
+	}()
+
+	backupDir = setBackupDir()
 
 	if !*check {
 		initRepository()
@@ -149,6 +176,79 @@ func main() {
 
 	if commandError != nil {
 		fmt.Println("Error occurred: ", commandError)
-		os.Exit(1)
+		exit = 1
 	}
+
+}
+
+func startMetrics() {
+	metrics = newResticMetrics(os.Getenv(promURLEnv))
+	go metrics.startUpdating()
+
+	metrics.BackupStartTimestamp.SetToCurrentTime()
+	metrics.Trigger <- metrics.BackupStartTimestamp
+}
+
+func parseBackupOutput(output []byte) {
+	lines := outputToSlice(output)
+	files := strings.Fields(strings.Split(lines[len(lines)-7], ":")[1])
+	dirs := strings.Fields(strings.Split(lines[len(lines)-6], ":")[1])
+
+	var errors = 0
+
+	for i := range lines {
+		if strings.Contains(lines[i], "error") {
+			errors++
+		}
+	}
+
+	newFiles, err := strconv.Atoi(files[0])
+	changedFiles, err := strconv.Atoi(files[2])
+	unmodifiedFiles, err := strconv.Atoi(files[4])
+
+	newDirs, err := strconv.Atoi(dirs[0])
+	changedDirs, err := strconv.Atoi(dirs[2])
+	unmodifiedDirs, err := strconv.Atoi(dirs[4])
+
+	if err != nil {
+		fmt.Println("There was a problem convertig the metrics: ", err)
+		return
+	}
+
+	metrics.NewFiles.Set(float64(newFiles))
+	metrics.Trigger <- metrics.NewFiles
+	metrics.ChangedFiles.Set(float64(changedFiles))
+	metrics.Trigger <- metrics.ChangedFiles
+	metrics.UnmodifiedFiles.Set(float64(unmodifiedFiles))
+	metrics.Trigger <- metrics.UnmodifiedFiles
+	metrics.NewDirs.Set(float64(newDirs))
+	metrics.Trigger <- metrics.NewDirs
+	metrics.ChangedDirs.Set(float64(changedDirs))
+	metrics.Trigger <- metrics.ChangedDirs
+	metrics.UnmodifiedDirs.Set(float64(unmodifiedDirs))
+	metrics.Trigger <- metrics.UnmodifiedDirs
+	metrics.Errors.Set(float64(errors))
+	metrics.Trigger <- metrics.Errors
+}
+
+func setBackupDir() string {
+	if value, ok := os.LookupEnv(backupDirEnv); ok {
+		return value
+	}
+	return "/data"
+}
+
+func parseCheckOutput(output []byte) {
+	lines := outputToSlice(output)
+	lastLine := lines[len(lines)-2]
+
+	if strings.Contains(lastLine, "Fatal") {
+		metrics.Errors.Set(1)
+		metrics.Trigger <- metrics.Errors
+	}
+}
+
+func outputToSlice(output []byte) []string {
+	stringOutput := string(output)
+	return strings.Split(stringOutput, "\n")
 }

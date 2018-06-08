@@ -1,6 +1,6 @@
 FROM golang:1.10
 
-ENV RESTIC_VERSION=0.9.0
+ENV RESTIC_VERSION=0.9.1
 
 RUN apt-get update && apt-get install wget bzip2 -y && cd / && \
     wget https://github.com/restic/restic/releases/download/v${RESTIC_VERSION}/restic_${RESTIC_VERSION}_linux_amd64.bz2 && \

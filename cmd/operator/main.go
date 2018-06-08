@@ -16,6 +16,7 @@ import (
 
 	podtermk8scli "git.vshn.net/vshn/baas/client/k8s/clientset/versioned"
 	"git.vshn.net/vshn/baas/log"
+	"git.vshn.net/vshn/baas/monitoring"
 	"git.vshn.net/vshn/baas/operator"
 	"github.com/spf13/viper"
 )
@@ -101,6 +102,7 @@ func main() {
 	logger := &applogger.Std{}
 
 	initViper()
+	monitoring.GetInstance()
 
 	stopC := make(chan struct{})
 	finishC := make(chan error)
