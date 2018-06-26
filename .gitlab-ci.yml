@@ -1,0 +1,43 @@
+image: golang:1.10-alpine
+
+variables:
+  BASE_URL: git.vshn.net
+
+before_script:
+  - go version
+  - echo $CI_BUILD_REF
+  - echo $CI_PROJECT_DIR
+  - echo "$GOPATH/src/$BASE_URL/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME"
+  # To find references to its own modules the project has still
+  # to be copied to the correct location in the GOPATH.
+  - mkdir -p $GOPATH/src/$BASE_URL/
+  - cp -r /builds/$CI_PROJECT_NAMESPACE $GOPATH/src/$BASE_URL/
+
+stages:
+  - test
+  - build
+
+test_project:
+  stage: test
+  only:
+    - master
+    - dev
+  script:
+    - cd $GOPATH/src/$BASE_URL/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME
+    - go generate $(go list ./... | grep -v /vendor/)
+    - go test $(go list ./... | grep -v /vendor/)
+
+
+binaries:
+  stage: build
+  only:
+    - master
+  script:
+    - cd $GOPATH/src/$BASE_URL/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME
+    - go generate $(go list ./... | grep -v /vendor/)
+    # This may differ for each project.
+    - cd cmd/ && go build -o $CI_PROJECT_DIR/artifacts/cmd && cd ..
+  artifacts:
+    paths:
+      - artifacts/cmd
+    expire_in: 7 day

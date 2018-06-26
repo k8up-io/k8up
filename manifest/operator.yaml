@@ -1,0 +1,28 @@
+---
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: baas
+  namespace: myproject
+  labels:
+    app: baas
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: baas
+  template:
+    metadata:
+      labels:
+        app: baas
+    spec:
+      containers:
+        - name: baas-operator
+          image: 172.30.1.1:5000/myproject/baas:0.0.1
+          imagePullPolicy: Always
+          env:
+            - name: BACKUP_IMAGE
+              value: 172.30.1.1:5000/myproject/test:latest
+      serviceAccountName: backup-account
+
+#kubectl create clusterrolebinding cluster-admin-binding-2   --clusterrole=cluster-admin   --user=system:system:serviceaccount:myproject:default
