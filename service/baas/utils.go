@@ -20,6 +20,7 @@ var (
 	jobName       string
 	podName       string
 	restartPolicy string
+	promPushURL   string
 )
 
 const (
@@ -116,6 +117,7 @@ func newJobDefinition(volumes []apiv1.Volume, controllerName string, backup *bac
 }
 
 func setUpEnvVariables(backup *backupv1alpha1.Backup) []apiv1.EnvVar {
+	// TODO: Read prometheus push url from the resource
 	vars := make([]apiv1.EnvVar, 0)
 	vars = append(vars, []apiv1.EnvVar{
 		{
@@ -145,6 +147,10 @@ func setUpEnvVariables(backup *backupv1alpha1.Backup) []apiv1.EnvVar {
 			{
 				Name:  resticRepository,
 				Value: r,
+			},
+			{
+				Name:  "PROM_URL",
+				Value: promPushURL,
 			},
 		}...)
 		return vars
