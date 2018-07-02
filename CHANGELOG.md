@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [unreleased]
 ### Added
-- Monitoring for the Operator and restic wrapper
+- Moved the Restic wrapper to its own project: https://git.vshn.net/vshn/wrestic
 
 ## [v0.0.1]
 ### Changed
