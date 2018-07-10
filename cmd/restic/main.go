@@ -25,6 +25,7 @@ const (
 	keepTagEnv     = "KEEP_TAG"
 	promURLEnv     = "PROM_URL"
 	backupDirEnv   = "BACKUP_DIR"
+	listTimeoutEnv = "BACKUP_LIST_TIMEOUT"
 	//Arguments for restic
 	keepLastArg    = "--keep-last"
 	keepHourlyArg  = "--keep-hourly"
@@ -68,22 +69,38 @@ func initRepository() {
 
 func listSnapshots() ([]snapshot, error) {
 	args := []string{"snapshots", "--json", "-q"}
-	output := genericCommand(args, false)
-	if strings.Contains(string(output), "following location?") {
-		commandError = nil
-		return nil, errors.New("Not initialised yet")
+	var output []byte
+	var timeout int
+	var converr error
+
+	if timeout, converr = strconv.Atoi(os.Getenv(listTimeoutEnv)); converr != nil {
+		timeout = 30
 	}
-	snapList := make([]snapshot, 0)
-	err := json.Unmarshal(output, &snapList)
-	if err != nil {
-		fmt.Printf("Error listing snapshots\n%v\n%v", err, string(output))
-		return nil, err
+
+	done := make(chan []byte)
+	go func() { done <- genericCommand(args, false) }()
+	fmt.Printf("Listing snapshots, timeout: %v\n", timeout)
+	select {
+	case output = <-done:
+		if strings.Contains(string(output), "following location?") {
+			commandError = nil
+			return nil, errors.New("Not initialised yet")
+		}
+		snapList := make([]snapshot, 0)
+		err := json.Unmarshal(output, &snapList)
+		if err != nil {
+			fmt.Printf("Error listing snapshots\n%v\n%v", err, string(output))
+			return nil, err
+		}
+		availableSnapshots := len(snapList)
+		fmt.Printf("%v command:\n%v Snapshots\n", args[0], availableSnapshots)
+		metrics.AvailableSnapshots.Set(float64(availableSnapshots))
+		metrics.Trigger <- metrics.AvailableSnapshots
+		return snapList, nil
+	case <-time.After(time.Duration(timeout) * time.Second):
+		commandError = errors.New("connection timed out")
+		return nil, commandError
 	}
-	availableSnapshots := len(snapList)
-	fmt.Printf("%v command:\n%v Snapshots\n", args[0], availableSnapshots)
-	metrics.AvailableSnapshots.Set(float64(availableSnapshots))
-	metrics.Trigger <- metrics.AvailableSnapshots
-	return snapList, nil
 }
 
 func backup() {
