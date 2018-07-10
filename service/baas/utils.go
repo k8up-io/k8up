@@ -20,7 +20,6 @@ var (
 	jobName       string
 	podName       string
 	restartPolicy string
-	promPushURL   string
 )
 
 const (
@@ -121,12 +120,23 @@ func setUpEnvVariables(backup *backupv1alpha1.Backup) []apiv1.EnvVar {
 	vars := make([]apiv1.EnvVar, 0)
 	vars = append(vars, []apiv1.EnvVar{
 		{
-			Name:  resticPassword,
-			Value: backup.Spec.Backend.Password,
+			Name: resticPassword,
+			ValueFrom: &apiv1.EnvVarSource{
+				SecretKeyRef: &apiv1.SecretKeySelector{
+					LocalObjectReference: apiv1.LocalObjectReference{
+						Name: "backup-repo",
+					},
+					Key: "password",
+				},
+			},
 		},
 		{
 			Name:  hostname,
 			Value: backup.Namespace,
+		},
+		{
+			Name:  "PROM_URL",
+			Value: backup.Spec.PromURL,
 		},
 	}...)
 
@@ -137,20 +147,30 @@ func setUpEnvVariables(backup *backupv1alpha1.Backup) []apiv1.EnvVar {
 
 		vars = append(vars, []apiv1.EnvVar{
 			{
-				Name:  awsAccessKeyID,
-				Value: backup.Spec.Backend.S3.Username,
+				Name: awsAccessKeyID,
+				ValueFrom: &apiv1.EnvVarSource{
+					SecretKeyRef: &apiv1.SecretKeySelector{
+						LocalObjectReference: apiv1.LocalObjectReference{
+							Name: "backup-credentials",
+						},
+						Key: "username",
+					},
+				},
 			},
 			{
-				Name:  awsSecretAccessKey,
-				Value: backup.Spec.Backend.S3.Password,
+				Name: awsSecretAccessKey,
+				ValueFrom: &apiv1.EnvVarSource{
+					SecretKeyRef: &apiv1.SecretKeySelector{
+						LocalObjectReference: apiv1.LocalObjectReference{
+							Name: "backup-credentials",
+						},
+						Key: "password",
+					},
+				},
 			},
 			{
 				Name:  resticRepository,
 				Value: r,
-			},
-			{
-				Name:  "PROM_URL",
-				Value: promPushURL,
 			},
 		}...)
 		return vars

@@ -1,4 +1,4 @@
-# Go-skelleton Change Log
+# Backup as a service
 
 All notable changes to this project will be documented in this file.
 
@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [unreleased]
 ### Added
 - Moved the Restic wrapper to its own project: https://git.vshn.net/vshn/wrestic
+- Vscode launch config
+- Read credentials and password from OpenShift secrets
+- Read the Prometheus push gateway url from the CRD
+### Changed
+- Use alpine for operator image
 
 ## [v0.0.1]
 ### Changed
