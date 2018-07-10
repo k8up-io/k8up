@@ -1,4 +1,4 @@
-FROM golang:1.10
+FROM alpine:3.7
 
 ADD operator /app/
 
