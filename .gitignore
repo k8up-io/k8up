@@ -23,7 +23,6 @@ gen### Go template
 .glide/
 
 *.DS_Store
-.vscode
 cmd/*/debug
 cmd/operator/operator
 cmd/restic/restic
