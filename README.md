@@ -123,6 +123,7 @@ Various things can be configured via environment variables:
 * `BACKUP_PODNAME` names for the backup pod objects in OpenShift, default: `backupjob-pod`
 * `BACKUP_RESTARTPOLICY` set the RestartPolicy for the backup jobs. According to the [docs](https://kubernetes.io/docs/concepts/workloads/controllers/jobs-run-to-completion/) this should be `OnFailure` for jobs that terminate, default: `OnFailure`
 * `BACKUP_METRICBIND` set the bind address for the prometheus endpoint, default: `:8080`
+* `BACKUP_PROMURL` set the operator wide default prometheus push gateway, default `http://127.0.0.1/`
 
 You only need to adjust `BACKUP_IMAGE` everything else can be left default.
 

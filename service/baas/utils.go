@@ -20,6 +20,7 @@ var (
 	jobName       string
 	podName       string
 	restartPolicy string
+	promURL       string
 )
 
 const (
@@ -43,6 +44,7 @@ func init() {
 	viper.SetDefault("jobName", "backupjob")
 	viper.SetDefault("podName", "backupjob-pod")
 	viper.SetDefault("restartPolicy", "OnFailure")
+	viper.SetDefault("PromURL", "http://127.0.0.1/")
 }
 
 func getConfig() {
@@ -51,6 +53,7 @@ func getConfig() {
 	jobName = viper.GetString("jobName")
 	podName = viper.GetString("podName")
 	restartPolicy = viper.GetString("restartPolicy")
+	promURL = viper.GetString("PromURL")
 }
 
 // byJobStartTime sorts a list of jobs by start timestamp, using their names as a tie breaker.
@@ -116,7 +119,11 @@ func newJobDefinition(volumes []apiv1.Volume, controllerName string, backup *bac
 }
 
 func setUpEnvVariables(backup *backupv1alpha1.Backup) []apiv1.EnvVar {
-	// TODO: Read prometheus push url from the resource
+
+	if backup.Spec.PromURL != "" {
+		promURL = backup.Spec.PromURL
+	}
+
 	vars := make([]apiv1.EnvVar, 0)
 	vars = append(vars, []apiv1.EnvVar{
 		{
@@ -136,7 +143,7 @@ func setUpEnvVariables(backup *backupv1alpha1.Backup) []apiv1.EnvVar {
 		},
 		{
 			Name:  "PROM_URL",
-			Value: backup.Spec.PromURL,
+			Value: promURL,
 		},
 	}...)
 

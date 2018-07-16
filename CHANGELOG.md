@@ -10,7 +10,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Moved the Restic wrapper to its own project: https://git.vshn.net/vshn/wrestic
 - Vscode launch config
 - Read credentials and password from OpenShift secrets
-- Read the Prometheus push gateway url from the CRD
+- Specifiy default Prometheus push gateway for the operator
+- Read the Prometheus push gateway url from the CRD, has precedence over the operator settings
 ### Changed
 - Use alpine for operator image
 
