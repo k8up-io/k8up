@@ -9,12 +9,10 @@ spec:
   # checkSchedule: "* * * * *"
   keepJobs: 4
   backend:
-    password: asdf
     s3:
       endpoint: http://10.144.1.133:9000
       bucket: baas
-      username: 8U0UDNYPNUDTUS1LIAF3
-      password: ip3cdrkXcHmH4S7if7erKPNoxDn27V0vrg6CHHem
   retention:
     keepLast: 2
     keepDaily: 14
+  promURL: http://10.144.1.133:9091

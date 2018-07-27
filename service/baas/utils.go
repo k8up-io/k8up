@@ -20,6 +20,7 @@ var (
 	jobName       string
 	podName       string
 	restartPolicy string
+	promURL       string
 )
 
 const (
@@ -43,6 +44,7 @@ func init() {
 	viper.SetDefault("jobName", "backupjob")
 	viper.SetDefault("podName", "backupjob-pod")
 	viper.SetDefault("restartPolicy", "OnFailure")
+	viper.SetDefault("PromURL", "http://127.0.0.1/")
 }
 
 func getConfig() {
@@ -51,6 +53,7 @@ func getConfig() {
 	jobName = viper.GetString("jobName")
 	podName = viper.GetString("podName")
 	restartPolicy = viper.GetString("restartPolicy")
+	promURL = viper.GetString("PromURL")
 }
 
 // byJobStartTime sorts a list of jobs by start timestamp, using their names as a tie breaker.
@@ -116,15 +119,31 @@ func newJobDefinition(volumes []apiv1.Volume, controllerName string, backup *bac
 }
 
 func setUpEnvVariables(backup *backupv1alpha1.Backup) []apiv1.EnvVar {
+
+	if backup.Spec.PromURL != "" {
+		promURL = backup.Spec.PromURL
+	}
+
 	vars := make([]apiv1.EnvVar, 0)
 	vars = append(vars, []apiv1.EnvVar{
 		{
-			Name:  resticPassword,
-			Value: backup.Spec.Backend.Password,
+			Name: resticPassword,
+			ValueFrom: &apiv1.EnvVarSource{
+				SecretKeyRef: &apiv1.SecretKeySelector{
+					LocalObjectReference: apiv1.LocalObjectReference{
+						Name: "backup-repo",
+					},
+					Key: "password",
+				},
+			},
 		},
 		{
 			Name:  hostname,
 			Value: backup.Namespace,
+		},
+		{
+			Name:  "PROM_URL",
+			Value: promURL,
 		},
 	}...)
 
@@ -135,12 +154,26 @@ func setUpEnvVariables(backup *backupv1alpha1.Backup) []apiv1.EnvVar {
 
 		vars = append(vars, []apiv1.EnvVar{
 			{
-				Name:  awsAccessKeyID,
-				Value: backup.Spec.Backend.S3.Username,
+				Name: awsAccessKeyID,
+				ValueFrom: &apiv1.EnvVarSource{
+					SecretKeyRef: &apiv1.SecretKeySelector{
+						LocalObjectReference: apiv1.LocalObjectReference{
+							Name: "backup-credentials",
+						},
+						Key: "username",
+					},
+				},
 			},
 			{
-				Name:  awsSecretAccessKey,
-				Value: backup.Spec.Backend.S3.Password,
+				Name: awsSecretAccessKey,
+				ValueFrom: &apiv1.EnvVarSource{
+					SecretKeyRef: &apiv1.SecretKeySelector{
+						LocalObjectReference: apiv1.LocalObjectReference{
+							Name: "backup-credentials",
+						},
+						Key: "password",
+					},
+				},
 			},
 			{
 				Name:  resticRepository,

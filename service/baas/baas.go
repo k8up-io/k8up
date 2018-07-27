@@ -28,18 +28,21 @@ type Baas struct {
 	reg     sync.Map
 	logger  log.Logger
 	cron    *cron.Cron
+	metrics *operatorMetrics
 }
 
 // NewBaas returns a new baas.
 func NewBaas(k8sCli kubernetes.Interface, baasCLI baas8scli.Interface, logger log.Logger) *Baas {
 	cron := cron.New()
 	cron.Start()
+	metrics := newOperatorMetrics(monitoring.GetInstance())
 	return &Baas{
 		k8sCli:  k8sCli,
 		baasCLI: baasCLI,
 		reg:     sync.Map{},
 		logger:  logger,
 		cron:    cron,
+		metrics: metrics,
 	}
 }
 
@@ -64,11 +67,9 @@ func (b *Baas) EnsureBackup(backup *backupv1alpha1.Backup) error {
 		}
 	}
 
-	metrics := newOperatorMetrics(monitoring.GetInstance())
-
 	// Create a Backup.
 	backupCopy := backup.DeepCopy()
-	bck = NewPVCBackupper(backupCopy, b.k8sCli, b.baasCLI, b.logger, b.cron, metrics)
+	bck = NewPVCBackupper(backupCopy, b.k8sCli, b.baasCLI, b.logger, b.cron, b.metrics)
 	b.reg.Store(name, bck)
 	return bck.Start()
 }

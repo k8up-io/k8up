@@ -58,12 +58,10 @@ spec:
   checkSchedule: "* * * * *" # When the checks should run default once a week
   keepJobs: 4 # How many job objects should be kept to check logs
   backend:
-    password: asdf # The restic encryption password
     s3: # Self explaining
       endpoint: http://10.144.1.133:9000
       bucket: baas
-      username: 8U0UDNYPNUDTUS1LIAF3
-      password: ip3cdrkXcHmH4S7if7erKPNoxDn27V0vrg6CHHem
+  promURL: http://10.144.1.133:9091 # Prometheus pushgateway url
   retention: # Default 14 days
     keepLast: 2 # Absolute amount of snapshots to keep overwrites all other settings
     keepDaily: 0
@@ -76,6 +74,35 @@ spec:
     # keepYearly
     # keepTags # Not yet implemented
 ```
+The Restic repository password and the credentials for S3 need to be saved to OpenShift secrets:
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: backup-credentials
+  namespace: myproject
+type: Opaque
+data:
+  username: OFUwVUROWVBOVURUVVMxTElBRjM=
+  password: aXAzY2Rya1hjSG1INFM3aWY3ZXJLUE5veERuMjdWMHZyZzZDSEhlbQ==
+
+---
+
+apiVersion: v1
+kind: Secret
+metadata:
+  name: backup-repo
+  namespace: myproject
+type: Opaque
+data:
+  password: YXNkZg==
+```
+
+The values of the secrets need to be in base64. To convert a string to base64 use:
+```bash
+echo -n "p@ssw0rd" | base64
+```
+
 # Deploy and Configure the Operator
 To deploy the operator you'll need to adjust some config in the manifest folder. The contents of that folder:
 * `baas-example.yaml` an example backup
@@ -94,8 +121,9 @@ Various things can be configured via environment variables:
 * `BACKUP_DATAPATH` where the PVCs should get mounted in the container, default `/data`
 * `BACKUP_JOBNAME` names for the backup job objects in OpenShift, default: `backupjob`
 * `BACKUP_PODNAME` names for the backup pod objects in OpenShift, default: `backupjob-pod`
-* `BACKUP_RESTARTPOLICY` set the RestartPolicy for the backup jobs, default: `OnFailure`
+* `BACKUP_RESTARTPOLICY` set the RestartPolicy for the backup jobs. According to the [docs](https://kubernetes.io/docs/concepts/workloads/controllers/jobs-run-to-completion/) this should be `OnFailure` for jobs that terminate, default: `OnFailure`
 * `BACKUP_METRICBIND` set the bind address for the prometheus endpoint, default: `:8080`
+* `BACKUP_PROMURL` set the operator wide default prometheus push gateway, default `http://127.0.0.1/`
 
 You only need to adjust `BACKUP_IMAGE` everything else can be left default.
 
@@ -122,9 +150,9 @@ To manually restore you'll need:
 Let's take the `backend` part of the above example resource:
 ```yaml
 backend:
-    password: asdf # The restic encryption password
-    s3: # Self explaining
-      endpoint: http://10.144.1.133:9000
+  password: asdf # The restic encryption password
+  s3: # Self explaining
+    endpoint: http://10.144.1.133:9000
       bucket: baas
       username: 8U0UDNYPNUDTUS1LIAF3
       password: ip3cdrkXcHmH4S7if7erKPNoxDn27V0vrg6CHHem

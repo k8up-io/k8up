@@ -44,6 +44,9 @@ type BackupSpec struct {
 	KeepJobs int32 `json:"keepJobs,omitempty"`
 	// Retention sets how many backups should be kept after a forget and prune
 	Retention RetentionPolicy `json:"retention,omitempty"`
+	// PromURL sets a prometheus push URL where the backup container send metrics to
+	// +optional
+	PromURL string `json:"promURL,omitempty"`
 }
 
 type BackupStatus struct {
