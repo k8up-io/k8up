@@ -1,4 +1,4 @@
-FROM golang:1.10
+FROM golang:1.10-alpine
 
 WORKDIR /go/src/git.vshn.net/vshn/baas
 COPY . .
