@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [unreleased]
+
+## [v0.0.2] - 07-27-2018
 ### Added
 - Vscode launch config
 - Read credentials and password from OpenShift secrets
@@ -19,5 +21,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Changed
 - Initial version
 
-[unreleased]: https://git.vshn.net/vshn/baas/compare/v0.0.1...master
+[unreleased]: https://git.vshn.net/vshn/baas/compare/v0.0.2...master
+[v0.0.2]: https://git.vshn.net/vshn/baas/compare/v0.0.1...v0.0.2
 [v0.0.1]: https://git.vshn.net/vshn/baas/tree/v0.0.1
