@@ -121,7 +121,7 @@ func (p *PVCBackupper) Start() error {
 	p.stopC = make(chan struct{})
 	p.running = true
 
-	p.log.Infof("started %s backup worker", p.backup.Name)
+	p.log.Infof("started %s backup worker in namespace %s", p.backup.Name, p.backup.Namespace)
 	// TODO: this library doesn't track if a job is already running
 	p.cronID, err = p.cron.AddFunc(p.backup.Spec.Schedule,
 		func() {
@@ -241,7 +241,7 @@ func (p *PVCBackupper) runJob(volumes []apiv1.Volume, check bool) error {
 	startTime := metav1.Time{
 		Time: time.Now(),
 	}
-	p.backup.Status.LastBackupDate = &startTime
+	p.backup.Status.LastBackupStart = startTime.Format("2006-01-02 15:04:05")
 
 	count := 0
 
@@ -290,7 +290,7 @@ func (p *PVCBackupper) runJob(volumes []apiv1.Volume, check bool) error {
 
 	p.log.Infof("%v Cleaning up", status)
 
-	p.backup.Status.LastBackupDuration = time.Since(startTime.Time).Seconds()
+	p.backup.Status.LastBackupEnd = time.Now().Format("2006-01-02 15:04:05")
 
 	defer p.updateMetrics()
 
