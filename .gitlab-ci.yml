@@ -1,43 +1,31 @@
-image: golang:1.10-alpine
-
-variables:
-  BASE_URL: git.vshn.net
+image: docker:latest
+services:
+  - docker:dind
 
 before_script:
-  - go version
-  - echo $CI_BUILD_REF
-  - echo $CI_PROJECT_DIR
-  - echo "$GOPATH/src/$BASE_URL/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME"
-  # To find references to its own modules the project has still
-  # to be copied to the correct location in the GOPATH.
-  - mkdir -p $GOPATH/src/$BASE_URL/
-  - cp -r /builds/$CI_PROJECT_NAMESPACE $GOPATH/src/$BASE_URL/
+- docker info
 
-stages:
-  - test
-  - build
+variables:
+  REGISTRY: "registry.vshn.net"
+  IMAGE_NAME: "vshn/baas"
 
-test_project:
-  stage: test
+build:
+  script:
+    - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN $REGISTRY
+    - docker build -t ${REGISTRY}/${IMAGE_NAME} .
+    - docker push ${REGISTRY}/${IMAGE_NAME}
+  tags:
+    - dockerbuild
   only:
-    - master
     - dev
+
+build:tag:
   script:
-    - cd $GOPATH/src/$BASE_URL/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME
-    - go generate $(go list ./... | grep -v /vendor/)
-    - go test $(go list ./... | grep -v /vendor/)
-
-
-binaries:
-  stage: build
+    - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN $REGISTRY
+    - docker build -t ${REGISTRY}/${IMAGE_NAME}:${CI_BUILD_TAG} .
+    - docker push ${REGISTRY}/${IMAGE_NAME}:${CI_BUILD_TAG}
   only:
-    - master
-  script:
-    - cd $GOPATH/src/$BASE_URL/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME
-    - go generate $(go list ./... | grep -v /vendor/)
-    # This may differ for each project.
-    - cd cmd/ && go build -o $CI_PROJECT_DIR/artifacts/cmd && cd ..
-  artifacts:
-    paths:
-      - artifacts/cmd
-    expire_in: 7 day
+    - tags
+  tags:
+    - dockerbuild
+
