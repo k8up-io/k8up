@@ -91,6 +91,14 @@ func newJobDefinition(volumes []apiv1.Volume, controllerName string, backup *bac
 	return &batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: name,
+			OwnerReferences: []metav1.OwnerReference{
+				{
+					UID:        backup.GetUID(),
+					APIVersion: backup.GroupVersionKind().Version,
+					Kind:       backup.GroupVersionKind().Kind,
+					Name:       backup.Name,
+				},
+			},
 		},
 		Spec: batchv1.JobSpec{
 			Template: apiv1.PodTemplateSpec{

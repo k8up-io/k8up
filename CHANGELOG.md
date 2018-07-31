@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Changes
 - Skip backup if no suitable PVCs are found
 - Minor refactoring
+- When the backup definition is deleted it will also cleanup all jobs and pods
 
 ## [v0.0.3] - 07-27-2018
 ### Changed
