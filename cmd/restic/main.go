@@ -1,12 +1,10 @@
 package main
 
 import (
-	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
 	"os"
-	"os/exec"
 	"strconv"
 	"strings"
 	"time"
@@ -35,8 +33,21 @@ const (
 	keepYearlyArg  = "--keep-yearly"
 )
 
+type arrayOpts []string
+
+func (a *arrayOpts) String() string {
+	return "my string representation"
+}
+
+func (a *arrayOpts) Set(value string) error {
+	*a = append(*a, value)
+	return nil
+}
+
 var (
-	check = flag.Bool("check", false, "Set if the container should run a check")
+	check     = flag.Bool("check", false, "Set if the container should run a check")
+	stdin     = flag.Bool("stdin", false, "Set to enable stdin backup")
+	stdinOpts arrayOpts
 
 	commandError error
 	metrics      *resticMetrics
@@ -57,119 +68,11 @@ type snapshot struct {
 	Tags     []string  `json:"tags"`
 }
 
-func initRepository() {
-	if _, err := listSnapshots(); err == nil {
-		return
-	}
-
-	fmt.Println("No repository available, initialising...")
-	args := []string{"init"}
-	genericCommand(args, true)
-}
-
-func listSnapshots() ([]snapshot, error) {
-	args := []string{"snapshots", "--json", "-q"}
-	var output []byte
-	var timeout int
-	var converr error
-
-	if timeout, converr = strconv.Atoi(os.Getenv(listTimeoutEnv)); converr != nil {
-		timeout = 30
-	}
-
-	done := make(chan []byte)
-	go func() { done <- genericCommand(args, false) }()
-	fmt.Printf("Listing snapshots, timeout: %v\n", timeout)
-	select {
-	case output = <-done:
-		if strings.Contains(string(output), "following location?") {
-			commandError = nil
-			return nil, errors.New("Not initialised yet")
-		}
-		snapList := make([]snapshot, 0)
-		err := json.Unmarshal(output, &snapList)
-		if err != nil {
-			fmt.Printf("Error listing snapshots\n%v\n%v", err, string(output))
-			return nil, err
-		}
-		availableSnapshots := len(snapList)
-		fmt.Printf("%v command:\n%v Snapshots\n", args[0], availableSnapshots)
-		metrics.AvailableSnapshots.Set(float64(availableSnapshots))
-		metrics.Trigger <- metrics.AvailableSnapshots
-		return snapList, nil
-	case <-time.After(time.Duration(timeout) * time.Second):
-		commandError = errors.New("connection timed out")
-		return nil, commandError
-	}
-}
-
-func backup() {
-	fmt.Println("backing up...")
-	args := []string{"backup", backupDir, "--hostname", os.Getenv(hostname)}
-	output := genericCommand(args, true)
-	if commandError == nil {
-		parseBackupOutput(output)
-	}
-}
-func forget() {
-	args := []string{"forget", "--prune"}
-
-	if last := os.Getenv(keepLastEnv); last != "" {
-		args = append(args, keepLastArg, last)
-	}
-
-	if hourly := os.Getenv(keepHourlyEnv); hourly != "" {
-		args = append(args, keepHourlyArg, hourly)
-	}
-
-	if daily := os.Getenv(keepDailyEnv); daily != "" {
-		args = append(args, keepDailyArg, daily)
-	}
-
-	if weekly := os.Getenv(keepWeeklyEnv); weekly != "" {
-		args = append(args, keepWeeklyArg, weekly)
-	}
-
-	if monthly := os.Getenv(keepMonthlyEnv); monthly != "" {
-		args = append(args, keepMonthlyArg, monthly)
-	}
-
-	if yearly := os.Getenv(keepYearlyEnv); yearly != "" {
-		args = append(args, keepYearlyArg, yearly)
-	}
-
-	fmt.Println("forget params: ", strings.Join(args, " "))
-	genericCommand(args, true)
-}
-
-func genericCommand(args []string, print bool) []byte {
-
-	// Turn into noop if previous commands failed
-	if commandError != nil {
-		return nil
-	}
-
-	cmd := exec.Command(restic, args...)
-	cmd.Env = os.Environ()
-	output, exitCode := cmd.CombinedOutput()
-
-	commandError = exitCode
-
-	if print {
-		fmt.Printf("%v output:\n%v\n", args[0], string(output))
-	}
-
-	return output
-}
-
-func checkCommand() {
-	args := []string{"check"}
-	parseCheckOutput(genericCommand(args, true))
-}
-
 func main() {
 	//TODO: locking management if f.e. a backup gets interrupted and the lock not
 	//cleaned
+
+	flag.Var(&stdinOpts, "arrayOpts", "Options needed for the stding backup. Format: command,pod,container")
 
 	exit := 0
 
@@ -193,7 +96,19 @@ func main() {
 
 	if !*check {
 		initRepository()
-		backup()
+		if !*stdin {
+			backup()
+		} else {
+			for _, stdin := range stdinOpts {
+				optsSplitted := strings.Split(stdin, ",")
+				if len(optsSplitted) != 4 {
+					commandError = fmt.Errorf("not enough arguments %v for stdin", stdin)
+				}
+				stdinBackup(optsSplitted[0], optsSplitted[1], optsSplitted[2], optsSplitted[3])
+			}
+			// After doing all backups via stdin don't forget todo the normal one
+			backup()
+		}
 		forget()
 	} else {
 		checkCommand()
@@ -209,18 +124,11 @@ func startMetrics() {
 	metrics.Trigger <- metrics.BackupStartTimestamp
 }
 
-func parseBackupOutput(output []byte) {
-	lines := outputToSlice(output)
-	files := strings.Fields(strings.Split(lines[len(lines)-7], ":")[1])
-	dirs := strings.Fields(strings.Split(lines[len(lines)-6], ":")[1])
+func parseBackupOutput(stdout, stderr []string) {
+	files := strings.Fields(strings.Split(stdout[len(stdout)-6], ":")[1])
+	dirs := strings.Fields(strings.Split(stdout[len(stdout)-5], ":")[1])
 
-	var errorCount = 0
-
-	for i := range lines {
-		if strings.Contains(lines[i], "error") || strings.Contains(lines[i], "Fatal") {
-			errorCount++
-		}
-	}
+	var errorCount = len(stderr)
 
 	newFiles, err := strconv.Atoi(files[0])
 	changedFiles, err := strconv.Atoi(files[2])
@@ -237,6 +145,10 @@ func parseBackupOutput(output []byte) {
 		return
 	}
 
+	if commandError != nil {
+		errorCount++
+	}
+
 	metrics.NewFiles.Set(float64(newFiles))
 	metrics.Trigger <- metrics.NewFiles
 	metrics.ChangedFiles.Set(float64(changedFiles))
@@ -251,6 +163,10 @@ func parseBackupOutput(output []byte) {
 	metrics.Trigger <- metrics.UnmodifiedDirs
 	metrics.Errors.Set(float64(errorCount))
 	metrics.Trigger <- metrics.Errors
+
+	if errorCount > 0 && commandError == nil {
+		commandError = fmt.Errorf("there where %v errors", errorCount)
+	}
 }
 
 func setBackupDir() string {
@@ -260,14 +176,11 @@ func setBackupDir() string {
 	return "/data"
 }
 
-func parseCheckOutput(output []byte) {
-	lines := outputToSlice(output)
-	lastLine := lines[len(lines)-2]
-
-	if strings.Contains(lastLine, "Fatal") {
-		metrics.Errors.Set(1)
-		metrics.Trigger <- metrics.Errors
-		commandError = errors.New("There was a backup error")
+func parseCheckOutput(stdout, stderr []string) {
+	metrics.Errors.Set(float64(len(stderr)))
+	metrics.Trigger <- metrics.Errors
+	if len(stderr) > 0 {
+		commandError = errors.New("There was at least one backup error")
 	}
 }
 
