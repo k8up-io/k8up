@@ -50,12 +50,12 @@ type BackupSpec struct {
 }
 
 type BackupStatus struct {
-	// LastBackup date
+	// LastBackupStart time
 	// +optional
-	LastBackupDate *metav1.Time `json:"lastBackupDate,omitempty"`
-	// LastBackupDuration in seconds
+	LastBackupStart string `json:"last_backup_start,omitempty"`
+	// LastBackupEnd time
 	// +optional
-	LastBackupDuration float64 `json:"lastBackupDuration,omitempty"`
+	LastBackupEnd string `json:"last_backup_end,omitempty"`
 	// LastBackupStatus
 	// +optional
 	LastBackupStatus string `json:"lastBackupDtatus,omitempty"`

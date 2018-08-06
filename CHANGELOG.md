@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [unreleased]
+### Changes
+- Skip backup if no suitable PVCs are found
+- Minor refactoring
+- When the backup definition is deleted it will also cleanup all jobs and pods
+
+## [v0.0.3] - 07-27-2018
+### Changed
+- CRD status, start and end are now timestamps
+- Print namespace wenn a backup is created
 
 ## [v0.0.2] - 07-27-2018
 ### Added
@@ -21,6 +30,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Changed
 - Initial version
 
-[unreleased]: https://git.vshn.net/vshn/baas/compare/v0.0.2...master
+[unreleased]: https://git.vshn.net/vshn/baas/compare/v0.0.3...master
+[v0.0.3]: https://git.vshn.net/vshn/baas/compare/v0.0.2...v0.0.3
 [v0.0.2]: https://git.vshn.net/vshn/baas/compare/v0.0.1...v0.0.2
 [v0.0.1]: https://git.vshn.net/vshn/baas/tree/v0.0.1

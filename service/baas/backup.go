@@ -121,11 +121,11 @@ func (p *PVCBackupper) Start() error {
 	p.stopC = make(chan struct{})
 	p.running = true
 
-	p.log.Infof("started %s backup worker", p.backup.Name)
+	p.log.Infof("Created %s backup schedule in namespace %s", p.backup.Name, p.backup.Namespace)
 	// TODO: this library doesn't track if a job is already running
 	p.cronID, err = p.cron.AddFunc(p.backup.Spec.Schedule,
 		func() {
-			if err := p.run(); err != nil {
+			if err := p.run(false); err != nil {
 				p.log.Errorf("error backup worker: %s", err)
 			}
 		},
@@ -140,7 +140,7 @@ func (p *PVCBackupper) Start() error {
 	}
 	p.checkCronID, err = p.cron.AddFunc(checkSchedule,
 		func() {
-			if err := p.runCheck(); err != nil {
+			if err := p.run(true); err != nil {
 				p.log.Errorf("error check: %v", err)
 			}
 		})
@@ -153,9 +153,13 @@ func (p *PVCBackupper) Start() error {
 	return nil
 }
 
-func (p *PVCBackupper) run() error {
+func (p *PVCBackupper) run(check bool) error {
 	volumes := p.listPVCs(p.config.annotation)
-	return p.runJob(volumes, false)
+	if len(volumes) == 0 {
+		p.log.Infof("No suitable PVCs found, skipping backup")
+		return nil
+	}
+	return p.runJob(volumes, check)
 }
 
 func (p *PVCBackupper) cleanupJob(job *batchv1.Job) error {
@@ -241,7 +245,7 @@ func (p *PVCBackupper) runJob(volumes []apiv1.Volume, check bool) error {
 	startTime := metav1.Time{
 		Time: time.Now(),
 	}
-	p.backup.Status.LastBackupDate = &startTime
+	p.backup.Status.LastBackupStart = startTime.Format("2006-01-02 15:04:05")
 
 	count := 0
 
@@ -290,7 +294,7 @@ func (p *PVCBackupper) runJob(volumes []apiv1.Volume, check bool) error {
 
 	p.log.Infof("%v Cleaning up", status)
 
-	p.backup.Status.LastBackupDuration = time.Since(startTime.Time).Seconds()
+	p.backup.Status.LastBackupEnd = time.Now().Format("2006-01-02 15:04:05")
 
 	defer p.updateMetrics()
 
@@ -369,11 +373,6 @@ func (p *PVCBackupper) getJobsInNameSpace(namespace, filter string) []batchv1.Jo
 	}
 
 	return jobs.Items
-}
-
-func (p *PVCBackupper) runCheck() error {
-	volumes := p.listPVCs(p.config.annotation)
-	return p.runJob(volumes, true)
 }
 
 func (p *PVCBackupper) containsAccessMode(s []apiv1.PersistentVolumeAccessMode, e string) bool {
