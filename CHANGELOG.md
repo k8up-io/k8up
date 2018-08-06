@@ -6,17 +6,19 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [unreleased]
+
+## [v0.0.4] - 2018-08-06
 ### Changes
 - Skip backup if no suitable PVCs are found
 - Minor refactoring
 - When the backup definition is deleted it will also cleanup all jobs and pods
 
-## [v0.0.3] - 07-27-2018
+## [v0.0.3] - 2018-07-27
 ### Changed
 - CRD status, start and end are now timestamps
 - Print namespace wenn a backup is created
 
-## [v0.0.2] - 07-27-2018
+## [v0.0.2] - 2018-07-27
 ### Added
 - Vscode launch config
 - Read credentials and password from OpenShift secrets
