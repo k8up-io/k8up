@@ -1,6 +1,7 @@
 package operator
 
 import (
+	"context"
 	"fmt"
 
 	"k8s.io/apimachinery/pkg/runtime"
@@ -28,7 +29,7 @@ func newHandler(k8sCli kubernetes.Interface, baasCLI baas8scli.Interface, logger
 }
 
 // Add will ensure that the required pod terminator is running.
-func (h *handler) Add(obj runtime.Object) error {
+func (h *handler) Add(ctx context.Context, obj runtime.Object) error {
 	bw, ok := obj.(*backupv1alpha1.Backup)
 	if !ok {
 		return fmt.Errorf("%v is not a pod terminator object", obj.GetObjectKind())
@@ -38,6 +39,6 @@ func (h *handler) Add(obj runtime.Object) error {
 }
 
 // Delete will ensure the reuited pod terminator is not running.
-func (h *handler) Delete(name string) error {
+func (h *handler) Delete(ctx context.Context, name string) error {
 	return h.baasService.DeleteBackup(name)
 }
