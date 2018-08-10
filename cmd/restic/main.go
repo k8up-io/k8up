@@ -86,9 +86,7 @@ func main() {
 			exit = 1
 		}
 		metrics.BackupEndTimestamp.SetToCurrentTime()
-		metrics.Trigger <- metrics.BackupEndTimestamp
-		// Block a second to transmit the metrics
-		time.Sleep(1 * time.Second)
+		metrics.Update(metrics.BackupEndTimestamp)
 		os.Exit(exit)
 	}()
 
@@ -126,7 +124,7 @@ func startMetrics() {
 	go metrics.startUpdating()
 
 	metrics.BackupStartTimestamp.SetToCurrentTime()
-	metrics.Trigger <- metrics.BackupStartTimestamp
+	metrics.Update(metrics.BackupStartTimestamp)
 }
 
 func parseBackupOutput(stdout, stderr []string) {
@@ -155,19 +153,19 @@ func parseBackupOutput(stdout, stderr []string) {
 	}
 
 	metrics.NewFiles.Set(float64(newFiles))
-	metrics.Trigger <- metrics.NewFiles
+	metrics.Update(metrics.NewFiles)
 	metrics.ChangedFiles.Set(float64(changedFiles))
-	metrics.Trigger <- metrics.ChangedFiles
+	metrics.Update(metrics.ChangedFiles)
 	metrics.UnmodifiedFiles.Set(float64(unmodifiedFiles))
-	metrics.Trigger <- metrics.UnmodifiedFiles
+	metrics.Update(metrics.UnmodifiedFiles)
 	metrics.NewDirs.Set(float64(newDirs))
-	metrics.Trigger <- metrics.NewDirs
+	metrics.Update(metrics.NewDirs)
 	metrics.ChangedDirs.Set(float64(changedDirs))
-	metrics.Trigger <- metrics.ChangedDirs
+	metrics.Update(metrics.ChangedDirs)
 	metrics.UnmodifiedDirs.Set(float64(unmodifiedDirs))
-	metrics.Trigger <- metrics.UnmodifiedDirs
+	metrics.Update(metrics.UnmodifiedDirs)
 	metrics.Errors.Set(float64(errorCount))
-	metrics.Trigger <- metrics.Errors
+	metrics.Update(metrics.Errors)
 
 	if errorCount > 0 && commandError == nil {
 		commandError = fmt.Errorf("there where %v errors", errorCount)
@@ -183,7 +181,7 @@ func setBackupDir() string {
 
 func parseCheckOutput(stdout, stderr []string) {
 	metrics.Errors.Set(float64(len(stderr)))
-	metrics.Trigger <- metrics.Errors
+	metrics.Update(metrics.Errors)
 	if len(stderr) > 0 {
 		commandError = errors.New("There was at least one backup error")
 	}

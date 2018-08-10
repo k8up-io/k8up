@@ -28,7 +28,6 @@ type resticMetrics struct {
 	DataTransferred       prometheus.Gauge
 	url                   string
 	intervall             int
-	Trigger               chan prometheus.Collector
 }
 
 func newResticMetrics(url string) *resticMetrics {
@@ -122,7 +121,6 @@ func newResticMetrics(url string) *resticMetrics {
 		Errors:                errors,
 		runningBackupDuration: backupDuration,
 		intervall:             1,
-		Trigger:               make(chan prometheus.Collector),
 		BackupEndTimestamp:    backupEndTimestamp,
 		AvailableSnapshots:    availableSnapshots,
 		NewFiles:              newFiles,
@@ -142,15 +140,12 @@ func (r *resticMetrics) startUpdating() {
 		select {
 		case <-tick.C:
 			r.runningBackupDuration.Add(float64(r.intervall))
-			r.update(r.runningBackupDuration)
-		case col := <-r.Trigger:
-			r.update(col)
+			r.Update(r.runningBackupDuration)
 		}
 	}
-
 }
 
-func (r *resticMetrics) update(collector prometheus.Collector) {
+func (r *resticMetrics) Update(collector prometheus.Collector) {
 	push.New(r.url, "restic_backup").Collector(collector).
 		Grouping("instance", os.Getenv(hostname)).
 		Add()

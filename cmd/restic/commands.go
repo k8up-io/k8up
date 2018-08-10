@@ -64,7 +64,7 @@ func listSnapshots() ([]snapshot, error) {
 		availableSnapshots := len(snapList)
 		fmt.Printf("%v command:\n%v Snapshots\n", args[0], availableSnapshots)
 		metrics.AvailableSnapshots.Set(float64(availableSnapshots))
-		metrics.Trigger <- metrics.AvailableSnapshots
+		metrics.Update(metrics.AvailableSnapshots)
 		return snapList, nil
 	case <-time.After(time.Duration(timeout) * time.Second):
 		commandError = errors.New("connection timed out")
