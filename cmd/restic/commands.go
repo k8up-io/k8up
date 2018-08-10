@@ -115,6 +115,7 @@ func genericCommand(args []string, options commandOptions) ([]string, []string) 
 
 	// Turn into noop if previous commands failed
 	if commandError != nil {
+		fmt.Println("Errors occured during previous commands skipping...")
 		return nil, nil
 	}
 
@@ -200,8 +201,8 @@ func checkCommand() {
 }
 
 func stdinBackup(backupCommand, pod, container, namespace string) {
-	fmt.Println("backing up via stdin...")
-	args := []string{"backup", "--hostname", os.Getenv(hostname), "--stdin"}
+	fmt.Printf("backing up via %v stdin...\n", container)
+	args := []string{"backup", "--hostname", os.Getenv(hostname) + "-" + container, "--stdin"}
 	stdout, stderr := genericCommand(args, commandOptions{
 		print: true,
 		Params: rest.Params{

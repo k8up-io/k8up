@@ -99,6 +99,7 @@ func main() {
 		if !*stdin {
 			backup()
 		} else {
+			fmt.Println("Backup commands detected")
 			for _, stdin := range stdinOpts {
 				optsSplitted := strings.Split(stdin, ",")
 				if len(optsSplitted) != 4 {
@@ -107,7 +108,11 @@ func main() {
 				stdinBackup(optsSplitted[0], optsSplitted[1], optsSplitted[2], optsSplitted[3])
 			}
 			// After doing all backups via stdin don't forget todo the normal one
-			backup()
+			if _, err := os.Stat(backupDir); os.IsNotExist(err) {
+				fmt.Printf("%v does not exist, skipping file backup\n", backupDir)
+			} else {
+				backup()
+			}
 		}
 		forget()
 	} else {
