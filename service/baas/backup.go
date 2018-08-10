@@ -220,30 +220,17 @@ func (p *PVCBackupper) listPVCs(annotation string) []apiv1.Volume {
 func (p *PVCBackupper) runJob(volumes []apiv1.Volume, backupCommands []string, check bool) error {
 	backupJob := newJobDefinition(volumes, p.backup.Name, p.backup)
 
-<<<<<<< HEAD
 	if len(volumes) == 0 && len(backupCommands) == 1 {
-=======
-	if check {
-		backupJob.Spec.Template.Spec.Containers[0].Args = []string{"-check"}
-	} else if len(backupCommands) > 1 {
-		backupJob.Spec.Template.Spec.Containers[0].Args = backupCommands
-	}
-
-	if len(volumes) == 0 && len(backupJob.Spec.Template.Spec.Containers[0].Args) == 1 {
->>>>>>> cf57c3b... Detect if the job was deleted during run
 		p.log.Infof("No suitable PVCs or backup commands found, skipping backup")
 		return nil
 	}
 
-<<<<<<< HEAD
 	if check {
 		backupJob.Spec.Template.Spec.Containers[0].Args = []string{"-check"}
 	} else if len(backupCommands) > 1 {
 		backupJob.Spec.Template.Spec.Containers[0].Args = backupCommands
 	}
 
-=======
->>>>>>> cf57c3b... Detect if the job was deleted during run
 	p.log.Infof("Creating Job %v in namespace %v", backupJob.Name, p.backup.Namespace)
 	_, err := p.k8sCLI.Batch().Jobs(p.backup.Namespace).Create(backupJob)
 	if err != nil {
@@ -431,13 +418,6 @@ func (p *PVCBackupper) listBackupCommands() []string {
 		annotations := pod.GetAnnotations()
 
 		if command, ok := annotations[p.config.backupCommandAnnotation]; ok {
-
-			p.log.Infof("Deployment %v", deployment.Name)
-
-			app := deployment.ObjectMeta.Labels["app"]
-			opts := metav1.ListOptions{
-				LabelSelector: "app=" + app,
-			}
 
 			owner := pod.OwnerReferences
 			firstOwnerID := string(owner[0].UID)
