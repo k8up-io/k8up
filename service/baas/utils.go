@@ -94,8 +94,8 @@ func newJobDefinition(volumes []apiv1.Volume, controllerName string, backup *bac
 			OwnerReferences: []metav1.OwnerReference{
 				{
 					UID:        backup.GetUID(),
-					APIVersion: backup.GroupVersionKind().Version,
-					Kind:       backup.GroupVersionKind().Kind,
+					APIVersion: backupv1alpha1.SchemeGroupVersion.String(),
+					Kind:       backupv1alpha1.BackupKind,
 					Name:       backup.Name,
 				},
 			},
@@ -118,8 +118,11 @@ func newJobDefinition(volumes []apiv1.Volume, controllerName string, backup *bac
 							VolumeMounts:    mounts,
 							Env:             setUpEnvVariables(backup),
 							ImagePullPolicy: apiv1.PullAlways,
+							TTY:             true,
+							Stdin:           true,
 						},
 					},
+					ServiceAccountName: "pod-executor",
 				},
 			},
 		},

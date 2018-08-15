@@ -49,9 +49,10 @@ type PVCBackupper struct {
 }
 
 type config struct {
-	annotation           string
-	defaultCheckSchedule string
-	podFilter            string
+	annotation              string
+	defaultCheckSchedule    string
+	podFilter               string
+	backupCommandAnnotation string
 }
 
 // Stop stops the backup schedule
@@ -89,9 +90,10 @@ func NewPVCBackupper(
 	}
 	tmp.initDefaults()
 	conf := config{
-		annotation:           viper.GetString("annotation"),
-		defaultCheckSchedule: viper.GetString("checkSchedule"),
-		podFilter:            viper.GetString("podFilter"),
+		annotation:              viper.GetString("annotation"),
+		defaultCheckSchedule:    viper.GetString("checkSchedule"),
+		podFilter:               viper.GetString("podFilter"),
+		backupCommandAnnotation: viper.GetString("backupCommandAnnotation"),
 	}
 	tmp.config = conf
 	return tmp
@@ -101,6 +103,7 @@ func (p *PVCBackupper) initDefaults() {
 	viper.SetDefault("annotation", "appuio.ch/backup")
 	viper.SetDefault("checkSchedule", "0 0 * * 0")
 	viper.SetDefault("podFilter", "backupPod=true")
+	viper.SetDefault("backupCommandAnnotation", "appuio.ch/backupcommand")
 }
 
 // SameSpec checks if the Backup Spec was changed
@@ -126,7 +129,7 @@ func (p *PVCBackupper) Start() error {
 	p.cronID, err = p.cron.AddFunc(p.backup.Spec.Schedule,
 		func() {
 			if err := p.run(false); err != nil {
-				p.log.Errorf("error backup worker: %s", err)
+				p.log.Errorf("error backup schedule %v: %s", p.backup.Name, err)
 			}
 		},
 	)
@@ -155,11 +158,8 @@ func (p *PVCBackupper) Start() error {
 
 func (p *PVCBackupper) run(check bool) error {
 	volumes := p.listPVCs(p.config.annotation)
-	if len(volumes) == 0 {
-		p.log.Infof("No suitable PVCs found, skipping backup")
-		return nil
-	}
-	return p.runJob(volumes, check)
+	backupCommands := p.listBackupCommands()
+	return p.runJob(volumes, backupCommands, check)
 }
 
 func (p *PVCBackupper) cleanupJob(job *batchv1.Job) error {
@@ -217,11 +217,18 @@ func (p *PVCBackupper) listPVCs(annotation string) []apiv1.Volume {
 	return volumes
 }
 
-func (p *PVCBackupper) runJob(volumes []apiv1.Volume, check bool) error {
+func (p *PVCBackupper) runJob(volumes []apiv1.Volume, backupCommands []string, check bool) error {
 	backupJob := newJobDefinition(volumes, p.backup.Name, p.backup)
+
+	if len(volumes) == 0 && len(backupCommands) == 1 {
+		p.log.Infof("No suitable PVCs or backup commands found, skipping backup")
+		return nil
+	}
 
 	if check {
 		backupJob.Spec.Template.Spec.Containers[0].Args = []string{"-check"}
+	} else if len(backupCommands) > 1 {
+		backupJob.Spec.Template.Spec.Containers[0].Args = backupCommands
 	}
 
 	p.log.Infof("Creating Job %v in namespace %v", backupJob.Name, p.backup.Namespace)
@@ -265,6 +272,10 @@ func (p *PVCBackupper) runJob(volumes []apiv1.Volume, check bool) error {
 		}
 		time.Sleep(10 * time.Second)
 		job, err = p.fetchJobObject(job)
+
+		if job == nil {
+			return fmt.Errorf("Job got removed while running, please check if the backup resource was removed")
+		}
 
 		jobFilter := "job-name=" + job.Name
 
@@ -386,4 +397,39 @@ func (p *PVCBackupper) containsAccessMode(s []apiv1.PersistentVolumeAccessMode, 
 
 func (p *PVCBackupper) updatePrometheus() {
 	// TODO: TBD
+}
+
+func (p *PVCBackupper) listBackupCommands() []string {
+	p.log.Infof("Listing all pods with annotation %v in namespace %v", p.config.backupCommandAnnotation, p.backup.Namespace)
+
+	tmp := make([]string, 0)
+
+	pods, err := p.k8sCLI.Core().Pods(p.backup.Namespace).List(metav1.ListOptions{})
+	if err != nil {
+		p.log.Errorf("Error listing backup commands: %v\n", err)
+		return tmp
+	}
+
+	tmp = append(tmp, "-stdin")
+
+	sameOwner := make(map[string]bool)
+
+	for _, pod := range pods.Items {
+		annotations := pod.GetAnnotations()
+
+		if command, ok := annotations[p.config.backupCommandAnnotation]; ok {
+
+			owner := pod.OwnerReferences
+			firstOwnerID := string(owner[0].UID)
+
+			if _, ok := sameOwner[firstOwnerID]; !ok {
+				sameOwner[firstOwnerID] = true
+				args := fmt.Sprintf("\"%v,%v,%v,%v\"", command, pod.Name, pod.Spec.Containers[0].Name, p.backup.Namespace)
+				tmp = append(tmp, "-arrayOpts", args)
+			}
+
+		}
+	}
+
+	return tmp
 }
