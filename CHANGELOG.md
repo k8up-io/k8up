@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [unreleased]
 
+## [v0.0.5] - 2018-08-15
+### Added
+- Consistent backups -> it is now possible to set backup commands on pods
+### Fixed
+- Crash when a running job got deleted
+- Skip backup if there are no backup commands and no PVCs
+
 ## [v0.0.4] - 2018-08-06
 ### Changes
 - Skip backup if no suitable PVCs are found
@@ -32,7 +39,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Changed
 - Initial version
 
-[unreleased]: https://git.vshn.net/vshn/baas/compare/v0.0.3...master
+[unreleased]: https://git.vshn.net/vshn/baas/compare/v0.0.5...master
+[v0.0.5]: https://git.vshn.net/vshn/baas/compare/v0.0.4...v0.0.5
+[v0.0.4]: https://git.vshn.net/vshn/baas/compare/v0.0.3...v0.0.4
 [v0.0.3]: https://git.vshn.net/vshn/baas/compare/v0.0.2...v0.0.3
 [v0.0.2]: https://git.vshn.net/vshn/baas/compare/v0.0.1...v0.0.2
 [v0.0.1]: https://git.vshn.net/vshn/baas/tree/v0.0.1

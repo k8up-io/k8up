@@ -103,6 +103,24 @@ The values of the secrets need to be in base64. To convert a string to base64 us
 echo -n "p@ssw0rd" | base64
 ```
 
+## Make consistent backups
+The Operator also supports setting commands that ensure consistency, you just need to set the `appuio.ch/backupcommand` annotation on the pods.
+
+```yaml
+<SNIP>
+template:
+    metadata:
+      labels:
+        app: mariadb
+      annotations:
+        appuio.ch/backupcommand: mysqldump -uroot -psecure --all-databases
+    spec:
+      containers:
+        - env:
+            - name: MYSQL_ROOT_PASSWORD
+<SNIP>
+```
+
 # Deploy and Configure the Operator
 To deploy the operator you'll need to adjust some config in the manifest folder. The contents of that folder:
 * `baas-example.yaml` an example backup
@@ -124,6 +142,7 @@ Various things can be configured via environment variables:
 * `BACKUP_RESTARTPOLICY` set the RestartPolicy for the backup jobs. According to the [docs](https://kubernetes.io/docs/concepts/workloads/controllers/jobs-run-to-completion/) this should be `OnFailure` for jobs that terminate, default: `OnFailure`
 * `BACKUP_METRICBIND` set the bind address for the prometheus endpoint, default: `:8080`
 * `BACKUP_PROMURL` set the operator wide default prometheus push gateway, default `http://127.0.0.1/`
+* `BACKUP_BACKUPCOMMANDANNOTATION` set the annotation name where the backup commands are stored, default `appuio.ch/backupcommand`
 
 You only need to adjust `BACKUP_IMAGE` everything else can be left default.
 
