@@ -150,9 +150,10 @@ You only need to adjust `BACKUP_IMAGE` everything else can be left default.
 After everything is set to your liking in the yaml files you can deploy it with:
 
 ```bash
-kubectl apply -f manifest/service-account.yaml
-kubectl apply -f manifest/role-bindings.yaml
-kubectl apply -f manifest/operator.yaml
+kubectl apply -f manifest/prereqs/service-account.yaml
+kubectl apply -f manifest/prereqs/role-bindings.yaml
+kubectl apply -f manifest/prereqs/operator.yaml
+kubectl apply -f manifest/prereqs/pod-exec.yaml
 # and then create a backup
 kubectl apply -f manifest/baas-exampler.yaml
 ```
@@ -160,6 +161,10 @@ kubectl apply -f manifest/baas-exampler.yaml
 You may need to adjust the namespace in `service-account.yaml` and `role-bindings.yaml`.
 
 Please see the example resource here in the readme for an explanation of the various settings.
+
+### Installation changes
+- Since v0.0.4 -
+Because v0.0.5 supports consistent backups via stdout/stdin streaming the wrestic container needs a service account. This is currently hardcoded to `pod-executor`. This needs another cluster role and a service account per namespace. See `manifest/prereqs/pod-exec.yaml` for an example.
 
 # Manual restore
 To manually restore you'll need:

@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [v0.0.5] - 2018-08-15
 ### Added
-- Consistent backups -> it is now possible to set backup commands on pods
+- Consistent backups -> it is now possible to set backup commands on pods. This changes the prerequisites, please consult the README chapter `Installation changes` for more infos.
 ### Fixed
 - Crash when a running job got deleted
 - Skip backup if there are no backup commands and no PVCs
