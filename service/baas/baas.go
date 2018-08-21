@@ -69,6 +69,12 @@ func (b *Baas) EnsureBackup(backup *backupv1alpha1.Backup) error {
 
 	// Create a Backup.
 	backupCopy := backup.DeepCopy()
+
+	err := createServiceAccountAndBinding(backupCopy, b.k8sCli)
+	if err != nil {
+		return err
+	}
+
 	bck = NewPVCBackupper(backupCopy, b.k8sCli, b.baasCLI, b.logger, b.cron, b.metrics)
 	b.reg.Store(name, bck)
 	return bck.Start()
@@ -88,4 +94,21 @@ func (b *Baas) DeleteBackup(name string) error {
 
 	b.reg.Delete(name)
 	return nil
+}
+
+func createServiceAccountAndBinding(backup *backupv1alpha1.Backup, k8sCli kubernetes.Interface) error {
+
+	account := newServiceAccontDefinition(backup)
+
+	_, err := k8sCli.RbacV1().RoleBindings(backup.Namespace).Create(account.roleBinding)
+	if err != nil {
+		return err
+	}
+	_, err = k8sCli.RbacV1().Roles(backup.Namespace).Create(account.role)
+	if err != nil {
+		return err
+	}
+	_, err = k8sCli.CoreV1().ServiceAccounts(backup.Namespace).Create(account.account)
+
+	return err
 }

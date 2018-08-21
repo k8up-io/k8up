@@ -11,16 +11,19 @@ import (
 	"github.com/spf13/viper"
 	batchv1 "k8s.io/api/batch/v1"
 	apiv1 "k8s.io/api/core/v1"
+	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 var (
-	image         string
-	dataPath      string
-	jobName       string
-	podName       string
-	restartPolicy string
-	promURL       string
+	image              string
+	dataPath           string
+	jobName            string
+	podName            string
+	restartPolicy      string
+	promURL            string
+	podExecRoleName    string
+	podExecAccountName string
 )
 
 const (
@@ -45,6 +48,8 @@ func init() {
 	viper.SetDefault("podName", "backupjob-pod")
 	viper.SetDefault("restartPolicy", "OnFailure")
 	viper.SetDefault("PromURL", "http://127.0.0.1/")
+	viper.SetDefault("PodExecRoleName", "pod-executor")
+	viper.SetDefault("PodExecAccountName", "pod-executor")
 }
 
 func getConfig() {
@@ -54,6 +59,8 @@ func getConfig() {
 	podName = viper.GetString("podName")
 	restartPolicy = viper.GetString("restartPolicy")
 	promURL = viper.GetString("PromURL")
+	podExecRoleName = viper.GetString("PodExecRoleName")
+	podExecAccountName = viper.GetString("PodExecAccountName")
 }
 
 // byJobStartTime sorts a list of jobs by start timestamp, using their names as a tie breaker.
@@ -92,12 +99,7 @@ func newJobDefinition(volumes []apiv1.Volume, controllerName string, backup *bac
 		ObjectMeta: metav1.ObjectMeta{
 			Name: name,
 			OwnerReferences: []metav1.OwnerReference{
-				{
-					UID:        backup.GetUID(),
-					APIVersion: backupv1alpha1.SchemeGroupVersion.String(),
-					Kind:       backupv1alpha1.BackupKind,
-					Name:       backup.Name,
-				},
+				newOwnerReference(backup),
 			},
 		},
 		Spec: batchv1.JobSpec{
@@ -256,4 +258,85 @@ func setUpRetention(backup *backupv1alpha1.Backup) []apiv1.EnvVar {
 	}
 
 	return retentionRules
+}
+
+func newServiceAccontDefinition(backup *backupv1alpha1.Backup) serviceAccount {
+	getConfig()
+
+	role := rbacv1.Role{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      podExecRoleName,
+			Namespace: backup.Namespace,
+			OwnerReferences: []metav1.OwnerReference{
+				newOwnerReference(backup),
+			},
+		},
+		Rules: []rbacv1.PolicyRule{
+			{
+				APIGroups: []string{
+					"",
+				},
+				Resources: []string{
+					"pods",
+					"pods/exec",
+				},
+				Verbs: []string{
+					"*",
+				},
+			},
+		},
+	}
+
+	roleBinding := rbacv1.RoleBinding{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      podExecRoleName + "-namespaced",
+			Namespace: backup.Namespace,
+			OwnerReferences: []metav1.OwnerReference{
+				newOwnerReference(backup),
+			},
+		},
+		Subjects: []rbacv1.Subject{
+			{
+				Kind:      "ServiceAccount",
+				Namespace: backup.Namespace,
+				Name:      podExecRoleName,
+			},
+		},
+		RoleRef: rbacv1.RoleRef{
+			Kind:     "Role",
+			Name:     podExecRoleName,
+			APIGroup: "rbac.authorization.k8s.io",
+		},
+	}
+
+	account := apiv1.ServiceAccount{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      podExecAccountName,
+			Namespace: backup.Namespace,
+			OwnerReferences: []metav1.OwnerReference{
+				newOwnerReference(backup),
+			},
+		},
+	}
+
+	return serviceAccount{
+		role:        &role,
+		roleBinding: &roleBinding,
+		account:     &account,
+	}
+}
+
+func newOwnerReference(backup *backupv1alpha1.Backup) metav1.OwnerReference {
+	return metav1.OwnerReference{
+		UID:        backup.GetUID(),
+		APIVersion: backupv1alpha1.SchemeGroupVersion.String(),
+		Kind:       backupv1alpha1.BackupKind,
+		Name:       backup.Name,
+	}
+}
+
+type serviceAccount struct {
+	role        *rbacv1.Role
+	roleBinding *rbacv1.RoleBinding
+	account     *apiv1.ServiceAccount
 }
