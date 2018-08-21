@@ -147,18 +147,13 @@ Various things can be configured via environment variables:
 You only need to adjust `BACKUP_IMAGE` everything else can be left default.
 
 ## Installation
-After everything is set to your liking in the yaml files you can deploy it with:
+All required definitions for the installation are located at `manifest/install/`:
 
 ```bash
-kubectl apply -f manifest/prereqs/service-account.yaml
-kubectl apply -f manifest/prereqs/role-bindings.yaml
-kubectl apply -f manifest/prereqs/operator.yaml
-kubectl apply -f manifest/prereqs/pod-exec.yaml
-# and then create a backup
-kubectl apply -f manifest/baas-exampler.yaml
+kubectl apply -f manifest/install/
 ```
 
-You may need to adjust the namespace in `service-account.yaml` and `role-bindings.yaml`.
+You may need to adjust the namespaces in the manifests. There are various other examples under `manifest/examples/`.
 
 Please see the example resource here in the readme for an explanation of the various settings.
 
