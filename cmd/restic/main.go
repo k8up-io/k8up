@@ -47,6 +47,7 @@ func (a *arrayOpts) Set(value string) error {
 var (
 	check     = flag.Bool("check", false, "Set if the container should run a check")
 	stdin     = flag.Bool("stdin", false, "Set to enable stdin backup")
+	prune     = flag.Bool("prune", false, "Set if the container should run a prune")
 	stdinOpts arrayOpts
 
 	commandError error
@@ -92,11 +93,14 @@ func main() {
 
 	backupDir = setBackupDir()
 
-	if !*check {
-		initRepository()
-		if !*stdin {
+	initRepository()
+
+	if *check {
+		checkCommand()
+	} else {
+		if !*stdin && !*prune {
 			backup()
-		} else {
+		} else if !*prune {
 			fmt.Println("Backup commands detected")
 			for _, stdin := range stdinOpts {
 				optsSplitted := strings.Split(stdin, ",")
@@ -111,10 +115,9 @@ func main() {
 			} else {
 				backup()
 			}
+		} else {
+			forget()
 		}
-		forget()
-	} else {
-		checkCommand()
 	}
 
 }

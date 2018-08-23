@@ -81,6 +81,7 @@ func backup() {
 	}
 }
 func forget() {
+	// TODO: check for integers
 	args := []string{"forget", "--prune"}
 
 	if last := os.Getenv(keepLastEnv); last != "" {
