@@ -34,18 +34,20 @@ type Backupper interface {
 
 // PVCBackupper implements the Backupper interface
 type PVCBackupper struct {
-	backup      *backupv1alpha1.Backup
-	k8sCLI      kubernetes.Interface
-	baasCLI     baas8scli.Interface
-	log         log.Logger
-	running     bool
-	mutex       sync.Mutex
-	stopC       chan struct{}
-	cron        *cron.Cron
-	cronID      cron.EntryID
-	checkCronID cron.EntryID
-	config      config
-	metrics     *operatorMetrics
+	backup           *backupv1alpha1.Backup
+	k8sCLI           kubernetes.Interface
+	baasCLI          baas8scli.Interface
+	log              log.Logger
+	registered       bool
+	mutex            sync.Mutex
+	wg               sync.WaitGroup
+	cron             *cron.Cron
+	cronID           cron.EntryID
+	checkCronID      cron.EntryID
+	config           config
+	metrics          *operatorMetrics
+	running          bool
+	clusterWideState clusterWideState
 }
 
 type config struct {
@@ -60,14 +62,13 @@ func (p *PVCBackupper) Stop() error {
 	p.mutex.Lock()
 	defer p.mutex.Unlock()
 
-	if p.running {
-		close(p.stopC)
+	if p.registered {
 		p.log.Infof("stopped %s Backup", p.backup.Name)
 	}
 
 	p.cron.Remove(p.cronID)
 	p.cron.Remove(p.checkCronID)
-	p.running = false
+	p.registered = false
 	return nil
 }
 
@@ -78,15 +79,18 @@ func NewPVCBackupper(
 	baasCLI baas8scli.Interface,
 	log log.Logger,
 	cron *cron.Cron,
-	metrics *operatorMetrics) Backupper {
+	metrics *operatorMetrics,
+	clusterWideState clusterWideState) Backupper {
 	tmp := &PVCBackupper{
-		backup:  backup,
-		k8sCLI:  k8sCLI,
-		baasCLI: baasCLI,
-		log:     log,
-		mutex:   sync.Mutex{},
-		cron:    cron,
-		metrics: metrics,
+		backup:           backup,
+		k8sCLI:           k8sCLI,
+		baasCLI:          baasCLI,
+		log:              log,
+		mutex:            sync.Mutex{},
+		cron:             cron,
+		metrics:          metrics,
+		clusterWideState: clusterWideState,
+		wg:               sync.WaitGroup{},
 	}
 	tmp.initDefaults()
 	conf := config{
@@ -117,19 +121,18 @@ func (p *PVCBackupper) Start() error {
 	defer p.mutex.Unlock()
 	var err error
 
-	if p.running {
-		return fmt.Errorf("already running")
+	if p.registered {
+		return fmt.Errorf("already registered")
 	}
 
-	p.stopC = make(chan struct{})
-	p.running = true
+	p.registered = true
 
 	p.log.Infof("Created %s backup schedule in namespace %s", p.backup.Name, p.backup.Namespace)
 	// TODO: this library doesn't track if a job is already running
 	p.cronID, err = p.cron.AddFunc(p.backup.Spec.Schedule,
 		func() {
 			if err := p.run(false); err != nil {
-				p.log.Errorf("error backup schedule %v: %s", p.backup.Name, err)
+				p.log.Errorf("error backup schedule %v in %v: %s", p.backup.Name, p.backup.Namespace, err)
 			}
 		},
 	)
@@ -160,6 +163,15 @@ func (p *PVCBackupper) run(check bool) error {
 	volumes := p.listPVCs(p.config.annotation)
 	backupCommands := p.listBackupCommands()
 	return p.runJob(volumes, backupCommands, check)
+}
+
+func (p *PVCBackupper) sharedRepo() bool {
+	value, _ := p.clusterWideState.repoMap.Load(p.backup.Spec.Backend.String())
+	number := value.(int)
+	if number > 1 {
+		return true
+	}
+	return false
 }
 
 func (p *PVCBackupper) cleanupJob(job *batchv1.Job) error {
@@ -221,7 +233,7 @@ func (p *PVCBackupper) runJob(volumes []apiv1.Volume, backupCommands []string, c
 	backupJob := newJobDefinition(volumes, p.backup.Name, p.backup)
 
 	if len(volumes) == 0 && len(backupCommands) == 1 {
-		p.log.Infof("No suitable PVCs or backup commands found, skipping backup")
+		p.log.Infof("No suitable PVCs or backup commands found in %v, skipping backup", p.backup.Namespace)
 		return nil
 	}
 
@@ -231,11 +243,25 @@ func (p *PVCBackupper) runJob(volumes []apiv1.Volume, backupCommands []string, c
 		backupJob.Spec.Template.Spec.Containers[0].Args = backupCommands
 	}
 
+	// Check if this specific backup is already running. This doesn't have
+	// anything todo with the prune locking, which is clusterwide.
+	if p.running {
+		p.log.Infof("Backup still running in %v, skipping...", p.backup.Namespace)
+		return nil
+	}
+
+	// Be sure no prune is running before starting the job
+	p.waitForPrune()
+	p.incrementRunningBackup()
 	p.log.Infof("Creating Job %v in namespace %v", backupJob.Name, p.backup.Namespace)
 	_, err := p.k8sCLI.Batch().Jobs(p.backup.Namespace).Create(backupJob)
 	if err != nil {
 		return err
 	}
+	p.running = true
+	defer func() {
+		p.running = false
+	}()
 
 	podFilter := p.config.podFilter
 
@@ -254,16 +280,120 @@ func (p *PVCBackupper) runJob(volumes []apiv1.Volume, backupCommands []string, c
 	}
 	p.backup.Status.LastBackupStart = startTime.Format("2006-01-02 15:04:05")
 
-	count := 0
-
 	p.metrics.RunningBackups.Inc()
 	defer p.metrics.RunningBackups.Dec()
+
+	job, err = p.waitForJobTofinish(job)
+	p.decrementRunningBackup()
+
+	if !p.pruneRunning() && !check {
+		p.incrementRunningPrune()
+
+		// Wait for all backups to finish
+		for p.getRunningBackups() != 0 {
+			time.Sleep(time.Second * 10)
+		}
+
+		backupJob.Name = fmt.Sprintf("%s-%d", "prunejob", time.Now().Unix())
+		backupJob.Spec.Template.Spec.Containers[0].Args = []string{"-prune"}
+
+		p.log.Infof("Creating Job %v in namespace %v", backupJob.Name, p.backup.Namespace)
+		_, err := p.k8sCLI.Batch().Jobs(p.backup.Namespace).Create(backupJob)
+		if err != nil {
+			p.log.Errorf("%v", err)
+			return err
+		}
+
+		job, err := p.fetchJobObject(backupJob)
+		if err != nil {
+			p.log.Errorf("%v", err)
+		}
+
+		job, err = p.waitForJobTofinish(job)
+		if err != nil {
+			p.log.Errorf("%v", err)
+		}
+
+		p.decrementRunningPrune()
+	}
+
+	var status string
+	var returnVal error
+
+	if job == nil {
+		status = "The job was deleted before completion."
+		returnVal = fmt.Errorf("the job was deleted before completion")
+	} else if job.Status.Succeeded == 0 {
+		status = "The backup failed."
+		returnVal = fmt.Errorf("The backup failed")
+	} else if err != nil {
+		status = "The backup failed. With error " + err.Error()
+		returnVal = err
+	} else {
+		status = fmt.Sprintf("The backup %v in namespace %v was successful.", p.backup.Name, p.backup.Namespace)
+		returnVal = nil
+	}
+
+	p.log.Infof("%v Cleaning up", status)
+
+	p.backup.Status.LastBackupEnd = time.Now().Format("2006-01-02 15:04:05")
+
+	defer p.updateMetrics()
+
+	return returnVal
+}
+
+func (p *PVCBackupper) incrementRunningBackup() {
+	backendString := p.backup.Spec.Backend.String()
+	value, _ := p.clusterWideState.runningBackupsPerRepo.Load(backendString)
+	number := value.(int)
+	number = number + 1
+	p.clusterWideState.runningBackupsPerRepo.Store(backendString, number)
+}
+
+func (p *PVCBackupper) decrementRunningBackup() {
+	backendString := p.backup.Spec.Backend.String()
+	value, _ := p.clusterWideState.runningBackupsPerRepo.Load(backendString)
+	number := value.(int)
+	number = number - 1
+	p.clusterWideState.runningBackupsPerRepo.Store(backendString, number)
+}
+
+func (p *PVCBackupper) incrementRunningPrune() {
+	p.wg.Add(1)
+	backendString := p.backup.Spec.Backend.String()
+	value, _ := p.clusterWideState.runningPruneOnRepo.Load(backendString)
+	number := value.(int)
+	number = number + 1
+	p.clusterWideState.runningPruneOnRepo.Store(backendString, number)
+}
+
+func (p *PVCBackupper) decrementRunningPrune() {
+	p.wg.Done()
+	backendString := p.backup.Spec.Backend.String()
+	value, _ := p.clusterWideState.runningPruneOnRepo.Load(backendString)
+	number := value.(int)
+	number = number - 1
+	p.clusterWideState.runningPruneOnRepo.Store(backendString, number)
+}
+
+func (p *PVCBackupper) getRunningBackups() int {
+	backendString := p.backup.Spec.Backend.String()
+	value, _ := p.clusterWideState.runningBackupsPerRepo.Load(backendString)
+	number := value.(int)
+	return number
+}
+
+func (p *PVCBackupper) waitForJobTofinish(job *batchv1.Job) (*batchv1.Job, error) {
+	var err error
+	count := 0
+
 	for job.Status.Active > 0 || job.Status.StartTime == nil {
 		//TODO: use select case and channels for more responsivenes
 		//or maybe a controller that observes that job?
 		count++
-		if !p.running {
-			return nil
+		if !p.registered {
+			return nil, nil
 		}
 
 		// Reduce verbosity a bit
@@ -274,7 +404,7 @@ func (p *PVCBackupper) runJob(volumes []apiv1.Volume, backupCommands []string, c
 		job, err = p.fetchJobObject(job)
 
 		if job == nil {
-			return fmt.Errorf("Job got removed while running, please check if the backup resource was removed")
+			return nil, fmt.Errorf("Job got removed while running, please check if the backup resource was removed")
 		}
 
 		jobFilter := "job-name=" + job.Name
@@ -288,28 +418,29 @@ func (p *PVCBackupper) runJob(volumes []apiv1.Volume, backupCommands []string, c
 			err = fmt.Errorf("Container failed")
 		}
 		if err != nil {
-			return err
+			return job, err
 		}
 	}
+	return job, nil
+}
 
-	var status string
-	var returnVal error
-
-	if job.Status.Succeeded == 0 {
-		status = "The backup failed."
-		returnVal = fmt.Errorf("The backup failed")
-	} else {
-		status = "The backup was successful."
-		returnVal = nil
+func (p *PVCBackupper) pruneRunning() bool {
+	backendString := p.backup.Spec.Backend.String()
+	value, _ := p.clusterWideState.runningPruneOnRepo.Load(backendString)
+	number := value.(int)
+	if number > 0 {
+		return true
 	}
+	return false
+}
 
-	p.log.Infof("%v Cleaning up", status)
-
-	p.backup.Status.LastBackupEnd = time.Now().Format("2006-01-02 15:04:05")
-
-	defer p.updateMetrics()
-
-	return returnVal
+func (p *PVCBackupper) waitForPrune() {
+	p.mutex.Lock()
+	if p.pruneRunning() && p.sharedRepo() {
+		p.log.Infof("Waiting for prune to finish in shared repository")
+		p.wg.Wait()
+	}
+	p.mutex.Unlock()
 }
 
 func (p *PVCBackupper) podErrors(filter string) bool {

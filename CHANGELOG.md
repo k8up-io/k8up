@@ -8,8 +8,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [unreleased]
 ### Added
 - Manage service accounts, roles and rolebindings in namespaces for backup commands. Please see the README chapter `Installation changes` about the new permissions necessary for the operator service account.
-### Known issues
-- The operator enters a crashloop if it is restarted after backup objects havve been created
+- Global cluster state. The operator now knows when a prune job is running to a shared repository and waits before starting the next backup/prune.
+### Fixed
+- Ignore if the service account, roles or rilebindings already exist in the namespace.
 
 ## [v0.0.5] - 2018-08-15
 ### Added

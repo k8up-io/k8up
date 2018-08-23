@@ -1,6 +1,8 @@
 package v1alpha1
 
 import (
+	"strings"
+
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -81,6 +83,44 @@ type Backend struct {
 	Swift    *SwiftSpec      `json:"swift,omitempty"`
 	B2       *B2Spec         `json:"b2,omitempty"`
 	Rest     *RestServerSpec `json:"rest,omitempty"`
+}
+
+// String returns a stringrepresentation of the repo
+// it concatenates all repos comma separated. It may support
+// multiple repos in the same instance in the future
+func (b *Backend) String() string {
+	allRepos := []string{}
+
+	if b.Azure != nil {
+		allRepos = append(allRepos, b.Azure.Container)
+	}
+
+	if b.B2 != nil {
+		allRepos = append(allRepos, b.B2.Bucket)
+	}
+
+	if b.GCS != nil {
+		allRepos = append(allRepos, b.GCS.Bucket)
+	}
+
+	if b.Local != nil {
+		allRepos = append(allRepos, b.Local.MountPath)
+	}
+
+	if b.Rest != nil {
+		allRepos = append(allRepos, b.Rest.URL)
+	}
+
+	if b.S3 != nil {
+		allRepos = append(allRepos, b.S3.Endpoint+b.S3.Bucket)
+	}
+
+	if b.Swift != nil {
+		allRepos = append(allRepos, b.Swift.Container)
+	}
+
+	return strings.Join(allRepos, ",")
+
 }
 
 type LocalSpec struct {

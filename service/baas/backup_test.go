@@ -25,7 +25,6 @@ func TestPVCBackupper_SameSpec(t *testing.T) {
 		log         log.Logger
 		running     bool
 		mutex       sync.Mutex
-		stopC       chan struct{}
 		cron        *cron.Cron
 		cronID      cron.EntryID
 		checkCronID cron.EntryID
@@ -85,7 +84,6 @@ func TestPVCBackupper_SameSpec(t *testing.T) {
 				log:         tt.fields.log,
 				running:     tt.fields.running,
 				mutex:       tt.fields.mutex,
-				stopC:       tt.fields.stopC,
 				cron:        tt.fields.cron,
 				cronID:      tt.fields.cronID,
 				checkCronID: tt.fields.checkCronID,
@@ -105,7 +103,7 @@ func TestPVCBackupper_podErrors(t *testing.T) {
 		log         log.Logger
 		running     bool
 		mutex       sync.Mutex
-		stopC       chan struct{}
+		finishedC   chan bool
 		cron        *cron.Cron
 		cronID      cron.EntryID
 		checkCronID cron.EntryID
@@ -246,7 +244,6 @@ func TestPVCBackupper_podErrors(t *testing.T) {
 				log:         tt.fields.log,
 				running:     tt.fields.running,
 				mutex:       tt.fields.mutex,
-				stopC:       tt.fields.stopC,
 				cron:        tt.fields.cron,
 				cronID:      tt.fields.cronID,
 				checkCronID: tt.fields.checkCronID,
@@ -266,7 +263,7 @@ func TestPVCBackupper_listPVCs(t *testing.T) {
 		log         log.Logger
 		running     bool
 		mutex       sync.Mutex
-		stopC       chan struct{}
+		finishedC   chan bool
 		cron        *cron.Cron
 		cronID      cron.EntryID
 		checkCronID cron.EntryID
@@ -414,7 +411,6 @@ func TestPVCBackupper_listPVCs(t *testing.T) {
 				log:         tt.fields.log,
 				running:     tt.fields.running,
 				mutex:       tt.fields.mutex,
-				stopC:       tt.fields.stopC,
 				cron:        tt.fields.cron,
 				cronID:      tt.fields.cronID,
 				checkCronID: tt.fields.checkCronID,

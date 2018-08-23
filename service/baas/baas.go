@@ -1,6 +1,7 @@
 package baas
 
 import (
+	"strings"
 	"sync"
 
 	"git.vshn.net/vshn/baas/monitoring"
@@ -15,20 +16,22 @@ import (
 
 // Syncer is the interface that each Baas implementation has to satisfy.
 type Syncer interface {
-	// EnsurePodTerminator will ensure that the pod terminator is running and working.
+	// EnsureBackup will ensure that the backup schedule is correctly registered
 	EnsureBackup(pt *backupv1alpha1.Backup) error
-	// DeletePodTerminator will stop and delete the pod terminator.
+	// DeleteBackup will stop and delete the schedule. Kubernetes will handle
+	// the deletion of all child items.
 	DeleteBackup(name string) error
 }
 
 // Baas will ensure that the backups are running accordingly.
 type Baas struct {
-	k8sCli  kubernetes.Interface
-	baasCLI baas8scli.Interface
-	reg     sync.Map
-	logger  log.Logger
-	cron    *cron.Cron
-	metrics *operatorMetrics
+	k8sCli           kubernetes.Interface
+	baasCLI          baas8scli.Interface
+	reg              sync.Map
+	logger           log.Logger
+	cron             *cron.Cron
+	metrics          *operatorMetrics
+	clusterWideState clusterWideState
 }
 
 // NewBaas returns a new baas.
@@ -43,6 +46,11 @@ func NewBaas(k8sCli kubernetes.Interface, baasCLI baas8scli.Interface, logger lo
 		logger:  logger,
 		cron:    cron,
 		metrics: metrics,
+		clusterWideState: clusterWideState{
+			repoMap:               &sync.Map{},
+			runningBackupsPerRepo: &sync.Map{},
+			runningPruneOnRepo:    &sync.Map{},
+		},
 	}
 }
 
@@ -75,7 +83,23 @@ func (b *Baas) EnsureBackup(backup *backupv1alpha1.Backup) error {
 		return err
 	}
 
-	bck = NewPVCBackupper(backupCopy, b.k8sCli, b.baasCLI, b.logger, b.cron, b.metrics)
+	// Store how many time we've seen the same repository.
+	backendString := backupCopy.Spec.Backend.String()
+	var number int
+	if value, ok := b.clusterWideState.repoMap.Load(backendString); ok {
+		number = value.(int)
+		number = number + 1
+	} else {
+		number = 1
+	}
+
+	// set shared states
+	b.clusterWideState.repoMap.Store(backendString, number)
+	b.clusterWideState.runningBackupsPerRepo.Store(backendString, 0)
+	b.clusterWideState.runningPruneOnRepo.Store(backendString, 0)
+
+	bck = NewPVCBackupper(backupCopy, b.k8sCli, b.baasCLI, b.logger, b.cron, b.metrics, b.clusterWideState)
+
 	b.reg.Store(name, bck)
 	return bck.Start()
 }
@@ -102,13 +126,30 @@ func createServiceAccountAndBinding(backup *backupv1alpha1.Backup, k8sCli kubern
 
 	_, err := k8sCli.RbacV1().RoleBindings(backup.Namespace).Create(account.roleBinding)
 	if err != nil {
-		return err
+		if !strings.Contains(err.Error(), "already exists") {
+			return err
+		}
 	}
 	_, err = k8sCli.RbacV1().Roles(backup.Namespace).Create(account.role)
 	if err != nil {
-		return err
+		if !strings.Contains(err.Error(), "already exists") {
+			return err
+		}
 	}
 	_, err = k8sCli.CoreV1().ServiceAccounts(backup.Namespace).Create(account.account)
 
-	return err
+	if err != nil {
+		if !strings.Contains(err.Error(), "already exists") {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// contains information that should be available to all namespaces
+type clusterWideState struct {
+	repoMap               *sync.Map
+	runningBackupsPerRepo *sync.Map
+	runningPruneOnRepo    *sync.Map
 }
