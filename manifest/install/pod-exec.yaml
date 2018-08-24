@@ -1,8 +1,9 @@
 ---
-kind: ClusterRole
+kind: Role
 apiVersion: rbac.authorization.k8s.io/v1beta1
 metadata:
   name: pod-executor
+  namespace: myproject
 rules:
 - apiGroups:
   - ''
@@ -13,10 +14,11 @@ rules:
   - '*'
 
 ---
-kind: ClusterRoleBinding
+kind: RoleBinding
 apiVersion: rbac.authorization.k8s.io/v1beta1
 metadata:
-  name: pod-executor-global
+  name: pod-executor-namespaced
+  namespace: myproject
 subjects:
 - kind: ServiceAccount
   namespace: myproject

@@ -40,9 +40,8 @@ minishift start
 oc login -u developer
 eval $(minishift docker-env)
 docker login -u developer -p $(oc whoami -t) $(minishift openshift registry)
-cd cmd/restic
-docker build -t $(minishift openshift registry)/myproject/test .
-docker push $(minishift openshift registry)/myproject/test
+docker build -t $(minishift openshift registry)/myproject/baas:0.0.1 .
+docker push $(minishift openshift registry)/myproject/baas:0.0.1
 ```
 
 ## Example resource
@@ -143,26 +142,30 @@ Various things can be configured via environment variables:
 * `BACKUP_METRICBIND` set the bind address for the prometheus endpoint, default: `:8080`
 * `BACKUP_PROMURL` set the operator wide default prometheus push gateway, default `http://127.0.0.1/`
 * `BACKUP_BACKUPCOMMANDANNOTATION` set the annotation name where the backup commands are stored, default `appuio.ch/backupcommand`
+* `BACKUP_PODEXECROLENAME` set the rolename that should be used for pod command execution, default `pod-executor`
+* `BACKUP_PODEXECACCOUNTNAME` set the service account name that should be used for the pod command execution, default: `pod-executor`
 
 You only need to adjust `BACKUP_IMAGE` everything else can be left default.
 
 ## Installation
-After everything is set to your liking in the yaml files you can deploy it with:
+All required definitions for the installation are located at `manifest/install/`:
 
 ```bash
-kubectl apply -f manifest/prereqs/service-account.yaml
-kubectl apply -f manifest/prereqs/role-bindings.yaml
-kubectl apply -f manifest/prereqs/operator.yaml
-kubectl apply -f manifest/prereqs/pod-exec.yaml
-# and then create a backup
-kubectl apply -f manifest/baas-exampler.yaml
+kubectl apply -f manifest/install/
 ```
 
-You may need to adjust the namespace in `service-account.yaml` and `role-bindings.yaml`.
+You may need to adjust the namespaces in the manifests. There are various other examples under `manifest/examples/`.
 
 Please see the example resource here in the readme for an explanation of the various settings.
 
 ### Installation changes
+- Since v0.0.5 -
+Rolebindings for the operator have changed. This is because of two reasons:
+  - The operator now manages the the pod command execution service account per namespace. Thus it needs `roles`, `rolebindings` and `serviceaccount` permissions
+  - In addition to that the operator needs at least the same permissions as it is allow to grant. Thus it also needs the `pods/exec` permissions
+
+  See `manifest/install/role-bindings.yaml` for more details.
+
 - Since v0.0.4 -
 Because v0.0.5 supports consistent backups via stdout/stdin streaming the wrestic container needs a service account. This is currently hardcoded to `pod-executor`. This needs another cluster role and a service account per namespace. See `manifest/prereqs/pod-exec.yaml` for an example.
 

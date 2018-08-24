@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [unreleased]
+### Added
+- Manage service accounts, roles and rolebindings in namespaces for backup commands. Please see the README chapter `Installation changes` about the new permissions necessary for the operator service account.
+### Known issues
+- The operator enters a crashloop if it is restarted after backup objects havve been created
 
 ## [v0.0.5] - 2018-08-15
 ### Added

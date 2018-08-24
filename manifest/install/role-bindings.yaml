@@ -25,14 +25,23 @@ rules:
   - ''
   resources:
   - pods
+  - pods/exec
   - persistentvolumeclaims
   - events
+  - serviceaccounts
   verbs:
   - '*'
 - apiGroups:
   - "batch"
   resources:
   - jobs
+  verbs:
+  - '*'
+- apiGroups:
+  - rbac.authorization.k8s.io
+  resources:
+  - rolebindings
+  - roles
   verbs:
   - '*'
 
