@@ -118,6 +118,7 @@ func main() {
 		} else {
 			forget()
 		}
+		listSnapshots()
 	}
 
 }
