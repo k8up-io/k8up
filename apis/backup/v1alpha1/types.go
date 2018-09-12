@@ -133,8 +133,10 @@ type S3Spec struct {
 	Endpoint string `json:"endpoint,omitempty"`
 	Bucket   string `json:"bucket,omitempty"`
 	Prefix   string `json:"prefix,omitempty"`
-	Username string `json:"username,omitempty"` //ONLY for development
-	Password string `json:"password,omitempty"` //ONLY for development
+	// +optional
+	CredentialsSecretName string `json:"credentialssecretname,omitempty"`
+	Username              string `json:"username,omitempty"` //ONLY for development
+	Password              string `json:"password,omitempty"` //ONLY for development
 }
 
 type GCSSpec struct {
