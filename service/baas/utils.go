@@ -16,14 +16,16 @@ import (
 )
 
 var (
-	image              string
-	dataPath           string
-	jobName            string
-	podName            string
-	restartPolicy      string
-	promURL            string
-	podExecRoleName    string
-	podExecAccountName string
+	image                 string
+	dataPath              string
+	jobName               string
+	podName               string
+	restartPolicy         string
+	promURL               string
+	podExecRoleName       string
+	podExecAccountName    string
+	globalAccessKeyID     string
+	globalSecretAccessKey string
 )
 
 const (
@@ -50,6 +52,8 @@ func init() {
 	viper.SetDefault("PromURL", "http://127.0.0.1/")
 	viper.SetDefault("PodExecRoleName", "pod-executor")
 	viper.SetDefault("PodExecAccountName", "pod-executor")
+	viper.SetDefault("GlobalAccessKeyID", "")
+	viper.SetDefault("GlobalSecretAccessKey", "")
 }
 
 func getConfig() {
@@ -61,6 +65,8 @@ func getConfig() {
 	promURL = viper.GetString("PromURL")
 	podExecRoleName = viper.GetString("PodExecRoleName")
 	podExecAccountName = viper.GetString("PodExecAccountName")
+	globalAccessKeyID = viper.GetString("GlobalAccessKeyID")
+	globalSecretAccessKey = viper.GetString("GlobalSecretAccessKey")
 }
 
 // byJobStartTime sorts a list of jobs by start timestamp, using their names as a tie breaker.
@@ -165,29 +171,48 @@ func setUpEnvVariables(backup *backupv1alpha1.Backup) []apiv1.EnvVar {
 	if backup.Spec.Backend.S3 != nil {
 		r := fmt.Sprintf("s3:%s/%s", backup.Spec.Backend.S3.Endpoint, backup.Spec.Backend.S3.Bucket)
 
-		vars = append(vars, []apiv1.EnvVar{
-			{
+		accessKeyID := apiv1.EnvVar{
+			Name:  awsAccessKeyID,
+			Value: globalAccessKeyID,
+		}
+		secretKeyID := apiv1.EnvVar{
+			Name:  awsSecretAccessKey,
+			Value: globalSecretAccessKey,
+		}
+
+		if globalAccessKeyID == "" && globalSecretAccessKey == "" && backup.Spec.Backend.S3.CredentialsSecretName == "" {
+			backup.Spec.Backend.S3.CredentialsSecretName = "backup-credentials"
+		}
+		if backup.Spec.Backend.S3.CredentialsSecretName != "" {
+			accessKeyID = apiv1.EnvVar{
 				Name: awsAccessKeyID,
 				ValueFrom: &apiv1.EnvVarSource{
 					SecretKeyRef: &apiv1.SecretKeySelector{
 						LocalObjectReference: apiv1.LocalObjectReference{
-							Name: "backup-credentials",
+							Name: backup.Spec.Backend.S3.CredentialsSecretName,
 						},
 						Key: "username",
 					},
 				},
-			},
-			{
+			}
+			secretKeyID = apiv1.EnvVar{
 				Name: awsSecretAccessKey,
 				ValueFrom: &apiv1.EnvVarSource{
 					SecretKeyRef: &apiv1.SecretKeySelector{
 						LocalObjectReference: apiv1.LocalObjectReference{
-							Name: "backup-credentials",
+							Name: backup.Spec.Backend.S3.CredentialsSecretName,
 						},
 						Key: "password",
 					},
 				},
-			},
+			}
+		}
+		vars = append(vars, []apiv1.EnvVar{
+			accessKeyID,
+			secretKeyID,
+		}...)
+
+		vars = append(vars, []apiv1.EnvVar{
 			{
 				Name:  resticRepository,
 				Value: r,

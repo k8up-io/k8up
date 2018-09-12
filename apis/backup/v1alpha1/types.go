@@ -1,6 +1,8 @@
 package v1alpha1
 
 import (
+	"strings"
+
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -83,6 +85,44 @@ type Backend struct {
 	Rest     *RestServerSpec `json:"rest,omitempty"`
 }
 
+// String returns a stringrepresentation of the repo
+// it concatenates all repos comma separated. It may support
+// multiple repos in the same instance in the future
+func (b *Backend) String() string {
+	allRepos := []string{}
+
+	if b.Azure != nil {
+		allRepos = append(allRepos, b.Azure.Container)
+	}
+
+	if b.B2 != nil {
+		allRepos = append(allRepos, b.B2.Bucket)
+	}
+
+	if b.GCS != nil {
+		allRepos = append(allRepos, b.GCS.Bucket)
+	}
+
+	if b.Local != nil {
+		allRepos = append(allRepos, b.Local.MountPath)
+	}
+
+	if b.Rest != nil {
+		allRepos = append(allRepos, b.Rest.URL)
+	}
+
+	if b.S3 != nil {
+		allRepos = append(allRepos, b.S3.Endpoint+b.S3.Bucket)
+	}
+
+	if b.Swift != nil {
+		allRepos = append(allRepos, b.Swift.Container)
+	}
+
+	return strings.Join(allRepos, ",")
+
+}
+
 type LocalSpec struct {
 	corev1.VolumeSource `json:",inline"`
 	MountPath           string `json:"mountPath,omitempty"`
@@ -93,8 +133,10 @@ type S3Spec struct {
 	Endpoint string `json:"endpoint,omitempty"`
 	Bucket   string `json:"bucket,omitempty"`
 	Prefix   string `json:"prefix,omitempty"`
-	Username string `json:"username,omitempty"` //ONLY for development
-	Password string `json:"password,omitempty"` //ONLY for development
+	// +optional
+	CredentialsSecretName string `json:"credentialssecretname,omitempty"`
+	Username              string `json:"username,omitempty"` //ONLY for development
+	Password              string `json:"password,omitempty"` //ONLY for development
 }
 
 type GCSSpec struct {
