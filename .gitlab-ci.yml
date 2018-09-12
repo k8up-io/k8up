@@ -11,7 +11,7 @@ variables:
 
 build:
   script:
-    - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN $REGISTRY
+    - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN $REGISTRY
     - docker build -t ${REGISTRY}/${IMAGE_NAME} .
     - docker push ${REGISTRY}/${IMAGE_NAME}
   tags:
@@ -21,11 +21,10 @@ build:
 
 build:tag:
   script:
-    - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN $REGISTRY
-    - docker build -t ${REGISTRY}/${IMAGE_NAME}:${CI_BUILD_TAG} .
-    - docker push ${REGISTRY}/${IMAGE_NAME}:${CI_BUILD_TAG}
+    - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN $REGISTRY
+    - docker build -t ${REGISTRY}/${IMAGE_NAME}:${CI_COMMIT_TAG} .
+    - docker push ${REGISTRY}/${IMAGE_NAME}:${CI_COMMIT_TAG}
   only:
     - tags
   tags:
     - dockerbuild
-
