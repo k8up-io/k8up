@@ -49,6 +49,9 @@ type BackupSpec struct {
 	// PromURL sets a prometheus push URL where the backup container send metrics to
 	// +optional
 	PromURL string `json:"promURL,omitempty"`
+	// RepoPasswordSecretRef references a secret key to look up the restic repository password
+	// +optional
+	RepoPasswordSecretRef *SecretKeySelector `json:"repoPasswordSecretRef,omitempty"`
 }
 
 type BackupStatus struct {

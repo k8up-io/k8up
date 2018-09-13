@@ -187,6 +187,15 @@ func (in *BackupSpec) DeepCopyInto(out *BackupSpec) {
 	*out = *in
 	in.Backend.DeepCopyInto(&out.Backend)
 	in.Retention.DeepCopyInto(&out.Retention)
+	if in.RepoPasswordSecretRef != nil {
+		in, out := &in.RepoPasswordSecretRef, &out.RepoPasswordSecretRef
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(SecretKeySelector)
+			**out = **in
+		}
+	}
 	return
 }
 

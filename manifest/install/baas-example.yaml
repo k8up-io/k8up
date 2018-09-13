@@ -2,7 +2,6 @@ apiVersion: appuio.ch/v1alpha1
 kind: Backup
 metadata:
   name: baas-test
-  namespace: myproject
 spec:
   dryRun: true
   schedule: "* * * * *" #every minute
@@ -19,6 +18,9 @@ spec:
         name: backup-credentials
         key: secret-access-key
   retention:
-    keepLast: 2
+    keepLast: 5
     keepDaily: 14
   promURL: http://10.144.1.133:9091
+  repoPasswordSecretRef:
+    name: backup-repo
+    key: password
