@@ -5,10 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## [unreleased]
+## [v0.0.7] - 2018-09-13
+### Added
+- Global repo password. The operator can use a global password for Restic repositories for backups which don't specify an own password.
+
+## [v0.0.6] - 2018-09-12
 ### Added
 - Manage service accounts, roles and rolebindings in namespaces for backup commands. Please see the README chapter `Installation changes` about the new permissions necessary for the operator service account.
 - Global cluster state. The operator now knows when a prune job is running to a shared repository and waits before starting the next backup/prune.
+- Global S3 credentials. The operator can use global S3 credentials to be used with backups which don't specify own credentials.
 ### Fixed
 - Ignore if the service account, roles or rilebindings already exist in the namespace.
 
