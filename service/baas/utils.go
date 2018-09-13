@@ -169,7 +169,8 @@ func setUpEnvVariables(backup *backupv1alpha1.Backup) []apiv1.EnvVar {
 	vars = append(vars, setUpRetention(backup)...)
 
 	if backup.Spec.Backend.S3 != nil {
-		r := fmt.Sprintf("s3:%s/%s", backup.Spec.Backend.S3.Endpoint, backup.Spec.Backend.S3.Bucket)
+		s3Backend := backup.Spec.Backend.S3
+		r := fmt.Sprintf("s3:%s/%s", s3Backend.Endpoint, s3Backend.Bucket)
 
 		accessKeyID := apiv1.EnvVar{
 			Name:  awsAccessKeyID,
@@ -180,18 +181,13 @@ func setUpEnvVariables(backup *backupv1alpha1.Backup) []apiv1.EnvVar {
 			Value: globalSecretAccessKey,
 		}
 
-		if globalAccessKeyID == "" && globalSecretAccessKey == "" && backup.Spec.Backend.S3.CredentialsSecretName == "" {
-			backup.Spec.Backend.S3.CredentialsSecretName = "backup-credentials"
-		}
-		if backup.Spec.Backend.S3.CredentialsSecretName != "" {
+		if s3Backend.AccessKeyIDSecretRef != nil && s3Backend.SecretAccessKeySecretRef != nil {
 			accessKeyID = apiv1.EnvVar{
 				Name: awsAccessKeyID,
 				ValueFrom: &apiv1.EnvVarSource{
 					SecretKeyRef: &apiv1.SecretKeySelector{
-						LocalObjectReference: apiv1.LocalObjectReference{
-							Name: backup.Spec.Backend.S3.CredentialsSecretName,
-						},
-						Key: "username",
+						LocalObjectReference: s3Backend.AccessKeyIDSecretRef.LocalObjectReference,
+						Key:                  s3Backend.AccessKeyIDSecretRef.Key,
 					},
 				},
 			}
@@ -199,10 +195,8 @@ func setUpEnvVariables(backup *backupv1alpha1.Backup) []apiv1.EnvVar {
 				Name: awsSecretAccessKey,
 				ValueFrom: &apiv1.EnvVarSource{
 					SecretKeyRef: &apiv1.SecretKeySelector{
-						LocalObjectReference: apiv1.LocalObjectReference{
-							Name: backup.Spec.Backend.S3.CredentialsSecretName,
-						},
-						Key: "password",
+						LocalObjectReference: s3Backend.SecretAccessKeySecretRef.LocalObjectReference,
+						Key:                  s3Backend.SecretAccessKeySecretRef.Key,
 					},
 				},
 			}

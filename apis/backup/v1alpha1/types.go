@@ -130,13 +130,13 @@ type LocalSpec struct {
 }
 
 type S3Spec struct {
-	Endpoint string `json:"endpoint,omitempty"`
-	Bucket   string `json:"bucket,omitempty"`
-	Prefix   string `json:"prefix,omitempty"`
-	// +optional
-	CredentialsSecretName string `json:"credentialssecretname,omitempty"`
-	Username              string `json:"username,omitempty"` //ONLY for development
-	Password              string `json:"password,omitempty"` //ONLY for development
+	Endpoint                 string             `json:"endpoint,omitempty"`
+	Bucket                   string             `json:"bucket,omitempty"`
+	Prefix                   string             `json:"prefix,omitempty"`
+	AccessKeyIDSecretRef     *SecretKeySelector `json:"accessKeyIDSecretRef,omitempty"`
+	SecretAccessKeySecretRef *SecretKeySelector `json:"secretAccessKeySecretRef,omitempty"`
+	Username                 string             `json:"username,omitempty"` //ONLY for development
+	Password                 string             `json:"password,omitempty"` //ONLY for development
 }
 
 type GCSSpec struct {
@@ -171,4 +171,11 @@ type RetentionPolicy struct {
 	KeepMonthly int      `json:"keepMonthly,omitempty"`
 	KeepYearly  int      `json:"keepYearly,omitempty"`
 	KeepTags    []string `json:"keepTags,omitempty"`
+}
+
+type SecretKeySelector struct {
+	// The name of the secret in the same namespace to select from.
+	corev1.LocalObjectReference `json:",inline"`
+	// The key of the secret to select from. Must be a valid secret key.
+	Key string `json:"key"`
 }
