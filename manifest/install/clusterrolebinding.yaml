@@ -2,13 +2,13 @@
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1beta1
 metadata:
-  name: crd-creator-global
+  name: baas-operator
 subjects:
 - kind: ServiceAccount
-  namespace: myproject
-  name: backup-account
+  namespace: appuio-baas-operator
+  name: baas-operator
   apiGroup:
 roleRef:
   kind: ClusterRole
-  name: crd-creator
+  name: baas-operator
   apiGroup: rbac.authorization.k8s.io
