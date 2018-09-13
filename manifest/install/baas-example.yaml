@@ -12,6 +12,12 @@ spec:
     s3:
       endpoint: http://10.144.1.133:9000
       bucket: baas
+      accessKeyIDSecretRef:
+        name: backup-credentials
+        key: access-key-id
+      secretAccessKeySecretRef:
+        name: backup-credentials
+        key: secret-access-key
   retention:
     keepLast: 2
     keepDaily: 14
