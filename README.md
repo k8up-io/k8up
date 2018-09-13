@@ -146,6 +146,7 @@ Various things can be configured via environment variables:
 * `BACKUP_PODEXECACCOUNTNAME` set the service account name that should be used for the pod command execution, default: `pod-executor`
 * `BACKUP_GLOBALACCESSKEYID` set the S3 access key id to be used globaly
 * `BACKUP_GLOBALSECRETACCESSKEY` set the S3 secret access key to be used globaly
+* `BACKUP_GLOBALREPOPASSWORD` set the restic repository password to be used globaly
 
 You only need to adjust `BACKUP_IMAGE` everything else can be left default.
 

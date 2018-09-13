@@ -26,6 +26,7 @@ var (
 	podExecAccountName    string
 	globalAccessKeyID     string
 	globalSecretAccessKey string
+	globalRepoPassword    string
 )
 
 const (
@@ -54,6 +55,7 @@ func init() {
 	viper.SetDefault("PodExecAccountName", "pod-executor")
 	viper.SetDefault("GlobalAccessKeyID", "")
 	viper.SetDefault("GlobalSecretAccessKey", "")
+	viper.SetDefault("GlobalRepoPassword", "")
 }
 
 func getConfig() {
@@ -67,6 +69,7 @@ func getConfig() {
 	podExecAccountName = viper.GetString("PodExecAccountName")
 	globalAccessKeyID = viper.GetString("GlobalAccessKeyID")
 	globalSecretAccessKey = viper.GetString("GlobalSecretAccessKey")
+	globalRepoPassword = viper.GetString("GlobalRepoPassword")
 }
 
 // byJobStartTime sorts a list of jobs by start timestamp, using their names as a tie breaker.
@@ -144,18 +147,26 @@ func setUpEnvVariables(backup *backupv1alpha1.Backup) []apiv1.EnvVar {
 	}
 
 	vars := make([]apiv1.EnvVar, 0)
-	vars = append(vars, []apiv1.EnvVar{
-		{
+
+	repoPasswordEnv := apiv1.EnvVar{
+		Name:  resticPassword,
+		Value: globalRepoPassword,
+	}
+
+	if backup.Spec.RepoPasswordSecretRef != nil {
+		repoPasswordEnv = apiv1.EnvVar{
 			Name: resticPassword,
 			ValueFrom: &apiv1.EnvVarSource{
 				SecretKeyRef: &apiv1.SecretKeySelector{
-					LocalObjectReference: apiv1.LocalObjectReference{
-						Name: "backup-repo",
-					},
-					Key: "password",
+					LocalObjectReference: backup.Spec.RepoPasswordSecretRef.LocalObjectReference,
+					Key:                  backup.Spec.RepoPasswordSecretRef.Key,
 				},
 			},
-		},
+		}
+	}
+
+	vars = append(vars, []apiv1.EnvVar{
+		repoPasswordEnv,
 		{
 			Name:  hostname,
 			Value: backup.Namespace,

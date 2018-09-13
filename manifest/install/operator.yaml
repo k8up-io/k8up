@@ -3,7 +3,6 @@ apiVersion: apps/v1beta1
 kind: Deployment
 metadata:
   name: baas
-  namespace: myproject
   labels:
     app: baas
 spec:
@@ -33,6 +32,11 @@ spec:
                 secretKeyRef:
                   name: global-credentials
                   key: secret-access-key
+            - name: BACKUP_GLOBALREPOPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: global-backup-repo
+                  key: password
       serviceAccountName: backup-account
 
 #kubectl create clusterrolebinding cluster-admin-binding-2   --clusterrole=cluster-admin   --user=system:system:serviceaccount:myproject:default
