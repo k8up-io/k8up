@@ -9,8 +9,8 @@ variables:
 
 before_script:
 - docker info
-- docker login -u gitlab-ci-token -p $CI_JOB_TOKEN $REGISTRY
-- docker login -u $DOCKER_HUB_USER -p $DOCKER_HUB_PASSWORD
+- echo $CI_JOB_TOKEN | docker login -u gitlab-ci-token --password-stdin $REGISTRY
+- echo $DOCKER_HUB_PASSWORD | docker login -u $DOCKER_HUB_USER --password-stdin
 
 build:
   script:
