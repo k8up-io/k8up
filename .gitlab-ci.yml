@@ -21,7 +21,7 @@ build:
   tags:
     - dockerbuild
   only:
-    - dev
+    - master
 
 build:tag:
   script:
