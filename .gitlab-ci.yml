@@ -2,18 +2,22 @@ image: docker:latest
 services:
   - docker:dind
 
-before_script:
-- docker info
-
 variables:
   REGISTRY: "registry.vshn.net"
   IMAGE_NAME: "vshn/baas"
+  IMAGE_NAME_DOCKER_HUB: "appuio/baas"
+
+before_script:
+- docker info
+- docker login -u gitlab-ci-token -p $CI_JOB_TOKEN $REGISTRY
+- docker login -u $DOCKER_HUB_USER -p $DOCKER_HUB_PASSWORD
 
 build:
   script:
-    - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN $REGISTRY
     - docker build -t ${REGISTRY}/${IMAGE_NAME} .
+    - docker tag ${REGISTRY}/${IMAGE_NAME} docker.io/${IMAGE_NAME_DOCKER_HUB}
     - docker push ${REGISTRY}/${IMAGE_NAME}
+    - docker push docker.io/${IMAGE_NAME_DOCKER_HUB}
   tags:
     - dockerbuild
   only:
@@ -21,9 +25,10 @@ build:
 
 build:tag:
   script:
-    - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN $REGISTRY
     - docker build -t ${REGISTRY}/${IMAGE_NAME}:${CI_COMMIT_TAG} .
+    - docker tag ${REGISTRY}/${IMAGE_NAME}:${CI_COMMIT_TAG} docker.io/${IMAGE_NAME_DOCKER_HUB}:${CI_COMMIT_TAG}
     - docker push ${REGISTRY}/${IMAGE_NAME}:${CI_COMMIT_TAG}
+    - docker push docker.io/${IMAGE_NAME_DOCKER_HUB}:${CI_COMMIT_TAG}
   only:
     - tags
   tags:
