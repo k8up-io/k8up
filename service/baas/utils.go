@@ -29,6 +29,7 @@ var (
 	globalRepoPassword    string
 	globalS3Endpoint      string
 	globalS3Bucket        string
+	globalStatsURL        string
 )
 
 const (
@@ -44,6 +45,7 @@ const (
 	keepMonthly        = "KEEP_MONTHLY"
 	keepYearly         = "KEEP_YEARLY"
 	keepTag            = "KEEP_TAG"
+	statsURL           = "STATS_URL"
 )
 
 func init() {
@@ -76,6 +78,7 @@ func getConfig() {
 	globalRepoPassword = viper.GetString("GlobalRepoPassword")
 	globalS3Endpoint = viper.GetString("GlobalS3Endpoint")
 	globalS3Bucket = viper.GetString("GlobalS3Bucket")
+	globalStatsURL = viper.GetString("GlobalStatsURL")
 }
 
 // byJobStartTime sorts a list of jobs by start timestamp, using their names as a tie breaker.
@@ -235,6 +238,17 @@ func setUpEnvVariables(backup *backupv1alpha1.Backup) []apiv1.EnvVar {
 		{
 			Name:  resticRepository,
 			Value: r,
+		},
+	}...)
+
+	if backup.Spec.StatsURL != "" {
+		globalStatsURL = backup.Spec.StatsURL
+	}
+
+	vars = append(vars, []apiv1.EnvVar{
+		{
+			Name:  statsURL,
+			Value: globalStatsURL,
 		},
 	}...)
 

@@ -52,6 +52,10 @@ type BackupSpec struct {
 	// RepoPasswordSecretRef references a secret key to look up the restic repository password
 	// +optional
 	RepoPasswordSecretRef *SecretKeySelector `json:"repoPasswordSecretRef,omitempty"`
+	// StatsURL sets an arbitrary URL where the wrestic container posts metrics and
+	// information about the snapshots to. This is in addition to the prometheus
+	// pushgateway.
+	StatsURL string `json:"statsURL,omitempty"`
 }
 
 type BackupStatus struct {
