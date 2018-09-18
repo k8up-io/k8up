@@ -108,6 +108,7 @@ func (p *PVCBackupper) initDefaults() {
 	viper.SetDefault("checkSchedule", "0 0 * * 0")
 	viper.SetDefault("podFilter", "backupPod=true")
 	viper.SetDefault("backupCommandAnnotation", "appuio.ch/backupcommand")
+	viper.SetDefault("GlobalKeepJobs", 10)
 }
 
 // SameSpec checks if the Backup Spec was changed
@@ -490,6 +491,9 @@ func (p *PVCBackupper) updateCRD() {
 }
 
 func (p *PVCBackupper) removeOldestJobs(jobs []batchv1.Job, maxJobs int32) {
+	if maxJobs == 0 {
+		maxJobs = viper.GetInt32("GlobalKeepJobs")
+	}
 	numToDelete := len(jobs) - int(maxJobs)
 	if numToDelete <= 0 {
 		return

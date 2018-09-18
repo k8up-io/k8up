@@ -21,12 +21,14 @@ var (
 	jobName               string
 	podName               string
 	restartPolicy         string
-	promURL               string
+	globalPromURL         string
 	podExecRoleName       string
 	podExecAccountName    string
 	globalAccessKeyID     string
 	globalSecretAccessKey string
 	globalRepoPassword    string
+	globalS3Endpoint      string
+	globalS3Bucket        string
 )
 
 const (
@@ -56,6 +58,8 @@ func init() {
 	viper.SetDefault("GlobalAccessKeyID", "")
 	viper.SetDefault("GlobalSecretAccessKey", "")
 	viper.SetDefault("GlobalRepoPassword", "")
+	viper.SetDefault("GlobalS3Endpoint", "")
+	viper.SetDefault("GlobalS3Bucket", "")
 }
 
 func getConfig() {
@@ -64,12 +68,14 @@ func getConfig() {
 	jobName = viper.GetString("jobName")
 	podName = viper.GetString("podName")
 	restartPolicy = viper.GetString("restartPolicy")
-	promURL = viper.GetString("PromURL")
+	globalPromURL = viper.GetString("PromURL")
 	podExecRoleName = viper.GetString("PodExecRoleName")
 	podExecAccountName = viper.GetString("PodExecAccountName")
 	globalAccessKeyID = viper.GetString("GlobalAccessKeyID")
 	globalSecretAccessKey = viper.GetString("GlobalSecretAccessKey")
 	globalRepoPassword = viper.GetString("GlobalRepoPassword")
+	globalS3Endpoint = viper.GetString("GlobalS3Endpoint")
+	globalS3Bucket = viper.GetString("GlobalS3Bucket")
 }
 
 // byJobStartTime sorts a list of jobs by start timestamp, using their names as a tie breaker.
@@ -142,6 +148,7 @@ func newJobDefinition(volumes []apiv1.Volume, controllerName string, backup *bac
 
 func setUpEnvVariables(backup *backupv1alpha1.Backup) []apiv1.EnvVar {
 
+	promURL := globalPromURL
 	if backup.Spec.PromURL != "" {
 		promURL = backup.Spec.PromURL
 	}
@@ -179,17 +186,23 @@ func setUpEnvVariables(backup *backupv1alpha1.Backup) []apiv1.EnvVar {
 
 	vars = append(vars, setUpRetention(backup)...)
 
-	if backup.Spec.Backend.S3 != nil {
-		s3Backend := backup.Spec.Backend.S3
-		r := fmt.Sprintf("s3:%s/%s", s3Backend.Endpoint, s3Backend.Bucket)
+	s3Endpoint, s3Bucket := globalS3Endpoint, globalS3Bucket
+	accessKeyID := apiv1.EnvVar{
+		Name:  awsAccessKeyID,
+		Value: globalAccessKeyID,
+	}
+	secretKeyID := apiv1.EnvVar{
+		Name:  awsSecretAccessKey,
+		Value: globalSecretAccessKey,
+	}
 
-		accessKeyID := apiv1.EnvVar{
-			Name:  awsAccessKeyID,
-			Value: globalAccessKeyID,
+	s3Backend := backup.Spec.Backend.S3
+	if s3Backend != nil {
+		if s3Backend.Endpoint != "" {
+			s3Endpoint = s3Backend.Endpoint
 		}
-		secretKeyID := apiv1.EnvVar{
-			Name:  awsSecretAccessKey,
-			Value: globalSecretAccessKey,
+		if s3Backend.Bucket != "" {
+			s3Bucket = s3Backend.Bucket
 		}
 
 		if s3Backend.AccessKeyIDSecretRef != nil && s3Backend.SecretAccessKeySecretRef != nil {
@@ -212,19 +225,18 @@ func setUpEnvVariables(backup *backupv1alpha1.Backup) []apiv1.EnvVar {
 				},
 			}
 		}
-		vars = append(vars, []apiv1.EnvVar{
-			accessKeyID,
-			secretKeyID,
-		}...)
-
-		vars = append(vars, []apiv1.EnvVar{
-			{
-				Name:  resticRepository,
-				Value: r,
-			},
-		}...)
-		return vars
 	}
+
+	r := fmt.Sprintf("s3:%s/%s", s3Endpoint, s3Bucket)
+
+	vars = append(vars, []apiv1.EnvVar{
+		accessKeyID,
+		secretKeyID,
+		{
+			Name:  resticRepository,
+			Value: r,
+		},
+	}...)
 
 	return vars
 }
