@@ -1,9 +1,12 @@
 package main
 
 import (
+	"bytes"
+	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
+	"net/http"
 	"os"
 	"strconv"
 	"strings"
@@ -22,6 +25,7 @@ const (
 	keepYearlyEnv  = "KEEP_YEARLY"
 	keepTagEnv     = "KEEP_TAG"
 	promURLEnv     = "PROM_URL"
+	statsURLEnv    = "STATS_URL"
 	backupDirEnv   = "BACKUP_DIR"
 	listTimeoutEnv = "BACKUP_LIST_TIMEOUT"
 	//Arguments for restic
@@ -67,6 +71,12 @@ type snapshot struct {
 	UID      int       `json:"uid"`
 	Gid      int       `json:"gid"`
 	Tags     []string  `json:"tags"`
+}
+
+type stats struct {
+	Name          string     `json:"name"`
+	BackupMetrics rawMetrics `json:"backup_metrics"`
+	Snapshots     []snapshot `json:"snapshots"`
 }
 
 func main() {
@@ -156,20 +166,17 @@ func parseBackupOutput(stdout, stderr []string) {
 		errorCount++
 	}
 
-	metrics.NewFiles.Set(float64(newFiles))
-	metrics.Update(metrics.NewFiles)
-	metrics.ChangedFiles.Set(float64(changedFiles))
-	metrics.Update(metrics.ChangedFiles)
-	metrics.UnmodifiedFiles.Set(float64(unmodifiedFiles))
-	metrics.Update(metrics.UnmodifiedFiles)
-	metrics.NewDirs.Set(float64(newDirs))
-	metrics.Update(metrics.NewDirs)
-	metrics.ChangedDirs.Set(float64(changedDirs))
-	metrics.Update(metrics.ChangedDirs)
-	metrics.UnmodifiedDirs.Set(float64(unmodifiedDirs))
-	metrics.Update(metrics.UnmodifiedDirs)
-	metrics.Errors.Set(float64(errorCount))
-	metrics.Update(metrics.Errors)
+	newMetrics := rawMetrics{
+		NewDirs:         float64(newDirs),
+		NewFiles:        float64(newFiles),
+		ChangedFiles:    float64(changedFiles),
+		UnmodifiedFiles: float64(unmodifiedFiles),
+		ChangedDirs:     float64(changedDirs),
+		UnmodifiedDirs:  float64(unmodifiedDirs),
+	}
+
+	updateProm(newMetrics)
+	postToURL(newMetrics)
 
 	if errorCount > 0 && commandError == nil {
 		commandError = fmt.Errorf("there where %v errors", errorCount)
@@ -194,4 +201,50 @@ func parseCheckOutput(stdout, stderr []string) {
 func outputToSlice(output []byte) []string {
 	stringOutput := string(output)
 	return strings.Split(stringOutput, "\n")
+}
+
+func updateProm(newMetrics rawMetrics) {
+	metrics.NewFiles.Set(newMetrics.NewFiles)
+	metrics.Update(metrics.NewFiles)
+	metrics.ChangedFiles.Set(newMetrics.ChangedFiles)
+	metrics.Update(metrics.ChangedFiles)
+	metrics.UnmodifiedFiles.Set(newMetrics.UnmodifiedFiles)
+	metrics.Update(metrics.UnmodifiedFiles)
+	metrics.NewDirs.Set(newMetrics.NewDirs)
+	metrics.Update(metrics.NewDirs)
+	metrics.ChangedDirs.Set(newMetrics.ChangedDirs)
+	metrics.Update(metrics.ChangedDirs)
+	metrics.UnmodifiedDirs.Set(newMetrics.UnmodifiedDirs)
+	metrics.Update(metrics.UnmodifiedDirs)
+	metrics.Errors.Set(newMetrics.Errors)
+	metrics.Update(metrics.Errors)
+}
+
+func postToURL(newMetrics rawMetrics) {
+	url := os.Getenv(statsURLEnv)
+	if url == "" {
+		return
+	}
+
+	snapshotList, err := listSnapshots()
+	if err != nil {
+		commandError = err
+	}
+
+	currentStats := stats{
+		Name:          os.Getenv(hostname),
+		BackupMetrics: newMetrics,
+		Snapshots:     snapshotList,
+	}
+
+	JSONStats, err := json.Marshal(currentStats)
+	if err != nil {
+		commandError = err
+		return
+	}
+
+	postBody := bytes.NewReader(JSONStats)
+
+	http.Post(url, "application/json", postBody)
+
 }
