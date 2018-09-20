@@ -26,6 +26,10 @@ type Backup struct {
 	// Status of the backups
 	// +optional
 	Status BackupStatus `json:"status,omitempty"`
+
+	// GlobalOverrides is a place where where the result of the global and CRD
+	// merge can be saved in the CRD without any influence on Kubernetes.
+	GlobalOverrides GlobalOverrides `json:"-"`
 }
 
 // BackupSpec is the spec for a BassWorker resource.
@@ -38,7 +42,7 @@ type BackupSpec struct {
 	// CheckSchedule defines when the check jobs should run default once a week
 	CheckSchedule string `json:"checkSchedule,omitempty"`
 	// Backend contains the restic repo where the job should backup to.
-	Backend Backend `json:"backend,omitempty"`
+	Backend *Backend `json:"backend,omitempty"`
 	// Paused indicates if the backup is currently paused or not.
 	// +optional
 	Paused bool `json:"paused,omitempty"`
@@ -61,10 +65,10 @@ type BackupSpec struct {
 type BackupStatus struct {
 	// LastBackupStart time
 	// +optional
-	LastBackupStart string `json:"last_backup_start,omitempty"`
+	LastBackupStart string `json:"lastBackupStart,omitempty"`
 	// LastBackupEnd time
 	// +optional
-	LastBackupEnd string `json:"last_backup_end,omitempty"`
+	LastBackupEnd string `json:"lastBackupEnd,omitempty"`
 	// LastBackupStatus
 	// +optional
 	LastBackupStatus string `json:"lastBackupDtatus,omitempty"`
@@ -81,7 +85,6 @@ type BackupList struct {
 }
 
 type Backend struct {
-	// Password contains the repository password. ONLY for development
 	Password string          `json:"password,omitempty"`
 	Local    *LocalSpec      `json:"local,omitempty"`
 	S3       *S3Spec         `json:"s3,omitempty"`
@@ -185,4 +188,10 @@ type SecretKeySelector struct {
 	corev1.LocalObjectReference `json:",inline"`
 	// The key of the secret to select from. Must be a valid secret key.
 	Key string `json:"key"`
+}
+
+type GlobalOverrides struct {
+	// RegisteredBackend is used to track what backend is actually used after
+	// the merge with the global settings
+	RegisteredBackend *Backend `json:"-"`
 }

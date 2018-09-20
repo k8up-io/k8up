@@ -1,4 +1,4 @@
-package baas
+package backup
 
 import (
 	"fmt"
@@ -8,28 +8,10 @@ import (
 	"time"
 
 	backupv1alpha1 "git.vshn.net/vshn/baas/apis/backup/v1alpha1"
-	"github.com/spf13/viper"
 	batchv1 "k8s.io/api/batch/v1"
 	apiv1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-)
-
-var (
-	image                 string
-	dataPath              string
-	jobName               string
-	podName               string
-	restartPolicy         string
-	globalPromURL         string
-	podExecRoleName       string
-	podExecAccountName    string
-	globalAccessKeyID     string
-	globalSecretAccessKey string
-	globalRepoPassword    string
-	globalS3Endpoint      string
-	globalS3Bucket        string
-	globalStatsURL        string
 )
 
 const (
@@ -47,39 +29,6 @@ const (
 	keepTag            = "KEEP_TAG"
 	statsURL           = "STATS_URL"
 )
-
-func init() {
-	viper.SetDefault("image", "172.30.1.1:5000/myproject/restic")
-	viper.SetDefault("dataPath", "/data")
-	viper.SetDefault("jobName", "backupjob")
-	viper.SetDefault("podName", "backupjob-pod")
-	viper.SetDefault("restartPolicy", "OnFailure")
-	viper.SetDefault("PromURL", "http://127.0.0.1/")
-	viper.SetDefault("PodExecRoleName", "pod-executor")
-	viper.SetDefault("PodExecAccountName", "pod-executor")
-	viper.SetDefault("GlobalAccessKeyID", "")
-	viper.SetDefault("GlobalSecretAccessKey", "")
-	viper.SetDefault("GlobalRepoPassword", "")
-	viper.SetDefault("GlobalS3Endpoint", "")
-	viper.SetDefault("GlobalS3Bucket", "")
-}
-
-func getConfig() {
-	image = viper.GetString("image")
-	dataPath = viper.GetString("dataPath")
-	jobName = viper.GetString("jobName")
-	podName = viper.GetString("podName")
-	restartPolicy = viper.GetString("restartPolicy")
-	globalPromURL = viper.GetString("PromURL")
-	podExecRoleName = viper.GetString("PodExecRoleName")
-	podExecAccountName = viper.GetString("PodExecAccountName")
-	globalAccessKeyID = viper.GetString("GlobalAccessKeyID")
-	globalSecretAccessKey = viper.GetString("GlobalSecretAccessKey")
-	globalRepoPassword = viper.GetString("GlobalRepoPassword")
-	globalS3Endpoint = viper.GetString("GlobalS3Endpoint")
-	globalS3Bucket = viper.GetString("GlobalS3Bucket")
-	globalStatsURL = viper.GetString("GlobalStatsURL")
-}
 
 // byJobStartTime sorts a list of jobs by start timestamp, using their names as a tie breaker.
 type byJobStartTime []batchv1.Job
@@ -99,19 +48,18 @@ func (o byJobStartTime) Less(i, j int) bool {
 	return o[i].Status.StartTime.Before(o[j].Status.StartTime)
 }
 
-func newJobDefinition(volumes []apiv1.Volume, controllerName string, backup *backupv1alpha1.Backup) *batchv1.Job {
-	getConfig()
+func newJobDefinition(volumes []apiv1.Volume, controllerName string, backup *backupv1alpha1.Backup, config config) *batchv1.Job {
 	mounts := make([]apiv1.VolumeMount, 0)
 	for _, volume := range volumes {
 		tmpMount := apiv1.VolumeMount{
 			Name:      volume.Name,
-			MountPath: path.Join(dataPath, volume.Name),
+			MountPath: path.Join(config.dataPath, volume.Name),
 		}
 		mounts = append(mounts, tmpMount)
 	}
 
 	// We want job names for a given nominal start time to have a deterministic name to avoid the same job being created twice
-	name := fmt.Sprintf("%s-%d", jobName, time.Now().Unix())
+	name := fmt.Sprintf("%s-%d", config.jobName, time.Now().Unix())
 
 	return &batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{
@@ -129,14 +77,14 @@ func newJobDefinition(volumes []apiv1.Volume, controllerName string, backup *bac
 					},
 				},
 				Spec: apiv1.PodSpec{
-					RestartPolicy: apiv1.RestartPolicy(restartPolicy),
+					RestartPolicy: apiv1.RestartPolicy(config.restartPolicy),
 					Volumes:       volumes,
 					Containers: []apiv1.Container{
 						{
-							Name:            podName,
-							Image:           image,
+							Name:            config.podName,
+							Image:           config.image,
 							VolumeMounts:    mounts,
-							Env:             setUpEnvVariables(backup),
+							Env:             setUpEnvVariables(backup, config),
 							ImagePullPolicy: apiv1.PullAlways,
 							TTY:             true,
 							Stdin:           true,
@@ -149,9 +97,9 @@ func newJobDefinition(volumes []apiv1.Volume, controllerName string, backup *bac
 	}
 }
 
-func setUpEnvVariables(backup *backupv1alpha1.Backup) []apiv1.EnvVar {
+func setUpEnvVariables(backup *backupv1alpha1.Backup, config config) []apiv1.EnvVar {
 
-	promURL := globalPromURL
+	promURL := config.globalPromURL
 	if backup.Spec.PromURL != "" {
 		promURL = backup.Spec.PromURL
 	}
@@ -160,7 +108,7 @@ func setUpEnvVariables(backup *backupv1alpha1.Backup) []apiv1.EnvVar {
 
 	repoPasswordEnv := apiv1.EnvVar{
 		Name:  resticPassword,
-		Value: globalRepoPassword,
+		Value: config.globalRepoPassword,
 	}
 
 	if backup.Spec.RepoPasswordSecretRef != nil {
@@ -189,23 +137,23 @@ func setUpEnvVariables(backup *backupv1alpha1.Backup) []apiv1.EnvVar {
 
 	vars = append(vars, setUpRetention(backup)...)
 
-	s3Endpoint, s3Bucket := globalS3Endpoint, globalS3Bucket
-	accessKeyID := apiv1.EnvVar{
-		Name:  awsAccessKeyID,
-		Value: globalAccessKeyID,
-	}
-	secretKeyID := apiv1.EnvVar{
-		Name:  awsSecretAccessKey,
-		Value: globalSecretAccessKey,
-	}
-
-	s3Backend := backup.Spec.Backend.S3
+	s3Backend := backup.GlobalOverrides.RegisteredBackend.S3
 	if s3Backend != nil {
-		if s3Backend.Endpoint != "" {
-			s3Endpoint = s3Backend.Endpoint
+		s3Endpoint := s3Backend.Endpoint
+		s3Bucket := s3Backend.Bucket
+
+		accessKeyID := apiv1.EnvVar{
+			Name:  awsAccessKeyID,
+			Value: config.globalAccessKeyID,
 		}
-		if s3Backend.Bucket != "" {
-			s3Bucket = s3Backend.Bucket
+		secretKeyID := apiv1.EnvVar{
+			Name:  awsSecretAccessKey,
+			Value: config.globalSecretAccessKey,
+		}
+
+		if backup.Spec.Backend.S3 != nil {
+			s3Backend.SecretAccessKeySecretRef = backup.Spec.Backend.S3.SecretAccessKeySecretRef
+			s3Backend.AccessKeyIDSecretRef = backup.Spec.Backend.S3.AccessKeyIDSecretRef
 		}
 
 		if s3Backend.AccessKeyIDSecretRef != nil && s3Backend.SecretAccessKeySecretRef != nil {
@@ -228,27 +176,26 @@ func setUpEnvVariables(backup *backupv1alpha1.Backup) []apiv1.EnvVar {
 				},
 			}
 		}
+		r := fmt.Sprintf("s3:%s/%s", s3Endpoint, s3Bucket)
+
+		vars = append(vars, []apiv1.EnvVar{
+			accessKeyID,
+			secretKeyID,
+			{
+				Name:  resticRepository,
+				Value: r,
+			},
+		}...)
 	}
 
-	r := fmt.Sprintf("s3:%s/%s", s3Endpoint, s3Bucket)
-
-	vars = append(vars, []apiv1.EnvVar{
-		accessKeyID,
-		secretKeyID,
-		{
-			Name:  resticRepository,
-			Value: r,
-		},
-	}...)
-
 	if backup.Spec.StatsURL != "" {
-		globalStatsURL = backup.Spec.StatsURL
+		config.globalStatsURL = backup.Spec.StatsURL
 	}
 
 	vars = append(vars, []apiv1.EnvVar{
 		{
 			Name:  statsURL,
-			Value: globalStatsURL,
+			Value: config.globalStatsURL,
 		},
 	}...)
 
@@ -316,12 +263,10 @@ func setUpRetention(backup *backupv1alpha1.Backup) []apiv1.EnvVar {
 	return retentionRules
 }
 
-func newServiceAccontDefinition(backup *backupv1alpha1.Backup) serviceAccount {
-	getConfig()
-
+func newServiceAccontDefinition(backup *backupv1alpha1.Backup, config config) serviceAccount {
 	role := rbacv1.Role{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      podExecRoleName,
+			Name:      config.podExecRoleName,
 			Namespace: backup.Namespace,
 			OwnerReferences: []metav1.OwnerReference{
 				newOwnerReference(backup),
@@ -345,7 +290,7 @@ func newServiceAccontDefinition(backup *backupv1alpha1.Backup) serviceAccount {
 
 	roleBinding := rbacv1.RoleBinding{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      podExecRoleName + "-namespaced",
+			Name:      config.podExecRoleName + "-namespaced",
 			Namespace: backup.Namespace,
 			OwnerReferences: []metav1.OwnerReference{
 				newOwnerReference(backup),
@@ -355,19 +300,19 @@ func newServiceAccontDefinition(backup *backupv1alpha1.Backup) serviceAccount {
 			{
 				Kind:      "ServiceAccount",
 				Namespace: backup.Namespace,
-				Name:      podExecRoleName,
+				Name:      config.podExecRoleName,
 			},
 		},
 		RoleRef: rbacv1.RoleRef{
 			Kind:     "Role",
-			Name:     podExecRoleName,
+			Name:     config.podExecRoleName,
 			APIGroup: "rbac.authorization.k8s.io",
 		},
 	}
 
 	account := apiv1.ServiceAccount{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      podExecAccountName,
+			Name:      config.podExecAccountName,
 			Namespace: backup.Namespace,
 			OwnerReferences: []metav1.OwnerReference{
 				newOwnerReference(backup),

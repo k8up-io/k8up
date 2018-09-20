@@ -32,6 +32,7 @@ type Baas struct {
 	cron             *cron.Cron
 	metrics          *operatorMetrics
 	clusterWideState clusterWideState
+	config           config
 }
 
 // NewBaas returns a new baas.
@@ -51,6 +52,7 @@ func NewBaas(k8sCli kubernetes.Interface, baasCLI baas8scli.Interface, logger lo
 			runningBackupsPerRepo: &sync.Map{},
 			runningPruneOnRepo:    &sync.Map{},
 		},
+		config: newConfig(),
 	}
 }
 
@@ -78,13 +80,30 @@ func (b *Baas) EnsureBackup(backup *backupv1alpha1.Backup) error {
 	// Create a Backup.
 	backupCopy := backup.DeepCopy()
 
-	err := createServiceAccountAndBinding(backupCopy, b.k8sCli)
+	err := createServiceAccountAndBinding(backupCopy, b.k8sCli, b.config)
 	if err != nil {
 		return err
 	}
 
+	var registerBackend = new(backupv1alpha1.Backend)
+	registerBackend.S3 = &backupv1alpha1.S3Spec{}
+	if backupCopy.Spec.Backend.S3 != nil {
+		registerBackend.S3.Bucket = backupCopy.Spec.Backend.S3.Bucket
+		registerBackend.S3.Endpoint = backupCopy.Spec.Backend.S3.Endpoint
+	} else {
+		registerBackend.S3.Bucket = ""
+		registerBackend.S3.Endpoint = ""
+	}
+
+	if registerBackend.S3.Bucket == "" {
+		registerBackend.S3.Bucket = b.config.globalS3Bucket
+	}
+	if registerBackend.S3.Endpoint == "" {
+		registerBackend.S3.Endpoint = b.config.globalS3Endpoint
+	}
+
 	// Store how many time we've seen the same repository.
-	backendString := backupCopy.Spec.Backend.String()
+	backendString := registerBackend.String()
 	var number int
 	if value, ok := b.clusterWideState.repoMap.Load(backendString); ok {
 		number = value.(int)
@@ -98,7 +117,9 @@ func (b *Baas) EnsureBackup(backup *backupv1alpha1.Backup) error {
 	b.clusterWideState.runningBackupsPerRepo.Store(backendString, 0)
 	b.clusterWideState.runningPruneOnRepo.Store(backendString, 0)
 
-	bck = NewPVCBackupper(backupCopy, b.k8sCli, b.baasCLI, b.logger, b.cron, b.metrics, b.clusterWideState)
+	backupCopy.GlobalOverrides.RegisteredBackend = registerBackend
+
+	bck = NewPVCBackupper(backupCopy, b.k8sCli, b.baasCLI, b.logger, b.cron, b.metrics, b.clusterWideState, b.config)
 
 	b.reg.Store(name, bck)
 	return bck.Start()
@@ -120,9 +141,9 @@ func (b *Baas) DeleteBackup(name string) error {
 	return nil
 }
 
-func createServiceAccountAndBinding(backup *backupv1alpha1.Backup, k8sCli kubernetes.Interface) error {
+func createServiceAccountAndBinding(backup *backupv1alpha1.Backup, k8sCli kubernetes.Interface, config config) error {
 
-	account := newServiceAccontDefinition(backup)
+	account := newServiceAccontDefinition(backup, config)
 
 	_, err := k8sCli.RbacV1().RoleBindings(backup.Namespace).Create(account.roleBinding)
 	if err != nil {
