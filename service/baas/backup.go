@@ -185,12 +185,14 @@ func (p *PVCBackupper) listPVCs(annotation string) []apiv1.Volume {
 	for _, item := range claimlist.Items {
 		annotations := item.GetAnnotations()
 
-		if !p.containsAccessMode(item.Spec.AccessModes, "ReadWriteMany") {
+		tmpAnnotation, ok := annotations[annotation]
+
+		if !p.containsAccessMode(item.Spec.AccessModes, "ReadWriteMany") && !ok {
 			p.log.Infof("PVC %v isn't RWX", item.Name)
 			continue
 		}
 
-		if tmpAnnotation, ok := annotations[annotation]; !ok {
+		if !ok {
 			p.log.Infof("PVC %v doesn't have annotation, adding to list...", item.Name)
 		} else if anno, _ := strconv.ParseBool(tmpAnnotation); !anno {
 			p.log.Infof("PVC %v annotation is %v. Skipping", item.Name, tmpAnnotation)

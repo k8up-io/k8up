@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [Unreleased]
 ### Added
 - Pass arbitrary URL to wrestic, which is used to post additional backup information.
+- When setting the backup annotation on PVC it will be backed up even if RWO
 
 ## [v0.0.9] - 2018-09-18
 ### Added
