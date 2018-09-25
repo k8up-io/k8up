@@ -152,7 +152,7 @@ func genericCommand(args []string, options commandOptions) ([]string, []string) 
 	commandStdout, err := cmd.StdoutPipe()
 	commandStderr, err := cmd.StderrPipe()
 
-	finished := make(chan bool, 0)
+	finished := make(chan error, 0)
 
 	stdOutput := make([]string, 0)
 	stderrOutput := make([]string, 0)
@@ -160,31 +160,43 @@ func genericCommand(args []string, options commandOptions) ([]string, []string) 
 	cmd.Start()
 
 	go func() {
-		stdOutput = collectOutput(commandStdout, options.print)
-		finished <- true
+		var collectErr error
+		stdOutput, collectErr = collectOutput(commandStdout, options.print)
+		finished <- collectErr
 	}()
 
 	go func() {
-		stderrOutput = collectOutput(commandStderr, options.print)
-		finished <- true
+		var collectErr error
+		stderrOutput, collectErr = collectOutput(commandStderr, options.print)
+		finished <- collectErr
 	}()
 
 	err = cmd.Wait()
-	<-finished
-	<-finished
+	collectErr1 := <-finished
+	collectErr2 := <-finished
 
 	// Avoid overwriting any errors produced by the
 	// copy command
 	if commandError == nil {
-		commandError = err
+		if err != nil {
+			commandError = err
+		}
+		if collectErr1 != nil {
+			commandError = collectErr1
+		}
+		if collectErr2 != nil {
+			commandError = collectErr2
+		}
 	}
 
 	return stdOutput, stderrOutput
 }
 
-func collectOutput(output io.ReadCloser, print bool) []string {
+func collectOutput(output io.ReadCloser, print bool) ([]string, error) {
 	collectedOutput := make([]string, 0)
 	scanner := bufio.NewScanner(output)
+	buff := make([]byte, 64*1024*1024)
+	scanner.Buffer(buff, 64*1024*1024)
 	scanner.Split(bufio.ScanLines)
 	for scanner.Scan() {
 		m := scanner.Text()
@@ -193,7 +205,7 @@ func collectOutput(output io.ReadCloser, print bool) []string {
 		}
 		collectedOutput = append(collectedOutput, m)
 	}
-	return collectedOutput
+	return collectedOutput, scanner.Err()
 }
 
 func checkCommand() {
