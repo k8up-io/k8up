@@ -17,17 +17,21 @@ const (
 	restic   = "/usr/local/bin/restic"
 	hostname = "HOSTNAME"
 	//Env variable names
-	keepLastEnv    = "KEEP_LAST"
-	keepHourlyEnv  = "KEEP_HOURLY"
-	keepDailyEnv   = "KEEP_DAILY"
-	keepWeeklyEnv  = "KEEP_WEEKLY"
-	keepMonthlyEnv = "KEEP_MONTHLY"
-	keepYearlyEnv  = "KEEP_YEARLY"
-	keepTagEnv     = "KEEP_TAG"
-	promURLEnv     = "PROM_URL"
-	statsURLEnv    = "STATS_URL"
-	backupDirEnv   = "BACKUP_DIR"
-	listTimeoutEnv = "BACKUP_LIST_TIMEOUT"
+	keepLastEnv              = "KEEP_LAST"
+	keepHourlyEnv            = "KEEP_HOURLY"
+	keepDailyEnv             = "KEEP_DAILY"
+	keepWeeklyEnv            = "KEEP_WEEKLY"
+	keepMonthlyEnv           = "KEEP_MONTHLY"
+	keepYearlyEnv            = "KEEP_YEARLY"
+	keepTagEnv               = "KEEP_TAG"
+	promURLEnv               = "PROM_URL"
+	statsURLEnv              = "STATS_URL"
+	backupDirEnv             = "BACKUP_DIR"
+	restoreDirEnv            = "RESTORE_DIR"
+	listTimeoutEnv           = "BACKUP_LIST_TIMEOUT"
+	restoreS3EndpointEnv     = "RESTORE_S3ENDPOINT"
+	restoreS3AccessKeyIDEnv  = "RESTORE_ACCESSKEYID"
+	restoreS3SecretAccessKey = "RESTORE_SECRETACCESSKEY"
 	//Arguments for restic
 	keepLastArg    = "--keep-last"
 	keepHourlyArg  = "--keep-hourly"
@@ -49,10 +53,15 @@ func (a *arrayOpts) Set(value string) error {
 }
 
 var (
-	check     = flag.Bool("check", false, "Set if the container should run a check")
-	stdin     = flag.Bool("stdin", false, "Set to enable stdin backup")
-	prune     = flag.Bool("prune", false, "Set if the container should run a prune")
-	stdinOpts arrayOpts
+	check         = flag.Bool("check", false, "Set if the container should run a check")
+	stdin         = flag.Bool("stdin", false, "Set to enable stdin backup")
+	prune         = flag.Bool("prune", false, "Set if the container should run a prune")
+	restore       = flag.Bool("restore", false, "Wheter or not a restore should be done")
+	restoreSnap   = flag.String("restoreSnap", "", "Snapshot ID, if empty takes the latest snapshot")
+	verifyRestore = flag.Bool("verifyRestore", false, "If the restore should get verified, only for PVCs restore")
+	restoreType   = flag.String("restoreType", "", "Type of this restore, folder or S3")
+	restoreFilter = flag.String("restoreFilter", "", "Simple filter to define what should get restored. For example the PVC name")
+	stdinOpts     arrayOpts
 
 	commandError error
 	metrics      *resticMetrics
@@ -103,32 +112,36 @@ func main() {
 
 	backupDir = setBackupDir()
 
-	initRepository()
+	if !*restore {
+		initRepository()
 
-	if *check {
-		checkCommand()
-	} else {
-		if !*stdin && !*prune {
-			backup()
-		} else if !*prune {
-			fmt.Println("Backup commands detected")
-			for _, stdin := range stdinOpts {
-				optsSplitted := strings.Split(stdin, ",")
-				if len(optsSplitted) != 4 {
-					commandError = fmt.Errorf("not enough arguments %v for stdin", stdin)
-				}
-				stdinBackup(optsSplitted[0], optsSplitted[1], optsSplitted[2], optsSplitted[3])
-			}
-			// After doing all backups via stdin don't forget todo the normal one
-			if _, err := os.Stat(backupDir); os.IsNotExist(err) {
-				fmt.Printf("%v does not exist, skipping file backup\n", backupDir)
-			} else {
-				backup()
-			}
+		if *check {
+			checkCommand()
 		} else {
-			forget()
+			if !*stdin && !*prune {
+				backup()
+			} else if !*prune {
+				fmt.Println("Backup commands detected")
+				for _, stdin := range stdinOpts {
+					optsSplitted := strings.Split(stdin, ",")
+					if len(optsSplitted) != 4 {
+						commandError = fmt.Errorf("not enough arguments %v for stdin", stdin)
+					}
+					stdinBackup(optsSplitted[0], optsSplitted[1], optsSplitted[2], optsSplitted[3])
+				}
+				// After doing all backups via stdin don't forget todo the normal one
+				if _, err := os.Stat(backupDir); os.IsNotExist(err) {
+					fmt.Printf("%v does not exist, skipping file backup\n", backupDir)
+				} else {
+					backup()
+				}
+			} else {
+				forget()
+			}
+			listSnapshots()
 		}
-		listSnapshots()
+	} else {
+		restoreJob()
 	}
 
 }
@@ -247,4 +260,11 @@ func postToURL(newMetrics rawMetrics) {
 
 	http.Post(url, "application/json", postBody)
 
+}
+
+func setRestoreDir() string {
+	if value, ok := os.LookupEnv(restoreDirEnv); ok {
+		return value
+	}
+	return "/restore"
 }
