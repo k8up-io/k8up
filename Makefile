@@ -1,4 +1,4 @@
-CODE_GENERATOR_IMAGE := slok/kube-code-generator:v1.9.1
+CODE_GENERATOR_IMAGE := slok/kube-code-generator:v1.11.2
 DIRECTORY := $(PWD)
 CODE_GENERATOR_PACKAGE := git.vshn.net/vshn/baas
 

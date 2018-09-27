@@ -12,24 +12,24 @@ import (
 	baas8scli "git.vshn.net/vshn/baas/client/k8s/clientset/versioned"
 )
 
-// baasCRD is the baas CRD
-type baasCRD struct {
+// backupCRD is the baas CRD
+type backupCRD struct {
 	crdCli   crd.Interface
 	kubecCli kubernetes.Interface
 	baasCli  baas8scli.Interface
 }
 
-func newBaasCRD(baasCli baas8scli.Interface, crdCli crd.Interface, kubeCli kubernetes.Interface) *baasCRD {
-	return &baasCRD{
+func newBackupCRD(baasCli baas8scli.Interface, crdCli crd.Interface, kubeCli kubernetes.Interface) *backupCRD {
+	return &backupCRD{
 		crdCli:   crdCli,
 		baasCli:  baasCli,
 		kubecCli: kubeCli,
 	}
 }
 
-// baasCRD satisfies resource.crd interface.
-func (p *baasCRD) Initialize() error {
-	baasCRD := crd.Conf{
+// backupCRD satisfies resource.crd interface.
+func (p *backupCRD) Initialize() error {
+	backupCRD := crd.Conf{
 		Kind:       backupv1alpha1.BackupKind,
 		NamePlural: backupv1alpha1.BackupPlural,
 		Group:      backupv1alpha1.SchemeGroupVersion.Group,
@@ -37,12 +37,12 @@ func (p *baasCRD) Initialize() error {
 		Scope:      backupv1alpha1.BackupScope,
 	}
 
-	return p.crdCli.EnsurePresent(baasCRD)
+	return p.crdCli.EnsurePresent(backupCRD)
 }
 
 // GetListerWatcher satisfies resource.crd interface (and retrieve.Retriever).
 // All namespaces.
-func (p *baasCRD) GetListerWatcher() cache.ListerWatcher {
+func (p *backupCRD) GetListerWatcher() cache.ListerWatcher {
 	return &cache.ListWatch{
 		ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
 			return p.baasCli.AppuioV1alpha1().Backups("").List(options)
@@ -54,6 +54,6 @@ func (p *baasCRD) GetListerWatcher() cache.ListerWatcher {
 }
 
 // GetObject satisfies resource.crd interface (and retrieve.Retriever).
-func (p *baasCRD) GetObject() runtime.Object {
+func (p *backupCRD) GetObject() runtime.Object {
 	return &backupv1alpha1.Backup{}
 }

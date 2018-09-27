@@ -1,4 +1,4 @@
-package baas
+package backup
 
 import (
 	"git.vshn.net/vshn/baas/monitoring"

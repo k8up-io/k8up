@@ -195,3 +195,4 @@ type GlobalOverrides struct {
 	// the merge with the global settings
 	RegisteredBackend *Backend `json:"-"`
 }
+

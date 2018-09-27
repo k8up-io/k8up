@@ -1,4 +1,4 @@
-package baas
+package backup
 
 import (
 	"fmt"
@@ -13,24 +13,18 @@ import (
 
 	baas8scli "git.vshn.net/vshn/baas/client/k8s/clientset/versioned"
 	"git.vshn.net/vshn/baas/log"
+	"git.vshn.net/vshn/baas/service"
 	cron "github.com/Infowatch/cron"
 
 	backupv1alpha1 "git.vshn.net/vshn/baas/apis/backup/v1alpha1"
 	batchv1 "k8s.io/api/batch/v1"
-	apiv1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes"
 )
 
 var ()
-
-// Backupper is an interface that a backup service has to
-// satisfy
-type Backupper interface {
-	Stop() error
-	SameSpec(baas *backupv1alpha1.Backup) bool
-	Start() error
-}
 
 // PVCBackupper implements the Backupper interface
 type PVCBackupper struct {
@@ -75,7 +69,7 @@ func NewPVCBackupper(
 	cron *cron.Cron,
 	metrics *operatorMetrics,
 	clusterWideState clusterWideState,
-	config config) Backupper {
+	config config) service.Runner {
 	return &PVCBackupper{
 		backup:           backup,
 		k8sCLI:           k8sCLI,
@@ -92,8 +86,12 @@ func NewPVCBackupper(
 }
 
 // SameSpec checks if the Backup Spec was changed
-func (p *PVCBackupper) SameSpec(baas *backupv1alpha1.Backup) bool {
-	return reflect.DeepEqual(p.backup.Spec, baas.Spec)
+func (p *PVCBackupper) SameSpec(baas runtime.Object) bool {
+	backup, ok := baas.(*backupv1alpha1.Backup)
+	if !ok {
+		return false
+	}
+	return reflect.DeepEqual(p.backup.Spec, backup.Spec)
 }
 
 // Start registeres the schedule for an instance of this resource
@@ -174,9 +172,9 @@ func (p *PVCBackupper) fetchJobObject(job *batchv1.Job) (*batchv1.Job, error) {
 	return updatedJob, nil
 }
 
-func (p *PVCBackupper) listPVCs(annotation string) []apiv1.Volume {
+func (p *PVCBackupper) listPVCs(annotation string) []corev1.Volume {
 	p.log.Infof("Listing all PVCs with annotation %v in namespace %v", annotation, p.backup.Namespace)
-	volumes := make([]apiv1.Volume, 0)
+	volumes := make([]corev1.Volume, 0)
 	claimlist, err := p.k8sCLI.Core().PersistentVolumeClaims(p.backup.Namespace).List(metav1.ListOptions{})
 	if err != nil {
 		return nil
@@ -201,21 +199,23 @@ func (p *PVCBackupper) listPVCs(annotation string) []apiv1.Volume {
 			p.log.Infof("Adding %v to list", item.Name)
 		}
 
-		tmpVol := apiv1.Volume{
+		tmpVol := corev1.Volume{
 			Name: item.Name,
+			VolumeSource: corev1.VolumeSource{
+				PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{
+					ClaimName: item.Name,
+					ReadOnly:  true,
+				},
+			},
 		}
 
-		tmpVol.PersistentVolumeClaim = &apiv1.PersistentVolumeClaimVolumeSource{
-			ClaimName: item.Name,
-			ReadOnly:  true,
-		}
 		volumes = append(volumes, tmpVol)
 	}
 
 	return volumes
 }
 
-func (p *PVCBackupper) runJob(volumes []apiv1.Volume, backupCommands []string, check bool) error {
+func (p *PVCBackupper) runJob(volumes []corev1.Volume, backupCommands []string, check bool) error {
 	backupJob := newJobDefinition(volumes, p.backup.Name, p.backup, p.config)
 
 	if len(volumes) == 0 && len(backupCommands) == 1 {
@@ -520,7 +520,7 @@ func (p *PVCBackupper) getJobsInNameSpace(namespace, filter string) []batchv1.Jo
 	return jobs.Items
 }
 
-func (p *PVCBackupper) containsAccessMode(s []apiv1.PersistentVolumeAccessMode, e string) bool {
+func (p *PVCBackupper) containsAccessMode(s []corev1.PersistentVolumeAccessMode, e string) bool {
 	for _, a := range s {
 		if string(a) == e {
 			return true

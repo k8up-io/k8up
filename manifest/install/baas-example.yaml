@@ -13,10 +13,10 @@ spec:
       bucket: baas
       accessKeyIDSecretRef:
         name: backup-credentials
-        key: access-key-id
+        key: username
       secretAccessKeySecretRef:
         name: backup-credentials
-        key: secret-access-key
+        key: password
   retention:
     keepLast: 5
     keepDaily: 14
