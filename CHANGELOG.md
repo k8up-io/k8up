@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [v0.0.10] - 2018-09-28
 ### Added
 - Pass arbitrary URL to wrestic, which is used to post additional backup information.
 - When setting the backup annotation on PVC it will be backed up even if RWO
@@ -65,7 +67,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Changed
 - Initial version
 
-[unreleased]: https://git.vshn.net/vshn/baas/compare/v0.0.5...master
+[unreleased]: https://git.vshn.net/vshn/baas/compare/v0.0.10...master
+[v0.0.10]: https://git.vshn.net/vshn/baas/compare/v0.0.9...v0.0.10
 [v0.0.5]: https://git.vshn.net/vshn/baas/compare/v0.0.4...v0.0.5
 [v0.0.4]: https://git.vshn.net/vshn/baas/compare/v0.0.3...v0.0.4
 [v0.0.3]: https://git.vshn.net/vshn/baas/compare/v0.0.2...v0.0.3
