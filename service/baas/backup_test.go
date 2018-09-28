@@ -310,7 +310,17 @@ func TestPVCBackupper_listPVCs(t *testing.T) {
 			args: args{
 				annotation: "test",
 			},
-			want: []apiv1.Volume{},
+			want: []apiv1.Volume{
+				{
+					Name: "testclaim",
+					VolumeSource: apiv1.VolumeSource{
+						PersistentVolumeClaim: &apiv1.PersistentVolumeClaimVolumeSource{
+							ClaimName: "testclaim",
+							ReadOnly:  true,
+						},
+					},
+				},
+			},
 		},
 		{
 			name: "1 PVC with annotation ignore",
@@ -329,15 +339,30 @@ func TestPVCBackupper_listPVCs(t *testing.T) {
 			},
 			want: []apiv1.Volume{},
 		},
-	}
-
-	tests[1].want = []apiv1.Volume{
 		{
-			Name: "testclaim",
-			VolumeSource: apiv1.VolumeSource{
-				PersistentVolumeClaim: &apiv1.PersistentVolumeClaimVolumeSource{
-					ClaimName: "testclaim",
-					ReadOnly:  true,
+			name: "1 PVC RWO with annotation",
+			fields: fields{
+				log:    &applogger.Std{},
+				k8sCLI: testclient.NewSimpleClientset(),
+				backup: &backupv1alpha1.Backup{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "test",
+						Namespace: "test",
+					},
+				},
+			},
+			args: args{
+				annotation: "test",
+			},
+			want: []apiv1.Volume{
+				{
+					Name: "testclaim",
+					VolumeSource: apiv1.VolumeSource{
+						PersistentVolumeClaim: &apiv1.PersistentVolumeClaimVolumeSource{
+							ClaimName: "testclaim",
+							ReadOnly:  true,
+						},
+					},
 				},
 			},
 		},
@@ -388,6 +413,37 @@ func TestPVCBackupper_listPVCs(t *testing.T) {
 		})
 
 	tests[2].fields.k8sCLI.CoreV1().PersistentVolumes().Create(
+		&apiv1.PersistentVolume{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "testvol",
+			},
+			Spec: apiv1.PersistentVolumeSpec{
+				PersistentVolumeSource: apiv1.PersistentVolumeSource{
+					HostPath: &apiv1.HostPathVolumeSource{
+						Path: "test",
+					},
+				},
+			},
+		},
+	)
+
+	tests[3].fields.k8sCLI.CoreV1().PersistentVolumeClaims(tests[1].fields.backup.Namespace).Create(
+		&apiv1.PersistentVolumeClaim{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "testclaim",
+				Annotations: map[string]string{
+					"test": "true",
+				},
+			},
+			Spec: apiv1.PersistentVolumeClaimSpec{
+				VolumeName: "testvol",
+				AccessModes: []apiv1.PersistentVolumeAccessMode{
+					"ReadWriteOnce",
+				},
+			},
+		})
+
+	tests[3].fields.k8sCLI.CoreV1().PersistentVolumes().Create(
 		&apiv1.PersistentVolume{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: "testvol",

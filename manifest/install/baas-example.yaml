@@ -9,7 +9,7 @@ spec:
   keepJobs: 4
   backend:
     s3:
-      endpoint: http://10.144.1.133:9000
+      endpoint: http://10.144.1.224:9000
       bucket: baas
       accessKeyIDSecretRef:
         name: backup-credentials
@@ -20,7 +20,7 @@ spec:
   retention:
     keepLast: 5
     keepDaily: 14
-  promURL: http://10.144.1.133:9091
+  promURL: http://10.144.1.224:9000
   repoPasswordSecretRef:
     name: backup-repo
     key: password

@@ -150,6 +150,7 @@ Various things can be configured via environment variables:
 * `BACKUP_GLOBALKEEPJOBS` set the count of jobs to keep globally
 * `BACKUP_GLOBALS3ENDPOINT` set the S3 endpoint to be used globally
 * `BACKUP_GLOBALS3BUCKET` set the S3 bucket to be used globally
+* `BACKUP_GLOBALSTATSURL` set the URL for wrestic to post additional metrics gloablly, default `""`
 
 You only need to adjust `BACKUP_IMAGE` everything else can be left default.
 

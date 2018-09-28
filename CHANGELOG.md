@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+### Added
+- Pass arbitrary URL to wrestic, which is used to post additional backup information.
+- When setting the backup annotation on PVC it will be backed up even if RWO
+### Fixed
+- Broken locking when using global backend
+
 ## [v0.0.9] - 2018-09-18
 ### Added
 - Global S3 endpoint, S3 bucket and keepJobs. Using env vars, global default values can be specified. The defaults can be overwritten by a backup spec.

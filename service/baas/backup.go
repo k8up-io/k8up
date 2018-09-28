@@ -48,13 +48,7 @@ type PVCBackupper struct {
 	metrics          *operatorMetrics
 	running          bool
 	clusterWideState clusterWideState
-}
-
-type config struct {
-	annotation              string
-	defaultCheckSchedule    string
-	podFilter               string
-	backupCommandAnnotation string
+	backendString    string
 }
 
 // Stop stops the backup schedule
@@ -80,8 +74,9 @@ func NewPVCBackupper(
 	log log.Logger,
 	cron *cron.Cron,
 	metrics *operatorMetrics,
-	clusterWideState clusterWideState) Backupper {
-	tmp := &PVCBackupper{
+	clusterWideState clusterWideState,
+	config config) Backupper {
+	return &PVCBackupper{
 		backup:           backup,
 		k8sCLI:           k8sCLI,
 		baasCLI:          baasCLI,
@@ -91,24 +86,9 @@ func NewPVCBackupper(
 		metrics:          metrics,
 		clusterWideState: clusterWideState,
 		wg:               sync.WaitGroup{},
+		config:           config,
+		backendString:    backup.GlobalOverrides.RegisteredBackend.String(),
 	}
-	tmp.initDefaults()
-	conf := config{
-		annotation:              viper.GetString("annotation"),
-		defaultCheckSchedule:    viper.GetString("checkSchedule"),
-		podFilter:               viper.GetString("podFilter"),
-		backupCommandAnnotation: viper.GetString("backupCommandAnnotation"),
-	}
-	tmp.config = conf
-	return tmp
-}
-
-func (p *PVCBackupper) initDefaults() {
-	viper.SetDefault("annotation", "appuio.ch/backup")
-	viper.SetDefault("checkSchedule", "0 0 * * 0")
-	viper.SetDefault("podFilter", "backupPod=true")
-	viper.SetDefault("backupCommandAnnotation", "appuio.ch/backupcommand")
-	viper.SetDefault("GlobalKeepJobs", 10)
 }
 
 // SameSpec checks if the Backup Spec was changed
@@ -167,8 +147,11 @@ func (p *PVCBackupper) run(check bool) error {
 }
 
 func (p *PVCBackupper) sharedRepo() bool {
-	value, _ := p.clusterWideState.repoMap.Load(p.backup.Spec.Backend.String())
-	number := value.(int)
+	value, _ := p.clusterWideState.repoMap.Load(p.backendString)
+	number, ok := value.(int)
+	if !ok {
+		return false
+	}
 	if number > 1 {
 		return true
 	}
@@ -202,12 +185,14 @@ func (p *PVCBackupper) listPVCs(annotation string) []apiv1.Volume {
 	for _, item := range claimlist.Items {
 		annotations := item.GetAnnotations()
 
-		if !p.containsAccessMode(item.Spec.AccessModes, "ReadWriteMany") {
+		tmpAnnotation, ok := annotations[annotation]
+
+		if !p.containsAccessMode(item.Spec.AccessModes, "ReadWriteMany") && !ok {
 			p.log.Infof("PVC %v isn't RWX", item.Name)
 			continue
 		}
 
-		if tmpAnnotation, ok := annotations[annotation]; !ok {
+		if !ok {
 			p.log.Infof("PVC %v doesn't have annotation, adding to list...", item.Name)
 		} else if anno, _ := strconv.ParseBool(tmpAnnotation); !anno {
 			p.log.Infof("PVC %v annotation is %v. Skipping", item.Name, tmpAnnotation)
@@ -231,7 +216,7 @@ func (p *PVCBackupper) listPVCs(annotation string) []apiv1.Volume {
 }
 
 func (p *PVCBackupper) runJob(volumes []apiv1.Volume, backupCommands []string, check bool) error {
-	backupJob := newJobDefinition(volumes, p.backup.Name, p.backup)
+	backupJob := newJobDefinition(volumes, p.backup.Name, p.backup, p.config)
 
 	if len(volumes) == 0 && len(backupCommands) == 1 {
 		p.log.Infof("No suitable PVCs or backup commands found in %v, skipping backup", p.backup.Namespace)
@@ -345,42 +330,53 @@ func (p *PVCBackupper) runJob(volumes []apiv1.Volume, backupCommands []string, c
 }
 
 func (p *PVCBackupper) incrementRunningBackup() {
-	backendString := p.backup.Spec.Backend.String()
-	value, _ := p.clusterWideState.runningBackupsPerRepo.Load(backendString)
-	number := value.(int)
+	var number int
+	value, _ := p.clusterWideState.runningBackupsPerRepo.Load(p.backendString)
+	number, ok := value.(int)
+	if !ok {
+		number = 1
+	}
 	number = number + 1
-	p.clusterWideState.runningBackupsPerRepo.Store(backendString, number)
+	p.clusterWideState.runningBackupsPerRepo.Store(p.backendString, number)
 }
 
 func (p *PVCBackupper) decrementRunningBackup() {
-	backendString := p.backup.Spec.Backend.String()
-	value, _ := p.clusterWideState.runningBackupsPerRepo.Load(backendString)
-	number := value.(int)
+	var number int
+	value, _ := p.clusterWideState.runningBackupsPerRepo.Load(p.backendString)
+	number, ok := value.(int)
+	if !ok {
+		number = 1
+	}
 	number = number - 1
-	p.clusterWideState.runningBackupsPerRepo.Store(backendString, number)
+	p.clusterWideState.runningBackupsPerRepo.Store(p.backendString, number)
 }
 
 func (p *PVCBackupper) incrementRunningPrune() {
 	p.wg.Add(1)
-	backendString := p.backup.Spec.Backend.String()
-	value, _ := p.clusterWideState.runningPruneOnRepo.Load(backendString)
-	number := value.(int)
+	var number int
+	value, _ := p.clusterWideState.runningPruneOnRepo.Load(p.backendString)
+	number, ok := value.(int)
+	if !ok {
+		number = 0
+	}
 	number = number + 1
-	p.clusterWideState.runningPruneOnRepo.Store(backendString, number)
+	p.clusterWideState.runningPruneOnRepo.Store(p.backendString, number)
 }
 
 func (p *PVCBackupper) decrementRunningPrune() {
 	p.wg.Done()
-	backendString := p.backup.Spec.Backend.String()
-	value, _ := p.clusterWideState.runningPruneOnRepo.Load(backendString)
-	number := value.(int)
+	var number int
+	value, _ := p.clusterWideState.runningPruneOnRepo.Load(p.backendString)
+	number, ok := value.(int)
+	if !ok {
+		number = 1
+	}
 	number = number - 1
-	p.clusterWideState.runningPruneOnRepo.Store(backendString, number)
+	p.clusterWideState.runningPruneOnRepo.Store(p.backendString, number)
 }
 
 func (p *PVCBackupper) getRunningBackups() int {
-	backendString := p.backup.Spec.Backend.String()
-	value, _ := p.clusterWideState.runningBackupsPerRepo.Load(backendString)
+	value, _ := p.clusterWideState.runningBackupsPerRepo.Load(p.backendString)
 	number := value.(int)
 	return number
 }
@@ -426,9 +422,12 @@ func (p *PVCBackupper) waitForJobTofinish(job *batchv1.Job) (*batchv1.Job, error
 }
 
 func (p *PVCBackupper) pruneRunning() bool {
-	backendString := p.backup.Spec.Backend.String()
-	value, _ := p.clusterWideState.runningPruneOnRepo.Load(backendString)
-	number := value.(int)
+	var number int
+	value, _ := p.clusterWideState.runningPruneOnRepo.Load(p.backendString)
+	number, ok := value.(int)
+	if !ok {
+		return false
+	}
 	if number > 0 {
 		return true
 	}
