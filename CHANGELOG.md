@@ -69,6 +69,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 [unreleased]: https://git.vshn.net/vshn/baas/compare/v0.0.10...master
 [v0.0.10]: https://git.vshn.net/vshn/baas/compare/v0.0.9...v0.0.10
+[v0.0.9]: https://git.vshn.net/vshn/baas/compare/v0.0.8...v0.0.9
+[v0.0.8]: https://git.vshn.net/vshn/baas/compare/v0.0.7...v0.0.8
+[v0.0.7]: https://git.vshn.net/vshn/baas/compare/v0.0.6...v0.0.7
+[v0.0.6]: https://git.vshn.net/vshn/baas/compare/v0.0.5...v0.0.6
 [v0.0.5]: https://git.vshn.net/vshn/baas/compare/v0.0.4...v0.0.5
 [v0.0.4]: https://git.vshn.net/vshn/baas/compare/v0.0.3...v0.0.4
 [v0.0.3]: https://git.vshn.net/vshn/baas/compare/v0.0.2...v0.0.3
