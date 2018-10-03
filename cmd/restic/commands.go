@@ -175,9 +175,9 @@ func genericCommand(args []string, options commandOptions) ([]string, []string) 
 		finished <- collectErr
 	}()
 
-	err = cmd.Wait()
 	collectErr1 := <-finished
 	collectErr2 := <-finished
+	err = cmd.Wait()
 
 	// Avoid overwriting any errors produced by the
 	// copy command
@@ -270,8 +270,8 @@ func folderRestore(snapshot snapshot) {
 
 	args := []string{"restore", snapshot.ID, "--target", restoreDir}
 
-	if *restoreFilter != ""{
-		args = append(args,"--include",*restoreFilter)
+	if *restoreFilter != "" {
+		args = append(args, "--include", *restoreFilter)
 	}
 
 	if *verifyRestore {
@@ -505,4 +505,10 @@ func parsePerm(perm string) string {
 		}
 	}
 	return strconv.Itoa(permInt)
+}
+
+func unlock() {
+	fmt.Println("Removing locks...")
+	args := []string{"unlock"}
+	genericCommand(args, commandOptions{print: true})
 }

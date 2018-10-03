@@ -107,6 +107,7 @@ func main() {
 		}
 		metrics.BackupEndTimestamp.SetToCurrentTime()
 		metrics.Update(metrics.BackupEndTimestamp)
+		unlock()
 		os.Exit(exit)
 	}()
 
@@ -259,7 +260,7 @@ func postToURL(newMetrics rawMetrics) {
 	postBody := bytes.NewReader(JSONStats)
 
 	http.Post(url, "application/json", postBody)
-
+	fmt.Printf("Pushed stats to %v", url)
 }
 
 func setRestoreDir() string {
