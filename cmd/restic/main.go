@@ -190,7 +190,7 @@ func parseBackupOutput(stdout, stderr []string) {
 	}
 
 	updateProm(newMetrics)
-	postToURL(newMetrics)
+	postToURL(prepareBackupMetricJSON(newMetrics))
 
 	if errorCount > 0 && commandError == nil {
 		commandError = fmt.Errorf("there where %v errors", errorCount)
@@ -234,12 +234,7 @@ func updateProm(newMetrics rawMetrics) {
 	metrics.Update(metrics.Errors)
 }
 
-func postToURL(newMetrics rawMetrics) {
-	url := os.Getenv(statsURLEnv)
-	if url == "" {
-		return
-	}
-
+func prepareBackupMetricJSON(newMetrics rawMetrics) stats {
 	snapshotList, err := listSnapshots()
 	if err != nil {
 		commandError = err
@@ -250,8 +245,18 @@ func postToURL(newMetrics rawMetrics) {
 		BackupMetrics: newMetrics,
 		Snapshots:     snapshotList,
 	}
+	return currentStats
+}
 
-	JSONStats, err := json.Marshal(currentStats)
+// postToURL will convert the object you passed to json
+// and post it to the defined stats URL
+func postToURL(data interface{}) {
+	url := os.Getenv(statsURLEnv)
+	if url == "" {
+		return
+	}
+
+	JSONStats, err := json.Marshal(data)
 	if err != nil {
 		commandError = err
 		return
@@ -259,8 +264,18 @@ func postToURL(newMetrics rawMetrics) {
 
 	postBody := bytes.NewReader(JSONStats)
 
-	http.Post(url, "application/json", postBody)
-	fmt.Printf("Pushed stats to %v", url)
+	resp, err := http.Post(url, "application/json", postBody)
+	if err != nil || !strings.HasPrefix(resp.Status, "200") {
+		httpCode := ""
+		if resp == nil {
+			httpCode = "http status unavailable"
+		} else {
+			httpCode = resp.Status
+		}
+		commandError = fmt.Errorf("Could not send webhook: %v http status code: %v", err, httpCode)
+	} else {
+		fmt.Printf("Pushed stats to %v\n", url)
+	}
 }
 
 func setRestoreDir() string {

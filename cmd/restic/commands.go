@@ -25,6 +25,12 @@ type commandOptions struct {
 	rest.Params
 }
 
+type restoreStats struct {
+	RestoreLocation string   `json:"restore_location,omitempty"`
+	SnapshotID      string   `json:"snapshot_ID,omitempty"`
+	RestoredFiles   []string `json:"restored_files,omitempty"`
+}
+
 func initRepository() {
 	if _, err := listSnapshots(); err == nil {
 		return
@@ -248,6 +254,18 @@ func restoreJob() {
 		fmt.Println("No snapshot defined, using latest one.")
 		snapshot = snapshots[len(snapshots)-1]
 		fmt.Printf("Snapshot %v is being restored.\n", snapshot.Time)
+	} else {
+		for i := range snapshots {
+			if snapshots[i].ID == *restoreSnap {
+				snapshot = snapshots[i]
+			}
+		}
+		if snapshot.ID == "" {
+			message := fmt.Sprintf("No Snapshot found with ID %v", *restoreSnap)
+			fmt.Println(message)
+			commandError = fmt.Errorf(message)
+			return
+		}
 	}
 
 	// TODO: implement some enum here: https://blog.learngoprogramming.com/golang-const-type-enums-iota-bc4befd096d3
@@ -299,21 +317,30 @@ func s3Restore(snapshot snapshot) {
 		return
 	}
 
-	s3Client := s3.New(os.Getenv(restoreS3EndpointEnv), os.Getenv(restoreS3AccessKeyIDEnv), os.Getenv(restoreS3SecretAccessKey))
+	endpoint := os.Getenv(restoreS3EndpointEnv)
+	snapDate := snapshot.Time.Format(time.RFC3339)
+	fileName := fmt.Sprintf("backup-%v-%v.tar.gz", snapshot.Hostname, snapDate)
+	stats := &restoreStats{
+		RestoreLocation: fmt.Sprintf("%v/%v", endpoint, fileName),
+		SnapshotID:      snapshot.ID,
+	}
+
+	s3Client := s3.New(endpoint, os.Getenv(restoreS3AccessKeyIDEnv), os.Getenv(restoreS3SecretAccessKey))
 	err = s3Client.Connect()
 	if err != nil {
 		commandError = err
 		return
 	}
-	stream := tarGz(readers)
+	stream := tarGz(readers, stats)
 	upload := s3.UploadObject{
 		ObjectStream: stream,
-		Name:         fmt.Sprintf("%v-%v.tar.gz", os.Getenv(hostname), time.Now().Unix()),
+		Name:         fileName,
 	}
 	err = s3Client.Upload(upload)
 	if err != nil {
 		commandError = err
 	}
+	postToURL(stats)
 }
 
 func listFilesInSnapshot(snapshot snapshot) []string {
@@ -352,6 +379,8 @@ func createFileReaders(snapshot snapshot, fileList []string) ([]restoreFile, err
 		scanner.Split(bufio.ScanWords)
 		j := 0
 		add := false
+		// TODO: Next version of restic will most likely have
+		// a json flag for the ls command.
 		tmpFile := restoreFile{}
 		for scanner.Scan() {
 			m := scanner.Text()
@@ -448,13 +477,14 @@ func createFileReaders(snapshot snapshot, fileList []string) ([]restoreFile, err
 	return filesToProcess, nil
 }
 
-func tarGz(files []restoreFile) io.Reader {
+func tarGz(files []restoreFile, stats *restoreStats) io.Reader {
 	readPipe, writePipe := io.Pipe()
 	gzpWriter := gzip.NewWriter(writePipe)
 	trWriter := tar.NewWriter(gzpWriter)
 
 	go func() {
 		for _, file := range files {
+			stats.RestoredFiles = append(stats.RestoredFiles, file.name)
 			fmt.Printf("Compressing %v...", file.name)
 			header := &tar.Header{
 				Name: file.name,
