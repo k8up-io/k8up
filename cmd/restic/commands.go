@@ -13,10 +13,9 @@ import (
 	"strings"
 	"time"
 
-	gzip "github.com/klauspost/pgzip"
-
 	"git.vshn.net/vshn/wrestic/rest"
 	"git.vshn.net/vshn/wrestic/s3"
+	gzip "github.com/klauspost/pgzip"
 )
 
 type commandOptions struct {
