@@ -166,6 +166,9 @@ You may need to adjust the namespaces in the manifests. There are various other 
 Please see the example resource here in the readme for an explanation of the various settings.
 
 ### Installation changes
+- since v0.0.11 -
+Clusterroles for the operator have changed the operator now also needs permissions to interact with the restore CRD objects. Please see `manifest/install/clusterrole.yaml` for details.
+
 - Since v0.0.5 -
 Rolebindings for the operator have changed. This is because of two reasons:
   - The operator now manages the the pod command execution service account per namespace. Thus it needs `roles`, `rolebindings` and `serviceaccount` permissions
@@ -175,6 +178,42 @@ Rolebindings for the operator have changed. This is because of two reasons:
 
 - Since v0.0.4 -
 Because v0.0.5 supports consistent backups via stdout/stdin streaming the wrestic container needs a service account. This is currently hardcoded to `pod-executor`. This needs another cluster role and a service account per namespace. See `manifest/prereqs/pod-exec.yaml` for an example.
+
+# Restore CRD
+It's now possible to define various restore jobs. Currently these kinds of restores are supported:
+
+* To a PVC
+* To S3 as tar.gz
+
+Example for a restore to a PVC:
+
+```yaml
+apiVersion: appuio.ch/v1alpha1
+kind: Restore
+metadata:
+  name: restore-test
+
+spec:
+  repoPasswordSecretRef:
+    name: backup-repo
+    key: password
+  restoreMethod:
+    folder:
+      claimName: restore
+
+  backend:
+    s3:
+      endpoint: http://10.144.1.224:9000
+      bucket: baas
+      accessKeyIDSecretRef:
+        name: backup-credentials
+        key: username
+      secretAccessKeySecretRef:
+        name: backup-credentials
+        key: password
+```
+
+This will restore the latest snapshot from `http://10.144.1.224:9000` to the PVC with the name `restore`.
 
 # Manual restore
 To manually restore you'll need:

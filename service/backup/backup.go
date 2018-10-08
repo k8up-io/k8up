@@ -1,30 +1,24 @@
-package baas
+package backup
 
 import (
+	"fmt"
 	"strings"
 	"sync"
 
 	"git.vshn.net/vshn/baas/monitoring"
+	"git.vshn.net/vshn/baas/service"
 
 	"git.vshn.net/vshn/baas/log"
 
 	backupv1alpha1 "git.vshn.net/vshn/baas/apis/backup/v1alpha1"
 	baas8scli "git.vshn.net/vshn/baas/client/k8s/clientset/versioned"
 	cron "github.com/Infowatch/cron"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes"
 )
 
-// Syncer is the interface that each Baas implementation has to satisfy.
-type Syncer interface {
-	// EnsureBackup will ensure that the backup schedule is correctly registered
-	EnsureBackup(pt *backupv1alpha1.Backup) error
-	// DeleteBackup will stop and delete the schedule. Kubernetes will handle
-	// the deletion of all child items.
-	DeleteBackup(name string) error
-}
-
-// Baas will ensure that the backups are running accordingly.
-type Baas struct {
+// Schedule will ensure that the backups are running accordingly.
+type Schedule struct {
 	k8sCli           kubernetes.Interface
 	baasCLI          baas8scli.Interface
 	reg              sync.Map
@@ -35,12 +29,12 @@ type Baas struct {
 	config           config
 }
 
-// NewBaas returns a new baas.
-func NewBaas(k8sCli kubernetes.Interface, baasCLI baas8scli.Interface, logger log.Logger) *Baas {
+// NewBackup returns a new schedule.
+func NewBackup(k8sCli kubernetes.Interface, baasCLI baas8scli.Interface, logger log.Logger) *Schedule {
 	cron := cron.New()
 	cron.Start()
 	metrics := newOperatorMetrics(monitoring.GetInstance())
-	return &Baas{
+	return &Schedule{
 		k8sCli:  k8sCli,
 		baasCLI: baasCLI,
 		reg:     sync.Map{},
@@ -56,20 +50,32 @@ func NewBaas(k8sCli kubernetes.Interface, baasCLI baas8scli.Interface, logger lo
 	}
 }
 
-// EnsureBackup satisfies Syncer interface.
-func (b *Baas) EnsureBackup(backup *backupv1alpha1.Backup) error {
+func (s *Schedule) checkObject(obj runtime.Object) (*backupv1alpha1.Backup, error) {
+	backup, ok := obj.(*backupv1alpha1.Backup)
+	if !ok {
+		return nil, fmt.Errorf("%v is not a backup", obj.GetObjectKind())
+	}
+	return backup, nil
+}
+
+// Ensure satisfies Syncer interface.
+func (s *Schedule) Ensure(obj runtime.Object) error {
+	backup, err := s.checkObject(obj)
+	if err != nil {
+		return err
+	}
 	var ok bool
 	name := backup.Namespace + "/" + backup.Name
-	tmpBck, ok := b.reg.Load(name)
-	var bck Backupper
+	tmpBck, ok := s.reg.Load(name)
+	var bck service.Runner
 
 	// We are already running.
 	if ok {
-		bck = tmpBck.(Backupper)
+		bck = tmpBck.(service.Runner)
 		// If not the same spec means options have changed, so we don't longer need this Backup.
 		if !bck.SameSpec(backup) {
-			b.logger.Infof("spec of %s changed, recreating baas worker", backup.Name)
-			if err := b.DeleteBackup(name); err != nil {
+			s.logger.Infof("spec of %s changed, recreating baas worker", backup.Name)
+			if err := s.Delete(name); err != nil {
 				return err
 			}
 		} else { // We are ok, nothing changed.
@@ -80,32 +86,17 @@ func (b *Baas) EnsureBackup(backup *backupv1alpha1.Backup) error {
 	// Create a Backup.
 	backupCopy := backup.DeepCopy()
 
-	err := createServiceAccountAndBinding(backupCopy, b.k8sCli, b.config)
+	err = createServiceAccountAndBinding(backupCopy, s.k8sCli, s.config)
 	if err != nil {
 		return err
 	}
 
-	var registerBackend = new(backupv1alpha1.Backend)
-	registerBackend.S3 = &backupv1alpha1.S3Spec{}
-	if backupCopy.Spec.Backend.S3 != nil {
-		registerBackend.S3.Bucket = backupCopy.Spec.Backend.S3.Bucket
-		registerBackend.S3.Endpoint = backupCopy.Spec.Backend.S3.Endpoint
-	} else {
-		registerBackend.S3.Bucket = ""
-		registerBackend.S3.Endpoint = ""
-	}
-
-	if registerBackend.S3.Bucket == "" {
-		registerBackend.S3.Bucket = b.config.globalS3Bucket
-	}
-	if registerBackend.S3.Endpoint == "" {
-		registerBackend.S3.Endpoint = b.config.globalS3Endpoint
-	}
+	var registerBackend = service.MergeGlobalBackendConfig(backupCopy.Spec.Backend, s.config.GlobalConfig)
 
 	// Store how many time we've seen the same repository.
 	backendString := registerBackend.String()
 	var number int
-	if value, ok := b.clusterWideState.repoMap.Load(backendString); ok {
+	if value, ok := s.clusterWideState.repoMap.Load(backendString); ok {
 		number = value.(int)
 		number = number + 1
 	} else {
@@ -113,31 +104,31 @@ func (b *Baas) EnsureBackup(backup *backupv1alpha1.Backup) error {
 	}
 
 	// set shared states
-	b.clusterWideState.repoMap.Store(backendString, number)
-	b.clusterWideState.runningBackupsPerRepo.Store(backendString, 0)
-	b.clusterWideState.runningPruneOnRepo.Store(backendString, 0)
+	s.clusterWideState.repoMap.Store(backendString, number)
+	s.clusterWideState.runningBackupsPerRepo.Store(backendString, 0)
+	s.clusterWideState.runningPruneOnRepo.Store(backendString, 0)
 
 	backupCopy.GlobalOverrides.RegisteredBackend = registerBackend
 
-	bck = NewPVCBackupper(backupCopy, b.k8sCli, b.baasCLI, b.logger, b.cron, b.metrics, b.clusterWideState, b.config)
+	bck = NewPVCBackupper(backupCopy, s.k8sCli, s.baasCLI, s.logger, s.cron, s.metrics, s.clusterWideState, s.config)
 
-	b.reg.Store(name, bck)
+	s.reg.Store(name, bck)
 	return bck.Start()
 }
 
-// DeleteBackup satisfies Syncer interface.
-func (b *Baas) DeleteBackup(name string) error {
-	pkt, ok := b.reg.Load(name)
+// Delete satisfies CRDEnsurer interface.
+func (s *Schedule) Delete(name string) error {
+	pkt, ok := s.reg.Load(name)
 	if !ok {
-		return nil
+		return fmt.Errorf("%v is not a backup", name)
 	}
 
-	pk := pkt.(Backupper)
+	pk := pkt.(service.Runner)
 	if err := pk.Stop(); err != nil {
 		return err
 	}
 
-	b.reg.Delete(name)
+	s.reg.Delete(name)
 	return nil
 }
 

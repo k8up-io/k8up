@@ -19,6 +19,7 @@ import (
 	"git.vshn.net/vshn/baas/monitoring"
 	"git.vshn.net/vshn/baas/operator"
 	"github.com/spf13/viper"
+	kooper "github.com/spotahome/kooper/operator"
 )
 
 // Main is the main program.
@@ -39,22 +40,22 @@ func New(logger log.Logger) *Main {
 }
 
 // Run runs the app.
-func (m *Main) Run(stopC <-chan struct{}) error {
+func (m *Main) initOperators() kooper.Operator {
 	m.logger.Infof("initializing operators")
 
 	// Get kubernetes rest client.
 	ptCli, crdCli, k8sCli, err := m.getKubernetesClients()
 	if err != nil {
-		return err
+		return nil
 	}
 
 	// Create the operator and run
 	op, err := operator.New(m.config, ptCli, crdCli, k8sCli, m.logger)
 	if err != nil {
-		return err
+		return nil
 	}
 
-	return op.Run(stopC)
+	return op
 }
 
 // getKubernetesClients returns all the required clients to communicate with
@@ -110,9 +111,11 @@ func main() {
 	signal.Notify(signalC, syscall.SIGTERM, syscall.SIGINT)
 	m := New(logger)
 
-	// Run in background the operator.
+	ops := m.initOperators()
+
+	// Run the operators
 	go func() {
-		finishC <- m.Run(stopC)
+		finishC <- ops.Run(stopC)
 	}()
 
 	select {

@@ -15,10 +15,14 @@ const (
 
 // Backup constants
 const (
-	BackupKind   = "Backup"
-	BackupName   = "backup"
-	BackupPlural = "backups"
-	BackupScope  = apiextensionsv1beta1.NamespaceScoped
+	BackupKind    = "Backup"
+	BackupName    = "backup"
+	BackupPlural  = "backups"
+	RestoreKind   = "Restore"
+	RestoreName   = "restore"
+	RestorePlural = "restores"
+	BackupScope   = apiextensionsv1beta1.NamespaceScoped
+	RestoreScope  = apiextensionsv1beta1.NamespaceScoped
 )
 
 // SchemeGroupVersion is group version used to register these objects
@@ -49,6 +53,8 @@ func addKnownTypes(scheme *runtime.Scheme) error {
 	scheme.AddKnownTypes(SchemeGroupVersion,
 		&Backup{},
 		&BackupList{},
+		&Restore{},
+		&RestoreList{},
 	)
 	metav1.AddToGroupVersion(scheme, SchemeGroupVersion)
 	return nil

@@ -1,8 +1,12 @@
-package baas
+package backup
 
-import "github.com/spf13/viper"
+import (
+	"git.vshn.net/vshn/baas/service"
+	"github.com/spf13/viper"
+)
 
 type config struct {
+	service.GlobalConfig
 	annotation              string
 	defaultCheckSchedule    string
 	podFilter               string
@@ -15,12 +19,6 @@ type config struct {
 	globalPromURL           string
 	podExecRoleName         string
 	podExecAccountName      string
-	globalAccessKeyID       string
-	globalSecretAccessKey   string
-	globalRepoPassword      string
-	globalS3Endpoint        string
-	globalS3Bucket          string
-	globalStatsURL          string
 }
 
 func newConfig() config {
@@ -38,12 +36,7 @@ func newConfig() config {
 		globalPromURL:           viper.GetString("PromURL"),
 		podExecRoleName:         viper.GetString("PodExecRoleName"),
 		podExecAccountName:      viper.GetString("PodExecAccountName"),
-		globalAccessKeyID:       viper.GetString("GlobalAccessKeyID"),
-		globalSecretAccessKey:   viper.GetString("GlobalSecretAccessKey"),
-		globalRepoPassword:      viper.GetString("GlobalRepoPassword"),
-		globalS3Endpoint:        viper.GetString("GlobalS3Endpoint"),
-		globalS3Bucket:          viper.GetString("GlobalS3Bucket"),
-		globalStatsURL:          viper.GetString("GlobalStatsURL"),
+		GlobalConfig:            service.NewGlobalConfig(),
 	}
 	return tmp
 }

@@ -19,6 +19,7 @@ rules:
   - appuio.ch
   resources:
     - backups
+    - restores
   verbs:
     - '*'
 - apiGroups:
