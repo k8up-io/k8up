@@ -14,17 +14,18 @@ const (
 )
 
 type rawMetrics struct {
-	runningBackupDuration float64 `json:"running_backup_duration"`
-	BackupStartTimestamp  float64 `json:"backup_start_timestamp"`
-	BackupEndTimestamp    float64 `json:"backup_end_timestamp"`
-	Errors                float64 `json:"errors"`
-	NewFiles              float64 `json:"new_files"`
-	ChangedFiles          float64 `json:"changed_files"`
-	UnmodifiedFiles       float64 `json:"unmodified_files"`
-	NewDirs               float64 `json:"new_dirs"`
-	ChangedDirs           float64 `json:"changed_dirs"`
-	UnmodifiedDirs        float64 `json:"unmodified_dirs"`
-	DataTransferred       float64 `json:"data_transferred"`
+	runningBackupDuration float64
+	BackupStartTimestamp  float64  `json:"backup_start_timestamp"`
+	BackupEndTimestamp    float64  `json:"backup_end_timestamp"`
+	Errors                float64  `json:"errors"`
+	NewFiles              float64  `json:"new_files"`
+	ChangedFiles          float64  `json:"changed_files"`
+	UnmodifiedFiles       float64  `json:"unmodified_files"`
+	NewDirs               float64  `json:"new_dirs"`
+	ChangedDirs           float64  `json:"changed_dirs"`
+	UnmodifiedDirs        float64  `json:"unmodified_dirs"`
+	DataTransferred       float64  `json:"data_transferred"`
+	MountedPVCs           []string `json:"mounted_PVCs"`
 }
 
 type resticMetrics struct {
