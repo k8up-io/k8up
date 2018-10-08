@@ -1,0 +1,10 @@
+apiVersion: appuio.ch/v1alpha1
+kind: Restore
+metadata:
+  name: restore-test
+
+spec:
+  restoreMethod:
+    s3: {}
+  backend:
+    s3: {}

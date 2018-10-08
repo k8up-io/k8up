@@ -151,6 +151,10 @@ Various things can be configured via environment variables:
 * `BACKUP_GLOBALS3ENDPOINT` set the S3 endpoint to be used globally
 * `BACKUP_GLOBALS3BUCKET` set the S3 bucket to be used globally
 * `BACKUP_GLOBALSTATSURL` set the URL for wrestic to post additional metrics gloablly, default `""`
+* `BACKUP_GLOBALRESTORES3BUCKET` set the global restore S3 bucket for restores
+* `BACKUP_GLOBALRESTORES3ENDPOINT` set the global restore S3 endpoint for the restores (needs the scheme [http/https]
+* `BACKUP_GLOBALRESTORES3ACCESKEYID` set the global resotre S3 accessKeyID for restores
+* `BACKUP_GLOBALRESTORES3SECRETACCESSKEY` set the global restore S3 SecretAccessKey for restores
 
 You only need to adjust `BACKUP_IMAGE` everything else can be left default.
 

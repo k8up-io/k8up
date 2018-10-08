@@ -99,34 +99,60 @@ func setUpEnvVariables(restore *backupv1alpha1.Restore, config config) []corev1.
 
 		if restore.Spec.RestoreMethod.S3 != nil {
 
-			endpoint := fmt.Sprintf("%v/%v", restore.Spec.RestoreMethod.S3.Endpoint, restore.Spec.RestoreMethod.S3.Bucket)
+			var endpoint string
+			if restore.Spec.RestoreMethod.S3.Endpoint != "" && restore.Spec.RestoreMethod.S3.Bucket != "" {
+				endpoint = fmt.Sprintf("%v/%v", restore.Spec.RestoreMethod.S3.Endpoint, restore.Spec.RestoreMethod.S3.Bucket)
+			} else {
+				endpoint = fmt.Sprintf("%v/%v", config.GlobalRestoreS3Endpoint, config.GlobalRestoreS3Bucket)
+			}
 
 			restoreEndpoint := corev1.EnvVar{
-				Name:  service.RestoreS3EndpointEnv,
+				Name:  service.RestoreS3Endpoint,
 				Value: endpoint,
 			}
 
-			restoreAccessKeyRef := corev1.EnvVar{
-				Name: service.RestoreS3AccessKeyIDEnv,
-				ValueFrom: &corev1.EnvVarSource{
-					SecretKeyRef: &corev1.SecretKeySelector{
-						LocalObjectReference: restore.Spec.RestoreMethod.S3.AccessKeyIDSecretRef.LocalObjectReference,
-						Key:                  restore.Spec.RestoreMethod.S3.AccessKeyIDSecretRef.Key,
-					},
-				},
+			restoreAccessKeyID := corev1.EnvVar{}
+			restoreSecretAccessKey := corev1.EnvVar{}
+
+			if config.GlobalRestoreS3AccesKeyID != "" {
+				restoreAccessKeyID = corev1.EnvVar{
+					Name:  service.RestoreS3AccessKeyID,
+					Value: config.GlobalRestoreS3AccesKeyID,
+				}
 			}
 
-			restoreSecretAccessKeyRef := corev1.EnvVar{
-				Name: service.RestoreS3SecretAccessKey,
-				ValueFrom: &corev1.EnvVarSource{
-					SecretKeyRef: &corev1.SecretKeySelector{
-						LocalObjectReference: restore.Spec.RestoreMethod.S3.SecretAccessKeySecretRef.LocalObjectReference,
-						Key:                  restore.Spec.RestoreMethod.S3.SecretAccessKeySecretRef.Key,
-					},
-				},
+			if config.GlobalRestoreS3SecretAccessKey != "" {
+				restoreSecretAccessKey = corev1.EnvVar{
+					Name:  service.RestoreS3SecretAccessKey,
+					Value: config.GlobalRestoreS3SecretAccessKey,
+				}
 			}
 
-			vars = append(vars, restoreEndpoint, restoreAccessKeyRef, restoreSecretAccessKeyRef)
+			if restore.Spec.RestoreMethod.S3.AccessKeyIDSecretRef != nil {
+				restoreAccessKeyID = corev1.EnvVar{
+					Name: service.RestoreS3AccessKeyID,
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: &corev1.SecretKeySelector{
+							LocalObjectReference: restore.Spec.RestoreMethod.S3.AccessKeyIDSecretRef.LocalObjectReference,
+							Key:                  restore.Spec.RestoreMethod.S3.AccessKeyIDSecretRef.Key,
+						},
+					},
+				}
+			}
+
+			if restore.Spec.RestoreMethod.S3.SecretAccessKeySecretRef != nil {
+				restoreSecretAccessKey = corev1.EnvVar{
+					Name: service.RestoreS3SecretAccessKey,
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: &corev1.SecretKeySelector{
+							LocalObjectReference: restore.Spec.RestoreMethod.S3.SecretAccessKeySecretRef.LocalObjectReference,
+							Key:                  restore.Spec.RestoreMethod.S3.SecretAccessKeySecretRef.Key,
+						},
+					},
+				}
+			}
+
+			vars = append(vars, restoreEndpoint, restoreSecretAccessKey, restoreAccessKeyID)
 		}
 
 		vars = append(vars, []corev1.EnvVar{

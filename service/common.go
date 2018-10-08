@@ -24,19 +24,23 @@ const (
 	KeepTag                  = "KEEP_TAG"
 	StatsURL                 = "STATS_URL"
 	RestorePath              = "/restore"
-	RestoreS3EndpointEnv     = "RESTORE_S3ENDPOINT"
-	RestoreS3AccessKeyIDEnv  = "RESTORE_ACCESSKEYID"
+	RestoreS3Endpoint        = "RESTORE_S3ENDPOINT"
+	RestoreS3AccessKeyID     = "RESTORE_ACCESSKEYID"
 	RestoreS3SecretAccessKey = "RESTORE_SECRETACCESSKEY"
 )
 
 // GlobalConfig contains configuration that is the same for all services
 type GlobalConfig struct {
-	GlobalAccessKeyID     string
-	GlobalSecretAccessKey string
-	GlobalRepoPassword    string
-	GlobalS3Endpoint      string
-	GlobalS3Bucket        string
-	GlobalStatsURL        string
+	GlobalAccessKeyID              string
+	GlobalSecretAccessKey          string
+	GlobalRepoPassword             string
+	GlobalS3Endpoint               string
+	GlobalS3Bucket                 string
+	GlobalStatsURL                 string
+	GlobalRestoreS3Endpoint        string
+	GlobalRestoreS3Bucket          string
+	GlobalRestoreS3AccesKeyID      string
+	GlobalRestoreS3SecretAccessKey string
 }
 
 // MergeGlobalBackendConfig merges together the
@@ -45,7 +49,7 @@ func MergeGlobalBackendConfig(backend *backupv1alpha1.Backend, globalConfig Glob
 
 	registerBackend.S3 = &backupv1alpha1.S3Spec{}
 	if backend != nil {
-		if backend.S3 != nil {
+		if backend.S3 != nil && backend.S3.Bucket != "" && backend.S3.Endpoint != "" {
 			registerBackend.S3.Bucket = backend.S3.Bucket
 			registerBackend.S3.Endpoint = backend.S3.Endpoint
 		} else {
@@ -61,12 +65,16 @@ func MergeGlobalBackendConfig(backend *backupv1alpha1.Backend, globalConfig Glob
 // the approriate env variables.
 func NewGlobalConfig() GlobalConfig {
 	return GlobalConfig{
-		GlobalAccessKeyID:     viper.GetString("GlobalAccessKeyID"),
-		GlobalSecretAccessKey: viper.GetString("GlobalSecretAccessKey"),
-		GlobalRepoPassword:    viper.GetString("GlobalRepoPassword"),
-		GlobalS3Endpoint:      viper.GetString("GlobalS3Endpoint"),
-		GlobalS3Bucket:        viper.GetString("GlobalS3Bucket"),
-		GlobalStatsURL:        viper.GetString("GlobalStatsURL"),
+		GlobalAccessKeyID:              viper.GetString("GlobalAccessKeyID"),
+		GlobalSecretAccessKey:          viper.GetString("GlobalSecretAccessKey"),
+		GlobalRepoPassword:             viper.GetString("GlobalRepoPassword"),
+		GlobalS3Endpoint:               viper.GetString("GlobalS3Endpoint"),
+		GlobalS3Bucket:                 viper.GetString("GlobalS3Bucket"),
+		GlobalStatsURL:                 viper.GetString("GlobalStatsURL"),
+		GlobalRestoreS3Bucket:          viper.GetString("GlobalRestoreS3Bucket"),
+		GlobalRestoreS3Endpoint:        viper.GetString("GlobalRestoreS3Endpoint"),
+		GlobalRestoreS3AccesKeyID:      viper.GetString("GlobalRestoreS3AccesKeyID"),
+		GlobalRestoreS3SecretAccessKey: viper.GetString("GlobalRestoreS3SecretAccessKey"),
 	}
 }
 
