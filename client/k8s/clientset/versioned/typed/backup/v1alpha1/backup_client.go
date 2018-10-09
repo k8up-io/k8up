@@ -27,8 +27,12 @@ import (
 
 type AppuioV1alpha1Interface interface {
 	RESTClient() rest.Interface
+	ArchivesGetter
 	BackupsGetter
+	ChecksGetter
+	PrunesGetter
 	RestoresGetter
+	SchedulesGetter
 }
 
 // AppuioV1alpha1Client is used to interact with features provided by the appuio.ch group.
@@ -36,12 +40,28 @@ type AppuioV1alpha1Client struct {
 	restClient rest.Interface
 }
 
+func (c *AppuioV1alpha1Client) Archives(namespace string) ArchiveInterface {
+	return newArchives(c, namespace)
+}
+
 func (c *AppuioV1alpha1Client) Backups(namespace string) BackupInterface {
 	return newBackups(c, namespace)
 }
 
+func (c *AppuioV1alpha1Client) Checks(namespace string) CheckInterface {
+	return newChecks(c, namespace)
+}
+
+func (c *AppuioV1alpha1Client) Prunes(namespace string) PruneInterface {
+	return newPrunes(c, namespace)
+}
+
 func (c *AppuioV1alpha1Client) Restores(namespace string) RestoreInterface {
 	return newRestores(c, namespace)
+}
+
+func (c *AppuioV1alpha1Client) Schedules(namespace string) ScheduleInterface {
+	return newSchedules(c, namespace)
 }
 
 // NewForConfig creates a new AppuioV1alpha1Client for the given config.

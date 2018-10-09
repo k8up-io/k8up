@@ -1,0 +1,23 @@
+apiVersion: appuio.ch/v1alpha1
+kind: Backup
+metadata:
+  name: baas-test
+spec:
+  keepJobs: 4
+  backend:
+    s3:
+      endpoint: http://10.144.1.224:9000
+      bucket: baas
+      accessKeyIDSecretRef:
+        name: backup-credentials
+        key: username
+      secretAccessKeySecretRef:
+        name: backup-credentials
+        key: password
+  retention:
+    keepLast: 5
+    keepDaily: 14
+  promURL: http://10.144.1.224:9000
+  repoPasswordSecretRef:
+    name: backup-repo
+    key: password

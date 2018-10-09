@@ -1,11 +1,7 @@
 package backup
 
 import (
-	"fmt"
 	"path"
-	"strconv"
-	"strings"
-	"time"
 
 	backupv1alpha1 "git.vshn.net/vshn/baas/apis/backup/v1alpha1"
 	"git.vshn.net/vshn/baas/service"
@@ -33,7 +29,7 @@ func (o byJobStartTime) Less(i, j int) bool {
 	return o[i].Status.StartTime.Before(o[j].Status.StartTime)
 }
 
-func newJobDefinition(volumes []corev1.Volume, controllerName string, backup *backupv1alpha1.Backup, config config) *batchv1.Job {
+func newBackupJob(volumes []corev1.Volume, controllerName string, backup *backupv1alpha1.Backup, config config) *batchv1.Job {
 	mounts := make([]corev1.VolumeMount, 0)
 	for _, volume := range volumes {
 		tmpMount := corev1.VolumeMount{
@@ -43,69 +39,37 @@ func newJobDefinition(volumes []corev1.Volume, controllerName string, backup *ba
 		mounts = append(mounts, tmpMount)
 	}
 
-	// We want job names for a given nominal start time to have a deterministic name to avoid the same job being created twice
-	name := fmt.Sprintf("%s-%d", config.jobName, time.Now().Unix())
+	job := service.GetBasicJob("backup", config.GlobalConfig, &backup.ObjectMeta)
 
-	return &batchv1.Job{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: name,
-			OwnerReferences: []metav1.OwnerReference{
-				newOwnerReference(backup),
-			},
-		},
-		Spec: batchv1.JobSpec{
-			Template: corev1.PodTemplateSpec{
-				ObjectMeta: metav1.ObjectMeta{
-					Namespace: backup.Namespace,
-					Labels: map[string]string{
-						"backupPod": "true",
-					},
-				},
-				Spec: corev1.PodSpec{
-					RestartPolicy: corev1.RestartPolicy(config.restartPolicy),
-					Volumes:       volumes,
-					Containers: []corev1.Container{
-						{
-							Name:            config.podName,
-							Image:           config.image,
-							VolumeMounts:    mounts,
-							Env:             setUpEnvVariables(backup, config),
-							ImagePullPolicy: corev1.PullAlways,
-							TTY:             true,
-							Stdin:           true,
-						},
-					},
-					ServiceAccountName: "pod-executor",
-				},
-			},
-		},
-	}
+	finalEnv := append(job.Spec.Template.Spec.Containers[0].Env, setUpEnvVariables(backup, config)...)
+
+	job.Spec.Template.Spec.Volumes = volumes
+	job.Spec.Template.Spec.ServiceAccountName = "pod-executor"
+	job.Spec.Template.Spec.Containers[0].VolumeMounts = mounts
+	job.Spec.Template.Spec.Containers[0].Env = finalEnv
+
+	return job
 }
 
+// TODO: move most of this into service, too
 func setUpEnvVariables(backup *backupv1alpha1.Backup, config config) []corev1.EnvVar {
 
-	promURL := config.globalPromURL
+	promURL := config.GlobalPromURL
 	if backup.Spec.PromURL != "" {
 		promURL = backup.Spec.PromURL
 	}
 
 	vars := make([]corev1.EnvVar, 0)
 
-	repoPasswordEnv := service.BuildRepoPasswordVar(backup.Spec.RepoPasswordSecretRef, config.GlobalConfig)
+	repoPasswordEnv := service.BuildRepoPasswordVar(backup.GlobalOverrides.RegisteredBackend.RepoPasswordSecretRef, config.GlobalConfig)
 
 	vars = append(vars, []corev1.EnvVar{
 		repoPasswordEnv,
 		{
-			Name:  service.Hostname,
-			Value: backup.Namespace,
-		},
-		{
-			Name:  "PROM_URL",
+			Name:  service.PromURL,
 			Value: promURL,
 		},
 	}...)
-
-	vars = append(vars, setUpRetention(backup)...)
 
 	s3Backend := service.BuildS3EnvVars(backup.GlobalOverrides.RegisteredBackend.S3, config.GlobalConfig)
 
@@ -124,74 +88,13 @@ func setUpEnvVariables(backup *backupv1alpha1.Backup, config config) []corev1.En
 	return vars
 }
 
-func setUpRetention(backup *backupv1alpha1.Backup) []corev1.EnvVar {
-	retentionRules := []corev1.EnvVar{}
-
-	if backup.Spec.Retention.KeepLast > 0 {
-		retentionRules = append(retentionRules, corev1.EnvVar{
-			Name:  string(service.KeepLast),
-			Value: strconv.Itoa(backup.Spec.Retention.KeepLast),
-		})
-	}
-
-	if backup.Spec.Retention.KeepHourly > 0 {
-		retentionRules = append(retentionRules, corev1.EnvVar{
-			Name:  string(service.KeepHourly),
-			Value: strconv.Itoa(backup.Spec.Retention.KeepHourly),
-		})
-	}
-
-	if backup.Spec.Retention.KeepDaily > 0 {
-		retentionRules = append(retentionRules, corev1.EnvVar{
-			Name:  string(service.KeepDaily),
-			Value: strconv.Itoa(backup.Spec.Retention.KeepDaily),
-		})
-	} else {
-		//Set defaults
-		retentionRules = append(retentionRules, corev1.EnvVar{
-			Name:  string(service.KeepDaily),
-			Value: strconv.Itoa(14),
-		})
-	}
-
-	if backup.Spec.Retention.KeepWeekly > 0 {
-		retentionRules = append(retentionRules, corev1.EnvVar{
-			Name:  string(service.KeepWeekly),
-			Value: strconv.Itoa(backup.Spec.Retention.KeepWeekly),
-		})
-	}
-
-	if backup.Spec.Retention.KeepMonthly > 0 {
-		retentionRules = append(retentionRules, corev1.EnvVar{
-			Name:  string(service.KeepMonthly),
-			Value: strconv.Itoa(backup.Spec.Retention.KeepMonthly),
-		})
-	}
-
-	if backup.Spec.Retention.KeepYearly > 0 {
-		retentionRules = append(retentionRules, corev1.EnvVar{
-			Name:  string(service.KeepYearly),
-			Value: strconv.Itoa(backup.Spec.Retention.KeepYearly),
-		})
-	}
-
-	if len(backup.Spec.Retention.KeepTags) > 0 {
-		retentionRules = append(retentionRules, corev1.EnvVar{
-			Name:  string(service.KeepTag),
-			Value: strings.Join(backup.Spec.Retention.KeepTags, ","),
-		})
-	}
-
-	return retentionRules
-}
-
-func newServiceAccontDefinition(backup *backupv1alpha1.Backup, config config) serviceAccount {
+func newServiceAccountDefinition(backup *backupv1alpha1.Backup, config config) serviceAccount {
 	role := rbacv1.Role{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      config.podExecRoleName,
 			Namespace: backup.Namespace,
 			OwnerReferences: []metav1.OwnerReference{
-				newOwnerReference(backup),
+				service.NewOwnerReference(backup),
 			},
 		},
 		Rules: []rbacv1.PolicyRule{
@@ -215,7 +118,7 @@ func newServiceAccontDefinition(backup *backupv1alpha1.Backup, config config) se
 			Name:      config.podExecRoleName + "-namespaced",
 			Namespace: backup.Namespace,
 			OwnerReferences: []metav1.OwnerReference{
-				newOwnerReference(backup),
+				service.NewOwnerReference(backup),
 			},
 		},
 		Subjects: []rbacv1.Subject{
@@ -237,7 +140,7 @@ func newServiceAccontDefinition(backup *backupv1alpha1.Backup, config config) se
 			Name:      config.podExecAccountName,
 			Namespace: backup.Namespace,
 			OwnerReferences: []metav1.OwnerReference{
-				newOwnerReference(backup),
+				service.NewOwnerReference(backup),
 			},
 		},
 	}
@@ -246,15 +149,6 @@ func newServiceAccontDefinition(backup *backupv1alpha1.Backup, config config) se
 		role:        &role,
 		roleBinding: &roleBinding,
 		account:     &account,
-	}
-}
-
-func newOwnerReference(backup *backupv1alpha1.Backup) metav1.OwnerReference {
-	return metav1.OwnerReference{
-		UID:        backup.GetUID(),
-		APIVersion: backupv1alpha1.SchemeGroupVersion.String(),
-		Kind:       backupv1alpha1.BackupKind,
-		Name:       backup.Name,
 	}
 }
 

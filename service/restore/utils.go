@@ -11,7 +11,18 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func newRestoreJob(restore *backupv1alpha1.Restore, volumes []corev1.Volume, config config) *batchv1.Job {
+func newRestoreJob(restore *backupv1alpha1.Restore, config config) *batchv1.Job {
+
+	volumes := []corev1.Volume{}
+	if restore.Spec.RestoreMethod.S3 == nil {
+		volumes = append(volumes,
+			corev1.Volume{
+				Name: restore.Spec.RestoreMethod.Folder.ClaimName,
+				VolumeSource: corev1.VolumeSource{
+					PersistentVolumeClaim: restore.Spec.RestoreMethod.Folder.PersistentVolumeClaimVolumeSource,
+				},
+			})
+	}
 
 	mounts := make([]corev1.VolumeMount, 0)
 	for _, volume := range volumes {
@@ -51,10 +62,10 @@ func newRestoreJob(restore *backupv1alpha1.Restore, volumes []corev1.Volume, con
 			Name:      jobName,
 			Namespace: restore.Namespace,
 			Labels: map[string]string{
-				"restorePod": "true",
+				config.Label: "true",
 			},
 			OwnerReferences: []metav1.OwnerReference{
-				newOwnerReference(restore),
+				service.NewOwnerReference(restore),
 			},
 		},
 		Spec: batchv1.JobSpec{
@@ -62,7 +73,7 @@ func newRestoreJob(restore *backupv1alpha1.Restore, volumes []corev1.Volume, con
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: restore.Namespace,
 					Labels: map[string]string{
-						"restorePod": "true",
+						config.Label: "true",
 					},
 				},
 				Spec: corev1.PodSpec{
@@ -95,64 +106,11 @@ func setUpEnvVariables(restore *backupv1alpha1.Restore, config config) []corev1.
 
 		vars = append(vars, s3repoEnv...)
 
-		repoPasswordEnv := service.BuildRepoPasswordVar(restore.Spec.RepoPasswordSecretRef, config.GlobalConfig)
+		repoPasswordEnv := service.BuildRepoPasswordVar(restore.GlobalOverrides.RegisteredBackend.RepoPasswordSecretRef, config.GlobalConfig)
 
 		if restore.Spec.RestoreMethod.S3 != nil {
 
-			var endpoint string
-			if restore.Spec.RestoreMethod.S3.Endpoint != "" && restore.Spec.RestoreMethod.S3.Bucket != "" {
-				endpoint = fmt.Sprintf("%v/%v", restore.Spec.RestoreMethod.S3.Endpoint, restore.Spec.RestoreMethod.S3.Bucket)
-			} else {
-				endpoint = fmt.Sprintf("%v/%v", config.GlobalRestoreS3Endpoint, config.GlobalRestoreS3Bucket)
-			}
-
-			restoreEndpoint := corev1.EnvVar{
-				Name:  service.RestoreS3Endpoint,
-				Value: endpoint,
-			}
-
-			restoreAccessKeyID := corev1.EnvVar{}
-			restoreSecretAccessKey := corev1.EnvVar{}
-
-			if config.GlobalRestoreS3AccesKeyID != "" {
-				restoreAccessKeyID = corev1.EnvVar{
-					Name:  service.RestoreS3AccessKeyID,
-					Value: config.GlobalRestoreS3AccesKeyID,
-				}
-			}
-
-			if config.GlobalRestoreS3SecretAccessKey != "" {
-				restoreSecretAccessKey = corev1.EnvVar{
-					Name:  service.RestoreS3SecretAccessKey,
-					Value: config.GlobalRestoreS3SecretAccessKey,
-				}
-			}
-
-			if restore.Spec.RestoreMethod.S3.AccessKeyIDSecretRef != nil {
-				restoreAccessKeyID = corev1.EnvVar{
-					Name: service.RestoreS3AccessKeyID,
-					ValueFrom: &corev1.EnvVarSource{
-						SecretKeyRef: &corev1.SecretKeySelector{
-							LocalObjectReference: restore.Spec.RestoreMethod.S3.AccessKeyIDSecretRef.LocalObjectReference,
-							Key:                  restore.Spec.RestoreMethod.S3.AccessKeyIDSecretRef.Key,
-						},
-					},
-				}
-			}
-
-			if restore.Spec.RestoreMethod.S3.SecretAccessKeySecretRef != nil {
-				restoreSecretAccessKey = corev1.EnvVar{
-					Name: service.RestoreS3SecretAccessKey,
-					ValueFrom: &corev1.EnvVarSource{
-						SecretKeyRef: &corev1.SecretKeySelector{
-							LocalObjectReference: restore.Spec.RestoreMethod.S3.SecretAccessKeySecretRef.LocalObjectReference,
-							Key:                  restore.Spec.RestoreMethod.S3.SecretAccessKeySecretRef.Key,
-						},
-					},
-				}
-			}
-
-			vars = append(vars, restoreEndpoint, restoreSecretAccessKey, restoreAccessKeyID)
+			vars = append(vars, service.BuildRestoreS3Env(restore.Spec.RestoreMethod.S3, config.GlobalConfig)...)
 		}
 
 		vars = append(vars, []corev1.EnvVar{
@@ -161,13 +119,4 @@ func setUpEnvVariables(restore *backupv1alpha1.Restore, config config) []corev1.
 	}
 
 	return vars
-}
-
-func newOwnerReference(restore *backupv1alpha1.Restore) metav1.OwnerReference {
-	return metav1.OwnerReference{
-		UID:        restore.GetUID(),
-		APIVersion: backupv1alpha1.SchemeGroupVersion.String(),
-		Kind:       backupv1alpha1.RestoreKind,
-		Name:       restore.Name,
-	}
 }

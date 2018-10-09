@@ -20,6 +20,8 @@ rules:
   resources:
     - backups
     - restores
+    - archives
+    - schedules
   verbs:
     - '*'
 - apiGroups:

@@ -7,6 +7,7 @@ import (
 
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
 // Restore contains the restore CRD
 type Restore struct {
 	metav1.TypeMeta `json:",inline"`
@@ -14,19 +15,18 @@ type Restore struct {
 	// More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#metadata
 	// +optional
 	metav1.ObjectMeta `json:"metadata,omitempty"`
-	Spec              RestoreSpec `json:"spec,omitempty"`
-	Status            RestoreStatus
-	GlobalOverrides   GlobalOverrides
+	Spec              *RestoreSpec    `json:"spec,omitempty"`
+	Status            RestoreStatus   `json:"status,omitempty"`
+	GlobalOverrides   GlobalOverrides `json:"globalOverrides,omitempty"`
 }
 
 // RestoreSpec contains all information needed to trigger a restore
 type RestoreSpec struct {
 	// Backend contains the backend information
-	Backend               *Backend           `json:"backend,omitempty"`
-	RestoreMethod         *RestoreMethod     `json:"restoreMethod,omitempty"`
-	RepoPasswordSecretRef *SecretKeySelector `json:"repoPasswordSecretRef,omitempty"`
-	RestoreFilter         string             `json:"restoreFilter,omitempty"`
-	Snapshot              string             `json:"snapshot,omitempty"`
+	Backend       *Backend       `json:"backend,omitempty"`
+	RestoreMethod *RestoreMethod `json:"restoreMethod,omitempty"`
+	RestoreFilter string         `json:"restoreFilter,omitempty"`
+	Snapshot      string         `json:"snapshot,omitempty"`
 }
 
 // RestoreMethod contains how and where the restore should happen
@@ -48,6 +48,14 @@ type RestoreList struct {
 	Items           []Restore `json:"items"`
 }
 
+// JobStatus holds information about the various jobs
+type JobStatus struct {
+	Started  bool `json:"started,omitempty"`
+	Finished bool `json:"finished,omitempty"`
+	Failed   bool `json:"failed,omitempty"`
+}
+
+// RestoreStatus contains the status of a restore job
 type RestoreStatus struct {
-	Started bool `json:"started,omitempty"`
+	JobStatus `json:",inline"`
 }

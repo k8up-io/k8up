@@ -1,0 +1,44 @@
+apiVersion: appuio.ch/v1alpha1
+kind: Schedule
+metadata:
+  name: schedule-test
+
+spec:
+  backend:
+    s3:
+      endpoint: http://10.144.1.224:9000
+      bucket: baas
+      accessKeyIDSecretRef:
+        name: backup-credentials
+        key: username
+      secretAccessKeySecretRef:
+        name: backup-credentials
+        key: password
+      repoPasswordSecretRef:
+        name: backup-repo
+        key: password
+  archive:
+    schedule: '0 * * * *'
+    restoreMethod:
+      s3:
+        endpoint: http://10.144.1.224:9000
+        bucket: restoremini
+        accessKeyIDSecretRef:
+          name: backup-credentials
+          key: username
+        secretAccessKeySecretRef:
+          name: backup-credentials
+          key: password
+  backup:
+    schedule: '* * * * *'
+    keepJobs: 4
+    promURL: http://10.144.1.224:9000
+  check:
+    schedule: '*/5 * * * *'
+    promURL: http://10.144.1.224:9000
+  prune:
+    schedule: '*/2 * * * *'
+    retention:
+      keepLast: 5
+      keepDaily: 14
+

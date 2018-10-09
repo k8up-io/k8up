@@ -5,25 +5,19 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"
-	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
 
 	backupv1alpha1 "git.vshn.net/vshn/baas/apis/backup/v1alpha1"
-	baas8scli "git.vshn.net/vshn/baas/client/k8s/clientset/versioned"
 )
 
 // restoreCRD
 type restoreCRD struct {
-	crdCli   crd.Interface
-	kubecCli kubernetes.Interface
-	baasCli  baas8scli.Interface
+	clients
 }
 
-func newRestoreCRD(baasCli baas8scli.Interface, crdCli crd.Interface, kubeCli kubernetes.Interface) *restoreCRD {
+func newRestoreCRD(clients clients) *restoreCRD {
 	return &restoreCRD{
-		crdCli:   crdCli,
-		baasCli:  baasCli,
-		kubecCli: kubeCli,
+		clients: clients,
 	}
 }
 
@@ -34,7 +28,7 @@ func (r *restoreCRD) Initialize() error {
 		NamePlural: backupv1alpha1.RestorePlural,
 		Group:      backupv1alpha1.SchemeGroupVersion.Group,
 		Version:    backupv1alpha1.SchemeGroupVersion.Version,
-		Scope:      backupv1alpha1.RestoreScope,
+		Scope:      backupv1alpha1.NamespaceScope,
 	}
 
 	return r.crdCli.EnsurePresent(restoreCRD)
@@ -45,10 +39,10 @@ func (r *restoreCRD) Initialize() error {
 func (r *restoreCRD) GetListerWatcher() cache.ListerWatcher {
 	return &cache.ListWatch{
 		ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
-			return r.baasCli.AppuioV1alpha1().Restores("").List(options)
+			return r.baasCLI.AppuioV1alpha1().Restores("").List(options)
 		},
 		WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
-			return r.baasCli.AppuioV1alpha1().Restores("").Watch(options)
+			return r.baasCLI.AppuioV1alpha1().Restores("").Watch(options)
 		},
 	}
 }

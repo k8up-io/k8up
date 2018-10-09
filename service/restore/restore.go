@@ -5,29 +5,21 @@ import (
 
 	"git.vshn.net/vshn/baas/service"
 
-	"git.vshn.net/vshn/baas/log"
-
 	backupv1alpha1 "git.vshn.net/vshn/baas/apis/backup/v1alpha1"
-	baas8scli "git.vshn.net/vshn/baas/client/k8s/clientset/versioned"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/client-go/kubernetes"
 )
 
 // Restore will ensure that the backups are running accordingly.
 type Restore struct {
-	k8sCli  kubernetes.Interface
-	baasCLI baas8scli.Interface
-	logger  log.Logger
-	config  config
+	service.CommonObjects
+	config config
 }
 
 // NewRestore returns a new restore.
-func NewRestore(k8sCli kubernetes.Interface, baasCLI baas8scli.Interface, logger log.Logger) *Restore {
+func NewRestore(common service.CommonObjects) *Restore {
 	return &Restore{
-		k8sCli:  k8sCli,
-		baasCLI: baasCLI,
-		logger:  logger,
-		config:  newConfig(),
+		CommonObjects: common,
+		config:        newConfig(),
 	}
 }
 
@@ -57,7 +49,7 @@ func (r *Restore) Ensure(obj runtime.Object) error {
 
 	restoreCopy.GlobalOverrides.RegisteredBackend = service.MergeGlobalBackendConfig(restore.Spec.Backend, r.config.GlobalConfig)
 
-	rst = NewRestoreRunner(restoreCopy, r.k8sCli, r.baasCLI, r.logger)
+	rst = NewRestoreRunner(restoreCopy, r.CommonObjects)
 
 	return rst.Start()
 }
