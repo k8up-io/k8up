@@ -24,6 +24,20 @@ type snapshot struct {
 	Tags     []string  `json:"tags"`
 }
 
+// dummy type to make snapshots sortable by date
+type snapList []snapshot
+
+func (s snapList) Len() int {
+	return len(s)
+}
+func (s snapList) Swap(i, j int) {
+	s[i], s[j] = s[j], s[i]
+}
+
+func (s snapList) Less(i, j int) bool {
+	return s[i].Time.Before(s[j].Time)
+}
+
 func listSnapshots() ([]snapshot, error) {
 	args := []string{"snapshots", "--json", "-q"}
 	var timeout int

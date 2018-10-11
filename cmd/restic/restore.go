@@ -21,7 +21,7 @@ type restoreStats struct {
 	RestoredFiles   []string `json:"restored_files,omitempty"`
 }
 
-func restoreJob() {
+func restoreJob(snapshotID, method string) {
 	fmt.Println("Starting restore...")
 
 	snapshot := snapshot{}
@@ -32,31 +32,33 @@ func restoreJob() {
 		return
 	}
 
-	if *restoreSnap == "" {
+	if snapshotID == "" {
 		fmt.Println("No snapshot defined, using latest one.")
 		snapshot = snapshots[len(snapshots)-1]
 		fmt.Printf("Snapshot %v is being restored.\n", snapshot.Time)
 	} else {
 		for i := range snapshots {
-			if snapshots[i].ID == *restoreSnap {
+			if snapshots[i].ID == snapshotID {
 				snapshot = snapshots[i]
 			}
 		}
 		if snapshot.ID == "" {
-			message := fmt.Sprintf("No Snapshot found with ID %v", *restoreSnap)
+			message := fmt.Sprintf("No Snapshot found with ID %v", snapshotID)
 			fmt.Println(message)
 			commandError = fmt.Errorf(message)
 			return
 		}
 	}
 
+	method = strings.ToLower(method)
+
 	// TODO: implement some enum here: https://blog.learngoprogramming.com/golang-const-type-enums-iota-bc4befd096d3
-	if *restoreType == "folder" {
+	if method == "folder" {
 		folderRestore(snapshot)
 		return
 	}
 
-	if *restoreType == "s3" {
+	if method == "s3" {
 		s3Restore(snapshot)
 		return
 	}

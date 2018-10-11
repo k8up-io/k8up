@@ -58,6 +58,7 @@ var (
 	verifyRestore = flag.Bool("verifyRestore", false, "If the restore should get verified, only for PVCs restore")
 	restoreType   = flag.String("restoreType", "", "Type of this restore, folder or S3")
 	restoreFilter = flag.String("restoreFilter", "", "Simple filter to define what should get restored. For example the PVC name")
+	archive       = flag.Bool("archive", false, "")
 	stdinOpts     arrayOpts
 
 	commandError error
@@ -96,7 +97,8 @@ func main() {
 
 	backupDir = setBackupDir()
 
-	if !*restore {
+	// TODO: simplify this
+	if !*restore && !*archive {
 		initRepository()
 
 		if *check {
@@ -124,8 +126,10 @@ func main() {
 			}
 			listSnapshots()
 		}
+	} else if *archive {
+		archiveJob()
 	} else {
-		restoreJob()
+		restoreJob(*restoreSnap, *restoreType)
 	}
 
 }
