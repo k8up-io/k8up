@@ -1,4 +1,4 @@
-apiVersion: appuio.ch/v1alpha1
+apiVersion: backup.appuio.ch/v1alpha1
 kind: Archive
 metadata:
   name: archive-test

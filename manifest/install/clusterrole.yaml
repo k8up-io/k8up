@@ -16,11 +16,13 @@ rules:
     - edit
     - patch
 - apiGroups:
-  - appuio.ch
+    - backup.appuio.ch
   resources:
-    - backups
-    - restores
     - archives
+    - prunes
+    - backups
+    - checks
+    - restores
     - schedules
   verbs:
     - '*'
