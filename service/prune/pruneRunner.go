@@ -29,9 +29,15 @@ func newPruneRunner(common service.CommonObjects, config config, prune *backupv1
 	}
 }
 
-func (p *pruneRunner) Stop() error                         { return nil }
+// Stop is part of the ServiceRunner interface, it's needed for permanent
+// services like the scheduler.
+func (p *pruneRunner) Stop() error { return nil }
+
+// SameSpec checks if the CRD instance changed. This is is only viable for
+// permanent services like the scheduler, that may change.
 func (p *pruneRunner) SameSpec(object runtime.Object) bool { return true }
 
+// Start is part of the ServiceRunner interface.
 func (p *pruneRunner) Start() error {
 	p.Logger.Infof("New prune job received %v in namespace %v", p.prune.Name, p.prune.Namespace)
 	p.prune.Status.Started = true

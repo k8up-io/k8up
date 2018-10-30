@@ -26,6 +26,7 @@ func newArchiveRunner(archiver *backupv1alpha1.Archive, common service.CommonObj
 	}
 }
 
+// Start is part of the ServiceRunner interface.
 func (a *archiveRunner) Start() error {
 	a.Logger.Infof("New archive job received %v in namespace %v", a.archiver.Name, a.archiver.Namespace)
 	a.archiver.Status.Started = true
@@ -58,7 +59,12 @@ func (a *archiveRunner) updateArchiveStatus() error {
 	return nil
 }
 
-func (a *archiveRunner) Stop() error                         { return nil }
+// Stop is part of the ServiceRunner interface, it's needed for permanent
+// services like the scheduler.
+func (a *archiveRunner) Stop() error { return nil }
+
+// SameSpec checks if the CRD instance changed. This is is only viable for
+// permanent services like the scheduler, that may change.
 func (a *archiveRunner) SameSpec(object runtime.Object) bool { return true }
 
 // TODO: make exported so running jobs can be picked up if the operator does

@@ -34,12 +34,13 @@ func newScheduleRunner(schedule *backupv1alpha1.Schedule, common *service.Common
 }
 
 // TODO: cleanup of older jobs
-
+// Stop stops the currently running schedule. It implements the ServiceRunner interface.
 func (s *scheduleRunner) Stop() error {
 	s.cron.Stop()
 	return nil
 }
 
+// SameSepc checks if something changed in the Spec of the schedule. It's part of the ServiceRunner interface.
 func (s *scheduleRunner) SameSpec(object runtime.Object) bool {
 	schedule, ok := object.(*backupv1alpha1.Schedule)
 	if !ok {

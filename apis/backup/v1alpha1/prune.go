@@ -12,7 +12,7 @@ type Prune struct {
 	GlobalOverrides   *GlobalOverrides `json:"-"`
 }
 
-// ArchiveSpec specifies how the archiv CRD looks like
+// ArchiveSpec specifies how the prune CRD looks like
 // currently this is a simple wrapper for the RestoreSpec
 // but this might get extended in the future.
 type PruneSpec struct {

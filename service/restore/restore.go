@@ -3,13 +3,12 @@ package restore
 import (
 	"fmt"
 
-	"git.vshn.net/vshn/baas/service"
-
 	backupv1alpha1 "git.vshn.net/vshn/baas/apis/backup/v1alpha1"
+	"git.vshn.net/vshn/baas/service"
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
-// Restore will ensure that the backups are running accordingly.
+// Restore holds the state of the restore handler. It implements ServiceHandler intrface.
 type Restore struct {
 	service.CommonObjects
 	config config
@@ -31,7 +30,7 @@ func (r *Restore) checkObject(obj runtime.Object) (*backupv1alpha1.Restore, erro
 	return backup, nil
 }
 
-// Ensure satisfies CRDEnsurer interface.
+// Ensure satisfies ServiceHandler interface.
 func (r *Restore) Ensure(obj runtime.Object) error {
 	restore, err := r.checkObject(obj)
 	if err != nil {
@@ -54,7 +53,7 @@ func (r *Restore) Ensure(obj runtime.Object) error {
 	return rst.Start()
 }
 
-// Delete satisfies CRDEnsurer interface.
+// Delete satisfies ServiceHandler interface.
 func (r *Restore) Delete(name string) error {
 	// Currently noop
 	return nil

@@ -44,35 +44,65 @@ docker build -t $(minishift openshift registry)/myproject/baas:0.0.1 .
 docker push $(minishift openshift registry)/myproject/baas:0.0.1
 ```
 
-## Example resource
-```yaml
-apiVersion: appuio.ch/v1alpha1
-kind: Backup
-metadata:
-  namespace: baas-test
-  name: baas-test
-spec:
-  dryRun: true # Not used yet
-  schedule: "* * * * *" #every minute
-  checkSchedule: "* * * * *" # When the checks should run default once a week
-  keepJobs: 4 # How many job objects should be kept to check logs
-  backend:
-    s3: # Self explaining
-      endpoint: http://10.144.1.133:9000
-      bucket: baas
-  promURL: http://10.144.1.133:9091 # Prometheus pushgateway url
-  retention: # Default 14 days
-    keepLast: 2 # Absolute amount of snapshots to keep overwrites all other settings
-    keepDaily: 0
-    # Available retention settings:
-    # keepLast
-    # keepHourly
-    # keepDaily
-    # keepWeekly
-    # keepMonthly
-    # keepYearly
-    # keepTags # Not yet implemented
+## Installation
+All required definitions for the installation are located at `manifest/install/`:
+
+```bash
+kubectl apply -f manifest/install/
 ```
+
+Please be aware that these manifests are intended for dev and as examples. They are not the official way to install the operator in production. For this we provide a helm chart at https://github.com/appuio/charts.
+You may need to adjust the namespaces in the manifests. There are various other examples under `manifest/examples/`.
+
+Please see the example resource here in the readme for an explanation of the various settings.
+
+# Examples
+```yaml
+apiVersion: backup.appuio.ch/v1alpha1
+kind: Schedule
+metadata:
+  name: schedule-test
+
+spec:
+  backend:
+    s3:
+      endpoint: http://10.144.1.224:9000
+      bucket: baas
+      accessKeyIDSecretRef:
+        name: backup-credentials
+        key: username
+      secretAccessKeySecretRef:
+        name: backup-credentials
+        key: password
+      repoPasswordSecretRef:
+        name: backup-repo
+        key: password
+  archive:
+    schedule: '0 * * * *'
+    restoreMethod:
+      s3:
+        endpoint: http://10.144.1.224:9000
+        bucket: restoremini
+        accessKeyIDSecretRef:
+          name: backup-credentials
+          key: username
+        secretAccessKeySecretRef:
+          name: backup-credentials
+          key: password
+  backup:
+    schedule: '* * * * *'
+    keepJobs: 4
+    promURL: http://10.144.1.224:9000
+  check:
+    schedule: '*/5 * * * *'
+    promURL: http://10.144.1.224:9000
+  prune:
+    schedule: '*/2 * * * *'
+    retention:
+      keepLast: 5
+      keepDaily: 14
+```
+
 The Restic repository password and the credentials for S3 need to be saved to OpenShift secrets:
 ```yaml
 apiVersion: v1
@@ -120,15 +150,6 @@ template:
 <SNIP>
 ```
 
-# Deploy and Configure the Operator
-To deploy the operator you'll need to adjust some config in the manifest folder. The contents of that folder:
-* `baas-example.yaml` an example backup
-* `operator.yaml` the actual operator
-* `pv-example.yaml` example for a pv
-* `pvc-example.yaml` example for a pvc
-* `role-bindings.yaml` cluster wide permissions necessary
-* `service-account.yaml` the service account for the permissions
-
 ## Configuration
 Various things can be configured via environment variables:
 * `BACKUP_IMAGE` URL for the restic image, default: `172.30.1.1:5000/myproject/restic`
@@ -158,32 +179,57 @@ Various things can be configured via environment variables:
 
 You only need to adjust `BACKUP_IMAGE` everything else can be left default.
 
-## Installation
-All required definitions for the installation are located at `manifest/install/`:
+# Description of the various CRDs
 
-```bash
-kubectl apply -f manifest/install/
+## Schedule CRD
+With the schedule CRD it is possible to put all other CRDs on a schedule.
+
+```yaml
+apiVersion: backup.appuio.ch/v1alpha1
+kind: Schedule
+metadata:
+  name: schedule-test
+spec:
+  backend:
+    s3:
+      endpoint: http://10.144.1.224:9000
+      bucket: baas
+      accessKeyIDSecretRef:
+        name: backup-credentials
+        key: username
+      secretAccessKeySecretRef:
+        name: backup-credentials
+        key: password
+      repoPasswordSecretRef:
+        name: backup-repo
+        key: password
+  archive:
+    schedule: '0 * * * *'
+    restoreMethod:
+      s3:
+        endpoint: http://10.144.1.224:9000
+        bucket: restoremini
+        accessKeyIDSecretRef:
+          name: backup-credentials
+          key: username
+        secretAccessKeySecretRef:
+          name: backup-credentials
+          key: password
+  backup:
+    schedule: '* * * * *'
+    keepJobs: 4
+    promURL: http://10.144.1.224:9000
+  check:
+    schedule: '*/5 * * * *'
+    promURL: http://10.144.1.224:9000
+  prune:
+    schedule: '*/2 * * * *'
+    retention:
+      keepLast: 5
+      keepDaily: 14
 ```
 
-You may need to adjust the namespaces in the manifests. There are various other examples under `manifest/examples/`.
-
-Please see the example resource here in the readme for an explanation of the various settings.
-
-### Installation changes
-- since v0.0.11 -
-Clusterroles for the operator have changed the operator now also needs permissions to interact with the restore CRD objects. Please see `manifest/install/clusterrole.yaml` for details.
-
-- Since v0.0.5 -
-Rolebindings for the operator have changed. This is because of two reasons:
-  - The operator now manages the the pod command execution service account per namespace. Thus it needs `roles`, `rolebindings` and `serviceaccount` permissions
-  - In addition to that the operator needs at least the same permissions as it is allow to grant. Thus it also needs the `pods/exec` permissions
-
-  See `manifest/install/role-bindings.yaml` for more details.
-
-- Since v0.0.4 -
-Because v0.0.5 supports consistent backups via stdout/stdin streaming the wrestic container needs a service account. This is currently hardcoded to `pod-executor`. This needs another cluster role and a service account per namespace. See `manifest/prereqs/pod-exec.yaml` for an example.
-
-# Restore CRD
+## Restore CRD
 It's now possible to define various restore jobs. Currently these kinds of restores are supported:
 
 * To a PVC
@@ -218,6 +264,123 @@ spec:
 ```
 
 This will restore the latest snapshot from `http://10.144.1.224:9000` to the PVC with the name `restore`.
+
+## Archive CRD
+The archive CRD will take the latest snapshots from each namespace/project in the repository. Thus you should only run one schedule per repository for archival as there's a chance that you'll archive snapshots more than once.
+
+```yaml
+apiVersion: backup.appuio.ch/v1alpha1
+kind: Archive
+metadata:
+  name: archive-test
+spec:
+  repoPasswordSecretRef:
+    name: backup-repo
+    key: password
+  restoreMethod:
+    s3:
+      endpoint: http://10.144.1.224:9000
+      bucket: restoremini
+      accessKeyIDSecretRef:
+        name: backup-credentials
+        key: username
+      secretAccessKeySecretRef:
+        name: backup-credentials
+        key: password
+  backend:
+    s3:
+      endpoint: http://10.144.1.224:9000
+      bucket: baas
+      accessKeyIDSecretRef:
+        name: backup-credentials
+        key: username
+      secretAccessKeySecretRef:
+        name: backup-credentials
+        key: password
+```
+
+## Backup CRD
+This will trigger a single backup.
+
+```yaml
+apiVersion: backup.appuio.ch/v1alpha1
+kind: Backup
+metadata:
+  name: baas-test
+spec:
+  keepJobs: 4
+  backend:
+    s3:
+      endpoint: http://10.144.1.224:9000
+      bucket: baas
+      accessKeyIDSecretRef:
+        name: backup-credentials
+        key: username
+      secretAccessKeySecretRef:
+        name: backup-credentials
+        key: password
+  retention:
+    keepLast: 5
+    keepDaily: 14
+  promURL: http://10.144.1.224:9000
+  repoPasswordSecretRef:
+    name: backup-repo
+    key: password
+```
+
+## Check CRD
+This will trigger a single check run on the repository.
+
+```yaml
+apiVersion: backup.appuio.ch/v1alpha1
+kind: Check
+metadata:
+  name: check-test
+spec:
+  backend:
+    s3:
+      endpoint: http://10.144.1.224:9000
+      bucket: baas
+      accessKeyIDSecretRef:
+        name: backup-credentials
+        key: username
+      secretAccessKeySecretRef:
+        name: backup-credentials
+        key: password
+  promURL: http://10.144.1.224:9000
+  repoPasswordSecretRef:
+    name: backup-repo
+    key: password
+
+```
+
+## Prune CRD
+This will trigger a single prune run and delete the snapshots according to the defined retention rules. This one needs to run exclusively on the repository. No other jobs must run on the same repository while this one is still running.
+
+```yaml
+apiVersion: backup.appuio.ch/v1alpha1
+kind: Prune
+metadata:
+  name: prune-test
+spec:
+  retention:
+    keepLast: 5
+    keepDaily: 14
+  backend:
+    s3:
+      endpoint: http://10.144.1.224:9000
+      bucket: baas
+      accessKeyIDSecretRef:
+        name: backup-credentials
+        key: username
+      secretAccessKeySecretRef:
+        name: backup-credentials
+        key: password
+      repoPasswordSecretRef:
+        name: backup-repo
+        key: password
+  promURL: http://10.144.1.224:9000
+```
 
 # Manual restore
 To manually restore you'll need:

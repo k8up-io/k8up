@@ -10,12 +10,14 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
+// Schedule holds the state of the schedule handler. It implements the ServiceHandler interface.
 type Schedule struct {
 	service.CommonObjects
 	schedules sync.Map
 	observer  *observe.Observer
 }
 
+// NewSchedule returns a new scheduler handler.
 func NewSchedule(common service.CommonObjects, observer *observe.Observer) *Schedule {
 	return &Schedule{
 		CommonObjects: common,
@@ -24,6 +26,7 @@ func NewSchedule(common service.CommonObjects, observer *observe.Observer) *Sche
 	}
 }
 
+// Ensure is part of the ServiceHandler interface
 func (s *Schedule) Ensure(obj runtime.Object) error {
 	schedule, err := checkObject(obj)
 	if err != nil {
@@ -56,6 +59,7 @@ func (s *Schedule) Ensure(obj runtime.Object) error {
 	return newScheduler.Start()
 }
 
+// Delete is part of the ServiceHandler interface.
 func (s *Schedule) Delete(name string) error {
 	schedule, ok := s.schedules.Load(name)
 	if !ok {

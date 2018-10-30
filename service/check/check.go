@@ -9,12 +9,14 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
+// Check holds the state of the check handler. It implements ServiceHandler.
 type Check struct {
 	service.CommonObjects
 	observer *observe.Observer
 	config   config
 }
 
+// NewCheck returns a new check handler.
 func NewCheck(common service.CommonObjects, observer *observe.Observer) *Check {
 	return &Check{
 		CommonObjects: common,
@@ -23,6 +25,7 @@ func NewCheck(common service.CommonObjects, observer *observe.Observer) *Check {
 	}
 }
 
+// Ensure is part of the ServiceHandler interface
 func (c *Check) Ensure(obj runtime.Object) error {
 	check, err := c.checkObject(obj)
 	if err != nil {
@@ -43,6 +46,8 @@ func (c *Check) Ensure(obj runtime.Object) error {
 	return checkRunner.Start()
 }
 
+// Delete is part of the ServiceHandler interface. It's needed for permanent
+// services, like the scheduler.
 func (c *Check) Delete(name string) error {
 	return nil
 }

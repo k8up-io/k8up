@@ -11,12 +11,14 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
+// Backup holds the state of the backup handler. It implements the ServiceHandler interface.
 type Backup struct {
 	service.CommonObjects
 	config   config
 	observer *observe.Observer
 }
 
+// NewBackup returns a new backup handler
 func NewBackup(common service.CommonObjects, observer *observe.Observer) *Backup {
 	return &Backup{
 		CommonObjects: common,
@@ -33,6 +35,7 @@ func (b *Backup) checkObject(obj runtime.Object) (*backupv1alpha1.Backup, error)
 	return backup, nil
 }
 
+// Ensure is part of the ServiceHandler interface
 func (b *Backup) Ensure(obj runtime.Object) error {
 	backup, err := b.checkObject(obj)
 	if err != nil {
@@ -58,6 +61,8 @@ func (b *Backup) Ensure(obj runtime.Object) error {
 
 }
 
+// Delete is part of the ServiceHandler interface. It's needed for permanent
+// services, like the scheduler.
 func (b *Backup) Delete(name string) error {
 	return nil
 }

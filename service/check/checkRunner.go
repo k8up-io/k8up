@@ -27,6 +27,7 @@ func newCheckRunner(common service.CommonObjects, config config, check *backupv1
 	}
 }
 
+// Start is part of the ServiceRunner interface.
 func (c *checkRunner) Start() error {
 	c.Logger.Infof("New check job received %v in namespace %v", c.check.Name, c.check.Namespace)
 	c.check.Status.Started = true
@@ -44,8 +45,13 @@ func (c *checkRunner) Start() error {
 	return nil
 }
 
+// SameSpec checks if the CRD instance changed. This is is only viable for
+// permanent services like the scheduler, that may change.
 func (c *checkRunner) SameSpec(object runtime.Object) bool { return true }
-func (c *checkRunner) Stop() error                         { return nil }
+
+// Stop is part of the ServiceRunner interface, it's needed for permanent
+// services like the scheduler.
+func (c *checkRunner) Stop() error { return nil }
 
 func (c *checkRunner) updateCheckStatus() {
 	// Just overwrite the resource

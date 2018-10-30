@@ -18,7 +18,7 @@ spec:
           key: password
   backup:
     schedule: '* * * * *'
-    keepJobs: 4
+    keepJobs: 10
     promURL: http://10.144.1.224:9000
   check:
     schedule: '*/5 * * * *'

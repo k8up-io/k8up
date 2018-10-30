@@ -30,6 +30,7 @@ func newBackupRunner(backup *backupv1alpha1.Backup, common service.CommonObjects
 	}
 }
 
+// Start is part of the ServiceRunner interface.
 func (b *backupRunner) Start() error {
 	b.Logger.Infof("New backup job received %v in namespace %v", b.backup.Name, b.backup.Namespace)
 	b.backup.Status.Started = true
@@ -59,8 +60,12 @@ func (b *backupRunner) Start() error {
 	return nil
 }
 
+// Stop is part of the ServiceRunner interface, it's needed for permanent
+// services like the scheduler.
 func (b *backupRunner) Stop() error { return nil }
 
+// SameSpec checks if the CRD instance changed. This is is only viable for
+// permanent services like the scheduler, that may change.
 func (b *backupRunner) SameSpec(object runtime.Object) bool { return true }
 
 func (b *backupRunner) watchState(backupJob *batchv1.Job) {

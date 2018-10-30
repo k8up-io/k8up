@@ -14,9 +14,6 @@ spec:
       secretAccessKeySecretRef:
         name: backup-credentials
         key: password
-  retention:
-    keepLast: 5
-    keepDaily: 14
   promURL: http://10.144.1.224:9000
   repoPasswordSecretRef:
     name: backup-repo

@@ -3,9 +3,8 @@ package restore
 import (
 	"fmt"
 
-	"git.vshn.net/vshn/baas/service"
-
 	backupv1alpha1 "git.vshn.net/vshn/baas/apis/backup/v1alpha1"
+	"git.vshn.net/vshn/baas/service"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
@@ -25,6 +24,7 @@ func NewRestoreRunner(restore *backupv1alpha1.Restore, common service.CommonObje
 	}
 }
 
+// Start is part of the ServiceRunner interface.
 func (r *RestoreRunner) Start() error {
 
 	r.Logger.Infof("Received restore job %v in namespace %v", r.restore.Name, r.restore.Namespace)
@@ -51,11 +51,15 @@ func (r *RestoreRunner) Start() error {
 	return nil
 }
 
+// Stop is part of the ServiceRunner interface, it's needed for permanent
+// services like the scheduler.
 func (r *RestoreRunner) Stop() error {
 	// Currently noop
 	return nil
 }
 
+// SameSpec checks if the CRD instance changed. This is is only viable for
+// permanent services like the scheduler, that may change.
 func (r *RestoreRunner) SameSpec(object runtime.Object) bool {
 	return false
 }

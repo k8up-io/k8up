@@ -9,6 +9,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
+// Pruner holds the state of the pruner handler. It implements the ServiceHandler interface.
 type Pruner struct {
 	service.CommonObjects
 	observer *observe.Observer
