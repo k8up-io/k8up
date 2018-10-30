@@ -3,14 +3,11 @@ package main
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"flag"
 	"fmt"
 	"net/http"
 	"os"
-	"strconv"
 	"strings"
-	"time"
 )
 
 const (
@@ -67,20 +64,6 @@ var (
 	metrics      *resticMetrics
 	backupDir    string
 )
-
-// snapshot models a restic a single snapshot from the
-// snapshots --json subcommand.
-type snapshot struct {
-	ID       string    `json:"id"`
-	Time     time.Time `json:"time"`
-	Tree     string    `json:"tree"`
-	Paths    []string  `json:"paths"`
-	Hostname string    `json:"hostname"`
-	Username string    `json:"username"`
-	UID      int       `json:"uid"`
-	Gid      int       `json:"gid"`
-	Tags     []string  `json:"tags"`
-}
 
 type stats struct {
 	Name          string     `json:"name"`
@@ -155,61 +138,11 @@ func startMetrics() {
 	metrics.Update(metrics.BackupStartTimestamp)
 }
 
-func parseBackupOutput(stdout, stderr []string) {
-	files := strings.Fields(strings.Split(stdout[len(stdout)-6], ":")[1])
-	dirs := strings.Fields(strings.Split(stdout[len(stdout)-5], ":")[1])
-
-	var errorCount = len(stderr)
-
-	newFiles, err := strconv.Atoi(files[0])
-	changedFiles, err := strconv.Atoi(files[2])
-	unmodifiedFiles, err := strconv.Atoi(files[4])
-
-	newDirs, err := strconv.Atoi(dirs[0])
-	changedDirs, err := strconv.Atoi(dirs[2])
-	unmodifiedDirs, err := strconv.Atoi(dirs[4])
-
-	if err != nil {
-		errorMessage := fmt.Sprintln("There was a problem convertig the metrics: ", err)
-		fmt.Println(errorMessage)
-		commandError = errors.New(errorMessage)
-		return
-	}
-
-	if commandError != nil {
-		errorCount++
-	}
-
-	newMetrics := rawMetrics{
-		NewDirs:         float64(newDirs),
-		NewFiles:        float64(newFiles),
-		ChangedFiles:    float64(changedFiles),
-		UnmodifiedFiles: float64(unmodifiedFiles),
-		ChangedDirs:     float64(changedDirs),
-		UnmodifiedDirs:  float64(unmodifiedDirs),
-	}
-
-	updateProm(newMetrics)
-	postToURL(prepareBackupMetricJSON(newMetrics))
-
-	if errorCount > 0 && commandError == nil {
-		commandError = fmt.Errorf("there where %v errors", errorCount)
-	}
-}
-
 func setBackupDir() string {
 	if value, ok := os.LookupEnv(backupDirEnv); ok {
 		return value
 	}
 	return "/data"
-}
-
-func parseCheckOutput(stdout, stderr []string) {
-	metrics.Errors.Set(float64(len(stderr)))
-	metrics.Update(metrics.Errors)
-	if len(stderr) > 0 {
-		commandError = errors.New("There was at least one backup error")
-	}
 }
 
 func outputToSlice(output []byte) []string {
