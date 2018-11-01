@@ -122,9 +122,9 @@ func main() {
 					backup()
 				}
 			} else {
-				prune()
+				pruneCommand()
 			}
-			listSnapshots()
+			updateSnapshots()
 		}
 	} else if *archive {
 		archiveJob()
@@ -220,4 +220,16 @@ func setRestoreDir() string {
 		return value
 	}
 	return "/restore"
+}
+
+func updateSnapshots() {
+	fmt.Println("Update webhook with snapshots")
+
+	snapshots, err := listSnapshots()
+	if err != nil {
+		commandError = err
+		return
+	}
+
+	postToURL(snapshots)
 }
