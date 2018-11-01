@@ -122,7 +122,7 @@ func main() {
 					backup()
 				}
 			} else {
-				forget()
+				prune()
 			}
 			listSnapshots()
 		}

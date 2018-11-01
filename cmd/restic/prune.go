@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-func forget() {
+func prune() {
 	// TODO: check for integers
 	args := []string{"forget", "--prune"}
 
