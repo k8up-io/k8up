@@ -6,10 +6,22 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+With this release it is possible to trigger every action on demand. But there's also a schedule CRD that can put everything on its own schedule. These changes are the plumbing for further improvements especially with the locking problem.
+
+**ATTENTION**: All the CRD definitions have changed slightly.
+
+Also some known issues in this version:
+- No lock management yet, only the plumbing, so if there's a shared repository it can and will sometimes fail due to stale locks
+- If a job still fails after it reached the back-off limit the operator doesn't notice it. That's due to the k8s job controller cleaning up the pod. This can be resolved by observing the job states.
+
 ### Added
-- Restore CRD to handle restores. See the Readme for examples.
-### Changes
-- The new CRD also needs changes to the cluster roles. Please see the README for further explanation
+- Archive function
+- Check function
+- Prune function
+- Schedule CRD to schedule all functions
+### Changed
+- Group name of the API, it's now backup.appuio.ch
+- New CRDs please consult manifest/examples for how to use them
 
 ## [v0.0.10] - 2018-09-28
 ### Added

@@ -5,9 +5,8 @@ metadata:
   name: baas-operator
 subjects:
 - kind: ServiceAccount
-  namespace: appuio-baas-operator
+  namespace: myproject
   name: baas-operator
-  apiGroup:
 roleRef:
   kind: ClusterRole
   name: baas-operator

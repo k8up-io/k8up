@@ -28,12 +28,28 @@ type FakeAppuioV1alpha1 struct {
 	*testing.Fake
 }
 
+func (c *FakeAppuioV1alpha1) Archives(namespace string) v1alpha1.ArchiveInterface {
+	return &FakeArchives{c, namespace}
+}
+
 func (c *FakeAppuioV1alpha1) Backups(namespace string) v1alpha1.BackupInterface {
 	return &FakeBackups{c, namespace}
 }
 
+func (c *FakeAppuioV1alpha1) Checks(namespace string) v1alpha1.CheckInterface {
+	return &FakeChecks{c, namespace}
+}
+
+func (c *FakeAppuioV1alpha1) Prunes(namespace string) v1alpha1.PruneInterface {
+	return &FakePrunes{c, namespace}
+}
+
 func (c *FakeAppuioV1alpha1) Restores(namespace string) v1alpha1.RestoreInterface {
 	return &FakeRestores{c, namespace}
+}
+
+func (c *FakeAppuioV1alpha1) Schedules(namespace string) v1alpha1.ScheduleInterface {
+	return &FakeSchedules{c, namespace}
 }
 
 // RESTClient returns a RESTClient that is used to communicate

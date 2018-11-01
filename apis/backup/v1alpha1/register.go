@@ -1,12 +1,11 @@
 package v1alpha1
 
 import (
+	backup "git.vshn.net/vshn/baas/apis/backup"
 	apiextensionsv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-
-	backup "git.vshn.net/vshn/baas/apis/backup"
 )
 
 const (
@@ -15,14 +14,32 @@ const (
 
 // Backup constants
 const (
-	BackupKind    = "Backup"
-	BackupName    = "backup"
-	BackupPlural  = "backups"
+	BackupKind   = "Backup"
+	BackupName   = "backup"
+	BackupPlural = "backups"
+
 	RestoreKind   = "Restore"
 	RestoreName   = "restore"
 	RestorePlural = "restores"
-	BackupScope   = apiextensionsv1beta1.NamespaceScoped
-	RestoreScope  = apiextensionsv1beta1.NamespaceScoped
+
+	ArchiveKind   = "Archive"
+	ArchiveName   = "archive"
+	ArchivePlural = "archives"
+
+	ScheduleKind   = "Schedule"
+	ScheduleName   = "schedule"
+	SchedulePlural = "schedules"
+
+	CheckKind   = "Check"
+	CheckName   = "check"
+	CheckPlural = "checks"
+
+	PruneKind   = "Prune"
+	PruneName   = "prune"
+	PrunePlural = "prunes"
+
+	NamespaceScope = apiextensionsv1beta1.NamespaceScoped
+	ClusterScope   = apiextensionsv1beta1.ClusterScoped
 )
 
 // SchemeGroupVersion is group version used to register these objects
@@ -55,6 +72,14 @@ func addKnownTypes(scheme *runtime.Scheme) error {
 		&BackupList{},
 		&Restore{},
 		&RestoreList{},
+		&Archive{},
+		&ArchiveList{},
+		&Schedule{},
+		&ScheduleList{},
+		&Check{},
+		&CheckList{},
+		&Prune{},
+		&PruneList{},
 	)
 	metav1.AddToGroupVersion(scheme, SchemeGroupVersion)
 	return nil

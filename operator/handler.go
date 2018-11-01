@@ -4,9 +4,7 @@ import (
 	"context"
 
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/client-go/kubernetes"
 
-	baas8scli "git.vshn.net/vshn/baas/client/k8s/clientset/versioned"
 	"git.vshn.net/vshn/baas/log"
 	"git.vshn.net/vshn/baas/service"
 )
@@ -14,12 +12,12 @@ import (
 // Handler  is the pod terminator handler that will handle the
 // events received from kubernetes.
 type handler struct {
-	baasService service.CRDEnsurer
+	baasService service.Handler
 	logger      log.Logger
 }
 
 // newHandler returns a new handler.
-func newHandler(k8sCli kubernetes.Interface, baasCLI baas8scli.Interface, logger log.Logger, obj service.CRDEnsurer) *handler {
+func newHandler(logger log.Logger, obj service.Handler) *handler {
 	return &handler{
 		baasService: obj,
 		logger:      logger,

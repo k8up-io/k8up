@@ -1,5 +1,5 @@
 package test
 
 const (
-	GroupName = "appuio.ch"
+	GroupName = "backup.appuio.ch"
 )

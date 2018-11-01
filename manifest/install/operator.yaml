@@ -21,22 +21,25 @@ spec:
           imagePullPolicy: Always
           env:
             - name: BACKUP_IMAGE
-              value: 172.30.1.1:5000/myproject/test:latest
+              value: 172.30.1.1:5000/myproject/wrestic:0.0.1
             - name: BACKUP_GLOBALACCESSKEYID
-              valueFrom:
-                secretKeyRef:
-                  name: global-credentials
-                  key: access-key-id
+              value: 8U0UDNYPNUDTUS1LIAF3
             - name: BACKUP_GLOBALSECRETACCESSKEY
-              valueFrom:
-                secretKeyRef:
-                  name: global-credentials
-                  key: secret-access-key
+              value: ip3cdrkXcHmH4S7if7erKPNoxDn27V0vrg6CHHem
             - name: BACKUP_GLOBALREPOPASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: global-backup-repo
-                  key: password
-      serviceAccountName: backup-account
+              value: password
+            - name: BACKUP_GLOBALRESTORES3BUCKET
+              value: restoremin
+            - name: BACKUP_GLOBALRESTORES3ENDPOINT
+              value: http://10.144.1.224:9000
+            - name: BACKUP_GLOBALRESTORES3ACCESKEYID
+              value: 8U0UDNYPNUDTUS1LIAF3
+            - name: BACKUP_GLOBALRESTORES3SECRETACCESSKEY
+              value: ip3cdrkXcHmH4S7if7erKPNoxDn27V0vrg6CHHem
+            - name: BACKUP_GLOBALS3ENDPOINT
+              value: http://10.144.1.224:9000
+            - name: BACKUP_GLOBALS3BUCKET
+              value: baas
+      serviceAccountName: baas-operator
 
 #kubectl create clusterrolebinding cluster-admin-binding-2   --clusterrole=cluster-admin   --user=system:system:serviceaccount:myproject:default

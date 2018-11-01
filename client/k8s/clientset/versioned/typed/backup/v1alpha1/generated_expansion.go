@@ -18,6 +18,14 @@ limitations under the License.
 
 package v1alpha1
 
+type ArchiveExpansion interface{}
+
 type BackupExpansion interface{}
 
+type CheckExpansion interface{}
+
+type PruneExpansion interface{}
+
 type RestoreExpansion interface{}
+
+type ScheduleExpansion interface{}
