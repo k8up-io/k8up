@@ -95,7 +95,7 @@ func main() {
 		os.Exit(exit)
 	}()
 
-	backupDir = setBackupDir()
+	backupDir = getBackupDir()
 
 	// TODO: simplify this
 	if !*restore && !*archive {
@@ -142,7 +142,7 @@ func startMetrics() {
 	metrics.Update(metrics.BackupStartTimestamp)
 }
 
-func setBackupDir() string {
+func getBackupDir() string {
 	if value, ok := os.LookupEnv(backupDirEnv); ok {
 		return value
 	}
@@ -154,20 +154,20 @@ func outputToSlice(output []byte) []string {
 	return strings.Split(stringOutput, "\n")
 }
 
-func updateProm(newMetrics rawMetrics) {
-	metrics.NewFiles.Set(newMetrics.NewFiles)
+func updateProm(newMetrics rawMetrics, folder, hostname string) {
+	metrics.NewFiles.WithLabelValues(folder, hostname).Set(newMetrics.NewFiles)
 	metrics.Update(metrics.NewFiles)
-	metrics.ChangedFiles.Set(newMetrics.ChangedFiles)
+	metrics.ChangedFiles.WithLabelValues(folder, hostname).Set(newMetrics.ChangedFiles)
 	metrics.Update(metrics.ChangedFiles)
-	metrics.UnmodifiedFiles.Set(newMetrics.UnmodifiedFiles)
+	metrics.UnmodifiedFiles.WithLabelValues(folder, hostname).Set(newMetrics.UnmodifiedFiles)
 	metrics.Update(metrics.UnmodifiedFiles)
-	metrics.NewDirs.Set(newMetrics.NewDirs)
+	metrics.NewDirs.WithLabelValues(folder, hostname).Set(newMetrics.NewDirs)
 	metrics.Update(metrics.NewDirs)
-	metrics.ChangedDirs.Set(newMetrics.ChangedDirs)
+	metrics.ChangedDirs.WithLabelValues(folder, hostname).Set(newMetrics.ChangedDirs)
 	metrics.Update(metrics.ChangedDirs)
-	metrics.UnmodifiedDirs.Set(newMetrics.UnmodifiedDirs)
+	metrics.UnmodifiedDirs.WithLabelValues(folder, hostname).Set(newMetrics.UnmodifiedDirs)
 	metrics.Update(metrics.UnmodifiedDirs)
-	metrics.Errors.Set(newMetrics.Errors)
+	metrics.Errors.WithLabelValues(folder, hostname).Set(newMetrics.Errors)
 	metrics.Update(metrics.Errors)
 }
 
@@ -215,7 +215,7 @@ func postToURL(data interface{}) {
 	}
 }
 
-func setRestoreDir() string {
+func getRestoreDir() string {
 	if value, ok := os.LookupEnv(restoreDirEnv); ok {
 		return value
 	}

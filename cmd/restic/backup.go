@@ -1,23 +1,38 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path"
 	"strconv"
 	"strings"
 
 	"git.vshn.net/vshn/wrestic/kubernetes"
 )
 
+var folderList []string
+
 func backup() {
 	fmt.Println("backing up...")
-	args := []string{"backup", backupDir, "--hostname", os.Getenv(hostname)}
-	stdout, stderr := genericCommand(args, commandOptions{print: true})
-	if commandError == nil {
-		parseBackupOutput(stdout, stderr)
+	files, err := ioutil.ReadDir(getBackupDir())
+	if err != nil {
+		commandError = err
 	}
+	folderList = make([]string, 0)
+	for _, folder := range files {
+		if folder.IsDir() && commandError == nil {
+			fmt.Printf("Starting backup for folder %v\n", folder.Name())
+			folderList = append(folderList, folder.Name())
+			backupFolder(path.Join(getBackupDir(), folder.Name()), folder.Name())
+		}
+	}
+}
+
+func backupFolder(folder, folderName string) {
+	args := []string{"backup", folder, "--hostname", os.Getenv(hostname)}
+	stdout, stderr := genericCommand(args, commandOptions{print: true})
+	parseBackupOutput(stdout, stderr, folderName)
 }
 
 func stdinBackup(backupCommand, pod, container, namespace string) {
@@ -33,10 +48,10 @@ func stdinBackup(backupCommand, pod, container, namespace string) {
 		},
 		stdin: true,
 	})
-	parseBackupOutput(stdout, stderr)
+	parseBackupOutput(stdout, stderr, "stdin")
 }
 
-func parseBackupOutput(stdout, stderr []string) {
+func parseBackupOutput(stdout, stderr []string, folderName string) {
 	files := strings.Fields(strings.Split(stdout[len(stdout)-6], ":")[1])
 	dirs := strings.Fields(strings.Split(stdout[len(stdout)-5], ":")[1])
 
@@ -53,22 +68,11 @@ func parseBackupOutput(stdout, stderr []string) {
 	if err != nil {
 		errorMessage := fmt.Sprintln("There was a problem convertig the metrics: ", err)
 		fmt.Println(errorMessage)
-		commandError = errors.New(errorMessage)
 		return
 	}
 
 	if commandError != nil {
 		errorCount++
-	}
-
-	folders, err := ioutil.ReadDir(setBackupDir())
-	if err != nil {
-		commandError = err
-		return
-	}
-	mountedPVCs := []string{}
-	for _, folder := range folders {
-		mountedPVCs = append(mountedPVCs, folder.Name())
 	}
 
 	newMetrics := rawMetrics{
@@ -78,13 +82,15 @@ func parseBackupOutput(stdout, stderr []string) {
 		UnmodifiedFiles: float64(unmodifiedFiles),
 		ChangedDirs:     float64(changedDirs),
 		UnmodifiedDirs:  float64(unmodifiedDirs),
-		MountedPVCs:     mountedPVCs,
+		MountedPVCs:     folderList,
 	}
 
-	updateProm(newMetrics)
+	if errorCount > 0 {
+		fmt.Println("Following errors occured during the backup:")
+		fmt.Println(strings.Join(stderr, "\n"))
+	}
+
+	updateProm(newMetrics, folderName, os.Getenv(hostname))
 	postToURL(prepareBackupMetricJSON(newMetrics))
 
-	if errorCount > 0 && commandError == nil {
-		commandError = fmt.Errorf("there where %v errors", errorCount)
-	}
 }
