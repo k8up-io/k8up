@@ -6,9 +6,11 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [v0.1.0] - 2018-11-1
 With this release it is possible to trigger every action on demand. But there's also a schedule CRD that can put everything on its own schedule. These changes are the plumbing for further improvements especially with the locking problem.
 
-**ATTENTION**: All the CRD definitions have changed slightly.
+**ATTENTION**: All the CRD definitions have changed slightly. So this is not backwards compatible with the old CRDs.
 
 Also some known issues in this version:
 - No lock management yet, only the plumbing, so if there's a shared repository it can and will sometimes fail due to stale locks
@@ -83,7 +85,8 @@ Also some known issues in this version:
 ### Changed
 - Initial version
 
-[unreleased]: https://git.vshn.net/vshn/baas/compare/v0.0.10...master
+[unreleased]: https://git.vshn.net/vshn/baas/compare/v0.1.0...master
+[v0.1.0]: https://git.vshn.net/vshn/baas/compare/v0.0.10...v0.1.0
 [v0.0.10]: https://git.vshn.net/vshn/baas/compare/v0.0.9...v0.0.10
 [v0.0.9]: https://git.vshn.net/vshn/baas/compare/v0.0.8...v0.0.9
 [v0.0.8]: https://git.vshn.net/vshn/baas/compare/v0.0.7...v0.0.8
