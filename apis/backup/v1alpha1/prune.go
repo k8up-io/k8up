@@ -19,6 +19,7 @@ type PruneSpec struct {
 	// Retention sets how many backups should be kept after a forget and prune
 	Retention RetentionPolicy `json:"retention,omitempty"`
 	Backend   *Backend        `json:"backend,omitempty"`
+	KeepJobs  int             `json:"keepJobs,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

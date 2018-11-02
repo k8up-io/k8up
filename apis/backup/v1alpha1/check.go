@@ -17,8 +17,9 @@ type Check struct {
 // CheckSpec only needs to hold the repository information
 // for which the check should run.
 type CheckSpec struct {
-	PromURL string   `json:"promURL,omitempty"`
-	Backend *Backend `json:"backend,omitempty"`
+	PromURL  string   `json:"promURL,omitempty"`
+	Backend  *Backend `json:"backend,omitempty"`
+	KeepJobs int      `json:"keepJobs,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

@@ -1,9 +1,12 @@
 package archive
 
 import (
+	"sort"
+
 	backupv1alpha1 "git.vshn.net/vshn/baas/apis/backup/v1alpha1"
 	"git.vshn.net/vshn/baas/service"
 	"git.vshn.net/vshn/baas/service/observe"
+	"git.vshn.net/vshn/baas/service/schedule"
 	batchv1 "k8s.io/api/batch/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -96,4 +99,45 @@ func (a *archiveRunner) watchState(archiveJob *batchv1.Job) {
 		a.observer.GetBroker().Unsubscribe(archiveJob.Labels[a.config.Identifier], subscription)
 	}()
 
+	a.removeOldestArchives(a.getScheduledCRDsInNameSpace(), a.archiver.Spec.KeepJobs)
+
+}
+
+func (a *archiveRunner) getScheduledCRDsInNameSpace() []backupv1alpha1.Archive {
+	opts := metav1.ListOptions{
+		LabelSelector: schedule.ScheduledLabelFilter(),
+	}
+	checks, err := a.BaasCLI.AppuioV1alpha1().Archives(a.archiver.Namespace).List(opts)
+	if err != nil {
+		a.Logger.Errorf("%v", err)
+		return nil
+	}
+
+	return checks.Items
+}
+
+func (a *archiveRunner) cleanupArchive(archive *backupv1alpha1.Archive) error {
+	a.Logger.Infof("Cleanup archive %v", archive.Name)
+	option := metav1.DeletePropagationForeground
+	return a.BaasCLI.AppuioV1alpha1().Archives(archive.Namespace).Delete(archive.Name, &metav1.DeleteOptions{
+		PropagationPolicy: &option,
+	})
+}
+
+func (a *archiveRunner) removeOldestArchives(archives []backupv1alpha1.Archive, maxJobs int) {
+	if maxJobs == 0 {
+		maxJobs = a.config.GlobalKeepJobs
+	}
+	numToDelete := len(archives) - maxJobs
+	if numToDelete <= 0 {
+		return
+	}
+
+	a.Logger.Infof("Cleaning up %d/%d jobs", numToDelete, len(archives))
+
+	sort.Sort(byCreationTime(archives))
+	for i := 0; i < numToDelete; i++ {
+		a.Logger.Infof("Removing job %v limit reached", archives[i].Name)
+		a.cleanupArchive(&archives[i])
+	}
 }

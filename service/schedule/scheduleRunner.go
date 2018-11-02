@@ -3,6 +3,7 @@ package schedule
 import (
 	"fmt"
 	"reflect"
+	"strings"
 	"time"
 
 	backupv1alpha1 "git.vshn.net/vshn/baas/apis/backup/v1alpha1"
@@ -11,6 +12,10 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
+
+var labels = map[string]string{
+	"scheduled": "true",
+}
 
 type state int
 
@@ -71,9 +76,12 @@ func (s *scheduleRunner) Start() error {
 				ObjectMeta: metav1.ObjectMeta{
 					Name:            fmt.Sprintf("scheduled-restore-%v-%v", scheduleCopy.Name, time.Now().Unix()),
 					OwnerReferences: ownerReference,
+					Labels:          labels,
 				},
 				Spec: scheduleCopy.Spec.Restore.RestoreSpec.DeepCopy(),
 			}
+
+			newRestore.Spec.KeepJobs = scheduleCopy.Spec.KeepJobs
 
 			_, err := s.BaasCLI.AppuioV1alpha1().Restores(scheduleCopy.Namespace).Create(&newRestore)
 			if err != nil {
@@ -93,9 +101,12 @@ func (s *scheduleRunner) Start() error {
 				ObjectMeta: metav1.ObjectMeta{
 					Name:            fmt.Sprintf("scheduled-prune-%v-%v", scheduleCopy.Name, time.Now().Unix()),
 					OwnerReferences: ownerReference,
+					Labels:          labels,
 				},
 				Spec: scheduleCopy.Spec.Prune.PruneSpec.DeepCopy(),
 			}
+
+			newPrune.Spec.KeepJobs = scheduleCopy.Spec.KeepJobs
 
 			_, err := s.BaasCLI.AppuioV1alpha1().Prunes(scheduleCopy.Namespace).Create(&newPrune)
 			if err != nil {
@@ -115,9 +126,12 @@ func (s *scheduleRunner) Start() error {
 				ObjectMeta: metav1.ObjectMeta{
 					Name:            fmt.Sprintf("scheduled-check-%v-%v", scheduleCopy.Name, time.Now().Unix()),
 					OwnerReferences: ownerReference,
+					Labels:          labels,
 				},
 				Spec: scheduleCopy.Spec.Check.CheckSpec.DeepCopy(),
 			}
+
+			newCheck.Spec.KeepJobs = scheduleCopy.Spec.KeepJobs
 
 			_, err := s.BaasCLI.AppuioV1alpha1().Checks(scheduleCopy.Namespace).Create(&newCheck)
 			if err != nil {
@@ -137,9 +151,12 @@ func (s *scheduleRunner) Start() error {
 				ObjectMeta: metav1.ObjectMeta{
 					Name:            fmt.Sprintf("scheduled-backup-%v-%v", scheduleCopy.Name, time.Now().Unix()),
 					OwnerReferences: ownerReference,
+					Labels:          labels,
 				},
 				Spec: scheduleCopy.Spec.Backup.BackupSpec.DeepCopy(),
 			}
+
+			newBackup.Spec.KeepJobs = scheduleCopy.Spec.KeepJobs
 
 			_, err := s.BaasCLI.AppuioV1alpha1().Backups(scheduleCopy.Namespace).Create(&newBackup)
 			if err != nil {
@@ -159,9 +176,13 @@ func (s *scheduleRunner) Start() error {
 				ObjectMeta: metav1.ObjectMeta{
 					Name:            fmt.Sprintf("scheduled-archive-%v-%v", scheduleCopy.Name, time.Now().Unix()),
 					OwnerReferences: ownerReference,
+					Labels:          labels,
 				},
 				Spec: scheduleCopy.Spec.Archive.ArchiveSpec.DeepCopy(),
 			}
+
+			newArchive.Spec.KeepJobs = scheduleCopy.Spec.KeepJobs
+
 			_, err := s.BaasCLI.AppuioV1alpha1().Archives(scheduleCopy.Namespace).Create(&newArchive)
 			if err != nil {
 				s.Logger.Errorf("Error creating the archive schedule %v in namespace %v: %v", scheduleCopy.Name, scheduleCopy.Namespace, err)
@@ -172,4 +193,12 @@ func (s *scheduleRunner) Start() error {
 	s.cron.Start()
 
 	return nil
+}
+
+func ScheduledLabelFilter() string {
+	filter := make([]string, 0)
+	for k, v := range labels {
+		filter = append(filter, k+"="+v)
+	}
+	return strings.Join(filter, ", ")
 }

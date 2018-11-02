@@ -8,6 +8,7 @@ import (
 	backupv1alpha1 "git.vshn.net/vshn/baas/apis/backup/v1alpha1"
 	"git.vshn.net/vshn/baas/service"
 	"git.vshn.net/vshn/baas/service/observe"
+	"git.vshn.net/vshn/baas/service/schedule"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -92,8 +93,7 @@ func (b *backupRunner) watchState(backupJob *batchv1.Job) {
 
 	subscription.WatchLoop(watch)
 
-	// TODO: move this to the scheduler and manage all scheduled jobs
-	b.removeOldestJobs(b.getJobsInNameSpace(b.backup.Namespace, b.config.Label), b.backup.Spec.KeepJobs)
+	b.removeOldestBackups(b.getScheduledCRDsInNameSpace(), b.backup.Spec.KeepJobs)
 }
 
 func (b *backupRunner) listPVCs(annotation string) []corev1.Volume {
@@ -183,41 +183,41 @@ func (b *backupRunner) listBackupCommands() []string {
 	return tmp
 }
 
-func (b *backupRunner) removeOldestJobs(jobs []batchv1.Job, maxJobs int) {
+func (b *backupRunner) removeOldestBackups(backups []backupv1alpha1.Backup, maxJobs int) {
 	if maxJobs == 0 {
 		maxJobs = b.config.GlobalKeepJobs
 	}
-	numToDelete := len(jobs) - maxJobs
+	numToDelete := len(backups) - maxJobs
 	if numToDelete <= 0 {
 		return
 	}
 
-	b.Logger.Infof("Cleaning up %d/%d jobs", numToDelete, len(jobs))
+	b.Logger.Infof("Cleaning up %d/%d jobs", numToDelete, len(backups))
 
-	sort.Sort(byJobStartTime(jobs))
+	sort.Sort(byCreationTime(backups))
 	for i := 0; i < numToDelete; i++ {
-		b.Logger.Infof("Removing job %v limit reached", jobs[i].Name)
-		b.cleanupJob(&jobs[i])
+		b.Logger.Infof("Removing job %v limit reached", backups[i].Name)
+		b.cleanupBackup(&backups[i])
 	}
 }
 
-func (b *backupRunner) getJobsInNameSpace(namespace, filter string) []batchv1.Job {
+func (b *backupRunner) getScheduledCRDsInNameSpace() []backupv1alpha1.Backup {
 	opts := metav1.ListOptions{
-		LabelSelector: filter,
+		LabelSelector: schedule.ScheduledLabelFilter(),
 	}
-	jobs, err := b.K8sCli.Batch().Jobs(b.backup.Namespace).List(opts)
+	backups, err := b.BaasCLI.AppuioV1alpha1().Backups(b.backup.Namespace).List(opts)
 	if err != nil {
 		b.Logger.Errorf("%v", err)
 		return nil
 	}
 
-	return jobs.Items
+	return backups.Items
 }
 
-func (b *backupRunner) cleanupJob(job *batchv1.Job) error {
-	b.Logger.Infof("Cleanup job %v", job.Name)
+func (b *backupRunner) cleanupBackup(backup *backupv1alpha1.Backup) error {
+	b.Logger.Infof("Cleanup backup %v", backup.Name)
 	option := metav1.DeletePropagationForeground
-	return b.K8sCli.Batch().Jobs(b.backup.Namespace).Delete(job.Name, &metav1.DeleteOptions{
+	return b.BaasCLI.AppuioV1alpha1().Backups(backup.Namespace).Delete(backup.Name, &metav1.DeleteOptions{
 		PropagationPolicy: &option,
 	})
 }
