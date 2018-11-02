@@ -1,13 +1,12 @@
 package operator
 
 import (
+	backupv1alpha1 "git.vshn.net/vshn/baas/apis/backup/v1alpha1"
 	"github.com/spotahome/kooper/client/crd"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/tools/cache"
-
-	backupv1alpha1 "git.vshn.net/vshn/baas/apis/backup/v1alpha1"
 )
 
 // backupCRD is the baas CRD

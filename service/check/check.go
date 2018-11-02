@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	backupv1alpha1 "git.vshn.net/vshn/baas/apis/backup/v1alpha1"
+	"git.vshn.net/vshn/baas/config"
 	"git.vshn.net/vshn/baas/service"
 	"git.vshn.net/vshn/baas/service/observe"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -13,7 +14,7 @@ import (
 type Check struct {
 	service.CommonObjects
 	observer *observe.Observer
-	config   config
+	config   config.Global
 }
 
 // NewCheck returns a new check handler.
@@ -21,7 +22,7 @@ func NewCheck(common service.CommonObjects, observer *observe.Observer) *Check {
 	return &Check{
 		CommonObjects: common,
 		observer:      observer,
-		config:        newConfig(),
+		config:        config.New(),
 	}
 }
 
@@ -37,9 +38,6 @@ func (c *Check) Ensure(obj runtime.Object) error {
 	}
 
 	checkCopy := check.DeepCopy()
-
-	checkCopy.GlobalOverrides = &backupv1alpha1.GlobalOverrides{}
-	checkCopy.GlobalOverrides.RegisteredBackend = service.MergeGlobalBackendConfig(checkCopy.Spec.Backend, c.config.GlobalConfig)
 
 	checkRunner := newCheckRunner(c.CommonObjects, c.config, checkCopy, c.observer)
 

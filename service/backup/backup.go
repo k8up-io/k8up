@@ -48,9 +48,6 @@ func (b *Backup) Ensure(obj runtime.Object) error {
 
 	backupCopy := backup.DeepCopy()
 
-	backupCopy.GlobalOverrides = &backupv1alpha1.GlobalOverrides{}
-	backupCopy.GlobalOverrides.RegisteredBackend = service.MergeGlobalBackendConfig(backupCopy.Spec.Backend, b.config.GlobalConfig)
-
 	err = createServiceAccountAndBinding(backupCopy, b.K8sCli, b.config)
 	if err != nil {
 		return err

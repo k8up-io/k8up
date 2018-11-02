@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [Unreleased]
 ### Fixed
 - Cleanup of the CRDs
+### Changed
+- Removed a lot of duplicated code
 
 ## [v0.1.0] - 2018-11-1
 With this release it is possible to trigger every action on demand. But there's also a schedule CRD that can put everything on its own schedule. These changes are the plumbing for further improvements especially with the locking problem.

@@ -4,6 +4,7 @@ import (
 	"sort"
 
 	backupv1alpha1 "git.vshn.net/vshn/baas/apis/backup/v1alpha1"
+	"git.vshn.net/vshn/baas/config"
 	"git.vshn.net/vshn/baas/service"
 	"git.vshn.net/vshn/baas/service/observe"
 	"git.vshn.net/vshn/baas/service/schedule"
@@ -16,7 +17,7 @@ import (
 type archiveRunner struct {
 	service.CommonObjects
 	archiver *backupv1alpha1.Archive
-	config   config
+	config   config.Global
 	observer *observe.Observer
 }
 
@@ -24,7 +25,7 @@ func newArchiveRunner(archiver *backupv1alpha1.Archive, common service.CommonObj
 	return &archiveRunner{
 		CommonObjects: common,
 		archiver:      archiver,
-		config:        newConfig(),
+		config:        config.New(),
 		observer:      observer,
 	}
 }

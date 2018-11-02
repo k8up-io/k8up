@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	backupv1alpha1 "git.vshn.net/vshn/baas/apis/backup/v1alpha1"
+	"git.vshn.net/vshn/baas/config"
 	"git.vshn.net/vshn/baas/service"
 	"git.vshn.net/vshn/baas/service/observe"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -13,7 +14,7 @@ import (
 type Pruner struct {
 	service.CommonObjects
 	observer *observe.Observer
-	config   config
+	config   config.Global
 }
 
 // NewPruner returns a new pruner handler
@@ -21,7 +22,7 @@ func NewPruner(common service.CommonObjects, observer *observe.Observer) *Pruner
 	return &Pruner{
 		CommonObjects: common,
 		observer:      observer,
-		config:        newConfig(),
+		config:        config.New(),
 	}
 }
 
@@ -38,9 +39,6 @@ func (p *Pruner) Ensure(obj runtime.Object) error {
 	}
 
 	pruneCopy := prune.DeepCopy()
-
-	pruneCopy.GlobalOverrides = &backupv1alpha1.GlobalOverrides{}
-	pruneCopy.GlobalOverrides.RegisteredBackend = service.MergeGlobalBackendConfig(pruneCopy.Spec.Backend, p.config.GlobalConfig)
 
 	pruneRunner := newPruneRunner(p.CommonObjects, p.config, pruneCopy, p.observer)
 

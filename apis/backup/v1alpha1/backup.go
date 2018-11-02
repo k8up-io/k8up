@@ -1,8 +1,6 @@
 package v1alpha1
 
 import (
-	"strings"
-
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -69,97 +67,6 @@ type BackupList struct {
 	metav1.ListMeta `json:"metadata"`
 
 	Items []Backup `json:"items"`
-}
-
-type Backend struct {
-	// RepoPasswordSecretRef references a secret key to look up the restic repository password
-	// +optional
-	RepoPasswordSecretRef *SecretKeySelector `json:"repoPasswordSecretRef,omitempty"`
-	Local                 *LocalSpec         `json:"local,omitempty"`
-	S3                    *S3Spec            `json:"s3,omitempty"`
-	GCS                   *GCSSpec           `json:"gcs,omitempty"`
-	Azure                 *AzureSpec         `json:"azure,omitempty"`
-	Swift                 *SwiftSpec         `json:"swift,omitempty"`
-	B2                    *B2Spec            `json:"b2,omitempty"`
-	Rest                  *RestServerSpec    `json:"rest,omitempty"`
-}
-
-// String returns a stringrepresentation of the repo
-// it concatenates all repos comma separated. It may support
-// multiple repos in the same instance in the future
-func (b *Backend) String() string {
-	allRepos := []string{}
-
-	if b.Azure != nil {
-		allRepos = append(allRepos, b.Azure.Container)
-	}
-
-	if b.B2 != nil {
-		allRepos = append(allRepos, b.B2.Bucket)
-	}
-
-	if b.GCS != nil {
-		allRepos = append(allRepos, b.GCS.Bucket)
-	}
-
-	if b.Local != nil {
-		allRepos = append(allRepos, b.Local.MountPath)
-	}
-
-	if b.Rest != nil {
-		allRepos = append(allRepos, b.Rest.URL)
-	}
-
-	if b.S3 != nil {
-		allRepos = append(allRepos, b.S3.Endpoint+b.S3.Bucket)
-	}
-
-	if b.Swift != nil {
-		allRepos = append(allRepos, b.Swift.Container)
-	}
-
-	return strings.Join(allRepos, ",")
-
-}
-
-type LocalSpec struct {
-	corev1.VolumeSource `json:",inline"`
-	MountPath           string `json:"mountPath,omitempty"`
-	SubPath             string `json:"subPath,omitempty"`
-}
-
-type S3Spec struct {
-	Endpoint                 string             `json:"endpoint,omitempty"`
-	Bucket                   string             `json:"bucket,omitempty"`
-	Prefix                   string             `json:"prefix,omitempty"`
-	AccessKeyIDSecretRef     *SecretKeySelector `json:"accessKeyIDSecretRef,omitempty"`
-	SecretAccessKeySecretRef *SecretKeySelector `json:"secretAccessKeySecretRef,omitempty"`
-	Username                 string             `json:"username,omitempty"` //ONLY for development
-	Password                 string             `json:"password,omitempty"` //ONLY for development
-}
-
-type GCSSpec struct {
-	Bucket string `json:"bucket,omitempty"`
-	Prefix string `json:"prefix,omitempty"`
-}
-
-type AzureSpec struct {
-	Container string `json:"container,omitempty"`
-	Prefix    string `json:"prefix,omitempty"`
-}
-
-type SwiftSpec struct {
-	Container string `json:"container,omitempty"`
-	Prefix    string `json:"prefix,omitempty"`
-}
-
-type B2Spec struct {
-	Bucket string `json:"bucket,omitempty"`
-	Prefix string `json:"prefix,omitempty"`
-}
-
-type RestServerSpec struct {
-	URL string `json:"url,omitempty"`
 }
 
 type SecretKeySelector struct {

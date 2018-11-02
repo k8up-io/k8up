@@ -2,6 +2,7 @@ package check
 
 import (
 	backupv1alpha1 "git.vshn.net/vshn/baas/apis/backup/v1alpha1"
+	"git.vshn.net/vshn/baas/config"
 	"git.vshn.net/vshn/baas/service"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -21,9 +22,9 @@ func (b byCreationTime) Less(i, j int) bool {
 	return b[i].CreationTimestamp.Before(&b[j].CreationTimestamp)
 }
 
-func newCheckJob(check *backupv1alpha1.Check, config config) *batchv1.Job {
+func newCheckJob(check *backupv1alpha1.Check, config config.Global) *batchv1.Job {
 
-	job := service.GetBasicJob("check", config.GlobalConfig, &check.ObjectMeta)
+	job := service.GetBasicJob("check", config, &check.ObjectMeta)
 
 	finalEnv := append(job.Spec.Template.Spec.Containers[0].Env, setUpEnvVariables(check, config)...)
 
@@ -33,12 +34,8 @@ func newCheckJob(check *backupv1alpha1.Check, config config) *batchv1.Job {
 	return job
 }
 
-func setUpEnvVariables(check *backupv1alpha1.Check, config config) []corev1.EnvVar {
-	envVars := make([]corev1.EnvVar, 0)
-
-	envVars = append(envVars, service.BuildS3EnvVars(check.GlobalOverrides.RegisteredBackend.S3, config.GlobalConfig)...)
-
-	envVars = append(envVars, service.BuildRepoPasswordVar(check.GlobalOverrides.RegisteredBackend.RepoPasswordSecretRef, config.GlobalConfig))
+func setUpEnvVariables(check *backupv1alpha1.Check, config config.Global) []corev1.EnvVar {
+	envVars := service.DefaultEnvs(check.Spec.Backend, config)
 
 	promURL := config.GlobalPromURL
 	if check.Spec.PromURL != "" {

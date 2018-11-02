@@ -35,7 +35,7 @@ func newBackupJob(volumes []corev1.Volume, controllerName string, backup *backup
 		mounts = append(mounts, tmpMount)
 	}
 
-	job := service.GetBasicJob("backup", config.GlobalConfig, &backup.ObjectMeta)
+	job := service.GetBasicJob("backup", config.Global, &backup.ObjectMeta)
 
 	finalEnv := append(job.Spec.Template.Spec.Containers[0].Env, setUpEnvVariables(backup, config)...)
 
@@ -55,30 +55,12 @@ func setUpEnvVariables(backup *backupv1alpha1.Backup, config config) []corev1.En
 		promURL = backup.Spec.PromURL
 	}
 
-	vars := make([]corev1.EnvVar, 0)
-
-	repoPasswordEnv := service.BuildRepoPasswordVar(backup.GlobalOverrides.RegisteredBackend.RepoPasswordSecretRef, config.GlobalConfig)
+	vars := service.DefaultEnvs(backup.Spec.Backend, config.Global)
 
 	vars = append(vars, []corev1.EnvVar{
-		repoPasswordEnv,
 		{
 			Name:  service.PromURL,
 			Value: promURL,
-		},
-	}...)
-
-	s3Backend := service.BuildS3EnvVars(backup.GlobalOverrides.RegisteredBackend.S3, config.GlobalConfig)
-
-	vars = append(vars, s3Backend...)
-
-	if backup.Spec.StatsURL != "" {
-		config.GlobalStatsURL = backup.Spec.StatsURL
-	}
-
-	vars = append(vars, []corev1.EnvVar{
-		{
-			Name:  service.StatsURL,
-			Value: config.GlobalStatsURL,
 		},
 	}...)
 	return vars

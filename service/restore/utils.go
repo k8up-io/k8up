@@ -112,25 +112,9 @@ func newRestoreJob(restore *backupv1alpha1.Restore, config config) *batchv1.Job 
 }
 
 func setUpEnvVariables(restore *backupv1alpha1.Restore, config config) []corev1.EnvVar {
-	vars := make([]corev1.EnvVar, 0)
+	vars := service.DefaultEnvs(restore.Spec.Backend, config.Global)
 
-	if restore.Spec.Backend.S3 != nil {
-
-		s3repoEnv := service.BuildS3EnvVars(restore.GlobalOverrides.RegisteredBackend.S3, config.GlobalConfig)
-
-		vars = append(vars, s3repoEnv...)
-
-		repoPasswordEnv := service.BuildRepoPasswordVar(restore.GlobalOverrides.RegisteredBackend.RepoPasswordSecretRef, config.GlobalConfig)
-
-		if restore.Spec.RestoreMethod.S3 != nil {
-
-			vars = append(vars, service.BuildRestoreS3Env(restore.Spec.RestoreMethod.S3, config.GlobalConfig)...)
-		}
-
-		vars = append(vars, []corev1.EnvVar{
-			repoPasswordEnv,
-		}...)
-	}
+	vars = append(vars, restore.Spec.Backend.S3.RestoreEnvs(config.Global)...)
 
 	return vars
 }
