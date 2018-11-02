@@ -7,9 +7,8 @@ import metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 type Prune struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
-	Spec              *PruneSpec       `json:"spec,omitempty"`
-	Status            PruneStatus      `json:"status,omitempty"`
-	GlobalOverrides   *GlobalOverrides `json:"-"`
+	Spec              *PruneSpec  `json:"spec,omitempty"`
+	Status            PruneStatus `json:"status,omitempty"`
 }
 
 // ArchiveSpec specifies how the prune CRD looks like

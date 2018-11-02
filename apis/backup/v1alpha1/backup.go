@@ -24,10 +24,6 @@ type Backup struct {
 	// Status of the backups
 	// +optional
 	Status BackupStatus `json:"status,omitempty"`
-
-	// GlobalOverrides is a place where where the result of the global and CRD
-	// merge can be saved in the CRD without any influence on Kubernetes.
-	GlobalOverrides *GlobalOverrides `json:"-"`
 }
 
 // BackupSpec is the spec for a BassWorker resource.
@@ -74,13 +70,4 @@ type SecretKeySelector struct {
 	corev1.LocalObjectReference `json:",inline"`
 	// The key of the secret to select from. Must be a valid secret key.
 	Key string `json:"key"`
-}
-
-// GlobalOverrides holds information about global params that can get set via
-// env variables in the operator. This is not in the normal spec as to avoid
-// any overwriting and recreating schedules.
-type GlobalOverrides struct {
-	// RegisteredBackend is used to track what backend is actually used after
-	// the merge with the global settings
-	RegisteredBackend *Backend `json:"-"`
 }

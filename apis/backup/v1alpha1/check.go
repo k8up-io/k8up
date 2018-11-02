@@ -11,7 +11,6 @@ type Check struct {
 	metav1.ObjectMeta `json:"metadata"`
 	Spec              *CheckSpec  `json:"spec,omitempty"`
 	Status            CheckStatus `json:"status,omitempty"`
-	GlobalOverrides   *GlobalOverrides
 }
 
 // CheckSpec only needs to hold the repository information
