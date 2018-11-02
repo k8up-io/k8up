@@ -14,12 +14,13 @@ type Schedule struct {
 
 // ScheduleSpec contains the schedule specifications
 type ScheduleSpec struct {
-	Restore *RestoreSchedule `json:"restore,omitempty"`
-	Backup  *BackupSchedule  `json:"backup,omitempty"`
-	Archive *ArchiveSchedule `json:"archive,omitempty"`
-	Check   *CheckSchedule   `json:"check,omitempty"`
-	Prune   *PruneSchedule   `json:"prune,omitempty"`
-	Backend *Backend         `json:"backend,omitempty"`
+	Restore  *RestoreSchedule `json:"restore,omitempty"`
+	Backup   *BackupSchedule  `json:"backup,omitempty"`
+	Archive  *ArchiveSchedule `json:"archive,omitempty"`
+	Check    *CheckSchedule   `json:"check,omitempty"`
+	Prune    *PruneSchedule   `json:"prune,omitempty"`
+	Backend  *Backend         `json:"backend,omitempty"`
+	KeepJobs int              `json:"keepJobs,omitempty"`
 }
 
 // ScheduleCommon contains fields every schedule needs

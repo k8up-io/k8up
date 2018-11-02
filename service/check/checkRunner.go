@@ -1,9 +1,12 @@
 package check
 
 import (
+	"sort"
+
 	backupv1alpha1 "git.vshn.net/vshn/baas/apis/backup/v1alpha1"
 	"git.vshn.net/vshn/baas/service"
 	"git.vshn.net/vshn/baas/service/observe"
+	"git.vshn.net/vshn/baas/service/schedule"
 	batchv1 "k8s.io/api/batch/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -90,4 +93,45 @@ func (c *checkRunner) watchState(job *batchv1.Job) {
 	}
 
 	subscription.WatchLoop(watch)
+
+	c.removeOldestChecks(c.getScheduledCRDsInNameSpace(), c.check.Spec.KeepJobs)
+}
+
+func (c *checkRunner) getScheduledCRDsInNameSpace() []backupv1alpha1.Check {
+	opts := metav1.ListOptions{
+		LabelSelector: schedule.ScheduledLabelFilter(),
+	}
+	checks, err := c.BaasCLI.AppuioV1alpha1().Checks(c.check.Namespace).List(opts)
+	if err != nil {
+		c.Logger.Errorf("%v", err)
+		return nil
+	}
+
+	return checks.Items
+}
+
+func (c *checkRunner) cleanupCheck(check *backupv1alpha1.Check) error {
+	c.Logger.Infof("Cleanup check %v", check.Name)
+	option := metav1.DeletePropagationForeground
+	return c.BaasCLI.AppuioV1alpha1().Checks(check.Namespace).Delete(check.Name, &metav1.DeleteOptions{
+		PropagationPolicy: &option,
+	})
+}
+
+func (c *checkRunner) removeOldestChecks(checks []backupv1alpha1.Check, maxJobs int) {
+	if maxJobs == 0 {
+		maxJobs = c.config.GlobalKeepJobs
+	}
+	numToDelete := len(checks) - maxJobs
+	if numToDelete <= 0 {
+		return
+	}
+
+	c.Logger.Infof("Cleaning up %d/%d jobs", numToDelete, len(checks))
+
+	sort.Sort(byCreationTime(checks))
+	for i := 0; i < numToDelete; i++ {
+		c.Logger.Infof("Removing job %v limit reached", checks[i].Name)
+		c.cleanupCheck(&checks[i])
+	}
 }

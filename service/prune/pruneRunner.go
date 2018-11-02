@@ -1,12 +1,14 @@
 package prune
 
 import (
+	"sort"
 	"strconv"
 	"strings"
 
 	backupv1alpha1 "git.vshn.net/vshn/baas/apis/backup/v1alpha1"
 	"git.vshn.net/vshn/baas/service"
 	"git.vshn.net/vshn/baas/service/observe"
+	"git.vshn.net/vshn/baas/service/schedule"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -18,6 +20,20 @@ type pruneRunner struct {
 	config   config
 	observer *observe.Observer
 	prune    *backupv1alpha1.Prune
+}
+
+type byCreationTime []backupv1alpha1.Prune
+
+func (b byCreationTime) Len() int      { return len(b) }
+func (b byCreationTime) Swap(i, j int) { b[i], b[j] = b[j], b[i] }
+
+func (b byCreationTime) Less(i, j int) bool {
+
+	if b[i].CreationTimestamp.Equal(&b[j].CreationTimestamp) {
+		return b[i].Name < b[j].Name
+	}
+
+	return b[i].CreationTimestamp.Before(&b[j].CreationTimestamp)
 }
 
 func newPruneRunner(common service.CommonObjects, config config, prune *backupv1alpha1.Prune, observer *observe.Observer) *pruneRunner {
@@ -169,4 +185,46 @@ func (p *pruneRunner) watchState(job *batchv1.Job) {
 	}
 
 	subscription.WatchLoop(watch)
+
+	p.removeOldestPrunes(p.getScheduledCRDsInNameSpace(), p.prune.Spec.KeepJobs)
+
+}
+
+func (p *pruneRunner) getScheduledCRDsInNameSpace() []backupv1alpha1.Prune {
+	opts := metav1.ListOptions{
+		LabelSelector: schedule.ScheduledLabelFilter(),
+	}
+	prunes, err := p.BaasCLI.AppuioV1alpha1().Prunes(p.prune.Namespace).List(opts)
+	if err != nil {
+		p.Logger.Errorf("%v", err)
+		return nil
+	}
+
+	return prunes.Items
+}
+
+func (p *pruneRunner) cleanupPrune(prune *backupv1alpha1.Prune) error {
+	p.Logger.Infof("Cleanup prune %v", prune.Name)
+	option := metav1.DeletePropagationForeground
+	return p.BaasCLI.AppuioV1alpha1().Prunes(prune.Namespace).Delete(prune.Name, &metav1.DeleteOptions{
+		PropagationPolicy: &option,
+	})
+}
+
+func (p *pruneRunner) removeOldestPrunes(prunes []backupv1alpha1.Prune, maxJobs int) {
+	if maxJobs == 0 {
+		maxJobs = p.config.GlobalKeepJobs
+	}
+	numToDelete := len(prunes) - maxJobs
+	if numToDelete <= 0 {
+		return
+	}
+
+	p.Logger.Infof("Cleaning up %d/%d jobs", numToDelete, len(prunes))
+
+	sort.Sort(byCreationTime(prunes))
+	for i := 0; i < numToDelete; i++ {
+		p.Logger.Infof("Removing job %v limit reached", prunes[i].Name)
+		p.cleanupPrune(&prunes[i])
+	}
 }

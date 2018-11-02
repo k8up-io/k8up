@@ -11,22 +11,18 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// byJobStartTime sorts a list of jobs by start timestamp, using their names as a tie breaker.
-type byJobStartTime []batchv1.Job
+type byCreationTime []backupv1alpha1.Backup
 
-func (o byJobStartTime) Len() int      { return len(o) }
-func (o byJobStartTime) Swap(i, j int) { o[i], o[j] = o[j], o[i] }
+func (b byCreationTime) Len() int      { return len(b) }
+func (b byCreationTime) Swap(i, j int) { b[i], b[j] = b[j], b[i] }
 
-func (o byJobStartTime) Less(i, j int) bool {
-	if o[j].Status.StartTime == nil {
-		return o[i].Status.StartTime != nil
+func (b byCreationTime) Less(i, j int) bool {
+
+	if b[i].CreationTimestamp.Equal(&b[j].CreationTimestamp) {
+		return b[i].Name < b[j].Name
 	}
 
-	if o[i].Status.StartTime.Equal(o[j].Status.StartTime) {
-		return o[i].Name < o[j].Name
-	}
-
-	return o[i].Status.StartTime.Before(o[j].Status.StartTime)
+	return b[i].CreationTimestamp.Before(&b[j].CreationTimestamp)
 }
 
 func newBackupJob(volumes []corev1.Volume, controllerName string, backup *backupv1alpha1.Backup, config config) *batchv1.Job {

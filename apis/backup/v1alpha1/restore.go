@@ -27,6 +27,7 @@ type RestoreSpec struct {
 	RestoreMethod *RestoreMethod `json:"restoreMethod,omitempty"`
 	RestoreFilter string         `json:"restoreFilter,omitempty"`
 	Snapshot      string         `json:"snapshot,omitempty"`
+	KeepJobs      int            `json:"keepJobs,omitempty"`
 }
 
 // RestoreMethod contains how and where the restore should happen

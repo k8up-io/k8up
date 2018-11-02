@@ -19,13 +19,11 @@ spec:
   backup:
     schedule: '* * * * *'
     keepJobs: 10
-    promURL: http://10.144.1.224:9000
   check:
-    schedule: '*/5 * * * *'
-    promURL: http://10.144.1.224:9000
+    schedule: '0 0 * * 0'
   prune:
-    schedule: '*/2 * * * *'
+    schedule: '*/5 * * * *'
     retention:
-      keepLast: 5
+      keepLast: 10
       keepDaily: 14
 
