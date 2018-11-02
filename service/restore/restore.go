@@ -46,8 +46,6 @@ func (r *Restore) Ensure(obj runtime.Object) error {
 	// Create a restore.
 	restoreCopy := restore.DeepCopy()
 
-	restoreCopy.GlobalOverrides.RegisteredBackend = service.MergeGlobalBackendConfig(restore.Spec.Backend, r.config.GlobalConfig)
-
 	rst = NewRestoreRunner(restoreCopy, r.CommonObjects)
 
 	return rst.Start()

@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	backupv1alpha1 "git.vshn.net/vshn/baas/apis/backup/v1alpha1"
+	"git.vshn.net/vshn/baas/config"
 	"git.vshn.net/vshn/baas/service"
 	"git.vshn.net/vshn/baas/service/observe"
 	"git.vshn.net/vshn/baas/service/schedule"
@@ -17,7 +18,7 @@ import (
 
 type pruneRunner struct {
 	service.CommonObjects
-	config   config
+	config   config.Global
 	observer *observe.Observer
 	prune    *backupv1alpha1.Prune
 }
@@ -36,7 +37,7 @@ func (b byCreationTime) Less(i, j int) bool {
 	return b[i].CreationTimestamp.Before(&b[j].CreationTimestamp)
 }
 
-func newPruneRunner(common service.CommonObjects, config config, prune *backupv1alpha1.Prune, observer *observe.Observer) *pruneRunner {
+func newPruneRunner(common service.CommonObjects, config config.Global, prune *backupv1alpha1.Prune, observer *observe.Observer) *pruneRunner {
 	return &pruneRunner{
 		CommonObjects: common,
 		config:        config,
@@ -71,16 +72,14 @@ func (p *pruneRunner) Start() error {
 	return nil
 }
 
-func (p *pruneRunner) newPruneJob(prune *backupv1alpha1.Prune, config config) *batchv1.Job {
-	job := service.GetBasicJob("prune", p.config.GlobalConfig, &p.prune.ObjectMeta)
+func (p *pruneRunner) newPruneJob(prune *backupv1alpha1.Prune, config config.Global) *batchv1.Job {
+	job := service.GetBasicJob("prune", p.config, &p.prune.ObjectMeta)
 
 	job.Spec.Template.Spec.Containers[0].Args = []string{"-prune"}
 
 	envVar := p.setUpRetention(p.prune)
 
-	envVar = append(envVar, service.BuildRepoPasswordVar(prune.GlobalOverrides.RegisteredBackend.RepoPasswordSecretRef, config.GlobalConfig))
-
-	envVar = append(envVar, service.BuildS3EnvVars(prune.GlobalOverrides.RegisteredBackend.S3, config.GlobalConfig)...)
+	envVar = append(envVar, service.DefaultEnvs(prune.Spec.Backend, config)...)
 
 	job.Spec.Template.Spec.Containers[0].Env = append(envVar, job.Spec.Template.Spec.Containers[0].Env...)
 

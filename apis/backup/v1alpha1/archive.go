@@ -7,9 +7,8 @@ import metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 type Archive struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
-	Spec              *ArchiveSpec     `json:"spec,omitempty"`
-	Status            ArchiveStatus    `json:"status,omitempty"`
-	GlobalOverrides   *GlobalOverrides `json:"-"`
+	Spec              *ArchiveSpec  `json:"spec,omitempty"`
+	Status            ArchiveStatus `json:"status,omitempty"`
 }
 
 // ArchiveSpec specifies how the archiv CRD looks like

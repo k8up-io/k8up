@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"sync"
 
+	"git.vshn.net/vshn/baas/config"
 	"git.vshn.net/vshn/baas/log"
 	"git.vshn.net/vshn/baas/service"
 	batchv1 "k8s.io/api/batch/v1"
@@ -22,7 +23,7 @@ var once sync.Once
 // and triggers corresponding events.
 type Observer struct {
 	broker *Broker
-	config config
+	config config.Global
 	locker Locker
 	Logger log.Logger
 }
@@ -33,7 +34,7 @@ func GetInstance(log log.Logger) *Observer {
 		if instance == nil {
 			instance = &Observer{
 				broker: newBroker(),
-				config: newConfig(),
+				config: config.New(),
 				locker: newLocker(),
 				Logger: log,
 			}

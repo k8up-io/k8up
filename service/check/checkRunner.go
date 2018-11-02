@@ -4,6 +4,7 @@ import (
 	"sort"
 
 	backupv1alpha1 "git.vshn.net/vshn/baas/apis/backup/v1alpha1"
+	"git.vshn.net/vshn/baas/config"
 	"git.vshn.net/vshn/baas/service"
 	"git.vshn.net/vshn/baas/service/observe"
 	"git.vshn.net/vshn/baas/service/schedule"
@@ -16,12 +17,12 @@ var test service.Runner = &checkRunner{}
 
 type checkRunner struct {
 	service.CommonObjects
-	config   config
+	config   config.Global
 	check    *backupv1alpha1.Check
 	observer *observe.Observer
 }
 
-func newCheckRunner(common service.CommonObjects, config config, check *backupv1alpha1.Check, observer *observe.Observer) *checkRunner {
+func newCheckRunner(common service.CommonObjects, config config.Global, check *backupv1alpha1.Check, observer *observe.Observer) *checkRunner {
 	return &checkRunner{
 		CommonObjects: common,
 		config:        config,

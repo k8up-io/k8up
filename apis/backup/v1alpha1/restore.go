@@ -15,9 +15,8 @@ type Restore struct {
 	// More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#metadata
 	// +optional
 	metav1.ObjectMeta `json:"metadata,omitempty"`
-	Spec              *RestoreSpec    `json:"spec,omitempty"`
-	Status            RestoreStatus   `json:"status,omitempty"`
-	GlobalOverrides   GlobalOverrides `json:"globalOverrides,omitempty"`
+	Spec              *RestoreSpec  `json:"spec,omitempty"`
+	Status            RestoreStatus `json:"status,omitempty"`
 }
 
 // RestoreSpec contains all information needed to trigger a restore

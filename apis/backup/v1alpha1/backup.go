@@ -1,8 +1,6 @@
 package v1alpha1
 
 import (
-	"strings"
-
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -26,10 +24,6 @@ type Backup struct {
 	// Status of the backups
 	// +optional
 	Status BackupStatus `json:"status,omitempty"`
-
-	// GlobalOverrides is a place where where the result of the global and CRD
-	// merge can be saved in the CRD without any influence on Kubernetes.
-	GlobalOverrides *GlobalOverrides `json:"-"`
 }
 
 // BackupSpec is the spec for a BassWorker resource.
@@ -71,109 +65,9 @@ type BackupList struct {
 	Items []Backup `json:"items"`
 }
 
-type Backend struct {
-	// RepoPasswordSecretRef references a secret key to look up the restic repository password
-	// +optional
-	RepoPasswordSecretRef *SecretKeySelector `json:"repoPasswordSecretRef,omitempty"`
-	Local                 *LocalSpec         `json:"local,omitempty"`
-	S3                    *S3Spec            `json:"s3,omitempty"`
-	GCS                   *GCSSpec           `json:"gcs,omitempty"`
-	Azure                 *AzureSpec         `json:"azure,omitempty"`
-	Swift                 *SwiftSpec         `json:"swift,omitempty"`
-	B2                    *B2Spec            `json:"b2,omitempty"`
-	Rest                  *RestServerSpec    `json:"rest,omitempty"`
-}
-
-// String returns a stringrepresentation of the repo
-// it concatenates all repos comma separated. It may support
-// multiple repos in the same instance in the future
-func (b *Backend) String() string {
-	allRepos := []string{}
-
-	if b.Azure != nil {
-		allRepos = append(allRepos, b.Azure.Container)
-	}
-
-	if b.B2 != nil {
-		allRepos = append(allRepos, b.B2.Bucket)
-	}
-
-	if b.GCS != nil {
-		allRepos = append(allRepos, b.GCS.Bucket)
-	}
-
-	if b.Local != nil {
-		allRepos = append(allRepos, b.Local.MountPath)
-	}
-
-	if b.Rest != nil {
-		allRepos = append(allRepos, b.Rest.URL)
-	}
-
-	if b.S3 != nil {
-		allRepos = append(allRepos, b.S3.Endpoint+b.S3.Bucket)
-	}
-
-	if b.Swift != nil {
-		allRepos = append(allRepos, b.Swift.Container)
-	}
-
-	return strings.Join(allRepos, ",")
-
-}
-
-type LocalSpec struct {
-	corev1.VolumeSource `json:",inline"`
-	MountPath           string `json:"mountPath,omitempty"`
-	SubPath             string `json:"subPath,omitempty"`
-}
-
-type S3Spec struct {
-	Endpoint                 string             `json:"endpoint,omitempty"`
-	Bucket                   string             `json:"bucket,omitempty"`
-	Prefix                   string             `json:"prefix,omitempty"`
-	AccessKeyIDSecretRef     *SecretKeySelector `json:"accessKeyIDSecretRef,omitempty"`
-	SecretAccessKeySecretRef *SecretKeySelector `json:"secretAccessKeySecretRef,omitempty"`
-	Username                 string             `json:"username,omitempty"` //ONLY for development
-	Password                 string             `json:"password,omitempty"` //ONLY for development
-}
-
-type GCSSpec struct {
-	Bucket string `json:"bucket,omitempty"`
-	Prefix string `json:"prefix,omitempty"`
-}
-
-type AzureSpec struct {
-	Container string `json:"container,omitempty"`
-	Prefix    string `json:"prefix,omitempty"`
-}
-
-type SwiftSpec struct {
-	Container string `json:"container,omitempty"`
-	Prefix    string `json:"prefix,omitempty"`
-}
-
-type B2Spec struct {
-	Bucket string `json:"bucket,omitempty"`
-	Prefix string `json:"prefix,omitempty"`
-}
-
-type RestServerSpec struct {
-	URL string `json:"url,omitempty"`
-}
-
 type SecretKeySelector struct {
 	// The name of the secret in the same namespace to select from.
 	corev1.LocalObjectReference `json:",inline"`
 	// The key of the secret to select from. Must be a valid secret key.
 	Key string `json:"key"`
-}
-
-// GlobalOverrides holds information about global params that can get set via
-// env variables in the operator. This is not in the normal spec as to avoid
-// any overwriting and recreating schedules.
-type GlobalOverrides struct {
-	// RegisteredBackend is used to track what backend is actually used after
-	// the merge with the global settings
-	RegisteredBackend *Backend `json:"-"`
 }

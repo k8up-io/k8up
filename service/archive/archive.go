@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	backupv1alpha1 "git.vshn.net/vshn/baas/apis/backup/v1alpha1"
+	"git.vshn.net/vshn/baas/config"
 	"git.vshn.net/vshn/baas/service"
 	"git.vshn.net/vshn/baas/service/observe"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -12,7 +13,7 @@ import (
 // Archive holds the state of the archive handler. It satisfies the ServiceHandler Interface.
 type Archive struct {
 	service.CommonObjects
-	config   config
+	config   config.Global
 	observer *observe.Observer
 }
 
@@ -20,7 +21,7 @@ type Archive struct {
 func NewArchive(common service.CommonObjects, observer *observe.Observer) *Archive {
 	return &Archive{
 		CommonObjects: common,
-		config:        newConfig(),
+		config:        config.New(),
 		observer:      observer,
 	}
 }
@@ -37,9 +38,6 @@ func (a *Archive) Ensure(obj runtime.Object) error {
 	}
 
 	archiverCopy := archiver.DeepCopy()
-
-	archiverCopy.GlobalOverrides = &backupv1alpha1.GlobalOverrides{}
-	archiverCopy.GlobalOverrides.RegisteredBackend = service.MergeGlobalBackendConfig(archiverCopy.Spec.Backend, a.config.GlobalConfig)
 
 	newArchiver := newArchiveRunner(archiverCopy, a.CommonObjects, a.observer)
 	return newArchiver.Start()

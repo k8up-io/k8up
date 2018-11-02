@@ -1,20 +1,20 @@
 package restore
 
 import (
-	"git.vshn.net/vshn/baas/service"
+	configPackage "git.vshn.net/vshn/baas/config"
 	"github.com/spf13/viper"
 )
 
 type config struct {
-	service.GlobalConfig
+	configPackage.Global
 	image string
 }
 
 func newConfig() config {
 	setDefaults()
 	tmp := config{
-		image:        viper.GetString("image"),
-		GlobalConfig: service.NewGlobalConfig(),
+		image:  viper.GetString("image"),
+		Global: configPackage.New(),
 	}
 	return tmp
 }

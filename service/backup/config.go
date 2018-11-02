@@ -1,12 +1,12 @@
 package backup
 
 import (
-	"git.vshn.net/vshn/baas/service"
+	configPackage "git.vshn.net/vshn/baas/config"
 	"github.com/spf13/viper"
 )
 
 type config struct {
-	service.GlobalConfig
+	configPackage.Global
 	annotation              string
 	defaultCheckSchedule    string
 	podFilter               string
@@ -30,7 +30,7 @@ func newConfig() config {
 		podName:                 viper.GetString("podName"),
 		podExecRoleName:         viper.GetString("PodExecRoleName"),
 		podExecAccountName:      viper.GetString("PodExecAccountName"),
-		GlobalConfig:            service.NewGlobalConfig(),
+		Global:                  configPackage.New(),
 	}
 	return tmp
 }
