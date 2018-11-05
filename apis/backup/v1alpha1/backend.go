@@ -2,7 +2,6 @@ package v1alpha1
 
 import (
 	"fmt"
-	"strings"
 
 	"git.vshn.net/vshn/baas/config"
 	corev1 "k8s.io/api/core/v1"
@@ -31,41 +30,39 @@ type Backend struct {
 	Rest                  *RestServerSpec    `json:"rest,omitempty"`
 }
 
-// String returns a stringrepresentation of the repo
-// it concatenates all repos comma separated. It may support
-// multiple repos in the same instance in the future
+// String returns the string representation of the repository. If no repo is
+// defined it'll return empty string.
 func (b *Backend) String() string {
-	allRepos := []string{}
 
 	if b.Azure != nil {
-		allRepos = append(allRepos, b.Azure.Container)
+		return b.Azure.Container
 	}
 
 	if b.B2 != nil {
-		allRepos = append(allRepos, b.B2.Bucket)
+		return b.B2.Bucket
 	}
 
 	if b.GCS != nil {
-		allRepos = append(allRepos, b.GCS.Bucket)
+		return b.GCS.Bucket
 	}
 
 	if b.Local != nil {
-		allRepos = append(allRepos, b.Local.MountPath)
+		return b.Local.MountPath
 	}
 
 	if b.Rest != nil {
-		allRepos = append(allRepos, b.Rest.URL)
+		return b.Rest.URL
 	}
 
 	if b.S3 != nil {
-		allRepos = append(allRepos, b.S3.Endpoint+b.S3.Bucket)
+		return fmt.Sprintf("s3:%v/%v", b.S3.Endpoint, b.S3.Bucket)
 	}
 
 	if b.Swift != nil {
-		allRepos = append(allRepos, b.Swift.Container)
+		return b.Swift.Container
 	}
 
-	return strings.Join(allRepos, ",")
+	return ""
 
 }
 
