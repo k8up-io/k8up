@@ -66,6 +66,28 @@ func (b *Backend) String() string {
 
 }
 
+func (b *Backend) Merge(config config.Global) {
+
+	if b == nil {
+		b = &Backend{}
+	}
+
+	// Currently only S3 is implemented
+	if b.S3 == nil {
+		b.S3 = &S3Spec{
+			Endpoint: config.GlobalS3Endpoint,
+			Bucket:   config.GlobalS3Bucket,
+		}
+	} else {
+		if b.S3.Endpoint == "" {
+			b.S3.Endpoint = config.GlobalS3Endpoint
+		}
+		if b.S3.Bucket == "" {
+			b.S3.Bucket = config.GlobalS3Bucket
+		}
+	}
+}
+
 func (b *Backend) PasswordEnvVar(config config.Global) corev1.EnvVar {
 	repoPasswordEnv := corev1.EnvVar{
 		Name:  ResticPassword,
@@ -156,7 +178,7 @@ func (s *S3Spec) repoEnvs(awsAccessKeyIDName, awsSecretAccessKeyName, repoName s
 	var endpoint string
 	if s.Endpoint != "" && s.Bucket != "" {
 		endpoint = fmt.Sprintf("%v/%v", s.Endpoint, s.Bucket)
-		if restore {
+		if !restore {
 			endpoint = "s3:" + endpoint
 		}
 	} else if restore {

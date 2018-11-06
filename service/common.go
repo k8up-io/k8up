@@ -68,6 +68,9 @@ func GetRepository(obj interface{}) string {
 		}
 	case *backupv1alpha1.Backend:
 		backend, _ := obj.(*backupv1alpha1.Backend)
+		if backend == nil {
+			return ""
+		}
 		return backend.String()
 	}
 

@@ -22,7 +22,7 @@ spec:
   check:
     schedule: '0 0 * * 0'
   prune:
-    schedule: '*/5 * * * *'
+    schedule: '*/2 * * * *'
     retention:
       keepLast: 10
       keepDaily: 14
