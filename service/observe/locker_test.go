@@ -34,6 +34,23 @@ func Test_concreteLocker_WaitForRun(t *testing.T) {
 				jobs:    []JobType{BackupType},
 			},
 		},
+		{
+			name:        "Block all jobs",
+			unlockAfter: 5,
+			fields: fields{
+				semaphores: &concreteSemaphoreMap{},
+				mutex:      sync.Mutex{},
+			},
+			args: args{
+				backend: "test",
+				jobs: []JobType{
+					BackupType,
+					CheckType,
+					RestoreType,
+					PruneType,
+				},
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -42,7 +59,9 @@ func Test_concreteLocker_WaitForRun(t *testing.T) {
 				mutex:      tt.fields.mutex,
 			}
 
-			c.Increment(tt.args.backend, tt.args.jobs[0])
+			for _, job := range tt.args.jobs {
+				c.Increment(tt.args.backend, job)
+			}
 
 			finished := make(chan bool, 0)
 
@@ -53,7 +72,9 @@ func Test_concreteLocker_WaitForRun(t *testing.T) {
 
 			go func() {
 				time.Sleep(time.Second * time.Duration(tt.unlockAfter))
-				c.Decrement(tt.args.backend, tt.args.jobs[0])
+				for _, job := range tt.args.jobs {
+					c.Decrement(tt.args.backend, job)
+				}
 			}()
 
 			select {
@@ -62,7 +83,7 @@ func Test_concreteLocker_WaitForRun(t *testing.T) {
 					t.Fail()
 				}
 			case <-finished:
-				// NOOP
+				c.Remove(tt.args.backend)
 			}
 		})
 	}

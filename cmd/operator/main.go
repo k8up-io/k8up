@@ -6,20 +6,19 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/spotahome/kooper/client/crd"
-	applogger "github.com/spotahome/kooper/log"
-	apiextensionscli "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
-	"k8s.io/client-go/kubernetes"
-	_ "k8s.io/client-go/plugin/pkg/client/auth/oidc"
-	"k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/clientcmd"
-
 	podtermk8scli "git.vshn.net/vshn/baas/client/k8s/clientset/versioned"
 	"git.vshn.net/vshn/baas/log"
 	"git.vshn.net/vshn/baas/monitoring"
 	"git.vshn.net/vshn/baas/operator"
 	"github.com/spf13/viper"
+	"github.com/spotahome/kooper/client/crd"
+	applogger "github.com/spotahome/kooper/log"
 	kooper "github.com/spotahome/kooper/operator"
+	apiextensionscli "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
+	"k8s.io/client-go/kubernetes"
+	_ "k8s.io/client-go/plugin/pkg/client/auth/oidc"
+	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/clientcmd"
 )
 
 // Main is the main program.
