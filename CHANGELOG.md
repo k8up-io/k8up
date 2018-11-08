@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [v0.1.2] - 2018-11-08
 ### Changed
 - Removed a lot of duplicated code
 ### Added
@@ -94,7 +96,8 @@ Also some known issues in this version:
 ### Changed
 - Initial version
 
-[unreleased]: https://git.vshn.net/vshn/baas/compare/v0.1.1...master
+[unreleased]: https://git.vshn.net/vshn/baas/compare/v0.1.2...master
+[v0.1.2]: https://git.vshn.net/vshn/baas/compare/v0.0.1.1...v0.1.2
 [v0.1.1]: https://git.vshn.net/vshn/baas/compare/v0.0.1.0...v0.1.1
 [v0.1.0]: https://git.vshn.net/vshn/baas/compare/v0.0.10...v0.1.0
 [v0.0.10]: https://git.vshn.net/vshn/baas/compare/v0.0.9...v0.0.10
