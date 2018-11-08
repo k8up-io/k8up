@@ -7,7 +7,9 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"os/signal"
 	"strings"
+	"syscall"
 )
 
 const (
@@ -73,12 +75,29 @@ type stats struct {
 }
 
 func main() {
+	finishC := make(chan error)
+	signalC := make(chan os.Signal, 1)
+	signal.Notify(signalC, syscall.SIGTERM, syscall.SIGINT)
+
+	go run(finishC)
+
+	defer unlock(false)
+
+	select {
+	case err := <-finishC:
+		if err != nil {
+			os.Exit(1)
+		}
+	case <-signalC:
+		fmt.Println("Signal captured, removing locks and exiting...")
+	}
+}
+
+func run(finishC chan error) {
 	//TODO: locking management if f.e. a backup gets interrupted and the lock not
 	//cleaned
 
 	flag.Var(&stdinOpts, "arrayOpts", "Options needed for the stding backup. Format: command,pod,container")
-
-	exit := 0
 
 	flag.Parse()
 
@@ -87,12 +106,10 @@ func main() {
 	defer func() {
 		if commandError != nil {
 			fmt.Println("Error occurred: ", commandError)
-			exit = 1
 		}
 		metrics.BackupEndTimestamp.SetToCurrentTime()
 		metrics.Update(metrics.BackupEndTimestamp)
-		unlock()
-		os.Exit(exit)
+		finishC <- commandError
 	}()
 
 	backupDir = getBackupDir()
