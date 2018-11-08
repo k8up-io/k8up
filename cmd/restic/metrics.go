@@ -32,20 +32,26 @@ type resticMetrics struct {
 	runningBackupDuration prometheus.Counter
 	BackupStartTimestamp  prometheus.Gauge
 	BackupEndTimestamp    prometheus.Gauge
-	Errors                prometheus.Gauge
+	Errors                *prometheus.GaugeVec
 	AvailableSnapshots    prometheus.Gauge
-	NewFiles              prometheus.Gauge
-	ChangedFiles          prometheus.Gauge
-	UnmodifiedFiles       prometheus.Gauge
-	NewDirs               prometheus.Gauge
-	ChangedDirs           prometheus.Gauge
-	UnmodifiedDirs        prometheus.Gauge
-	DataTransferred       prometheus.Gauge
+	NewFiles              *prometheus.GaugeVec
+	ChangedFiles          *prometheus.GaugeVec
+	UnmodifiedFiles       *prometheus.GaugeVec
+	NewDirs               *prometheus.GaugeVec
+	ChangedDirs           *prometheus.GaugeVec
+	UnmodifiedDirs        *prometheus.GaugeVec
+	DataTransferred       *prometheus.GaugeVec
 	url                   string
 	intervall             int
 }
 
 func newResticMetrics(url string) *resticMetrics {
+
+	labels := []string{
+		"pvc",
+		"namespace",
+	}
+
 	backupStartTimestamp := prometheus.NewGauge(prometheus.GaugeOpts{
 		Namespace: namespace,
 		Subsystem: subsystem,
@@ -53,12 +59,12 @@ func newResticMetrics(url string) *resticMetrics {
 		Help:      "Timestamp when the last backup was started",
 	})
 
-	errors := prometheus.NewGauge(prometheus.GaugeOpts{
+	errors := prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Namespace: namespace,
 		Subsystem: subsystem,
 		Name:      "last_errors",
 		Help:      "How many errors the backup or check had",
-	})
+	}, labels)
 
 	backupDuration := prometheus.NewCounter(prometheus.CounterOpts{
 		Namespace: namespace,
@@ -81,54 +87,54 @@ func newResticMetrics(url string) *resticMetrics {
 		Help:      "How many snapshots are available",
 	})
 
-	newFiles := prometheus.NewGauge(prometheus.GaugeOpts{
+	newFiles := prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Namespace: namespace,
 		Subsystem: subsystem,
 		Name:      "new_files_during_backup",
 		Help:      "How many new files were backed up during the last backup",
-	})
+	}, labels)
 
-	changedFiles := prometheus.NewGauge(prometheus.GaugeOpts{
+	changedFiles := prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Namespace: namespace,
 		Subsystem: subsystem,
 		Name:      "changed_files_during_backup",
 		Help:      "How many changed files were backed up during the last backup",
-	})
+	}, labels)
 
-	unmodifiedFiles := prometheus.NewGauge(prometheus.GaugeOpts{
+	unmodifiedFiles := prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Namespace: namespace,
 		Subsystem: subsystem,
 		Name:      "unmodified_files_during_backup",
 		Help:      "How many files were skipped due to no modifications",
-	})
+	}, labels)
 
-	newDirs := prometheus.NewGauge(prometheus.GaugeOpts{
+	newDirs := prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Namespace: namespace,
 		Subsystem: subsystem,
 		Name:      "new_directories_during_backup",
 		Help:      "How many new directories were backed up during the last backup",
-	})
+	}, labels)
 
-	changedDirs := prometheus.NewGauge(prometheus.GaugeOpts{
+	changedDirs := prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Namespace: namespace,
 		Subsystem: subsystem,
 		Name:      "changed_directories_during_backup",
 		Help:      "How many changed directories were backed up during the last backup",
-	})
+	}, labels)
 
-	unmodifiedDirs := prometheus.NewGauge(prometheus.GaugeOpts{
+	unmodifiedDirs := prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Namespace: namespace,
 		Subsystem: subsystem,
 		Name:      "unmodified_directories_during_backup",
 		Help:      "How many directories were skipped due to no modifications",
-	})
+	}, labels)
 
-	dataTransferred := prometheus.NewGauge(prometheus.GaugeOpts{
+	dataTransferred := prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Namespace: namespace,
 		Subsystem: subsystem,
 		Name:      "data_transferred_during_backup",
 		Help:      "Amount of data transferred during last backup",
-	})
+	}, labels)
 
 	return &resticMetrics{
 		url:                   url,

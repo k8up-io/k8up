@@ -68,7 +68,7 @@ func restoreJob(snapshotID, method string) {
 }
 
 func folderRestore(snapshot snapshot) {
-	restoreDir := setRestoreDir()
+	restoreDir := getRestoreDir()
 
 	args := []string{"restore", snapshot.ID, "--target", restoreDir}
 
