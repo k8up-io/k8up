@@ -7,6 +7,11 @@ import (
 )
 
 func pruneCommand() {
+
+	fmt.Println("Removing all locks to clear stale locks")
+
+	unlock(true)
+
 	// TODO: check for integers
 	args := []string{"forget"}
 

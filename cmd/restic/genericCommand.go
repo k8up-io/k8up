@@ -112,8 +112,11 @@ func collectOutput(output io.ReadCloser, print bool) ([]string, error) {
 	return collectedOutput, scanner.Err()
 }
 
-func unlock() {
+func unlock(all bool) {
 	fmt.Println("Removing locks...")
 	args := []string{"unlock"}
+	if all {
+		args = append(args, "--remove-all")
+	}
 	genericCommand(args, commandOptions{print: true})
 }
