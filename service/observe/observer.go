@@ -104,6 +104,7 @@ func (o *Observer) podObserver(pod *corev1.Pod) {
 			BaasID:     baasID,
 		})
 		if err != nil {
+			// TODO: here would be the point to re-register lost pods.
 			o.Logger.Warningf("%v", err)
 		}
 	}

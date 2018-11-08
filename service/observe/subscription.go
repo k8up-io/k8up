@@ -114,13 +114,21 @@ func (b *Broker) Unsubscribe(topicName string, subscriber *Subscriber) {
 	}
 }
 
-// Notify notifies all subscribers to topic with the state.
+// Notify notifies all subscribers to topic with the state. If it wants to
+// notify a topic that doesn't exist it will return an error. The most likely
+// cause for this is if the operator is restarted and there are still pods
+// around. In that case it can be safely ignored. It's planned, that the
+// operator should also register jobs that aren't created by the same, for cases
+// where the operator gets evicted or HA setups.
 func (b *Broker) Notify(topicName string, state PodState) error {
 	if subs, ok := b.subscribers[topic(topicName)]; ok {
 		for i := range subs {
 			go subs[i].update(state)
 		}
 	} else {
+		if topicName == "" {
+			return nil
+		}
 		return fmt.Errorf("%v is not a registered topic", topicName)
 	}
 	return nil
