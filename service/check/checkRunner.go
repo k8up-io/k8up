@@ -98,7 +98,7 @@ func (c *checkRunner) watchState(job *batchv1.Job) {
 	c.removeOldestChecks(c.getScheduledCRDsInNameSpace(), c.check.Spec.KeepJobs)
 }
 
-func (c *checkRunner) getScheduledCRDsInNameSpace() []backupv1alpha1.Check {
+func (c *checkRunner) getScheduledCRDsInNameSpace() *backupv1alpha1.CheckList {
 	opts := metav1.ListOptions{
 		LabelSelector: schedule.ScheduledLabelFilter(),
 	}
@@ -108,7 +108,7 @@ func (c *checkRunner) getScheduledCRDsInNameSpace() []backupv1alpha1.Check {
 		return nil
 	}
 
-	return checks.Items
+	return checks
 }
 
 func (c *checkRunner) cleanupCheck(check *backupv1alpha1.Check) error {
@@ -119,20 +119,20 @@ func (c *checkRunner) cleanupCheck(check *backupv1alpha1.Check) error {
 	})
 }
 
-func (c *checkRunner) removeOldestChecks(checks []backupv1alpha1.Check, maxJobs int) {
+func (c *checkRunner) removeOldestChecks(checks *backupv1alpha1.CheckList, maxJobs int) {
 	if maxJobs == 0 {
 		maxJobs = c.config.GlobalKeepJobs
 	}
-	numToDelete := len(checks) - maxJobs
+	numToDelete := len(checks.Items) - maxJobs
 	if numToDelete <= 0 {
 		return
 	}
 
-	c.Logger.Infof("Cleaning up %d/%d jobs", numToDelete, len(checks))
+	c.Logger.Infof("Cleaning up %d/%d jobs", numToDelete, len(checks.Items))
 
-	sort.Sort(byCreationTime(checks))
+	sort.Sort(checks)
 	for i := 0; i < numToDelete; i++ {
-		c.Logger.Infof("Removing job %v limit reached", checks[i].Name)
-		c.cleanupCheck(&checks[i])
+		c.Logger.Infof("Removing job %v limit reached", checks.Items[i].Name)
+		c.cleanupCheck(&checks.Items[i])
 	}
 }

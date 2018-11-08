@@ -44,7 +44,6 @@ func (p *Pruner) Ensure(obj runtime.Object) error {
 
 	return pruneRunner.Start()
 
-	return nil
 }
 
 // Delete satisfies service.Handler

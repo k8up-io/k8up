@@ -56,13 +56,24 @@ func PseudoUUID() string {
 	return fmt.Sprintf("%X-%X-%X-%X-%X", b[0:4], b[4:6], b[6:8], b[8:10], b[10:])
 }
 
-func GetRepository(pod *corev1.Pod) string {
-	// baas pods only have one container
-	for _, env := range pod.Spec.Containers[0].Env {
-		if env.Name == backupv1alpha1.ResticRepository {
-			return env.Value
+func GetRepository(obj interface{}) string {
+	switch obj.(type) {
+	case *corev1.Pod:
+		pod, _ := obj.(*corev1.Pod)
+		// baas pods only have one container
+		for _, env := range pod.Spec.Containers[0].Env {
+			if env.Name == backupv1alpha1.ResticRepository {
+				return env.Value
+			}
 		}
+	case *backupv1alpha1.Backend:
+		backend, _ := obj.(*backupv1alpha1.Backend)
+		if backend == nil {
+			return ""
+		}
+		return backend.String()
 	}
+
 	return ""
 }
 

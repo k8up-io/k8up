@@ -11,20 +11,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-type byCreationTime []backupv1alpha1.Backup
-
-func (b byCreationTime) Len() int      { return len(b) }
-func (b byCreationTime) Swap(i, j int) { b[i], b[j] = b[j], b[i] }
-
-func (b byCreationTime) Less(i, j int) bool {
-
-	if b[i].CreationTimestamp.Equal(&b[j].CreationTimestamp) {
-		return b[i].Name < b[j].Name
-	}
-
-	return b[i].CreationTimestamp.Before(&b[j].CreationTimestamp)
-}
-
 func newBackupJob(volumes []corev1.Volume, controllerName string, backup *backupv1alpha1.Backup, config config) *batchv1.Job {
 	mounts := make([]corev1.VolumeMount, 0)
 	for _, volume := range volumes {

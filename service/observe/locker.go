@@ -2,6 +2,7 @@ package observe
 
 import (
 	"sync"
+	"time"
 )
 
 const (
@@ -13,12 +14,14 @@ const (
 
 type JobType string
 
+// sempahoreMap is an interface to make the sync map type safe.
 type semaphoreMap interface {
 	load(name string) semaphore
 	add(name string, sem semaphore)
 	remove(name string)
 }
 
+// concreteSemaphoreMap implements semaphoreMap
 type concreteSemaphoreMap struct {
 	sync.Map
 }
@@ -27,23 +30,25 @@ type concreteSemaphoreMap struct {
 // the following rules:
 // Backups can run in parallel, also restores can run during backups.
 // Nothing else may run during prunes (exclusive lock), neither restores or backups.
-// No prunes may run during a restore, but backups can.
 // These rules are only applicable if the jobs run on the same backend!
 //
 // Due to the complexity of these rules they are handled in their service. The
 // locker doesn't contain any of the logic above.
 type Locker interface {
-	IsLocked(backend string, job JobType) bool
+	WaitForRun(backend string, jobs []JobType)
 	Increment(backend string, job JobType)
 	Decrement(backend string, job JobType)
 	Remove(backend string)
+	IsLocked(backend string, jobs JobType) bool
 }
 
-type ConcreteLocker struct {
+// concreteLocker implements the Locker interface
+type concreteLocker struct {
 	semaphores semaphoreMap
 	mutex      sync.Mutex
 }
 
+// semaphore holds a counter for each job type
 type semaphore struct {
 	backup  int
 	prune   int
@@ -51,10 +56,12 @@ type semaphore struct {
 	check   int
 }
 
-func newLocker() *ConcreteLocker {
-	return &ConcreteLocker{
+func newLocker() *concreteLocker {
+	locker := &concreteLocker{
 		semaphores: &concreteSemaphoreMap{},
 	}
+
+	return locker
 }
 
 func (s *concreteSemaphoreMap) load(name string) semaphore {
@@ -74,12 +81,12 @@ func (s *concreteSemaphoreMap) remove(name string) {
 	s.Map.Delete(name)
 }
 
-// IsLocked will determine if the backend is locked or not. Returns true if a job
-// of JobType is still running.
-func (c *ConcreteLocker) IsLocked(backend string, job JobType) bool {
+// IsLocked will return true if the semaphore for the given jobType and backend
+// isn't zero.
+func (c *concreteLocker) IsLocked(backend string, job JobType) bool {
+	sem := c.semaphores.load(backend)
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
-	sem := c.semaphores.load(backend)
 	switch job {
 	case PruneType:
 		return sem.prune > 0
@@ -95,16 +102,18 @@ func (c *ConcreteLocker) IsLocked(backend string, job JobType) bool {
 }
 
 // Increment will increment the semaphore for the backend and job type
-func (c *ConcreteLocker) Increment(backend string, job JobType) {
+func (c *concreteLocker) Increment(backend string, job JobType) {
 	c.incOrDec(backend, job, true)
 }
 
 // Decrement will decrement the semaphore for the backend and job type
-func (c *ConcreteLocker) Decrement(backend string, job JobType) {
+func (c *concreteLocker) Decrement(backend string, job JobType) {
 	c.incOrDec(backend, job, false)
 }
 
-func (c *ConcreteLocker) incOrDec(backend string, job JobType, inc bool) {
+// incOrDec will either increment or decrement the semaphore depenending on the
+// value of inc.
+func (c *concreteLocker) incOrDec(backend string, job JobType, inc bool) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 	sem := c.semaphores.load(backend)
@@ -137,6 +146,36 @@ func (c *ConcreteLocker) incOrDec(backend string, job JobType, inc bool) {
 	c.semaphores.add(backend, sem)
 }
 
-func (c *ConcreteLocker) Remove(backend string) {
+// Remove removes the backend from the locker
+func (c *concreteLocker) Remove(backend string) {
 	c.semaphores.remove(backend)
+}
+
+// WaitForRun will loop through all job types passed for the given Repository.
+// As soon as no more jobs are running it will return.
+func (c *concreteLocker) WaitForRun(backend string, jobs []JobType) {
+
+	waiting := true
+	for waiting {
+		for i := range jobs {
+
+			if c.IsLocked(backend, jobs[i]) {
+				// at least one job is still running so we set waiting true and
+				// break the loop so we don't override it again.
+				waiting = true
+				break
+			} else {
+				waiting = false
+			}
+
+		}
+		if !waiting {
+			return
+		}
+		// TODO: would be great if we have something here that would
+		// block as long as there are no changes in the semaphores, to avoid
+		// unnnecessary pollings every second. But this might prove rather
+		// complex todo.
+		time.Sleep(time.Second * 1)
+	}
 }

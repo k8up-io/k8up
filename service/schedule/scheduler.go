@@ -54,7 +54,7 @@ func (s *Schedule) Ensure(obj runtime.Object) error {
 
 	scheduleCopy := schedule.DeepCopy()
 
-	newScheduler := newScheduleRunner(scheduleCopy, &s.CommonObjects)
+	newScheduler := newScheduleRunner(scheduleCopy, &s.CommonObjects, s.observer)
 	s.schedules.Store(name, newScheduler)
 	return newScheduler.Start()
 }

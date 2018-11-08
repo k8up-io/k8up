@@ -71,3 +71,15 @@ type SecretKeySelector struct {
 	// The key of the secret to select from. Must be a valid secret key.
 	Key string `json:"key"`
 }
+
+func (b BackupList) Len() int      { return len(b.Items) }
+func (b BackupList) Swap(i, j int) { b.Items[i], b.Items[j] = b.Items[j], b.Items[i] }
+
+func (b BackupList) Less(i, j int) bool {
+
+	if b.Items[i].CreationTimestamp.Equal(&b.Items[j].CreationTimestamp) {
+		return b.Items[i].Name < b.Items[j].Name
+	}
+
+	return b.Items[i].CreationTimestamp.Before(&b.Items[j].CreationTimestamp)
+}

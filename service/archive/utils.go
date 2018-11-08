@@ -8,20 +8,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
-type byCreationTime []backupv1alpha1.Archive
-
-func (b byCreationTime) Len() int      { return len(b) }
-func (b byCreationTime) Swap(i, j int) { b[i], b[j] = b[j], b[i] }
-
-func (b byCreationTime) Less(i, j int) bool {
-
-	if b[i].CreationTimestamp.Equal(&b[j].CreationTimestamp) {
-		return b[i].Name < b[j].Name
-	}
-
-	return b[i].CreationTimestamp.Before(&b[j].CreationTimestamp)
-}
-
 func newArchiveJob(archive *backupv1alpha1.Archive, config config.Global) *batchv1.Job {
 
 	args := []string{"-archive", "-restoreType", "s3"}

@@ -11,20 +11,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-type byCreationTime []backupv1alpha1.Restore
-
-func (b byCreationTime) Len() int      { return len(b) }
-func (b byCreationTime) Swap(i, j int) { b[i], b[j] = b[j], b[i] }
-
-func (b byCreationTime) Less(i, j int) bool {
-
-	if b[i].CreationTimestamp.Equal(&b[j].CreationTimestamp) {
-		return b[i].Name < b[j].Name
-	}
-
-	return b[i].CreationTimestamp.Before(&b[j].CreationTimestamp)
-}
-
 func newRestoreJob(restore *backupv1alpha1.Restore, config config) *batchv1.Job {
 
 	volumes := []corev1.Volume{}

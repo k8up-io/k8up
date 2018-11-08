@@ -1,6 +1,11 @@
-// observe contains a very special "operator". It is actually a controller,
-// which uses dummy pod and job CRDs to satisfy kooper. It's job is to observe
-// what happens with the pods running the actual jobs.
+// Package observe contains a very special "operator". It is actually a
+// controller, which uses dummy pod and job CRDs to satisfy kooper. It's job is
+// to observe what happens with the pods running the actual jobs.
+//
+// There are three components to this:
+// * locker: handles the semaphores and locks
+// * observer: actually observes the pods and triggers state updates
+// * subscription: notifies consumers on state updates
 package observe
 
 import (
@@ -43,6 +48,7 @@ func GetInstance(log log.Logger) *Observer {
 	return instance
 }
 
+// Ensure will be triggered when a pod or job gets created.
 func (o *Observer) Ensure(obj runtime.Object) error {
 	switch obj.(type) {
 	case *batchv1.Job:
@@ -58,10 +64,15 @@ func (o *Observer) Ensure(obj runtime.Object) error {
 	}
 }
 
+// Delete will be triggered if a pod or job gets deleted.
 func (o *Observer) Delete(name string) error {
+	// TODO:
 	return nil
 }
 
+// podObserver checks the status of the given pod. It will then trigger
+// a notification in the broker and all registered consumers will be notified
+// about the change.
 func (o *Observer) podObserver(pod *corev1.Pod) {
 	baasPod := false
 	baasID := ""
@@ -98,18 +109,17 @@ func (o *Observer) podObserver(pod *corev1.Pod) {
 	}
 }
 
+// jobObserver will observer the job status in the future
 func (o *Observer) jobObserver(job *batchv1.Job) {
-	// for key, value := range job.GetLabels() {
-	// 	if key == "backupPod" && value == "true" {
-	// 		o.Logger.Infof("job %v", job.Name)
-	// 	}
-	// }
+	// NOOP
 }
 
+// GetBroker returns the broker.
 func (o *Observer) GetBroker() *Broker {
-	return instance.broker
+	return o.broker
 }
 
+// GetLocker returns the locker.
 func (o *Observer) GetLocker() Locker {
 	return o.locker
 }

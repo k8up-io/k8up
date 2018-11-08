@@ -12,16 +12,23 @@ import (
 
 type topic string
 
+// PodState contains the state of a pod as well as meta information for the
+// subscription system.
 type PodState struct {
 	BaasID     string
 	State      string
 	Repository string
 }
 
+// Broker holds the subscribers per topic. So that every subscriber for each
+// topic can be notified at a time. The topic is a random UUID each baas
+// resource gets assigned during creation.
 type Broker struct {
 	subscribers map[topic][]Subscriber
 }
 
+// Subscriber holds a channel that will receive the updates. The id is for
+// internal tracking.
 type Subscriber struct {
 	CH chan PodState
 	id int // ID has to be uniqe within a topic
@@ -40,6 +47,7 @@ type WatchObjects struct {
 	Defaultfunc func(message PodState)
 }
 
+// update sends an update to a single subscriber
 func (s *Subscriber) update(state PodState) {
 	s.CH <- state
 }
@@ -50,6 +58,8 @@ func newBroker() *Broker {
 	}
 }
 
+// Subscribe adds a subscriber to the broker under the correct topic and returns
+// the subscriber. The subscriber contains the means to listen to events if necessary.
 func (b *Broker) Subscribe(topicName string) (*Subscriber, error) {
 	if subs, ok := b.subscribers[topic(topicName)]; !ok {
 		tmpSlice := make([]Subscriber, 0)
@@ -90,6 +100,7 @@ func (b *Broker) Subscribe(topicName string) (*Subscriber, error) {
 	}
 }
 
+// Unsubscribe removes the provided subscriber from the topic.
 func (b *Broker) Unsubscribe(topicName string, subscriber *Subscriber) {
 	if subs, ok := b.subscribers[topic(topicName)]; ok {
 		deleteIndex := 0
@@ -103,15 +114,22 @@ func (b *Broker) Unsubscribe(topicName string, subscriber *Subscriber) {
 	}
 }
 
+// Notify notifies all subscribers to topic with the state.
 func (b *Broker) Notify(topicName string, state PodState) error {
 	if subs, ok := b.subscribers[topic(topicName)]; ok {
 		for i := range subs {
 			go subs[i].update(state)
 		}
+	} else {
+		return fmt.Errorf("%v is not a registered topic", topicName)
 	}
 	return nil
 }
 
+// WatchLoop loops over the channel. It will run the WatchObject functions when
+// the appriopriate state is triggered (running, success, fail). This way each
+// service can provide custom code that should get executed on the state changes
+// if necessary.
 func (s *Subscriber) WatchLoop(watch WatchObjects) {
 
 	running := false
@@ -135,10 +153,6 @@ func (s *Subscriber) WatchLoop(watch WatchObjects) {
 			return
 		case string(corev1.PodRunning):
 			watch.Logger.Infof("Pod %v in namespace %v is still running", watch.Job.GetName(), watch.Job.GetNamespace())
-			if !running {
-				watch.Locker.Increment(backendString, watch.JobType)
-				running = true
-			}
 			if watch.Runningfunc != nil {
 				watch.Runningfunc(message)
 			}
@@ -146,6 +160,14 @@ func (s *Subscriber) WatchLoop(watch WatchObjects) {
 			watch.Logger.Infof("Pod state for job %v is: %v", watch.Job.Name, message.State)
 			if watch.Defaultfunc != nil {
 				watch.Defaultfunc(message)
+			}
+			// As soon as the pod is created it's time to increment the semaphore
+			// or else two pods started at the exact same time may run concurrently
+			if message.State == string(corev1.PodPending) {
+				if !running {
+					watch.Locker.Increment(backendString, watch.JobType)
+					running = true
+				}
 			}
 		}
 	}

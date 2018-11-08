@@ -104,17 +104,17 @@ func (a *archiveRunner) watchState(archiveJob *batchv1.Job) {
 
 }
 
-func (a *archiveRunner) getScheduledCRDsInNameSpace() []backupv1alpha1.Archive {
+func (a *archiveRunner) getScheduledCRDsInNameSpace() *backupv1alpha1.ArchiveList {
 	opts := metav1.ListOptions{
 		LabelSelector: schedule.ScheduledLabelFilter(),
 	}
-	checks, err := a.BaasCLI.AppuioV1alpha1().Archives(a.archiver.Namespace).List(opts)
+	archives, err := a.BaasCLI.AppuioV1alpha1().Archives(a.archiver.Namespace).List(opts)
 	if err != nil {
 		a.Logger.Errorf("%v", err)
 		return nil
 	}
 
-	return checks.Items
+	return archives
 }
 
 func (a *archiveRunner) cleanupArchive(archive *backupv1alpha1.Archive) error {
@@ -125,20 +125,20 @@ func (a *archiveRunner) cleanupArchive(archive *backupv1alpha1.Archive) error {
 	})
 }
 
-func (a *archiveRunner) removeOldestArchives(archives []backupv1alpha1.Archive, maxJobs int) {
+func (a *archiveRunner) removeOldestArchives(archives *backupv1alpha1.ArchiveList, maxJobs int) {
 	if maxJobs == 0 {
 		maxJobs = a.config.GlobalKeepJobs
 	}
-	numToDelete := len(archives) - maxJobs
+	numToDelete := len(archives.Items) - maxJobs
 	if numToDelete <= 0 {
 		return
 	}
 
-	a.Logger.Infof("Cleaning up %d/%d jobs", numToDelete, len(archives))
+	a.Logger.Infof("Cleaning up %d/%d jobs", numToDelete, len(archives.Items))
 
-	sort.Sort(byCreationTime(archives))
+	sort.Sort(archives)
 	for i := 0; i < numToDelete; i++ {
-		a.Logger.Infof("Removing job %v limit reached", archives[i].Name)
-		a.cleanupArchive(&archives[i])
+		a.Logger.Infof("Removing job %v limit reached", archives.Items[i].Name)
+		a.cleanupArchive(&archives.Items[i])
 	}
 }

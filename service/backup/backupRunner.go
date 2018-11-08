@@ -183,25 +183,25 @@ func (b *backupRunner) listBackupCommands() []string {
 	return tmp
 }
 
-func (b *backupRunner) removeOldestBackups(backups []backupv1alpha1.Backup, maxJobs int) {
+func (b *backupRunner) removeOldestBackups(backups *backupv1alpha1.BackupList, maxJobs int) {
 	if maxJobs == 0 {
 		maxJobs = b.config.GlobalKeepJobs
 	}
-	numToDelete := len(backups) - maxJobs
+	numToDelete := len(backups.Items) - maxJobs
 	if numToDelete <= 0 {
 		return
 	}
 
-	b.Logger.Infof("Cleaning up %d/%d jobs", numToDelete, len(backups))
+	b.Logger.Infof("Cleaning up %d/%d jobs", numToDelete, len(backups.Items))
 
-	sort.Sort(byCreationTime(backups))
+	sort.Sort(backups)
 	for i := 0; i < numToDelete; i++ {
-		b.Logger.Infof("Removing job %v limit reached", backups[i].Name)
-		b.cleanupBackup(&backups[i])
+		b.Logger.Infof("Removing job %v limit reached", backups.Items[i].Name)
+		b.cleanupBackup(&backups.Items[i])
 	}
 }
 
-func (b *backupRunner) getScheduledCRDsInNameSpace() []backupv1alpha1.Backup {
+func (b *backupRunner) getScheduledCRDsInNameSpace() *backupv1alpha1.BackupList {
 	opts := metav1.ListOptions{
 		LabelSelector: schedule.ScheduledLabelFilter(),
 	}
@@ -211,7 +211,7 @@ func (b *backupRunner) getScheduledCRDsInNameSpace() []backupv1alpha1.Backup {
 		return nil
 	}
 
-	return backups.Items
+	return backups
 }
 
 func (b *backupRunner) cleanupBackup(backup *backupv1alpha1.Backup) error {
