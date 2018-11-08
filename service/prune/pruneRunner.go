@@ -23,20 +23,6 @@ type pruneRunner struct {
 	prune    *backupv1alpha1.Prune
 }
 
-type byCreationTime []backupv1alpha1.Prune
-
-func (b byCreationTime) Len() int      { return len(b) }
-func (b byCreationTime) Swap(i, j int) { b[i], b[j] = b[j], b[i] }
-
-func (b byCreationTime) Less(i, j int) bool {
-
-	if b[i].CreationTimestamp.Equal(&b[j].CreationTimestamp) {
-		return b[i].Name < b[j].Name
-	}
-
-	return b[i].CreationTimestamp.Before(&b[j].CreationTimestamp)
-}
-
 func newPruneRunner(common service.CommonObjects, config config.Global, prune *backupv1alpha1.Prune, observer *observe.Observer) *pruneRunner {
 	return &pruneRunner{
 		CommonObjects: common,
@@ -189,7 +175,7 @@ func (p *pruneRunner) watchState(job *batchv1.Job) {
 
 }
 
-func (p *pruneRunner) getScheduledCRDsInNameSpace() []backupv1alpha1.Prune {
+func (p *pruneRunner) getScheduledCRDsInNameSpace() *backupv1alpha1.PruneList {
 	opts := metav1.ListOptions{
 		LabelSelector: schedule.ScheduledLabelFilter(),
 	}
@@ -199,7 +185,7 @@ func (p *pruneRunner) getScheduledCRDsInNameSpace() []backupv1alpha1.Prune {
 		return nil
 	}
 
-	return prunes.Items
+	return prunes
 }
 
 func (p *pruneRunner) cleanupPrune(prune *backupv1alpha1.Prune) error {
@@ -210,20 +196,20 @@ func (p *pruneRunner) cleanupPrune(prune *backupv1alpha1.Prune) error {
 	})
 }
 
-func (p *pruneRunner) removeOldestPrunes(prunes []backupv1alpha1.Prune, maxJobs int) {
+func (p *pruneRunner) removeOldestPrunes(prunes *backupv1alpha1.PruneList, maxJobs int) {
 	if maxJobs == 0 {
 		maxJobs = p.config.GlobalKeepJobs
 	}
-	numToDelete := len(prunes) - maxJobs
+	numToDelete := len(prunes.Items) - maxJobs
 	if numToDelete <= 0 {
 		return
 	}
 
-	p.Logger.Infof("Cleaning up %d/%d jobs", numToDelete, len(prunes))
+	p.Logger.Infof("Cleaning up %d/%d jobs", numToDelete, len(prunes.Items))
 
-	sort.Sort(byCreationTime(prunes))
+	sort.Sort(prunes)
 	for i := 0; i < numToDelete; i++ {
-		p.Logger.Infof("Removing job %v limit reached", prunes[i].Name)
-		p.cleanupPrune(&prunes[i])
+		p.Logger.Infof("Removing job %v limit reached", prunes.Items[i].Name)
+		p.cleanupPrune(&prunes.Items[i])
 	}
 }

@@ -81,7 +81,7 @@ func (r *RestoreRunner) updateStatus() error {
 	return nil
 }
 
-func (r *RestoreRunner) getScheduledCRDsInNameSpace() []backupv1alpha1.Restore {
+func (r *RestoreRunner) getScheduledCRDsInNameSpace() *backupv1alpha1.RestoreList {
 	opts := metav1.ListOptions{
 		LabelSelector: schedule.ScheduledLabelFilter(),
 	}
@@ -91,7 +91,7 @@ func (r *RestoreRunner) getScheduledCRDsInNameSpace() []backupv1alpha1.Restore {
 		return nil
 	}
 
-	return restores.Items
+	return restores
 }
 
 func (r *RestoreRunner) cleanupRestore(restore *backupv1alpha1.Restore) error {
@@ -102,20 +102,20 @@ func (r *RestoreRunner) cleanupRestore(restore *backupv1alpha1.Restore) error {
 	})
 }
 
-func (r *RestoreRunner) removeOldestPrunes(restores []backupv1alpha1.Restore, maxJobs int) {
+func (r *RestoreRunner) removeOldestPrunes(restores *backupv1alpha1.RestoreList, maxJobs int) {
 	if maxJobs == 0 {
 		maxJobs = r.config.GlobalKeepJobs
 	}
-	numToDelete := len(restores) - maxJobs
+	numToDelete := len(restores.Items) - maxJobs
 	if numToDelete <= 0 {
 		return
 	}
 
-	r.Logger.Infof("Cleaning up %d/%d jobs", numToDelete, len(restores))
+	r.Logger.Infof("Cleaning up %d/%d jobs", numToDelete, len(restores.Items))
 
-	sort.Sort(byCreationTime(restores))
+	sort.Sort(restores)
 	for i := 0; i < numToDelete; i++ {
-		r.Logger.Infof("Removing job %v limit reached", restores[i].Name)
-		r.cleanupRestore(&restores[i])
+		r.Logger.Infof("Removing job %v limit reached", restores.Items[i].Name)
+		r.cleanupRestore(&restores.Items[i])
 	}
 }

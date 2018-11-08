@@ -59,3 +59,15 @@ type JobStatus struct {
 type RestoreStatus struct {
 	JobStatus `json:",inline"`
 }
+
+func (r RestoreList) Len() int      { return len(r.Items) }
+func (r RestoreList) Swap(i, j int) { r.Items[i], r.Items[j] = r.Items[j], r.Items[i] }
+
+func (r RestoreList) Less(i, j int) bool {
+
+	if r.Items[i].CreationTimestamp.Equal(&r.Items[j].CreationTimestamp) {
+		return r.Items[i].Name < r.Items[j].Name
+	}
+
+	return r.Items[i].CreationTimestamp.Before(&r.Items[j].CreationTimestamp)
+}

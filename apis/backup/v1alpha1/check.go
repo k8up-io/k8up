@@ -31,3 +31,15 @@ type CheckList struct {
 type CheckStatus struct {
 	JobStatus `json:",inline"`
 }
+
+func (c CheckList) Len() int      { return len(c.Items) }
+func (c CheckList) Swap(i, j int) { c.Items[i], c.Items[j] = c.Items[j], c.Items[i] }
+
+func (c CheckList) Less(i, j int) bool {
+
+	if c.Items[i].CreationTimestamp.Equal(&c.Items[j].CreationTimestamp) {
+		return c.Items[i].Name < c.Items[j].Name
+	}
+
+	return c.Items[i].CreationTimestamp.Before(&c.Items[j].CreationTimestamp)
+}

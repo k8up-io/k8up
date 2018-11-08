@@ -67,3 +67,15 @@ type ScheduleList struct {
 
 	Items []Schedule `json:"items"`
 }
+
+func (s ScheduleList) Len() int      { return len(s.Items) }
+func (s ScheduleList) Swap(i, j int) { s.Items[i], s.Items[j] = s.Items[j], s.Items[i] }
+
+func (s ScheduleList) Less(i, j int) bool {
+
+	if s.Items[i].CreationTimestamp.Equal(&s.Items[j].CreationTimestamp) {
+		return s.Items[i].Name < s.Items[j].Name
+	}
+
+	return s.Items[i].CreationTimestamp.Before(&s.Items[j].CreationTimestamp)
+}

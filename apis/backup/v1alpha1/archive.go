@@ -29,3 +29,15 @@ type ArchiveList struct {
 type ArchiveStatus struct {
 	JobStatus `json:",inline"`
 }
+
+func (a ArchiveList) Len() int      { return len(a.Items) }
+func (a ArchiveList) Swap(i, j int) { a.Items[i], a.Items[j] = a.Items[j], a.Items[i] }
+
+func (a ArchiveList) Less(i, j int) bool {
+
+	if a.Items[i].CreationTimestamp.Equal(&a.Items[j].CreationTimestamp) {
+		return a.Items[i].Name < a.Items[j].Name
+	}
+
+	return a.Items[i].CreationTimestamp.Before(&a.Items[j].CreationTimestamp)
+}

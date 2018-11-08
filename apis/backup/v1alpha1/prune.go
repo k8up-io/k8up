@@ -42,3 +42,15 @@ type RetentionPolicy struct {
 	KeepYearly  int      `json:"keepYearly,omitempty"`
 	KeepTags    []string `json:"keepTags,omitempty"`
 }
+
+func (p PruneList) Len() int      { return len(p.Items) }
+func (p PruneList) Swap(i, j int) { p.Items[i], p.Items[j] = p.Items[j], p.Items[i] }
+
+func (p PruneList) Less(i, j int) bool {
+
+	if p.Items[i].CreationTimestamp.Equal(&p.Items[j].CreationTimestamp) {
+		return p.Items[i].Name < p.Items[j].Name
+	}
+
+	return p.Items[i].CreationTimestamp.Before(&p.Items[j].CreationTimestamp)
+}
