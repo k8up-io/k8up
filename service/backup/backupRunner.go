@@ -173,7 +173,7 @@ func (b *backupRunner) listBackupCommands() []string {
 
 			if _, ok := sameOwner[firstOwnerID]; !ok {
 				sameOwner[firstOwnerID] = true
-				args := fmt.Sprintf("\"%v,%v,%v,%v\"", command, pod.Name, pod.Spec.Containers[0].Name, b.backup.Namespace)
+				args := fmt.Sprintf("%v,%v,%v,%v", command, pod.Name, pod.Spec.Containers[0].Name, b.backup.Namespace)
 				tmp = append(tmp, "-arrayOpts", args)
 			}
 
