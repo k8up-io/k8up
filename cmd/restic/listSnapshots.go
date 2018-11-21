@@ -10,6 +10,8 @@ import (
 	"time"
 )
 
+const notInitialisedError = "Not initialised yet"
+
 // snapshot models a restic a single snapshot from the
 // snapshots --json subcommand.
 type snapshot struct {
@@ -57,9 +59,9 @@ func listSnapshots() ([]snapshot, error) {
 	fmt.Printf("Listing snapshots, timeout: %v\n", timeout)
 	select {
 	case <-done:
-		if len(stderr) > 0 && strings.Contains(stderr[1], "following location?") {
+		if len(stderr) > 1 && strings.Contains(stderr[1], "following location?") {
 			commandError = nil
-			return nil, errors.New("Not initialised yet")
+			return nil, errors.New(notInitialisedError)
 		}
 		snapList := make([]snapshot, 0)
 		output := strings.Join(stdout, "\n")
