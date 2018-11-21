@@ -114,9 +114,11 @@ func run(finishC chan error) {
 
 	backupDir = getBackupDir()
 
-	// TODO: simplify this
+	// TODO: simplify this APPU-1368
 	if !*restore && !*archive {
-		initRepository()
+		if err := initRepository(); err != nil {
+			return
+		}
 
 		if *check {
 			checkCommand()
@@ -131,6 +133,9 @@ func run(finishC chan error) {
 						commandError = fmt.Errorf("not enough arguments %v for stdin", stdin)
 					}
 					stdinBackup(optsSplitted[0], optsSplitted[1], optsSplitted[2], optsSplitted[3])
+					if commandError != nil {
+						return
+					}
 				}
 				// After doing all backups via stdin don't forget todo the normal one
 				if _, err := os.Stat(backupDir); os.IsNotExist(err) {
