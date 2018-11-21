@@ -21,7 +21,6 @@ func genericCommand(args []string, options commandOptions) ([]string, []string) 
 
 	// Turn into noop if previous commands failed
 	if commandError != nil {
-		// fmt.Println("Errors occured during previous commands skipping...")
 		return nil, nil
 	}
 

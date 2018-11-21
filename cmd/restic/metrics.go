@@ -42,7 +42,7 @@ type resticMetrics struct {
 	UnmodifiedDirs        *prometheus.GaugeVec
 	DataTransferred       *prometheus.GaugeVec
 	url                   string
-	intervall             int
+	interval              int
 }
 
 func newResticMetrics(url string) *resticMetrics {
@@ -141,7 +141,7 @@ func newResticMetrics(url string) *resticMetrics {
 		BackupStartTimestamp:  backupStartTimestamp,
 		Errors:                errors,
 		runningBackupDuration: backupDuration,
-		intervall:             1,
+		interval:              1,
 		BackupEndTimestamp:    backupEndTimestamp,
 		AvailableSnapshots:    availableSnapshots,
 		NewFiles:              newFiles,
@@ -155,12 +155,12 @@ func newResticMetrics(url string) *resticMetrics {
 }
 
 func (r *resticMetrics) startUpdating() {
-	tick := time.NewTicker(time.Duration(r.intervall) * time.Second)
+	tick := time.NewTicker(time.Duration(r.interval) * time.Second)
 
 	for {
 		select {
 		case <-tick.C:
-			r.runningBackupDuration.Add(float64(r.intervall))
+			r.runningBackupDuration.Add(float64(r.interval))
 			r.Update(r.runningBackupDuration)
 		}
 	}

@@ -89,7 +89,7 @@ func parseBackupOutput(stdout, stderr []string, folderName string) {
 	}
 
 	if errorCount > 0 {
-		fmt.Println("Following errors occured during the backup:")
+		fmt.Println("Following errors occurred during the backup:")
 		fmt.Println(strings.Join(stderr, "\n"))
 	}
 

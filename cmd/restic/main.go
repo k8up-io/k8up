@@ -55,7 +55,7 @@ var (
 	check         = flag.Bool("check", false, "Set if the container should run a check")
 	stdin         = flag.Bool("stdin", false, "Set to enable stdin backup")
 	prune         = flag.Bool("prune", false, "Set if the container should run a prune")
-	restore       = flag.Bool("restore", false, "Wheter or not a restore should be done")
+	restore       = flag.Bool("restore", false, "Whether or not a restore should be done")
 	restoreSnap   = flag.String("restoreSnap", "", "Snapshot ID, if empty takes the latest snapshot")
 	verifyRestore = flag.Bool("verifyRestore", false, "If the restore should get verified, only for PVCs restore")
 	restoreType   = flag.String("restoreType", "", "Type of this restore, folder or S3")
