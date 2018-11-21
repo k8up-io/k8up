@@ -52,6 +52,9 @@ func stdinBackup(backupCommand, pod, container, namespace string) {
 }
 
 func parseBackupOutput(stdout, stderr []string, folderName string) {
+	if len(stdout) < 6 {
+		return
+	}
 	files := strings.Fields(strings.Split(stdout[len(stdout)-6], ":")[1])
 	dirs := strings.Fields(strings.Split(stdout[len(stdout)-5], ":")[1])
 

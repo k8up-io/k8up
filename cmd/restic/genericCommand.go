@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -28,7 +29,12 @@ func genericCommand(args []string, options commandOptions) ([]string, []string) 
 	cmd.Env = os.Environ()
 
 	if options.stdin {
-		stdout, err := kubernetes.PodExec(options.Params)
+		stdout, stderr, err := kubernetes.PodExec(options.Params)
+		if err != nil {
+			fmt.Println(err)
+			commandError = err
+			return nil, nil
+		}
 		stdin, err := cmd.StdinPipe()
 		if err != nil {
 			fmt.Println(err)
@@ -46,9 +52,14 @@ func genericCommand(args []string, options commandOptions) ([]string, []string) 
 			defer stdin.Close()
 			_, err := io.Copy(stdin, stdout)
 			if err != nil {
+				cmd.Process.Kill()
 				fmt.Println(err)
 				commandError = err
-				return
+				stderrStr := stderr.String()
+				if stderrStr != "" {
+					fmt.Printf("Stderr of pod exec: '%v'", stderr)
+					commandError = errors.New(stderrStr)
+				}
 			}
 		}()
 	}
@@ -61,7 +72,12 @@ func genericCommand(args []string, options commandOptions) ([]string, []string) 
 	stdOutput := make([]string, 0)
 	stderrOutput := make([]string, 0)
 
-	cmd.Start()
+	err = cmd.Start()
+	if err != nil {
+		fmt.Println(err)
+		commandError = err
+		return nil, nil
+	}
 
 	go func() {
 		var collectErr error

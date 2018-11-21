@@ -7,10 +7,7 @@ import (
 
 func checkCommand() {
 	args := []string{"check"}
-	parseCheckOutput(genericCommand(args, commandOptions{print: true}))
-}
-
-func parseCheckOutput(stdout, stderr []string) {
+	_, stderr := genericCommand(args, commandOptions{print: true})
 	metrics.Errors.WithLabelValues("all", os.Getenv(hostname)).Set(float64(len(stderr)))
 	metrics.Update(metrics.Errors)
 	if len(stderr) > 0 {
