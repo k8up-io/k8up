@@ -124,7 +124,9 @@ func s3Restore(snapshot snapshot) {
 	if err != nil {
 		commandError = err
 	}
-	postToURL(stats)
+	if err = postToURL(stats); err != nil {
+		commandError = err
+	}
 }
 
 func listFilesInSnapshot(snapshot snapshot) []string {
