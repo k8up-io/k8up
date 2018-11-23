@@ -21,7 +21,7 @@ func newBackupJob(volumes []corev1.Volume, controllerName string, backup *backup
 		mounts = append(mounts, tmpMount)
 	}
 
-	job := service.GetBasicJob("backup", config.Global, &backup.ObjectMeta)
+	job := service.GetBasicJob(backupv1alpha1.BackupKind, config.Global, &backup.ObjectMeta)
 
 	finalEnv := append(job.Spec.Template.Spec.Containers[0].Env, setUpEnvVariables(backup, config)...)
 
@@ -58,7 +58,7 @@ func newServiceAccountDefinition(backup *backupv1alpha1.Backup, config config) s
 			Name:      config.podExecRoleName,
 			Namespace: backup.Namespace,
 			OwnerReferences: []metav1.OwnerReference{
-				service.NewOwnerReference(backup),
+				service.NewOwnerReference(backup, backupv1alpha1.BackupKind),
 			},
 		},
 		Rules: []rbacv1.PolicyRule{
@@ -82,7 +82,7 @@ func newServiceAccountDefinition(backup *backupv1alpha1.Backup, config config) s
 			Name:      config.podExecRoleName + "-namespaced",
 			Namespace: backup.Namespace,
 			OwnerReferences: []metav1.OwnerReference{
-				service.NewOwnerReference(backup),
+				service.NewOwnerReference(backup, backupv1alpha1.BackupKind),
 			},
 		},
 		Subjects: []rbacv1.Subject{
@@ -104,7 +104,7 @@ func newServiceAccountDefinition(backup *backupv1alpha1.Backup, config config) s
 			Name:      config.podExecAccountName,
 			Namespace: backup.Namespace,
 			OwnerReferences: []metav1.OwnerReference{
-				service.NewOwnerReference(backup),
+				service.NewOwnerReference(backup, backupv1alpha1.BackupKind),
 			},
 		},
 	}

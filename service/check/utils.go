@@ -10,7 +10,7 @@ import (
 
 func newCheckJob(check *backupv1alpha1.Check, config config.Global) *batchv1.Job {
 
-	job := service.GetBasicJob("check", config, &check.ObjectMeta)
+	job := service.GetBasicJob(backupv1alpha1.CheckKind, config, &check.ObjectMeta)
 
 	finalEnv := append(job.Spec.Template.Spec.Containers[0].Env, setUpEnvVariables(check, config)...)
 

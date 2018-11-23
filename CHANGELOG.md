@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [Unreleased]
 ### Changed
 - Don't quote backup commands
+### Fixed
+- Fix owner reference creation
 
 ## [v0.1.2] - 2018-11-08
 ### Changed

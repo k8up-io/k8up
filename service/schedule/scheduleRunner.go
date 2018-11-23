@@ -57,7 +57,7 @@ func (s *scheduleRunner) Start() error {
 	scheduleCopy := s.schedule.DeepCopy()
 
 	ownerReference := []metav1.OwnerReference{
-		service.NewOwnerReference(scheduleCopy),
+		service.NewOwnerReference(scheduleCopy, backupv1alpha1.ScheduleKind),
 	}
 
 	locker := s.observer.GetLocker()

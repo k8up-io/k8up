@@ -65,7 +65,7 @@ func newRestoreJob(restore *backupv1alpha1.Restore, config config) *batchv1.Job 
 				config.Label: "true",
 			},
 			OwnerReferences: []metav1.OwnerReference{
-				service.NewOwnerReference(restore),
+				service.NewOwnerReference(restore, backupv1alpha1.RestoreKind),
 			},
 		},
 		Spec: batchv1.JobSpec{
