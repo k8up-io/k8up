@@ -24,7 +24,7 @@ func setUpEnvVariables(archive *backupv1alpha1.Archive, config config.Global) []
 	vars := service.DefaultEnvs(archive.Spec.Backend, config)
 
 	if archive.Spec.RestoreMethod.S3 != nil {
-		vars = append(vars, archive.Spec.RestoreSpec.Backend.S3.RestoreEnvs(config)...)
+		vars = append(vars, archive.Spec.RestoreMethod.S3.RestoreEnvs(config)...)
 	}
 
 	return vars

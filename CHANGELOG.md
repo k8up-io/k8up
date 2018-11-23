@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Don't quote backup commands
 ### Fixed
 - Fix owner reference creation
+- Choose the right target for archival jobs
 
 ## [v0.1.2] - 2018-11-08
 ### Changed
