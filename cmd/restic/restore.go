@@ -3,6 +3,7 @@ package main
 import (
 	"archive/tar"
 	"bufio"
+	"bytes"
 	"fmt"
 	"io"
 	"os"
@@ -124,7 +125,9 @@ func s3Restore(snapshot snapshot) {
 	if err != nil {
 		commandError = err
 	}
-	postToURL(stats)
+	if err = postToURL(stats); err != nil {
+		commandError = err
+	}
 }
 
 func listFilesInSnapshot(snapshot snapshot) []string {
@@ -240,6 +243,8 @@ func createFileReaders(snapshot snapshot, fileList []string) ([]restoreFile, err
 			if err != nil {
 				return
 			}
+			var stdErr bytes.Buffer
+			cmd.Stderr = &stdErr
 
 			err = cmd.Start()
 			if err != nil {
@@ -252,7 +257,8 @@ func createFileReaders(snapshot snapshot, fileList []string) ([]restoreFile, err
 
 			err = cmd.Wait()
 			if err != nil {
-				fmt.Println(err)
+				fmt.Printf("Command failed with: '%v'\n", err)
+				fmt.Printf("Output: %v\n", stdErr.String())
 				return
 			}
 		}
@@ -267,6 +273,11 @@ func tarGz(files []restoreFile, stats *restoreStats) io.Reader {
 	trWriter := tar.NewWriter(gzpWriter)
 
 	go func() {
+		defer func() {
+			trWriter.Close()
+			gzpWriter.Close()
+			writePipe.Close()
+		}()
 		for _, file := range files {
 			stats.RestoredFiles = append(stats.RestoredFiles, file.name)
 			fmt.Printf("Compressing %v...", file.name)
@@ -280,26 +291,22 @@ func tarGz(files []restoreFile, stats *restoreStats) io.Reader {
 
 			err := trWriter.WriteHeader(header)
 			if err != nil {
-				fmt.Println(err)
+				fmt.Printf("\n%v\n", err)
+				commandError = err
+				return
 			}
 			go file.runFunc()
 			reader := <-file.closer
 			buffer := bufio.NewReader(reader)
 			_, err = io.Copy(trWriter, buffer)
 			if err != nil {
-				fmt.Println(err)
+				fmt.Printf("\n%v\n", err)
 				commandError = err
-				trWriter.Close()
-				gzpWriter.Close()
-				writePipe.Close()
 				return
 			}
 			file.closer <- reader
 			fmt.Println(" done!")
 		}
-		trWriter.Close()
-		gzpWriter.Close()
-		writePipe.Close()
 	}()
 
 	return readPipe

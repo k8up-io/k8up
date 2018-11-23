@@ -8,10 +8,6 @@ import (
 
 func pruneCommand() {
 
-	fmt.Println("Removing all locks to clear stale locks")
-
-	unlock(true)
-
 	// TODO: check for integers
 	args := []string{"forget"}
 
@@ -43,7 +39,10 @@ func pruneCommand() {
 	fmt.Println("forget params: ", strings.Join(args, " "))
 	genericCommand(args, commandOptions{print: true})
 
-	updateSnapshots()
+	if err := updateSnapshots(); err != nil {
+		commandError = err
+		return
+	}
 
 	args = []string{"prune"}
 	genericCommand(args, commandOptions{print: true})

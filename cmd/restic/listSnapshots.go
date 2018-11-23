@@ -67,7 +67,7 @@ func listSnapshots() ([]snapshot, error) {
 		output := strings.Join(stdout, "\n")
 		err := json.Unmarshal([]byte(output), &snapList)
 		if err != nil {
-			fmt.Printf("Error listing snapshots\n%v\n%v\n%v", err, output, strings.Join(stderr, "\n"))
+			fmt.Printf("Error listing snapshots:\n%v\n%v\n%v\n", err, output, strings.Join(stderr, "\n"))
 			return nil, err
 		}
 		availableSnapshots := len(snapList)

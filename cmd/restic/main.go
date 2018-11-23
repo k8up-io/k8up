@@ -115,6 +115,10 @@ func run(finishC chan error) {
 	backupDir = getBackupDir()
 
 	// TODO: simplify this APPU-1368
+	if *prune {
+		fmt.Println("Removing all locks to clear stale locks")
+		unlock(true)
+	}
 	if !*restore && !*archive {
 		if err := initRepository(); err != nil {
 			return
@@ -146,7 +150,9 @@ func run(finishC chan error) {
 			} else {
 				pruneCommand()
 			}
-			updateSnapshots()
+			if err := updateSnapshots(); err != nil && commandError == nil {
+				commandError = err
+			}
 		}
 	} else if *archive {
 		archiveJob()
@@ -209,16 +215,15 @@ func prepareBackupMetricJSON(newMetrics rawMetrics) stats {
 
 // postToURL will convert the object you passed to json
 // and post it to the defined stats URL
-func postToURL(data interface{}) {
+func postToURL(data interface{}) error {
 	url := os.Getenv(statsURLEnv)
 	if url == "" {
-		return
+		return nil
 	}
 
 	JSONStats, err := json.Marshal(data)
 	if err != nil {
-		commandError = err
-		return
+		return err
 	}
 
 	postBody := bytes.NewReader(JSONStats)
@@ -231,9 +236,10 @@ func postToURL(data interface{}) {
 		} else {
 			httpCode = resp.Status
 		}
-		commandError = fmt.Errorf("Could not send webhook: %v http status code: %v", err, httpCode)
+		return fmt.Errorf("Could not send webhook: %v http status code: %v", err, httpCode)
 	} else {
 		fmt.Printf("Pushed stats to %v\n", url)
+		return nil
 	}
 }
 
@@ -244,14 +250,13 @@ func getRestoreDir() string {
 	return "/restore"
 }
 
-func updateSnapshots() {
+func updateSnapshots() error {
 	fmt.Println("Update webhook with snapshots")
 
 	snapshots, err := listSnapshots()
 	if err != nil {
-		commandError = err
-		return
+		return err
 	}
 
-	postToURL(snapshots)
+	return postToURL(snapshots)
 }

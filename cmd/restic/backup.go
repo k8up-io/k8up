@@ -94,6 +94,7 @@ func parseBackupOutput(stdout, stderr []string, folderName string) {
 	}
 
 	updateProm(newMetrics, folderName, os.Getenv(hostname))
-	postToURL(prepareBackupMetricJSON(newMetrics))
-
+	if err = postToURL(prepareBackupMetricJSON(newMetrics)); err != nil {
+		commandError = err
+	}
 }
