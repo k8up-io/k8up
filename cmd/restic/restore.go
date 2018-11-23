@@ -22,7 +22,7 @@ type restoreStats struct {
 	RestoredFiles   []string `json:"restored_files,omitempty"`
 }
 
-func restoreJob(snapshotID, method string) {
+func restoreJob(snapshotID, method string) error {
 	fmt.Println("Starting restore...")
 
 	snapshot := snapshot{}
@@ -30,7 +30,7 @@ func restoreJob(snapshotID, method string) {
 	snapshots, err := listSnapshots()
 	if err != nil {
 		fmt.Println(err)
-		return
+		return err
 	}
 
 	if snapshotID == "" {
@@ -47,7 +47,7 @@ func restoreJob(snapshotID, method string) {
 			message := fmt.Sprintf("No Snapshot found with ID %v", snapshotID)
 			fmt.Println(message)
 			commandError = fmt.Errorf(message)
-			return
+			return commandError
 		}
 	}
 
@@ -55,20 +55,18 @@ func restoreJob(snapshotID, method string) {
 
 	// TODO: implement some enum here: https://blog.learngoprogramming.com/golang-const-type-enums-iota-bc4befd096d3
 	if method == "folder" {
-		folderRestore(snapshot)
-		return
+		return folderRestore(snapshot)
 	}
 
 	if method == "s3" {
-		s3Restore(snapshot)
-		return
+		return s3Restore(snapshot)
 	}
 
 	commandError = fmt.Errorf("%v is not a valid restore type", *restoreType)
-
+	return commandError
 }
 
-func folderRestore(snapshot snapshot) {
+func folderRestore(snapshot snapshot) error {
 	restoreDir := getRestoreDir()
 
 	args := []string{"restore", snapshot.ID, "--target", restoreDir}
@@ -90,16 +88,18 @@ func folderRestore(snapshot snapshot) {
 	}
 	if notIgnoredErrors > 0 {
 		commandError = fmt.Errorf("There were %v unignored errors, please have a look", notIgnoredErrors)
+		return commandError
 	}
+	return nil
 }
 
-func s3Restore(snapshot snapshot) {
+func s3Restore(snapshot snapshot) error {
 	fmt.Println("S3 chosen as restore destination")
 	fileList := listFilesInSnapshot(snapshot)
 	readers, err := createFileReaders(snapshot, fileList)
 	if err != nil {
 		commandError = err
-		return
+		return err
 	}
 
 	endpoint := os.Getenv(restoreS3EndpointEnv)
@@ -114,7 +114,7 @@ func s3Restore(snapshot snapshot) {
 	err = s3Client.Connect()
 	if err != nil {
 		commandError = err
-		return
+		return err
 	}
 	stream := tarGz(readers, stats)
 	upload := s3.UploadObject{
@@ -124,10 +124,13 @@ func s3Restore(snapshot snapshot) {
 	err = s3Client.Upload(upload)
 	if err != nil {
 		commandError = err
+		return err
 	}
 	if err = postToURL(stats); err != nil {
 		commandError = err
+		return err
 	}
+	return nil
 }
 
 func listFilesInSnapshot(snapshot snapshot) []string {
