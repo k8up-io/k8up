@@ -54,7 +54,7 @@ func (p *Pruner) Delete(name string) error {
 func (p *Pruner) checkObject(obj runtime.Object) (*backupv1alpha1.Prune, error) {
 	prune, ok := obj.(*backupv1alpha1.Prune)
 	if !ok {
-		return nil, fmt.Errorf("%v is not a check", obj.GetObjectKind())
+		return nil, fmt.Errorf("%v is not a prune", obj.GetObjectKind())
 	}
 	return prune, nil
 }

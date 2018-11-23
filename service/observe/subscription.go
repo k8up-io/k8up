@@ -16,7 +16,7 @@ type topic string
 // subscription system.
 type PodState struct {
 	BaasID     string
-	State      string
+	State      corev1.PodPhase
 	Repository string
 }
 
@@ -145,21 +145,21 @@ func (s *Subscriber) WatchLoop(watch WatchObjects) {
 
 	for message := range s.CH {
 		switch message.State {
-		case string(corev1.PodFailed):
+		case corev1.PodFailed:
 			watch.Logger.Errorf("Pod %v in namespace %v failed", watch.Job.GetName(), watch.Job.GetNamespace())
 			if watch.Failedfunc != nil {
 				watch.Failedfunc(message)
 			}
 			watch.Locker.Decrement(backendString, watch.JobType)
 			return
-		case string(corev1.PodSucceeded):
+		case corev1.PodSucceeded:
 			watch.Logger.Infof("Pod %v in namespace %v finished successfully", watch.Job.GetName(), watch.Job.GetNamespace())
 			if watch.Successfunc != nil {
 				watch.Successfunc(message)
 			}
 			watch.Locker.Decrement(backendString, watch.JobType)
 			return
-		case string(corev1.PodRunning):
+		case corev1.PodRunning:
 			watch.Logger.Infof("Pod %v in namespace %v is still running", watch.Job.GetName(), watch.Job.GetNamespace())
 			if watch.Runningfunc != nil {
 				watch.Runningfunc(message)
@@ -171,7 +171,7 @@ func (s *Subscriber) WatchLoop(watch WatchObjects) {
 			}
 			// As soon as the pod is created it's time to increment the semaphore
 			// or else two pods started at the exact same time may run concurrently
-			if message.State == string(corev1.PodPending) {
+			if message.State == corev1.PodPending {
 				if !running {
 					watch.Locker.Increment(backendString, watch.JobType)
 					running = true

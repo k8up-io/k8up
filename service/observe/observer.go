@@ -85,21 +85,20 @@ func (o *Observer) podObserver(pod *corev1.Pod) {
 		}
 	}
 	if baasPod {
-		var message string
 		// first check the pod phase for a general overview
-		message = string(pod.Status.Phase)
+		message := pod.Status.Phase
 		// then check if the container actually restarted and report failure
 		// FIXME: After backoff limit is reached the pods get removed by the
 		// Kubernete job controller. Need to check status of jobs, too.
 		if len(pod.Status.ContainerStatuses) > 0 {
 			state := pod.Status.ContainerStatuses[0]
 			if state.RestartCount > 0 {
-				message = string(corev1.PodFailed)
+				message = corev1.PodFailed
 			}
 		}
 		repository := service.GetRepository(pod)
 		err := o.broker.Notify(pod.Labels[o.config.Identifier], PodState{
-			State:      string(message),
+			State:      message,
 			Repository: repository,
 			BaasID:     baasID,
 		})
