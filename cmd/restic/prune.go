@@ -9,7 +9,7 @@ import (
 func pruneCommand() {
 
 	// TODO: check for integers
-	args := []string{"forget"}
+	args := []string{"forget", "--prune"}
 
 	if last := os.Getenv(keepLastEnv); last != "" {
 		args = append(args, keepLastArg, last)
@@ -35,15 +35,7 @@ func pruneCommand() {
 		args = append(args, keepYearlyArg, yearly)
 	}
 
-	fmt.Println("Run forget without prune and update the webhook")
+	fmt.Println("Run forget and update the webhook")
 	fmt.Println("forget params: ", strings.Join(args, " "))
-	genericCommand(args, commandOptions{print: true})
-
-	if err := updateSnapshots(); err != nil {
-		commandError = err
-		return
-	}
-
-	args = []string{"prune"}
 	genericCommand(args, commandOptions{print: true})
 }
