@@ -155,11 +155,14 @@ func run(finishC chan error) {
 			}
 		}
 	} else if *archive {
-		archiveJob()
+		if err := archiveJob(); err != nil && commandError == nil {
+			commandError = err
+		}
 	} else {
-		restoreJob(*restoreSnap, *restoreType)
+		if err := restoreJob(*restoreSnap, *restoreType); err != nil && commandError == nil {
+			commandError = err
+		}
 	}
-
 }
 
 func startMetrics() {
