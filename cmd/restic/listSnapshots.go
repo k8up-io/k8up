@@ -41,7 +41,7 @@ func (s snapList) Less(i, j int) bool {
 }
 
 func listSnapshots() ([]snapshot, error) {
-	args := []string{"snapshots", "--json", "-q"}
+	args := []string{"snapshots", "--json", "-q", "--no-lock"}
 	var timeout int
 	var converr error
 
