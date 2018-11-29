@@ -46,7 +46,7 @@ func listSnapshots() ([]snapshot, error) {
 	var converr error
 
 	if timeout, converr = strconv.Atoi(os.Getenv(listTimeoutEnv)); converr != nil {
-		timeout = 30
+		timeout = 180
 	}
 
 	done := make(chan bool)
