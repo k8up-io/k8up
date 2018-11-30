@@ -89,7 +89,7 @@ func GetBasicJob(kind string, config config.Global, object metav1.Object) *batch
 		config.Label:      "true",
 		config.Identifier: PseudoUUID(),
 	}
-
+	backOffLimit := int32(6)
 	return &batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: nameJob,
@@ -99,6 +99,7 @@ func GetBasicJob(kind string, config config.Global, object metav1.Object) *batch
 			Labels: labels,
 		},
 		Spec: batchv1.JobSpec{
+			BackoffLimit: &backOffLimit,
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      namePod,

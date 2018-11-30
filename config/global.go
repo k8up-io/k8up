@@ -58,7 +58,7 @@ func initDefaults() {
 	viper.SetDefault("image", "172.30.1.1:5000/myproject/restic")
 	viper.SetDefault("label", "baasresource")
 	viper.SetDefault("identifier", "baasid")
-	viper.SetDefault("restartPolicy", "OnFailure")
+	viper.SetDefault("restartPolicy", "Never")
 	viper.SetDefault("PromURL", "http://127.0.0.1/")
 	viper.SetDefault("GlobalKeepJobs", 10)
 }
