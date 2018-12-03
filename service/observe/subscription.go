@@ -146,26 +146,26 @@ func (s *Subscriber) WatchLoop(watch WatchObjects) {
 	for message := range s.CH {
 		switch message.State {
 		case corev1.PodFailed:
-			watch.Logger.Errorf("Pod %v in namespace %v failed", watch.Job.GetName(), watch.Job.GetNamespace())
+			watch.Logger.Errorf("Pod %v/%v failed", watch.Job.GetNamespace(), watch.Job.GetName())
 			if watch.Failedfunc != nil {
 				watch.Failedfunc(message)
 			}
 			watch.Locker.Decrement(backendString, watch.JobType)
 			return
 		case corev1.PodSucceeded:
-			watch.Logger.Infof("Pod %v in namespace %v finished successfully", watch.Job.GetName(), watch.Job.GetNamespace())
+			watch.Logger.Infof("Pod %v/%v finished successfully", watch.Job.GetNamespace(), watch.Job.GetName())
 			if watch.Successfunc != nil {
 				watch.Successfunc(message)
 			}
 			watch.Locker.Decrement(backendString, watch.JobType)
 			return
 		case corev1.PodRunning:
-			watch.Logger.Infof("Pod %v in namespace %v is still running", watch.Job.GetName(), watch.Job.GetNamespace())
+			watch.Logger.Infof("Pod %v/%v is still running", watch.Job.GetNamespace(), watch.Job.GetName())
 			if watch.Runningfunc != nil {
 				watch.Runningfunc(message)
 			}
 		default:
-			watch.Logger.Infof("Pod state for job %v is: %v", watch.Job.Name, message.State)
+			watch.Logger.Infof("Pod state for job %v/%v is: %v", watch.Job.GetNamespace(), watch.Job.GetName(), message.State)
 			if watch.Defaultfunc != nil {
 				watch.Defaultfunc(message)
 			}

@@ -92,7 +92,8 @@ func GetBasicJob(kind string, config config.Global, object metav1.Object) *batch
 	backOffLimit := int32(6)
 	return &batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: nameJob,
+			Name:      nameJob,
+			Namespace: object.GetNamespace(),
 			OwnerReferences: []metav1.OwnerReference{
 				NewOwnerReference(object, kind),
 			},
