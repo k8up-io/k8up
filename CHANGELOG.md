@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [Unreleased]
 ### Changed
 - Don't quote backup commands
+- Observe jobs instead of pods
 ### Fixed
 - Fix owner reference creation
 - Choose the right target for archival jobs

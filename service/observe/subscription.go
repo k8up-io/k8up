@@ -10,13 +10,18 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
+const (
+	jobRunning = "running"
+	jobDeleted = "deleted"
+)
+
 type topic string
 
 // PodState contains the state of a pod as well as meta information for the
 // subscription system.
 type PodState struct {
 	BaasID     string
-	State      corev1.PodPhase
+	State      batchv1.JobConditionType
 	Repository string
 }
 
@@ -143,39 +148,29 @@ func (s *Subscriber) WatchLoop(watch WatchObjects) {
 	running := false
 	backendString := service.GetRepository(&corev1.Pod{Spec: watch.Job.Spec.Template.Spec})
 
+	jobString := fmt.Sprintf("%v/%v", watch.Job.GetNamespace(), watch.Job.GetName())
+
 	for message := range s.CH {
 		switch message.State {
-		case corev1.PodFailed:
-			watch.Logger.Errorf("Pod %v/%v failed", watch.Job.GetNamespace(), watch.Job.GetName())
+		case batchv1.JobFailed:
+			watch.Logger.Errorf("%v failed", jobString)
 			if watch.Failedfunc != nil {
 				watch.Failedfunc(message)
 			}
 			watch.Locker.Decrement(backendString, watch.JobType)
 			return
-		case corev1.PodSucceeded:
-			watch.Logger.Infof("Pod %v/%v finished successfully", watch.Job.GetNamespace(), watch.Job.GetName())
+		case batchv1.JobComplete:
+			watch.Logger.Infof("%v finished successfully", jobString)
 			if watch.Successfunc != nil {
 				watch.Successfunc(message)
 			}
 			watch.Locker.Decrement(backendString, watch.JobType)
 			return
-		case corev1.PodRunning:
-			watch.Logger.Infof("Pod %v/%v is still running", watch.Job.GetNamespace(), watch.Job.GetName())
-			if watch.Runningfunc != nil {
-				watch.Runningfunc(message)
-			}
 		default:
-			watch.Logger.Infof("Pod state for job %v/%v is: %v", watch.Job.GetNamespace(), watch.Job.GetName(), message.State)
-			if watch.Defaultfunc != nil {
-				watch.Defaultfunc(message)
-			}
-			// As soon as the pod is created it's time to increment the semaphore
-			// or else two pods started at the exact same time may run concurrently
-			if message.State == corev1.PodPending {
-				if !running {
-					watch.Locker.Increment(backendString, watch.JobType)
-					running = true
-				}
+			watch.Logger.Infof("%v is %v", jobString, jobRunning)
+			if !running {
+				running = true
+				watch.Locker.Increment(backendString, watch.JobType)
 			}
 		}
 	}
