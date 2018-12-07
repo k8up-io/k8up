@@ -41,12 +41,12 @@ func (s snapList) Less(i, j int) bool {
 }
 
 func listSnapshots() ([]snapshot, error) {
-	args := []string{"snapshots", "--json", "-q"}
+	args := []string{"snapshots", "--json", "-q", "--no-lock"}
 	var timeout int
 	var converr error
 
 	if timeout, converr = strconv.Atoi(os.Getenv(listTimeoutEnv)); converr != nil {
-		timeout = 30
+		timeout = 180
 	}
 
 	done := make(chan bool)

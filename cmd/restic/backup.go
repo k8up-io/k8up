@@ -7,6 +7,7 @@ import (
 	"path"
 	"strconv"
 	"strings"
+	"time"
 
 	"git.vshn.net/vshn/wrestic/kubernetes"
 )
@@ -37,7 +38,9 @@ func backupFolder(folder, folderName string) {
 
 func stdinBackup(backupCommand, pod, container, namespace string) {
 	fmt.Printf("backing up via %v stdin...\n", container)
-	args := []string{"backup", "--host", os.Getenv(hostname) + "-" + container, "--stdin"}
+	host := os.Getenv(hostname) + "-" + container
+	fileName := host + "-" + time.Now().Format(time.RFC3339)
+	args := []string{"backup", "--host", host, "--stdin", "--stdin-filename", fileName}
 	stdout, stderr := genericCommand(args, commandOptions{
 		print: true,
 		Params: kubernetes.Params{

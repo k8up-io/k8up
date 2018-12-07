@@ -136,7 +136,7 @@ func s3Restore(snapshot snapshot) error {
 func listFilesInSnapshot(snapshot snapshot) []string {
 	// TODO: if there's a problem with many files this may need
 	// rewriting so it uses pipes
-	args := []string{"ls", "-l", snapshot.ID}
+	args := []string{"ls", "-l", "--no-lock", snapshot.ID}
 	fmt.Printf("Listing files in snapshot %v\n", snapshot.Time)
 	stdOut, _ := genericCommand(args, commandOptions{print: false})
 	return stdOut
