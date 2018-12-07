@@ -59,7 +59,7 @@ func (p *pruneRunner) Start() error {
 }
 
 func (p *pruneRunner) newPruneJob(prune *backupv1alpha1.Prune, config config.Global) *batchv1.Job {
-	job := service.GetBasicJob("prune", p.config, &p.prune.ObjectMeta)
+	job := service.GetBasicJob(backupv1alpha1.PruneKind, p.config, &p.prune.ObjectMeta)
 
 	job.Spec.Template.Spec.Containers[0].Args = []string{"-prune"}
 

@@ -3,6 +3,7 @@ package service
 import (
 	"crypto/rand"
 	"fmt"
+	"strings"
 	"time"
 
 	backupv1alpha1 "git.vshn.net/vshn/baas/apis/backup/v1alpha1"
@@ -38,11 +39,11 @@ type CommonObjects struct {
 	Logger  log.Logger
 }
 
-func NewOwnerReference(object metav1.Object) metav1.OwnerReference {
+func NewOwnerReference(object metav1.Object, kind string) metav1.OwnerReference {
 	return metav1.OwnerReference{
 		UID:        object.GetUID(),
 		APIVersion: backupv1alpha1.SchemeGroupVersion.String(),
-		Kind:       backupv1alpha1.RestoreKind,
+		Kind:       kind,
 		Name:       object.GetName(),
 	}
 }
@@ -77,25 +78,28 @@ func GetRepository(obj interface{}) string {
 	return ""
 }
 
-func GetBasicJob(namePrefix string, config config.Global, object metav1.Object) *batchv1.Job {
+func GetBasicJob(kind string, config config.Global, object metav1.Object) *batchv1.Job {
 
-	nameJob := fmt.Sprintf("%vjob-%d", namePrefix, time.Now().Unix())
-	namePod := fmt.Sprintf("%vpod-%d", namePrefix, time.Now().Unix())
+	t := time.Now().Unix()
+	namePrefix := strings.ToLower(kind)
+	nameJob := fmt.Sprintf("%vjob-%d", namePrefix, t)
+	namePod := fmt.Sprintf("%vpod-%d", namePrefix, t)
 
 	labels := map[string]string{
 		config.Label:      "true",
 		config.Identifier: PseudoUUID(),
 	}
-
 	return &batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: nameJob,
+			Name:      nameJob,
+			Namespace: object.GetNamespace(),
 			OwnerReferences: []metav1.OwnerReference{
-				NewOwnerReference(object),
+				NewOwnerReference(object, kind),
 			},
 			Labels: labels,
 		},
 		Spec: batchv1.JobSpec{
+			BackoffLimit: &config.BackOffLimit,
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      namePod,

@@ -165,6 +165,9 @@ func (b *backupRunner) listBackupCommands() []string {
 
 	for _, pod := range pods.Items {
 		annotations := pod.GetAnnotations()
+		if pod.Status.Phase != corev1.PodRunning {
+			continue
+		}
 
 		if command, ok := annotations[b.config.backupCommandAnnotation]; ok {
 

@@ -22,6 +22,7 @@ type Global struct {
 	Label                          string
 	Identifier                     string
 	RestartPolicy                  string
+	BackOffLimit                   int32
 	GlobalPromURL                  string
 	GlobalKeepJobs                 int
 }
@@ -49,6 +50,7 @@ func New() Global {
 		Label:                          viper.GetString("label"),
 		Identifier:                     viper.GetString("identifier"),
 		RestartPolicy:                  viper.GetString("restartPolicy"),
+		BackOffLimit:                   viper.GetInt32("backOffLimit"),
 		GlobalPromURL:                  viper.GetString("PromURL"),
 		GlobalKeepJobs:                 viper.GetInt("GlobalKeepJobs"),
 	}
@@ -58,7 +60,8 @@ func initDefaults() {
 	viper.SetDefault("image", "172.30.1.1:5000/myproject/restic")
 	viper.SetDefault("label", "baasresource")
 	viper.SetDefault("identifier", "baasid")
-	viper.SetDefault("restartPolicy", "OnFailure")
+	viper.SetDefault("restartPolicy", "Never")
+	viper.SetDefault("backOffLimit", 6)
 	viper.SetDefault("PromURL", "http://127.0.0.1/")
 	viper.SetDefault("GlobalKeepJobs", 10)
 }
