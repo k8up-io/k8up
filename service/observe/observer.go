@@ -13,7 +13,6 @@ import (
 	"sync"
 
 	"git.vshn.net/vshn/baas/config"
-	"git.vshn.net/vshn/baas/log"
 	"git.vshn.net/vshn/baas/service"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -30,22 +29,26 @@ type Observer struct {
 	broker *Broker
 	config config.Global
 	locker Locker
-	Logger log.Logger
+	service.CommonObjects
 }
 
 // GetInstance returns a singleton of the observer
-func GetInstance(log log.Logger) *Observer {
+func GetInstance() *Observer {
 	once.Do(func() {
 		if instance == nil {
 			instance = &Observer{
 				broker: newBroker(),
 				config: config.New(),
 				locker: newLocker(),
-				Logger: log,
 			}
 		}
 	})
 	return instance
+}
+
+// SetCommonObjects sets the common objects for this operator
+func (o *Observer) SetCommonObjects(common service.CommonObjects) {
+	o.CommonObjects = common
 }
 
 // Ensure will be triggered when a pod or job gets created.
@@ -74,43 +77,50 @@ func (o *Observer) Delete(name string) error {
 // a notification in the broker and all registered consumers will be notified
 // about the change.
 func (o *Observer) podObserver(pod *corev1.Pod) {
-	baasPod := false
+
+}
+
+// jobObserver will observer the job status in the future
+func (o *Observer) jobObserver(job *batchv1.Job) {
+	baasJob := false
 	baasID := ""
-	for key, value := range pod.GetLabels() {
+	for key, value := range job.GetLabels() {
 		if fmt.Sprintf("%v=%v", key, value) == o.config.Label+"=true" {
-			baasPod = true
+			baasJob = true
 		}
 		if key == o.config.Identifier {
 			baasID = value
 		}
 	}
-	if baasPod {
-		// first check the pod phase for a general overview
-		message := pod.Status.Phase
-		// then check if the container actually restarted and report failure
-		// FIXME: After backoff limit is reached the pods get removed by the
-		// Kubernete job controller. Need to check status of jobs, too.
-		if len(pod.Status.ContainerStatuses) > 0 {
-			state := pod.Status.ContainerStatuses[0]
-			if state.RestartCount > 0 {
-				message = corev1.PodFailed
+	if baasJob {
+		conditions := job.Status.Conditions
+		message := batchv1.JobConditionType("")
+
+		// Check for conditions
+		if len(conditions) > 0 {
+			latestCondition := conditions[len(conditions)-1]
+
+			message = latestCondition.Type
+
+			if job.Status.CompletionTime == nil || job.Status.Active > 0 {
+				message = jobRunning
 			}
+
+		} else { // it's just running
+			message = jobRunning
 		}
-		repository := service.GetRepository(pod)
-		err := o.broker.Notify(pod.Labels[o.config.Identifier], PodState{
+
+		repository := service.GetRepository(&corev1.Pod{Spec: job.Spec.Template.Spec})
+		err := o.broker.Notify(job.Labels[o.config.Identifier], PodState{
 			State:      message,
 			Repository: repository,
 			BaasID:     baasID,
 		})
 		if err != nil {
 			// TODO: here would be the point to re-register lost pods.
+			return
 		}
 	}
-}
-
-// jobObserver will observer the job status in the future
-func (o *Observer) jobObserver(job *batchv1.Job) {
-	// NOOP
 }
 
 // GetBroker returns the broker.

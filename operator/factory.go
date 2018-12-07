@@ -58,7 +58,7 @@ func create(options options) operator.Operator {
 	}
 
 	bCRD := newBackupCRD(options.clients)
-	backup := backup.NewBackup(commonObjects, observe.GetInstance(options.logger))
+	backup := backup.NewBackup(commonObjects, observe.GetInstance())
 	backupHandler := newHandler(options.logger, backup)
 
 	rCRD := newRestoreCRD(options.clients)
@@ -66,27 +66,28 @@ func create(options options) operator.Operator {
 	restoreHandler := newHandler(options.logger, restore)
 
 	aCRD := newArchiveCRD(options.clients)
-	archive := archive.NewArchive(commonObjects, observe.GetInstance(options.logger))
+	archive := archive.NewArchive(commonObjects, observe.GetInstance())
 	archiveHandler := newHandler(options.logger, archive)
 
 	sCRD := newScheduleCRD(options.clients)
-	schedule := schedule.NewSchedule(commonObjects, observe.GetInstance(options.logger))
+	schedule := schedule.NewSchedule(commonObjects, observe.GetInstance())
 	scheduleHandler := newHandler(options.logger, schedule)
 
 	pod := newPodObserve(options.clients)
-	podObserver := observe.GetInstance(options.logger)
+	podObserver := observe.GetInstance()
+	podObserver.SetCommonObjects(commonObjects)
 	podObserverHandler := newHandler(options.logger, podObserver)
 
 	job := newJobObserve(options.clients)
-	jobObserver := observe.GetInstance(options.logger)
+	jobObserver := observe.GetInstance()
 	jobObserverHandler := newHandler(options.logger, jobObserver)
 
 	cCRD := newCheckCRD(options.clients)
-	check := check.NewCheck(commonObjects, observe.GetInstance(options.logger))
+	check := check.NewCheck(commonObjects, observe.GetInstance())
 	checkHandler := newHandler(options.logger, check)
 
 	pCRD := newPruneCRD(options.clients)
-	prune := prune.NewPruner(commonObjects, observe.GetInstance(options.logger))
+	prune := prune.NewPruner(commonObjects, observe.GetInstance())
 	pruneHandler := newHandler(options.logger, prune)
 
 	CRDs := []resource.CRD{
