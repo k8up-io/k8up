@@ -90,6 +90,7 @@ func main() {
 		}
 	case <-signalC:
 		fmt.Println("Signal captured, removing locks and exiting...")
+		os.Exit(1)
 	}
 }
 
