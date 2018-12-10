@@ -1,4 +1,4 @@
-package main
+package restic
 
 import (
 	"bufio"
@@ -9,7 +9,14 @@ import (
 	"os/exec"
 
 	"git.vshn.net/vshn/wrestic/kubernetes"
+	"git.vshn.net/vshn/wrestic/output"
+	"github.com/prometheus/client_golang/prometheus"
 )
+
+type genericCommand struct {
+	Error             error
+	StdOut, StdErrOut []string
+}
 
 type commandOptions struct {
 	print bool
@@ -17,12 +24,14 @@ type commandOptions struct {
 	kubernetes.Params
 }
 
-func genericCommand(args []string, options commandOptions) ([]string, []string) {
-
-	// Turn into noop if previous commands failed
-	if commandError != nil {
-		return nil, nil
+func newGenericCommand() *genericCommand {
+	return &genericCommand{
+		StdOut:    make([]string, 0),
+		StdErrOut: make([]string, 0),
 	}
+}
+
+func (g *genericCommand) exec(args []string, options commandOptions) {
 
 	cmd := exec.Command(restic, args...)
 	cmd.Env = os.Environ()
@@ -31,14 +40,14 @@ func genericCommand(args []string, options commandOptions) ([]string, []string) 
 		stdout, stderr, err := kubernetes.PodExec(options.Params)
 		if err != nil {
 			fmt.Println(err)
-			commandError = err
-			return nil, nil
+			g.Error = err
+			return
 		}
 		stdin, err := cmd.StdinPipe()
 		if err != nil {
 			fmt.Println(err)
-			commandError = err
-			return nil, nil
+			g.Error = err
+			return
 		}
 		if stdout == nil {
 			fmt.Println("stdout is nil")
@@ -53,11 +62,11 @@ func genericCommand(args []string, options commandOptions) ([]string, []string) 
 			if err != nil {
 				cmd.Process.Kill()
 				fmt.Println(err)
-				commandError = err
+				g.Error = err
 				stderrStr := stderr.String()
 				if stderrStr != "" {
 					fmt.Printf("Stderr of pod exec: '%v'", stderr)
-					commandError = errors.New(stderrStr)
+					g.Error = errors.New(stderrStr)
 				}
 			}
 		}()
@@ -68,25 +77,22 @@ func genericCommand(args []string, options commandOptions) ([]string, []string) 
 
 	finished := make(chan error, 0)
 
-	stdOutput := make([]string, 0)
-	stderrOutput := make([]string, 0)
-
 	err = cmd.Start()
 	if err != nil {
 		fmt.Println(err)
-		commandError = err
-		return nil, nil
+		g.Error = err
+		return
 	}
 
 	go func() {
 		var collectErr error
-		stdOutput, collectErr = collectOutput(commandStdout, options.print)
+		g.StdOut, collectErr = g.collectOutput(commandStdout, options.print)
 		finished <- collectErr
 	}()
 
 	go func() {
 		var collectErr error
-		stderrOutput, collectErr = collectOutput(commandStderr, options.print)
+		g.StdErrOut, collectErr = g.collectOutput(commandStderr, options.print)
 		finished <- collectErr
 	}()
 
@@ -96,22 +102,20 @@ func genericCommand(args []string, options commandOptions) ([]string, []string) 
 
 	// Avoid overwriting any errors produced by the
 	// copy command
-	if commandError == nil {
+	if g.Error == nil {
 		if err != nil {
-			commandError = err
+			g.Error = err
 		}
 		if collectErr1 != nil {
-			commandError = collectErr1
+			g.Error = collectErr1
 		}
 		if collectErr2 != nil {
-			commandError = collectErr2
+			g.Error = collectErr2
 		}
 	}
-
-	return stdOutput, stderrOutput
 }
 
-func collectOutput(output io.ReadCloser, print bool) ([]string, error) {
+func (g *genericCommand) collectOutput(output io.ReadCloser, print bool) ([]string, error) {
 	collectedOutput := make([]string, 0)
 	scanner := bufio.NewScanner(output)
 	buff := make([]byte, 64*1024*1024)
@@ -127,11 +131,23 @@ func collectOutput(output io.ReadCloser, print bool) ([]string, error) {
 	return collectedOutput, scanner.Err()
 }
 
-func unlock(all bool) {
-	fmt.Println("Removing locks...")
-	args := []string{"unlock"}
-	if all {
-		args = append(args, "--remove-all")
-	}
-	genericCommand(args, commandOptions{print: true})
+// GetError returns if there was an error
+func (g *genericCommand) GetError() error { return g.Error }
+
+// GetStdOut returns the complete output of the command
+func (g *genericCommand) GetStdOut() []string { return g.StdOut }
+
+// GetStdErrOut returns the complete StdErr of the command
+func (g *genericCommand) GetStdErrOut() []string { return g.StdErrOut }
+
+// GetWebhookData returns all objects that should get marshalled to json and
+// sent to the webhook endpoint. Returns nil by default.
+func (g *genericCommand) GetWebhookData() []output.JsonMarshaller {
+	return nil
+}
+
+// ToProm returns a list of prometheus collectors that should get pushed to
+// the prometheus push gateway.
+func (g *genericCommand) ToProm() []prometheus.Collector {
+	return nil
 }

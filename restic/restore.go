@@ -1,20 +1,68 @@
-package main
+package restic
 
 import (
 	"archive/tar"
 	"bufio"
 	"bytes"
+	"compress/gzip"
 	"fmt"
 	"io"
 	"os"
 	"os/exec"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
 
 	"git.vshn.net/vshn/wrestic/s3"
-	gzip "github.com/klauspost/pgzip"
 )
+
+// RestoreStruct holds the state of the restore command.
+type RestoreStruct struct {
+	genericCommand
+	restoreType   string
+	restoreDir    string
+	restoreFilter string
+	verifyRestore bool
+}
+
+func newRestore() *RestoreStruct {
+	return &RestoreStruct{}
+}
+
+func (r *RestoreStruct) setState(restoreType, restoreDir, restoreFilter string, verifyRestore bool) {
+	r.restoreType = restoreType
+	r.restoreDir = restoreDir
+	r.restoreFilter = restoreFilter
+	r.verifyRestore = verifyRestore
+}
+
+// Archive uploads the last version of each snapshot to S3.
+func (r *RestoreStruct) Archive(snaps []Snapshot, restoreType, restoreDir, restoreFilter string, verifyRestore bool) {
+
+	r.setState(restoreType, restoreDir, restoreFilter, verifyRestore)
+
+	fmt.Println("Archiving latest snapshots for every host")
+	sortedSnaps := snapList(snaps)
+
+	sort.Sort(sort.Reverse(sortedSnaps))
+
+	snapMap := make(map[string]Snapshot)
+	for _, snap := range sortedSnaps {
+		if _, ok := snapMap[snap.Hostname]; !ok {
+			snapMap[snap.Hostname] = snap
+		}
+	}
+
+	for _, v := range snapMap {
+		fmt.Printf("Archive running for %v\n", v.Hostname)
+		if err := r.restoreCommand(v.ID, r.restoreType, sortedSnaps); err != nil {
+			r.Error = err
+			return
+		}
+	}
+
+}
 
 type restoreStats struct {
 	RestoreLocation string   `json:"restore_location,omitempty"`
@@ -22,32 +70,33 @@ type restoreStats struct {
 	RestoredFiles   []string `json:"restored_files,omitempty"`
 }
 
-func restoreJob(snapshotID, method string) error {
+// Restore takes a snapshotID and a method to create a restore job.
+func (r *RestoreStruct) Restore(snapshotID, method string, snaps []Snapshot, restoreDir, restoreFilter string, verifyRestore bool) {
+
+	r.setState(method, restoreDir, restoreFilter, verifyRestore)
+
+	r.Error = r.restoreCommand(snapshotID, method, snaps)
+}
+
+func (r *RestoreStruct) restoreCommand(snapshotID, method string, snaps []Snapshot) error {
 	fmt.Println("Starting restore...")
 
-	snapshot := snapshot{}
-
-	snapshots, err := listSnapshots()
-	if err != nil {
-		fmt.Println(err)
-		return err
-	}
+	snapshot := Snapshot{}
 
 	if snapshotID == "" {
 		fmt.Println("No snapshot defined, using latest one.")
-		snapshot = snapshots[len(snapshots)-1]
+		snapshot := snaps[len(snaps)-1]
 		fmt.Printf("Snapshot %v is being restored.\n", snapshot.Time)
 	} else {
-		for i := range snapshots {
-			if snapshots[i].ID == snapshotID {
-				snapshot = snapshots[i]
+		for i := range snaps {
+			if snaps[i].ID == snapshotID {
+				snapshot = snaps[i]
 			}
 		}
 		if snapshot.ID == "" {
 			message := fmt.Sprintf("No Snapshot found with ID %v", snapshotID)
 			fmt.Println(message)
-			commandError = fmt.Errorf(message)
-			return commandError
+			return fmt.Errorf(message)
 		}
 	}
 
@@ -55,54 +104,51 @@ func restoreJob(snapshotID, method string) error {
 
 	// TODO: implement some enum here: https://blog.learngoprogramming.com/golang-const-type-enums-iota-bc4befd096d3
 	if method == "folder" {
-		return folderRestore(snapshot)
+		return r.folderRestore(snapshot)
 	}
 
 	if method == "s3" {
-		return s3Restore(snapshot)
+		return r.s3Restore(snapshot)
 	}
 
-	commandError = fmt.Errorf("%v is not a valid restore type", *restoreType)
-	return commandError
+	return fmt.Errorf("%v is not a valid restore type", r.restoreType)
 }
 
-func folderRestore(snapshot snapshot) error {
-	restoreDir := getRestoreDir()
+func (r *RestoreStruct) folderRestore(snapshot Snapshot) error {
 
-	args := []string{"restore", snapshot.ID, "--target", restoreDir}
+	args := []string{"restore", snapshot.ID, "--target", r.restoreDir}
 
-	if *restoreFilter != "" {
-		args = append(args, "--include", *restoreFilter)
+	if r.restoreFilter != "" {
+		args = append(args, "--include", r.restoreFilter)
 	}
 
-	if *verifyRestore {
+	if r.verifyRestore {
 		args = append(args, "--verify")
 	}
 
-	_, stdErr := genericCommand(args, commandOptions{print: true})
+	r.genericCommand.exec(args, commandOptions{print: true})
 	notIgnoredErrors := 0
-	for _, errLine := range stdErr {
+	for _, errLine := range r.StdErrOut {
 		if !strings.Contains(errLine, "Lchown") {
 			notIgnoredErrors++
 		}
 	}
 	if notIgnoredErrors > 0 {
-		commandError = fmt.Errorf("There were %v unignored errors, please have a look", notIgnoredErrors)
-		return commandError
+		return fmt.Errorf("There were %v unignored errors, please have a look", notIgnoredErrors)
 	}
 	return nil
 }
 
-func s3Restore(snapshot snapshot) error {
+func (r *RestoreStruct) s3Restore(snapshot Snapshot) error {
 	fmt.Println("S3 chosen as restore destination")
-	fileList := listFilesInSnapshot(snapshot)
-	readers, err := createFileReaders(snapshot, fileList)
+	r.listFilesInSnapshot(snapshot)
+	fileList := r.StdOut
+	readers, err := r.createFileReaders(snapshot, fileList)
 	if err != nil {
-		commandError = err
 		return err
 	}
 
-	endpoint := os.Getenv(restoreS3EndpointEnv)
+	endpoint := os.Getenv(RestoreS3EndpointEnv)
 	snapDate := snapshot.Time.Format(time.RFC3339)
 	fileName := fmt.Sprintf("backup-%v-%v.tar.gz", snapshot.Hostname, snapDate)
 	stats := &restoreStats{
@@ -110,36 +156,27 @@ func s3Restore(snapshot snapshot) error {
 		SnapshotID:      snapshot.ID,
 	}
 
-	s3Client := s3.New(endpoint, os.Getenv(restoreS3AccessKeyIDEnv), os.Getenv(restoreS3SecretAccessKey))
+	s3Client := s3.New(endpoint, os.Getenv(RestoreS3AccessKeyIDEnv), os.Getenv(RestoreS3SecretAccessKey))
 	err = s3Client.Connect()
 	if err != nil {
-		commandError = err
 		return err
 	}
-	stream := tarGz(readers, stats)
+	stream := r.tarGz(readers, stats)
 	upload := s3.UploadObject{
 		ObjectStream: stream,
 		Name:         fileName,
 	}
 	err = s3Client.Upload(upload)
 	if err != nil {
-		commandError = err
-		return err
-	}
-	if err = postToURL(stats); err != nil {
-		commandError = err
 		return err
 	}
 	return nil
 }
 
-func listFilesInSnapshot(snapshot snapshot) []string {
-	// TODO: if there's a problem with many files this may need
-	// rewriting so it uses pipes
+func (r *RestoreStruct) listFilesInSnapshot(snapshot Snapshot) {
 	args := []string{"ls", "-l", "--no-lock", snapshot.ID}
 	fmt.Printf("Listing files in snapshot %v\n", snapshot.Time)
-	stdOut, _ := genericCommand(args, commandOptions{print: false})
-	return stdOut
+	r.genericCommand.exec(args, commandOptions{print: false})
 }
 
 type restoreFile struct {
@@ -152,7 +189,7 @@ type restoreFile struct {
 	closer  chan io.ReadCloser
 }
 
-func createFileReaders(snapshot snapshot, fileList []string) ([]restoreFile, error) {
+func (r *RestoreStruct) createFileReaders(snapshot Snapshot, fileList []string) ([]restoreFile, error) {
 	// This case is so special we can't use genericCommand for this
 	args := []string{"dump", snapshot.ID}
 
@@ -182,9 +219,9 @@ func createFileReaders(snapshot snapshot, fileList []string) ([]restoreFile, err
 					usrPerm := perms[0:3]
 					groupPerm := perms[3:6]
 					everyOne := perms[6:9]
-					tmpPermString := "0" + parsePerm(usrPerm)
-					tmpPermString = tmpPermString + parsePerm(groupPerm)
-					tmpPermString = tmpPermString + parsePerm(everyOne)
+					tmpPermString := "0" + r.parsePerm(usrPerm)
+					tmpPermString = tmpPermString + r.parsePerm(groupPerm)
+					tmpPermString = tmpPermString + r.parsePerm(everyOne)
 					tmpFile.mode, _ = strconv.ParseInt(tmpPermString, 0, 64)
 				} else {
 					j++
@@ -217,8 +254,8 @@ func createFileReaders(snapshot snapshot, fileList []string) ([]restoreFile, err
 			}
 
 			if j == 6 && add {
-				if *restoreFilter != "" {
-					if strings.Contains(m, *restoreFilter) {
+				if r.restoreFilter != "" {
+					if strings.Contains(m, r.restoreFilter) {
 						tmpFile.name = m
 					} else {
 						add = false
@@ -270,7 +307,7 @@ func createFileReaders(snapshot snapshot, fileList []string) ([]restoreFile, err
 	return filesToProcess, nil
 }
 
-func tarGz(files []restoreFile, stats *restoreStats) io.Reader {
+func (r *RestoreStruct) tarGz(files []restoreFile, stats *restoreStats) io.Reader {
 	readPipe, writePipe := io.Pipe()
 	gzpWriter := gzip.NewWriter(writePipe)
 	trWriter := tar.NewWriter(gzpWriter)
@@ -295,7 +332,7 @@ func tarGz(files []restoreFile, stats *restoreStats) io.Reader {
 			err := trWriter.WriteHeader(header)
 			if err != nil {
 				fmt.Printf("\n%v\n", err)
-				commandError = err
+				r.Error = err
 				return
 			}
 			go file.runFunc()
@@ -304,7 +341,7 @@ func tarGz(files []restoreFile, stats *restoreStats) io.Reader {
 			_, err = io.Copy(trWriter, buffer)
 			if err != nil {
 				fmt.Printf("\n%v\n", err)
-				commandError = err
+				r.Error = err
 				return
 			}
 			file.closer <- reader
@@ -315,7 +352,7 @@ func tarGz(files []restoreFile, stats *restoreStats) io.Reader {
 	return readPipe
 }
 
-func parsePerm(perm string) string {
+func (r *RestoreStruct) parsePerm(perm string) string {
 	permInt := 0
 	for _, char := range perm {
 		if char == 'r' {

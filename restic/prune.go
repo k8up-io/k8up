@@ -1,4 +1,4 @@
-package main
+package restic
 
 import (
 	"fmt"
@@ -6,7 +6,16 @@ import (
 	"strings"
 )
 
-func pruneCommand() {
+// PruneStruct holds the state of the prune command.
+type PruneStruct struct {
+	genericCommand
+}
+
+func newPrune() *PruneStruct {
+	return &PruneStruct{}
+}
+
+func (p *PruneStruct) Prune() {
 
 	// TODO: check for integers
 	args := []string{"forget", "--prune"}
@@ -37,5 +46,5 @@ func pruneCommand() {
 
 	fmt.Println("Run forget and update the webhook")
 	fmt.Println("forget params: ", strings.Join(args, " "))
-	genericCommand(args, commandOptions{print: true})
+	p.genericCommand.exec(args, commandOptions{print: true})
 }
