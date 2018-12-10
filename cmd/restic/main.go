@@ -81,8 +81,6 @@ func main() {
 
 	go run(finishC)
 
-	defer unlock(false)
-
 	select {
 	case err := <-finishC:
 		if err != nil {
