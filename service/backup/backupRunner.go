@@ -164,19 +164,21 @@ func (b *backupRunner) listBackupCommands() []string {
 	sameOwner := make(map[string]bool)
 
 	for _, pod := range pods.Items {
-		annotations := pod.GetAnnotations()
 		if pod.Status.Phase != corev1.PodRunning {
 			continue
 		}
+		annotations := pod.GetAnnotations()
 
 		if command, ok := annotations[b.config.backupCommandAnnotation]; ok {
+
+			fileExtension := annotations[b.config.fileExtensionAnnotation]
 
 			owner := pod.OwnerReferences
 			firstOwnerID := string(owner[0].UID)
 
 			if _, ok := sameOwner[firstOwnerID]; !ok {
 				sameOwner[firstOwnerID] = true
-				args := fmt.Sprintf("%v,%v,%v,%v", command, pod.Name, pod.Spec.Containers[0].Name, b.backup.Namespace)
+				args := fmt.Sprintf("%v,%v,%v,%v,%v", command, pod.Name, pod.Spec.Containers[0].Name, b.backup.Namespace, fileExtension)
 				tmp = append(tmp, "-arrayOpts", args)
 			}
 

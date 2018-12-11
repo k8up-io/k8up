@@ -17,6 +17,7 @@ type config struct {
 	restartPolicy           string
 	podExecRoleName         string
 	podExecAccountName      string
+	fileExtensionAnnotation string
 }
 
 func newConfig() config {
@@ -30,6 +31,7 @@ func newConfig() config {
 		podName:                 viper.GetString("podName"),
 		podExecRoleName:         viper.GetString("PodExecRoleName"),
 		podExecAccountName:      viper.GetString("PodExecAccountName"),
+		fileExtensionAnnotation: viper.GetString("FileExtensionAnnotation"),
 		Global:                  configPackage.New(),
 	}
 	return tmp
@@ -44,4 +46,5 @@ func setDefaults() {
 	viper.SetDefault("podName", "backupjob-pod")
 	viper.SetDefault("PodExecRoleName", "pod-executor")
 	viper.SetDefault("PodExecAccountName", "pod-executor")
+	viper.SetDefault("FileExtensionAnnotation", "backup.appuio.ch/file-extension")
 }
