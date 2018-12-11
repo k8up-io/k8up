@@ -132,10 +132,14 @@ func run(finishC chan error) {
 				fmt.Println("Backup commands detected")
 				for _, stdin := range stdinOpts {
 					optsSplitted := strings.Split(stdin, ",")
-					if len(optsSplitted) != 4 {
+					if len(optsSplitted) < 4 {
 						commandError = fmt.Errorf("not enough arguments %v for stdin", stdin)
+					} else if len(optsSplitted) == 4 {
+						stdinBackup(optsSplitted[0], optsSplitted[1], optsSplitted[2], optsSplitted[3], "")
+					} else {
+						stdinBackup(optsSplitted[0], optsSplitted[1], optsSplitted[2], optsSplitted[3], optsSplitted[4])
+
 					}
-					stdinBackup(optsSplitted[0], optsSplitted[1], optsSplitted[2], optsSplitted[3])
 					if commandError != nil {
 						return
 					}

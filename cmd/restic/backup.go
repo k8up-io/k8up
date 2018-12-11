@@ -36,11 +36,11 @@ func backupFolder(folder, folderName string) {
 	parseBackupOutput(stdout, stderr, folderName)
 }
 
-func stdinBackup(backupCommand, pod, container, namespace string) {
+func stdinBackup(backupCommand, pod, container, namespace, fileExt string) {
 	fmt.Printf("backing up via %v stdin...\n", container)
 	host := os.Getenv(hostname) + "-" + container
 	fileName := host + "-" + time.Now().Format(time.RFC3339)
-	args := []string{"backup", "--host", host, "--stdin", "--stdin-filename", fileName}
+	args := []string{"backup", "--host", host, "--stdin", "--stdin-filename", fileName + fileExt}
 	stdout, stderr := genericCommand(args, commandOptions{
 		print: true,
 		Params: kubernetes.Params{
