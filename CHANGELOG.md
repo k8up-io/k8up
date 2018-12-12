@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [Unreleased]
 ### Added
 - Ability to set file extension for stdin jobs via annotation
+### Fixed
+- Wrong restart policy for restore
 
 ## [v0.1.3] - 2018-12-09
 ### Changed

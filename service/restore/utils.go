@@ -77,7 +77,7 @@ func newRestoreJob(restore *backupv1alpha1.Restore, config config) *batchv1.Job 
 					},
 				},
 				Spec: corev1.PodSpec{
-					RestartPolicy: "OnFailure",
+					RestartPolicy: corev1.RestartPolicy(config.RestartPolicy),
 					Volumes:       volumes,
 					Containers: []corev1.Container{
 						{
