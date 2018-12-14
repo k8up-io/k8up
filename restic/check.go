@@ -17,7 +17,7 @@ func newCheck() *CheckStruct {
 func (c *CheckStruct) Check() {
 	args := []string{"check"}
 	c.genericCommand.exec(args, commandOptions{print: true})
-	if len(c.StdErrOut) > 0 {
-		c.Error = errors.New("There was at least one backup error")
+	if len(c.stdErrOut) > 0 {
+		c.errorMessage = errors.New("There was at least one backup error")
 	}
 }

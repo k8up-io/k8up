@@ -57,7 +57,7 @@ func (r *RestoreStruct) Archive(snaps []Snapshot, restoreType, restoreDir, resto
 	for _, v := range snapMap {
 		fmt.Printf("Archive running for %v\n", v.Hostname)
 		if err := r.restoreCommand(v.ID, r.restoreType, sortedSnaps); err != nil {
-			r.Error = err
+			r.errorMessage = err
 			return
 		}
 	}
@@ -75,7 +75,7 @@ func (r *RestoreStruct) Restore(snapshotID, method string, snaps []Snapshot, res
 
 	r.setState(method, restoreDir, restoreFilter, verifyRestore)
 
-	r.Error = r.restoreCommand(snapshotID, method, snaps)
+	r.errorMessage = r.restoreCommand(snapshotID, method, snaps)
 }
 
 func (r *RestoreStruct) restoreCommand(snapshotID, method string, snaps []Snapshot) error {
@@ -128,7 +128,7 @@ func (r *RestoreStruct) folderRestore(snapshot Snapshot) error {
 
 	r.genericCommand.exec(args, commandOptions{print: true})
 	notIgnoredErrors := 0
-	for _, errLine := range r.StdErrOut {
+	for _, errLine := range r.stdErrOut {
 		if !strings.Contains(errLine, "Lchown") {
 			notIgnoredErrors++
 		}
@@ -142,7 +142,7 @@ func (r *RestoreStruct) folderRestore(snapshot Snapshot) error {
 func (r *RestoreStruct) s3Restore(snapshot Snapshot) error {
 	fmt.Println("S3 chosen as restore destination")
 	r.listFilesInSnapshot(snapshot)
-	fileList := r.StdOut
+	fileList := r.stdOut
 	readers, err := r.createFileReaders(snapshot, fileList)
 	if err != nil {
 		return err
@@ -332,7 +332,7 @@ func (r *RestoreStruct) tarGz(files []restoreFile, stats *restoreStats) io.Reade
 			err := trWriter.WriteHeader(header)
 			if err != nil {
 				fmt.Printf("\n%v\n", err)
-				r.Error = err
+				r.errorMessage = err
 				return
 			}
 			go file.runFunc()
@@ -341,7 +341,7 @@ func (r *RestoreStruct) tarGz(files []restoreFile, stats *restoreStats) io.Reade
 			_, err = io.Copy(trWriter, buffer)
 			if err != nil {
 				fmt.Printf("\n%v\n", err)
-				r.Error = err
+				r.errorMessage = err
 				return
 			}
 			file.closer <- reader

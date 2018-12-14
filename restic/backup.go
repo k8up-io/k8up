@@ -91,14 +91,14 @@ func (b *BackupStruct) Backup() {
 	fmt.Println("backing up...")
 	files, err := ioutil.ReadDir(b.backupDir)
 	if err != nil {
-		b.Error = fmt.Errorf("Error with the backupdir: %v", err)
+		b.errorMessage = fmt.Errorf("Error with the backupdir: %v", err)
 		return
 	}
 	// Build the folderlist first so every job that gets triggered later has the
 	// complete list of folders to be backed up for the metrics/webhooks.
 	b.folderList = make([]string, 0)
 	for _, folder := range files {
-		if folder.IsDir() && b.Error == nil {
+		if folder.IsDir() && b.errorMessage == nil {
 			b.folderList = append(b.folderList, folder.Name())
 		}
 	}
@@ -175,17 +175,17 @@ func (b *BackupStruct) ToProm() []prometheus.Collector {
 }
 
 func (b *BackupStruct) parse() rawMetrics {
-	if len(b.StdOut) < 6 || b.parsed {
+	if len(b.stdOut) < 6 || b.parsed {
 		return rawMetrics{}
 	}
-	files := strings.Fields(strings.Split(b.StdOut[len(b.StdOut)-6], ":")[1])
-	dirs := strings.Fields(strings.Split(b.StdOut[len(b.StdOut)-5], ":")[1])
+	files := strings.Fields(strings.Split(b.stdOut[len(b.stdOut)-6], ":")[1])
+	dirs := strings.Fields(strings.Split(b.stdOut[len(b.stdOut)-5], ":")[1])
 
-	var errorCount = len(b.StdErrOut)
+	var errorCount = len(b.stdErrOut)
 
 	if errorCount > 0 {
 		fmt.Println("These errors occurred during the backup of the folder:")
-		for _, line := range b.StdErrOut {
+		for _, line := range b.stdErrOut {
 			fmt.Println(line)
 		}
 	}
@@ -204,7 +204,7 @@ func (b *BackupStruct) parse() rawMetrics {
 		return rawMetrics{}
 	}
 
-	if b.Error != nil {
+	if b.errorMessage != nil {
 		errorCount++
 	}
 

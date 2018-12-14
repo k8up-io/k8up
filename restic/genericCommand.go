@@ -14,8 +14,8 @@ import (
 )
 
 type genericCommand struct {
-	Error             error
-	StdOut, StdErrOut []string
+	errorMessage      error
+	stdOut, stdErrOut []string
 }
 
 type commandOptions struct {
@@ -26,8 +26,8 @@ type commandOptions struct {
 
 func newGenericCommand() *genericCommand {
 	return &genericCommand{
-		StdOut:    make([]string, 0),
-		StdErrOut: make([]string, 0),
+		stdOut:    make([]string, 0),
+		stdErrOut: make([]string, 0),
 	}
 }
 
@@ -40,13 +40,13 @@ func (g *genericCommand) exec(args []string, options commandOptions) {
 		stdout, stderr, err := kubernetes.PodExec(options.Params)
 		if err != nil {
 			fmt.Println(err)
-			g.Error = err
+			g.errorMessage = err
 			return
 		}
 		stdin, err := cmd.StdinPipe()
 		if err != nil {
 			fmt.Println(err)
-			g.Error = err
+			g.errorMessage = err
 			return
 		}
 		if stdout == nil {
@@ -62,11 +62,11 @@ func (g *genericCommand) exec(args []string, options commandOptions) {
 			if err != nil {
 				cmd.Process.Kill()
 				fmt.Println(err)
-				g.Error = err
+				g.errorMessage = err
 				stderrStr := stderr.String()
 				if stderrStr != "" {
 					fmt.Printf("Stderr of pod exec: '%v'", stderr)
-					g.Error = errors.New(stderrStr)
+					g.errorMessage = errors.New(stderrStr)
 				}
 			}
 		}()
@@ -80,19 +80,19 @@ func (g *genericCommand) exec(args []string, options commandOptions) {
 	err = cmd.Start()
 	if err != nil {
 		fmt.Println(err)
-		g.Error = err
+		g.errorMessage = err
 		return
 	}
 
 	go func() {
 		var collectErr error
-		g.StdOut, collectErr = g.collectOutput(commandStdout, options.print)
+		g.stdOut, collectErr = g.collectOutput(commandStdout, options.print)
 		finished <- collectErr
 	}()
 
 	go func() {
 		var collectErr error
-		g.StdErrOut, collectErr = g.collectOutput(commandStderr, options.print)
+		g.stdErrOut, collectErr = g.collectOutput(commandStderr, options.print)
 		finished <- collectErr
 	}()
 
@@ -102,15 +102,15 @@ func (g *genericCommand) exec(args []string, options commandOptions) {
 
 	// Avoid overwriting any errors produced by the
 	// copy command
-	if g.Error == nil {
+	if g.errorMessage == nil {
 		if err != nil {
-			g.Error = err
+			g.errorMessage = err
 		}
 		if collectErr1 != nil {
-			g.Error = collectErr1
+			g.errorMessage = collectErr1
 		}
 		if collectErr2 != nil {
-			g.Error = collectErr2
+			g.errorMessage = collectErr2
 		}
 	}
 }
@@ -132,13 +132,13 @@ func (g *genericCommand) collectOutput(output io.ReadCloser, print bool) ([]stri
 }
 
 // GetError returns if there was an error
-func (g *genericCommand) GetError() error { return g.Error }
+func (g *genericCommand) GetError() error { return g.errorMessage }
 
 // GetStdOut returns the complete output of the command
-func (g *genericCommand) GetStdOut() []string { return g.StdOut }
+func (g *genericCommand) GetStdOut() []string { return g.stdOut }
 
 // GetStdErrOut returns the complete StdErr of the command
-func (g *genericCommand) GetStdErrOut() []string { return g.StdErrOut }
+func (g *genericCommand) GetStdErrOut() []string { return g.stdErrOut }
 
 // GetWebhookData returns all objects that should get marshalled to json and
 // sent to the webhook endpoint. Returns nil by default.
