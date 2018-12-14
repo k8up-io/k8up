@@ -85,6 +85,10 @@ func run(finishC chan error, outputManager *output.Output) {
 	}
 	resticCli.InitRepository(s3BackupClient)
 
+	if resticCli.Initrepo.GetError() != nil {
+		finishC <- fmt.Errorf("error contacting the repository: %v\n", resticCli.Initrepo.GetError())
+	}
+
 	var errors error
 
 	if *prune {
@@ -94,6 +98,7 @@ func run(finishC chan error, outputManager *output.Output) {
 		resticCli.ListSnapshots()
 		outputManager.Register(resticCli.PruneStruct)
 		outputManager.Register(resticCli.ListSnapshotsStruct)
+		errors = resticCli.PruneStruct.GetError()
 		commandRun = true
 	}
 	if *check {
@@ -105,19 +110,19 @@ func run(finishC chan error, outputManager *output.Output) {
 
 	if *restore || *archive {
 		snapshots = resticCli.ListSnapshots()
-		errors = resticCli.ListSnapshotsStruct.Error
+		errors = resticCli.ListSnapshotsStruct.GetError()
 		outputManager.Register(resticCli.ListSnapshotsStruct)
 	}
 
 	if *restore && errors != nil {
 		resticCli.Restore(*restoreSnap, *restoreType, snapshots, os.Getenv(restic.RestoreDirEnv), *restoreFilter, *verifyRestore)
-		errors = resticCli.RestoreStruct.Error
+		errors = resticCli.RestoreStruct.GetError()
 		commandRun = true
 		outputManager.Register(resticCli.RestoreStruct)
 	}
 	if *archive && errors != nil {
 		resticCli.Archive(snapshots, *restoreType, os.Getenv(restic.RestoreDirEnv), *restoreFilter, *verifyRestore)
-		errors = resticCli.RestoreStruct.Error
+		errors = resticCli.RestoreStruct.GetError()
 		commandRun = true
 		outputManager.Register(resticCli.RestoreStruct)
 	}
@@ -134,11 +139,11 @@ func run(finishC chan error, outputManager *output.Output) {
 				finishC <- fmt.Errorf("not enough arguments %v for stdin", stdin)
 			} else if len(optsSplitted) == 4 {
 				resticCli.StdinBackup(optsSplitted[0], optsSplitted[1], optsSplitted[2], optsSplitted[3], "")
-				errors = resticCli.BackupStruct.Error
+				errors = resticCli.BackupStruct.GetError()
 				break
 			} else {
 				resticCli.StdinBackup(optsSplitted[0], optsSplitted[1], optsSplitted[2], optsSplitted[3], optsSplitted[4])
-				errors = resticCli.BackupStruct.Error
+				errors = resticCli.BackupStruct.GetError()
 				break
 			}
 		}
@@ -148,7 +153,7 @@ func run(finishC chan error, outputManager *output.Output) {
 	// something else is desired
 	if !commandRun {
 		resticCli.Backup()
-		errors = resticCli.BackupStruct.Error
+		errors = resticCli.BackupStruct.GetError()
 		outputManager.Register(resticCli.BackupStruct)
 		stopMetrics(outputManager)
 	}
