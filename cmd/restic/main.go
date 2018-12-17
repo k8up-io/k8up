@@ -114,13 +114,13 @@ func run(finishC chan error, outputManager *output.Output) {
 		outputManager.Register(resticCli.ListSnapshotsStruct)
 	}
 
-	if *restore && errors != nil {
+	if *restore && errors == nil {
 		resticCli.Restore(*restoreSnap, *restoreType, snapshots, os.Getenv(restic.RestoreDirEnv), *restoreFilter, *verifyRestore)
 		errors = resticCli.RestoreStruct.GetError()
 		commandRun = true
 		outputManager.Register(resticCli.RestoreStruct)
 	}
-	if *archive && errors != nil {
+	if *archive && errors == nil {
 		resticCli.Archive(snapshots, *restoreType, os.Getenv(restic.RestoreDirEnv), *restoreFilter, *verifyRestore)
 		errors = resticCli.RestoreStruct.GetError()
 		commandRun = true

@@ -85,7 +85,7 @@ func (r *RestoreStruct) restoreCommand(snapshotID, method string, snaps []Snapsh
 
 	if snapshotID == "" {
 		fmt.Println("No snapshot defined, using latest one.")
-		snapshot := snaps[len(snaps)-1]
+		snapshot = snaps[len(snaps)-1]
 		fmt.Printf("Snapshot %v is being restored.\n", snapshot.Time)
 	} else {
 		for i := range snaps {
@@ -136,6 +136,8 @@ func (r *RestoreStruct) folderRestore(snapshot Snapshot) error {
 	if notIgnoredErrors > 0 {
 		return fmt.Errorf("There were %v unignored errors, please have a look", notIgnoredErrors)
 	}
+	fmt.Println("Restore successful.")
+
 	return nil
 }
 
@@ -170,6 +172,8 @@ func (r *RestoreStruct) s3Restore(snapshot Snapshot) error {
 	if err != nil {
 		return err
 	}
+	fmt.Println("Restore successful.")
+
 	return nil
 }
 
