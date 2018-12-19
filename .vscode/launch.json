@@ -24,6 +24,7 @@
                 "BACKUP_GLOBALRESTORES3ENDPOINT": "http://10.144.1.249:9000",
                 "BACKUP_GLOBALRESTORES3ACCESSKEYID": "8U0UDNYPNUDTUS1LIAF3",
                 "BACKUP_GLOBALRESTORES3SECRETACCESSKEY": "ip3cdrkXcHmH4S7if7erKPNoxDn27V0vrg6CHHem",
+                "BACKUP_BACKOFFLIMIT": "2",
             },
             "args": ["-development"],
             "showLog": true

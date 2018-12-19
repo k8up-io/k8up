@@ -102,7 +102,9 @@ func (o *Observer) jobObserver(job *batchv1.Job) {
 
 			message = latestCondition.Type
 
-			if job.Status.CompletionTime == nil || job.Status.Active > 0 {
+			reason := latestCondition.Reason
+
+			if message != "Complete" && reason != "BackoffLimitExceeded" {
 				message = jobRunning
 			}
 

@@ -26,4 +26,3 @@ spec:
     retention:
       keepLast: 10
       keepDaily: 14
-
