@@ -95,7 +95,7 @@ func run(finishC chan error, outputManager *output.Output) {
 		fmt.Println("Removing all locks to clear stale locks")
 		resticCli.Unlock(true)
 		resticCli.Prune()
-		resticCli.ListSnapshots()
+		resticCli.ListSnapshots(false)
 		outputManager.Register(resticCli.PruneStruct)
 		outputManager.Register(resticCli.ListSnapshotsStruct)
 		errors = resticCli.PruneStruct.GetError()
@@ -103,24 +103,22 @@ func run(finishC chan error, outputManager *output.Output) {
 	}
 	if *check {
 		resticCli.Check()
-		resticCli.ListSnapshots()
+		resticCli.ListSnapshots(false)
 		outputManager.Register(resticCli.CheckStruct)
 		commandRun = true
 	}
 
-	if *restore || *archive {
-		snapshots = resticCli.ListSnapshots()
-		errors = resticCli.ListSnapshotsStruct.GetError()
-		outputManager.Register(resticCli.ListSnapshotsStruct)
-	}
-
 	if *restore && errors == nil {
+		snapshots = resticCli.ListSnapshots(false)
+		errors = resticCli.ListSnapshotsStruct.GetError()
 		resticCli.Restore(*restoreSnap, *restoreType, snapshots, os.Getenv(restic.RestoreDirEnv), *restoreFilter, *verifyRestore)
 		errors = resticCli.RestoreStruct.GetError()
 		commandRun = true
 		outputManager.Register(resticCli.RestoreStruct)
 	}
 	if *archive && errors == nil {
+		snapshots = resticCli.ListSnapshots(true)
+		errors = resticCli.ListSnapshotsStruct.GetError()
 		resticCli.Archive(snapshots, *restoreType, os.Getenv(restic.RestoreDirEnv), *restoreFilter, *verifyRestore)
 		errors = resticCli.RestoreStruct.GetError()
 		commandRun = true

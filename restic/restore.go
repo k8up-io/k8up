@@ -5,15 +5,16 @@ import (
 	"bufio"
 	"bytes"
 	"compress/gzip"
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
 	"os/exec"
-	"sort"
-	"strconv"
+	"path"
 	"strings"
 	"time"
 
+	"git.vshn.net/vshn/wrestic/output"
 	"git.vshn.net/vshn/wrestic/s3"
 )
 
@@ -24,10 +25,41 @@ type RestoreStruct struct {
 	restoreDir    string
 	restoreFilter string
 	verifyRestore bool
+	stats         *restoreStats
 }
 
 func newRestore() *RestoreStruct {
 	return &RestoreStruct{}
+}
+
+type fileJSON []struct {
+	Time       time.Time  `json:"time"`
+	Tree       string     `json:"tree"`
+	Paths      []string   `json:"paths"`
+	Hostname   string     `json:"hostname"`
+	Username   string     `json:"username"`
+	UID        int        `json:"uid"`
+	Gid        int        `json:"gid"`
+	ID         string     `json:"id"`
+	ShortID    string     `json:"short_id"`
+	Nodes      []fileNode `json:"nodes"`
+	StructType string     `json:"struct_type"`
+}
+
+type fileNode struct {
+	Name       string    `json:"name"`
+	Type       string    `json:"type"`
+	Path       string    `json:"path"`
+	UID        int       `json:"uid"`
+	Gid        int       `json:"gid"`
+	Mode       int64     `json:"mode"`
+	Mtime      time.Time `json:"mtime"`
+	Atime      time.Time `json:"atime"`
+	Ctime      time.Time `json:"ctime"`
+	StructType string    `json:"struct_type"`
+	Size       int64     `json:"size,omitempty"`
+	closer     chan io.ReadCloser
+	runFunc    func()
 }
 
 func (r *RestoreStruct) setState(restoreType, restoreDir, restoreFilter string, verifyRestore bool) {
@@ -43,20 +75,11 @@ func (r *RestoreStruct) Archive(snaps []Snapshot, restoreType, restoreDir, resto
 	r.setState(restoreType, restoreDir, restoreFilter, verifyRestore)
 
 	fmt.Println("Archiving latest snapshots for every host")
-	sortedSnaps := snapList(snaps)
 
-	sort.Sort(sort.Reverse(sortedSnaps))
-
-	snapMap := make(map[string]Snapshot)
-	for _, snap := range sortedSnaps {
-		if _, ok := snapMap[snap.Hostname]; !ok {
-			snapMap[snap.Hostname] = snap
-		}
-	}
-
-	for _, v := range snapMap {
-		fmt.Printf("Archive running for %v\n", v.Hostname)
-		if err := r.restoreCommand(v.ID, r.restoreType, sortedSnaps); err != nil {
+	for _, v := range snaps {
+		PVCname := r.parsePath(v.Paths)
+		fmt.Printf("Archive running for %v\n", fmt.Sprintf("%v-%v", v.Hostname, PVCname))
+		if err := r.restoreCommand(v.ID, r.restoreType, snaps); err != nil {
 			r.errorMessage = err
 			return
 		}
@@ -68,6 +91,12 @@ type restoreStats struct {
 	RestoreLocation string   `json:"restore_location,omitempty"`
 	SnapshotID      string   `json:"snapshot_ID,omitempty"`
 	RestoredFiles   []string `json:"restored_files,omitempty"`
+}
+
+// ToJson implements output.JsonMarshaller
+func (r *restoreStats) ToJson() []byte {
+	tmp, _ := json.Marshal(r)
+	return tmp
 }
 
 // Restore takes a snapshotID and a method to create a restore job.
@@ -144,7 +173,12 @@ func (r *RestoreStruct) folderRestore(snapshot Snapshot) error {
 func (r *RestoreStruct) s3Restore(snapshot Snapshot) error {
 	fmt.Println("S3 chosen as restore destination")
 	r.listFilesInSnapshot(snapshot)
-	fileList := r.stdOut
+	fileList := fileJSON{}
+	out := []byte(strings.Join(r.stdOut, "\n"))
+	err := json.Unmarshal(out, &fileList)
+	if err != nil {
+		return err
+	}
 	readers, err := r.createFileReaders(snapshot, fileList)
 	if err != nil {
 		return err
@@ -152,7 +186,8 @@ func (r *RestoreStruct) s3Restore(snapshot Snapshot) error {
 
 	endpoint := os.Getenv(RestoreS3EndpointEnv)
 	snapDate := snapshot.Time.Format(time.RFC3339)
-	fileName := fmt.Sprintf("backup-%v-%v.tar.gz", snapshot.Hostname, snapDate)
+	PVCName := r.parsePath(snapshot.Paths)
+	fileName := fmt.Sprintf("backup-%v-%v-%v.tar.gz", snapshot.Hostname, PVCName, snapDate)
 	stats := &restoreStats{
 		RestoreLocation: fmt.Sprintf("%v/%v", endpoint, fileName),
 		SnapshotID:      snapshot.ID,
@@ -174,109 +209,43 @@ func (r *RestoreStruct) s3Restore(snapshot Snapshot) error {
 	}
 	fmt.Println("Restore successful.")
 
+	r.stats = stats
+
 	return nil
 }
 
 func (r *RestoreStruct) listFilesInSnapshot(snapshot Snapshot) {
-	args := []string{"ls", "-l", "--no-lock", snapshot.ID}
+	args := []string{"ls", "-l", "--no-lock", "--json", snapshot.ID}
 	fmt.Printf("Listing files in snapshot %v\n", snapshot.Time)
 	r.genericCommand.exec(args, commandOptions{print: false})
 }
 
-type restoreFile struct {
-	name    string
-	mode    int64
-	size    int64
-	runFunc func()
-	uid     int
-	gid     int
-	closer  chan io.ReadCloser
-}
-
-func (r *RestoreStruct) createFileReaders(snapshot Snapshot, fileList []string) ([]restoreFile, error) {
+func (r *RestoreStruct) createFileReaders(snapshot Snapshot, fileList fileJSON) ([]fileNode, error) {
 	// This case is so special we can't use genericCommand for this
 	args := []string{"dump", snapshot.ID}
 
 	fmt.Println("Adding files to the restore")
 
-	filesToProcess := []restoreFile{}
+	filesToProcess := []fileNode{}
 
-	for i, file := range fileList {
-		//Skip first entry
-		if i == 0 {
-			continue
+	for _, files := range fileList {
+
+		for _, node := range files.Nodes {
+			add := false
+			var tmpFile fileNode
+			if node.Type != "dir" {
+				tmpFile = node
+				add = true
+			}
+			if add {
+				filesToProcess = append(filesToProcess, tmpFile)
+			}
 		}
-		scanner := bufio.NewScanner(strings.NewReader(file))
-		scanner.Split(bufio.ScanWords)
-		j := 0
-		add := false
-		// TODO: Next version of restic will most likely have
-		// a json flag for the ls command.
-		tmpFile := restoreFile{}
-		for scanner.Scan() {
-			m := scanner.Text()
 
-			if j == 0 {
-				if !strings.HasPrefix(m, "d") {
-					add = true
-					perms := m[1:len(m)]
-					usrPerm := perms[0:3]
-					groupPerm := perms[3:6]
-					everyOne := perms[6:9]
-					tmpPermString := "0" + r.parsePerm(usrPerm)
-					tmpPermString = tmpPermString + r.parsePerm(groupPerm)
-					tmpPermString = tmpPermString + r.parsePerm(everyOne)
-					tmpFile.mode, _ = strconv.ParseInt(tmpPermString, 0, 64)
-				} else {
-					j++
-					continue
-				}
-			}
-
-			if j == 3 && add {
-				size, err := strconv.ParseInt(m, 10, 64)
-				tmpFile.size = size
-				if err != nil {
-					return nil, err
-				}
-			}
-
-			if j == 1 && add {
-				uid, err := strconv.Atoi(m)
-				tmpFile.uid = uid
-				if err != nil {
-					return nil, err
-				}
-			}
-
-			if j == 2 && add {
-				gid, err := strconv.Atoi(m)
-				tmpFile.gid = gid
-				if err != nil {
-					return nil, err
-				}
-			}
-
-			if j == 6 && add {
-				if r.restoreFilter != "" {
-					if strings.Contains(m, r.restoreFilter) {
-						tmpFile.name = m
-					} else {
-						add = false
-					}
-				} else {
-					tmpFile.name = m
-				}
-			}
-			j++
-		}
-		if add {
-			filesToProcess = append(filesToProcess, tmpFile)
-		}
 	}
 
 	for i := range filesToProcess {
-		tmpArgs := append(args, filesToProcess[i].name)
+		tmpArgs := append(args, filesToProcess[i].Path)
 		cmd := exec.Command(restic, tmpArgs...)
 		cmd.Env = os.Environ()
 		closerChan := make(chan io.ReadCloser, 0)
@@ -311,7 +280,7 @@ func (r *RestoreStruct) createFileReaders(snapshot Snapshot, fileList []string) 
 	return filesToProcess, nil
 }
 
-func (r *RestoreStruct) tarGz(files []restoreFile, stats *restoreStats) io.Reader {
+func (r *RestoreStruct) tarGz(files []fileNode, stats *restoreStats) io.Reader {
 	readPipe, writePipe := io.Pipe()
 	gzpWriter := gzip.NewWriter(writePipe)
 	trWriter := tar.NewWriter(gzpWriter)
@@ -323,14 +292,17 @@ func (r *RestoreStruct) tarGz(files []restoreFile, stats *restoreStats) io.Reade
 			writePipe.Close()
 		}()
 		for _, file := range files {
-			stats.RestoredFiles = append(stats.RestoredFiles, file.name)
-			fmt.Printf("Compressing %v...", file.name)
+			stats.RestoredFiles = append(stats.RestoredFiles, file.Path)
+			fmt.Printf("Compressing %v...", file.Path)
 			header := &tar.Header{
-				Name: file.name,
-				Mode: file.mode,
-				Size: file.size,
-				Uid:  file.uid,
-				Gid:  file.gid,
+				Name:       file.Path,
+				Mode:       file.Mode,
+				Size:       file.Size,
+				Uid:        file.UID,
+				Gid:        file.Gid,
+				AccessTime: file.Atime,
+				ChangeTime: file.Ctime,
+				ModTime:    file.Mtime,
 			}
 
 			err := trWriter.WriteHeader(header)
@@ -356,18 +328,13 @@ func (r *RestoreStruct) tarGz(files []restoreFile, stats *restoreStats) io.Reade
 	return readPipe
 }
 
-func (r *RestoreStruct) parsePerm(perm string) string {
-	permInt := 0
-	for _, char := range perm {
-		if char == 'r' {
-			permInt = permInt + 4
-		}
-		if char == 'w' {
-			permInt = permInt + 2
-		}
-		if char == 'x' {
-			permInt = permInt + 1
-		}
+// GetWebhookData returns a list of restore stats to send to the webhook.
+func (r *RestoreStruct) GetWebhookData() []output.JsonMarshaller {
+	return []output.JsonMarshaller{
+		r.stats,
 	}
-	return strconv.Itoa(permInt)
+}
+
+func (r *RestoreStruct) parsePath(paths []string) string {
+	return path.Base(paths[len(paths)-1])
 }

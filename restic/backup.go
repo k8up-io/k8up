@@ -112,7 +112,7 @@ func (b *BackupStruct) Backup() {
 		b.rawMetrics = append(b.rawMetrics, tmpMetrics)
 	}
 
-	b.snapshots = b.snapshotLister.ListSnapshots()
+	b.snapshots = b.snapshotLister.ListSnapshots(false)
 }
 
 func (b *BackupStruct) backupFolder(folder, folderName string) {
@@ -216,8 +216,9 @@ func (b *BackupStruct) parse() rawMetrics {
 		UnmodifiedFiles:    float64(unmodifiedFiles),
 		ChangedDirs:        float64(changedDirs),
 		UnmodifiedDirs:     float64(unmodifiedDirs),
+		Errors:             float64(errorCount),
 		MountedPVCs:        b.folderList,
-		availableSnapshots: float64(len(b.snapshotLister.ListSnapshots())),
+		availableSnapshots: float64(len(b.snapshotLister.ListSnapshots(false))),
 	}
 }
 
