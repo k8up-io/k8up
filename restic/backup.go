@@ -88,6 +88,12 @@ func newBackup(backupDir string, listSnapshots *ListSnapshotsStruct) *BackupStru
 
 // Backup executes a backup command.
 func (b *BackupStruct) Backup() {
+
+	if _, err := os.Stat(b.backupDir); os.IsNotExist(err) {
+		fmt.Printf("Backupdir %v does not exist, skipping\n", b.backupDir)
+		return
+	}
+
 	fmt.Println("backing up...")
 	files, err := ioutil.ReadDir(b.backupDir)
 	if err != nil {

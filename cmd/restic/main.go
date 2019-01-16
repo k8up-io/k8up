@@ -74,7 +74,13 @@ func main() {
 
 func run(finishC chan error, outputManager *output.Output) {
 
-	resticCli := restic.New(os.Getenv(restic.BackupDirEnv))
+	var dir string
+	if os.Getenv(restic.BackupDirEnv) == "" {
+		dir = "/data"
+	} else {
+		dir = os.Getenv(restic.BackupDirEnv)
+	}
+	resticCli := restic.New(dir)
 
 	var commandRun bool
 	var snapshots []restic.Snapshot
