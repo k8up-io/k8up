@@ -46,6 +46,8 @@ var (
 
 func main() {
 
+	flag.Var(&stdinOpts, "arrayOpts", "Options needed for the stding backup. Format: command,pod,container")
+
 	flag.Parse()
 
 	finishC := make(chan error)
