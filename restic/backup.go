@@ -47,9 +47,9 @@ type rawMetrics struct {
 }
 
 type WebhookStats struct {
-	Name          string
-	BackupMetrics rawMetrics
-	Snapshots     []Snapshot
+	Name          string     `json: "name"`
+	BackupMetrics rawMetrics `json:"backup_metrics"`
+	Snapshots     []Snapshot `json:"snapshots"`
 }
 
 type promMetrics struct {
@@ -147,6 +147,7 @@ func (b *BackupStruct) StdinBackup(backupCommand, pod, container, namespace, fil
 	tmpMetrics.Folder = fileName
 	tmpMetrics.hostname = os.Getenv(Hostname)
 	b.rawMetrics = append(b.rawMetrics, tmpMetrics)
+	b.snapshots = b.snapshotLister.ListSnapshots(false)
 }
 
 // GetWebhookData a slice of objects that should be sent to the webhook endpoint.
