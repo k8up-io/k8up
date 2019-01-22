@@ -143,6 +143,10 @@ func (b *BackupStruct) StdinBackup(backupCommand, pod, container, namespace, fil
 		},
 		stdin: true,
 	})
+	tmpMetrics := b.parse()
+	tmpMetrics.Folder = fileName
+	tmpMetrics.hostname = os.Getenv(Hostname)
+	b.rawMetrics = append(b.rawMetrics, tmpMetrics)
 }
 
 // GetWebhookData a slice of objects that should be sent to the webhook endpoint.
