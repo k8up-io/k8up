@@ -146,11 +146,9 @@ func run(finishC chan error, outputManager *output.Output) {
 			} else if len(optsSplitted) == 4 {
 				resticCli.StdinBackup(optsSplitted[0], optsSplitted[1], optsSplitted[2], optsSplitted[3], "")
 				errors = resticCli.BackupStruct.GetError()
-				break
 			} else {
 				resticCli.StdinBackup(optsSplitted[0], optsSplitted[1], optsSplitted[2], optsSplitted[3], optsSplitted[4])
 				errors = resticCli.BackupStruct.GetError()
-				break
 			}
 		}
 	}
