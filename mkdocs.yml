@@ -1,0 +1,6 @@
+site_name: K8up
+
+theme: readthedocs
+
+markdown_extensions:
+  - admonition
