@@ -3,8 +3,8 @@ package backup
 import (
 	"path"
 
-	backupv1alpha1 "git.vshn.net/vshn/baas/apis/backup/v1alpha1"
-	"git.vshn.net/vshn/baas/service"
+	backupv1alpha1 "github.com/vshn/k8up/apis/backup/v1alpha1"
+	"github.com/vshn/k8up/service"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"

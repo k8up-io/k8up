@@ -5,8 +5,8 @@ import (
 
 	"k8s.io/apimachinery/pkg/runtime"
 
-	"git.vshn.net/vshn/baas/log"
-	"git.vshn.net/vshn/baas/service"
+	"github.com/vshn/k8up/log"
+	"github.com/vshn/k8up/service"
 )
 
 // Handler  is the pod terminator handler that will handle the

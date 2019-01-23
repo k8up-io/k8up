@@ -12,8 +12,8 @@ import (
 	"fmt"
 	"sync"
 
-	"git.vshn.net/vshn/baas/config"
-	"git.vshn.net/vshn/baas/service"
+	"github.com/vshn/k8up/config"
+	"github.com/vshn/k8up/service"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"

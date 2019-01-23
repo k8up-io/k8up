@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"sync"
 
-	backupv1alpha1 "git.vshn.net/vshn/baas/apis/backup/v1alpha1"
-	"git.vshn.net/vshn/baas/service"
-	"git.vshn.net/vshn/baas/service/observe"
+	backupv1alpha1 "github.com/vshn/k8up/apis/backup/v1alpha1"
+	"github.com/vshn/k8up/service"
+	"github.com/vshn/k8up/service/observe"
 	"k8s.io/apimachinery/pkg/runtime"
 )
 

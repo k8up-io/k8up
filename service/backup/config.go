@@ -1,7 +1,7 @@
 package backup
 
 import (
-	configPackage "git.vshn.net/vshn/baas/config"
+	configPackage "github.com/vshn/k8up/config"
 	"github.com/spf13/viper"
 )
 

@@ -1,7 +1,7 @@
 package operator
 
 import (
-	backupv1alpha1 "git.vshn.net/vshn/baas/apis/backup/v1alpha1"
+	backupv1alpha1 "github.com/vshn/k8up/apis/backup/v1alpha1"
 	"github.com/spotahome/kooper/client/crd"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"

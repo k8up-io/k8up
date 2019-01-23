@@ -3,7 +3,7 @@ package v1alpha1
 import (
 	"fmt"
 
-	"git.vshn.net/vshn/baas/config"
+	"github.com/vshn/k8up/config"
 	corev1 "k8s.io/api/core/v1"
 )
 

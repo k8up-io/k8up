@@ -1,6 +1,6 @@
 CODE_GENERATOR_IMAGE := slok/kube-code-generator:v1.11.2
 DIRECTORY := $(PWD)
-CODE_GENERATOR_PACKAGE := git.vshn.net/vshn/baas
+CODE_GENERATOR_PACKAGE := github.com/vshn/k8up
 
 generate:
 	docker run --rm -it \

@@ -19,9 +19,9 @@ limitations under the License.
 package fake
 
 import (
-	clientset "git.vshn.net/vshn/baas/client/k8s/clientset/versioned"
-	appuiov1alpha1 "git.vshn.net/vshn/baas/client/k8s/clientset/versioned/typed/backup/v1alpha1"
-	fakeappuiov1alpha1 "git.vshn.net/vshn/baas/client/k8s/clientset/versioned/typed/backup/v1alpha1/fake"
+	clientset "github.com/vshn/k8up/client/k8s/clientset/versioned"
+	appuiov1alpha1 "github.com/vshn/k8up/client/k8s/clientset/versioned/typed/backup/v1alpha1"
+	fakeappuiov1alpha1 "github.com/vshn/k8up/client/k8s/clientset/versioned/typed/backup/v1alpha1/fake"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/discovery"
