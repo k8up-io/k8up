@@ -8,7 +8,7 @@ import (
 
 	"k8s.io/client-go/util/homedir"
 
-	"git.vshn.net/vshn/baas/operator"
+	"github.com/vshn/k8up/operator"
 )
 
 // Flags are the controller flags.

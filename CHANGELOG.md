@@ -109,17 +109,17 @@ Also some known issues in this version:
 ### Changed
 - Initial version
 
-[unreleased]: https://git.vshn.net/vshn/baas/compare/v0.1.2...master
-[v0.1.2]: https://git.vshn.net/vshn/baas/compare/v0.0.1.1...v0.1.2
-[v0.1.1]: https://git.vshn.net/vshn/baas/compare/v0.0.1.0...v0.1.1
-[v0.1.0]: https://git.vshn.net/vshn/baas/compare/v0.0.10...v0.1.0
-[v0.0.10]: https://git.vshn.net/vshn/baas/compare/v0.0.9...v0.0.10
-[v0.0.9]: https://git.vshn.net/vshn/baas/compare/v0.0.8...v0.0.9
-[v0.0.8]: https://git.vshn.net/vshn/baas/compare/v0.0.7...v0.0.8
-[v0.0.7]: https://git.vshn.net/vshn/baas/compare/v0.0.6...v0.0.7
-[v0.0.6]: https://git.vshn.net/vshn/baas/compare/v0.0.5...v0.0.6
-[v0.0.5]: https://git.vshn.net/vshn/baas/compare/v0.0.4...v0.0.5
-[v0.0.4]: https://git.vshn.net/vshn/baas/compare/v0.0.3...v0.0.4
-[v0.0.3]: https://git.vshn.net/vshn/baas/compare/v0.0.2...v0.0.3
-[v0.0.2]: https://git.vshn.net/vshn/baas/compare/v0.0.1...v0.0.2
-[v0.0.1]: https://git.vshn.net/vshn/baas/tree/v0.0.1
+[unreleased]: https://github.com/vshn/k8up/compare/v0.1.2...master
+[v0.1.2]: https://github.com/vshn/k8up/compare/v0.0.1.1...v0.1.2
+[v0.1.1]: https://github.com/vshn/k8up/compare/v0.0.1.0...v0.1.1
+[v0.1.0]: https://github.com/vshn/k8up/compare/v0.0.10...v0.1.0
+[v0.0.10]: https://github.com/vshn/k8up/compare/v0.0.9...v0.0.10
+[v0.0.9]: https://github.com/vshn/k8up/compare/v0.0.8...v0.0.9
+[v0.0.8]: https://github.com/vshn/k8up/compare/v0.0.7...v0.0.8
+[v0.0.7]: https://github.com/vshn/k8up/compare/v0.0.6...v0.0.7
+[v0.0.6]: https://github.com/vshn/k8up/compare/v0.0.5...v0.0.6
+[v0.0.5]: https://github.com/vshn/k8up/compare/v0.0.4...v0.0.5
+[v0.0.4]: https://github.com/vshn/k8up/compare/v0.0.3...v0.0.4
+[v0.0.3]: https://github.com/vshn/k8up/compare/v0.0.2...v0.0.3
+[v0.0.2]: https://github.com/vshn/k8up/compare/v0.0.1...v0.0.2
+[v0.0.1]: https://github.com/vshn/k8up/tree/v0.0.1

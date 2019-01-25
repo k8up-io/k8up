@@ -19,7 +19,7 @@ limitations under the License.
 package scheme
 
 import (
-	appuiov1alpha1 "git.vshn.net/vshn/baas/apis/backup/v1alpha1"
+	appuiov1alpha1 "github.com/vshn/k8up/apis/backup/v1alpha1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"

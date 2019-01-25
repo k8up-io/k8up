@@ -5,7 +5,7 @@ import (
 	"sync"
 	"time"
 
-	"git.vshn.net/vshn/baas/log"
+	"github.com/vshn/k8up/log"
 	"github.com/gorilla/mux"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"

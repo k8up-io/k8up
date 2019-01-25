@@ -1,10 +1,9 @@
-FROM golang:1.10-alpine
+FROM golang:1.11-alpine
 
 RUN apk add --no-cache tzdata
 
-WORKDIR /go/src/git.vshn.net/vshn/baas
+WORKDIR /go/src/github.com/vshn/k8up
 COPY . .
-
-RUN go install -v ./...
+RUN go build -v ./...
 
 ENTRYPOINT [ "operator" ]
