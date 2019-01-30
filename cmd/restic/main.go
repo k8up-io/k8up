@@ -1,43 +1,23 @@
 package main
 
 import (
-	"bytes"
-	"encoding/json"
 	"flag"
 	"fmt"
-	"net/http"
 	"os"
 	"os/signal"
 	"strings"
 	"syscall"
+	"time"
+
+	"git.vshn.net/vshn/wrestic/output"
+	"git.vshn.net/vshn/wrestic/restic"
+	"git.vshn.net/vshn/wrestic/s3"
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 const (
-	restic   = "/usr/local/bin/restic"
-	hostname = "HOSTNAME"
-	//Env variable names
-	keepLastEnv              = "KEEP_LAST"
-	keepHourlyEnv            = "KEEP_HOURLY"
-	keepDailyEnv             = "KEEP_DAILY"
-	keepWeeklyEnv            = "KEEP_WEEKLY"
-	keepMonthlyEnv           = "KEEP_MONTHLY"
-	keepYearlyEnv            = "KEEP_YEARLY"
-	keepTagEnv               = "KEEP_TAG"
-	promURLEnv               = "PROM_URL"
-	statsURLEnv              = "STATS_URL"
-	backupDirEnv             = "BACKUP_DIR"
-	restoreDirEnv            = "RESTORE_DIR"
-	listTimeoutEnv           = "BACKUP_LIST_TIMEOUT"
-	restoreS3EndpointEnv     = "RESTORE_S3ENDPOINT"
-	restoreS3AccessKeyIDEnv  = "RESTORE_ACCESSKEYID"
-	restoreS3SecretAccessKey = "RESTORE_SECRETACCESSKEY"
-	//Arguments for restic
-	keepLastArg    = "--keep-last"
-	keepHourlyArg  = "--keep-hourly"
-	keepDailyArg   = "--keep-daily"
-	keepWeeklyArg  = "--keep-weekly"
-	keepMonthlyArg = "--keep-monthly"
-	keepYearlyArg  = "--keep-yearly"
+	promURLEnv    = "PROM_URL"
+	webhookURLEnv = "STATS_URL"
 )
 
 type arrayOpts []string
@@ -62,207 +42,175 @@ var (
 	restoreFilter = flag.String("restoreFilter", "", "Simple filter to define what should get restored. For example the PVC name")
 	archive       = flag.Bool("archive", false, "")
 	stdinOpts     arrayOpts
-
-	commandError error
-	metrics      *resticMetrics
-	backupDir    string
 )
 
-type stats struct {
-	Name          string     `json:"name"`
-	BackupMetrics rawMetrics `json:"backup_metrics"`
-	Snapshots     []snapshot `json:"snapshots"`
-}
-
 func main() {
-	finishC := make(chan error)
-	signalC := make(chan os.Signal, 1)
-	signal.Notify(signalC, syscall.SIGTERM, syscall.SIGINT)
-
-	go run(finishC)
-
-	select {
-	case err := <-finishC:
-		if err != nil {
-			os.Exit(1)
-		}
-	case <-signalC:
-		fmt.Println("Signal captured, removing locks and exiting...")
-		os.Exit(1)
-	}
-}
-
-func run(finishC chan error) {
-	//TODO: locking management if f.e. a backup gets interrupted and the lock not
-	//cleaned
 
 	flag.Var(&stdinOpts, "arrayOpts", "Options needed for the stding backup. Format: command,pod,container")
 
 	flag.Parse()
 
-	startMetrics()
+	finishC := make(chan error)
+	signalC := make(chan os.Signal, 1)
+	signal.Notify(signalC, syscall.SIGTERM, syscall.SIGINT)
+	outputManager := output.New(os.Getenv(webhookURLEnv), os.Getenv(promURLEnv), os.Getenv(restic.Hostname))
 
-	defer func() {
-		if commandError != nil {
-			fmt.Println("Error occurred: ", commandError)
+	go run(finishC, outputManager)
+
+	select {
+	case err := <-finishC:
+		outputManager.TriggerAll()
+		if err != nil {
+			fmt.Printf("Last reported error: %v", err)
+			os.Exit(1)
 		}
-		metrics.BackupEndTimestamp.SetToCurrentTime()
-		metrics.Update(metrics.BackupEndTimestamp)
-		finishC <- commandError
-	}()
 
-	backupDir = getBackupDir()
+	case <-signalC:
+		fmt.Println("Signal captured, removing locks and exiting...")
+		outputManager.TriggerAll()
+		os.Exit(1)
+	}
+}
 
-	// TODO: simplify this APPU-1368
+func run(finishC chan error, outputManager *output.Output) {
+
+	var dir string
+	if os.Getenv(restic.BackupDirEnv) == "" {
+		dir = "/data"
+	} else {
+		dir = os.Getenv(restic.BackupDirEnv)
+	}
+	resticCli := restic.New(dir)
+
+	var commandRun bool
+	var snapshots []restic.Snapshot
+
+	s3BackupClient := s3.New(getS3Repo(), os.Getenv("AWS_ACCESS_KEY_ID"), os.Getenv("AWS_SECRET_ACCESS_KEY"))
+	connErr := s3BackupClient.Connect()
+	if connErr != nil {
+		finishC <- fmt.Errorf("Connection to S3 endpoint not possible: %v", connErr)
+		return
+	}
+	resticCli.InitRepository(s3BackupClient)
+
+	if resticCli.Initrepo.GetError() != nil {
+		finishC <- fmt.Errorf("error contacting the repository: %v\n", resticCli.Initrepo.GetError())
+	}
+
+	var errors error
+
 	if *prune {
 		fmt.Println("Removing all locks to clear stale locks")
-		unlock(true)
+		resticCli.Unlock(true)
+		resticCli.Prune()
+		resticCli.ListSnapshots(false)
+		outputManager.Register(resticCli.PruneStruct)
+		outputManager.Register(resticCli.ListSnapshotsStruct)
+		errors = resticCli.PruneStruct.GetError()
+		commandRun = true
 	}
-	if !*restore && !*archive {
-		if err := initRepository(); err != nil {
-			return
-		}
+	if *check {
+		resticCli.Check()
+		resticCli.ListSnapshots(false)
+		outputManager.Register(resticCli.CheckStruct)
+		commandRun = true
+	}
 
-		if *check {
-			checkCommand()
-		} else {
-			if !*stdin && !*prune {
-				backup()
-			} else if !*prune {
-				fmt.Println("Backup commands detected")
-				for _, stdin := range stdinOpts {
-					optsSplitted := strings.Split(stdin, ",")
-					if len(optsSplitted) < 4 {
-						commandError = fmt.Errorf("not enough arguments %v for stdin", stdin)
-					} else if len(optsSplitted) == 4 {
-						stdinBackup(optsSplitted[0], optsSplitted[1], optsSplitted[2], optsSplitted[3], "")
-					} else {
-						stdinBackup(optsSplitted[0], optsSplitted[1], optsSplitted[2], optsSplitted[3], optsSplitted[4])
+	if *restore && errors == nil {
+		snapshots = resticCli.ListSnapshots(false)
+		errors = resticCli.ListSnapshotsStruct.GetError()
+		resticCli.Restore(*restoreSnap, *restoreType, snapshots, os.Getenv(restic.RestoreDirEnv), *restoreFilter, *verifyRestore)
+		errors = resticCli.RestoreStruct.GetError()
+		commandRun = true
+		outputManager.Register(resticCli.RestoreStruct)
+	}
+	if *archive && errors == nil {
+		snapshots = resticCli.ListSnapshots(true)
+		errors = resticCli.ListSnapshotsStruct.GetError()
+		resticCli.Archive(snapshots, *restoreType, os.Getenv(restic.RestoreDirEnv), *restoreFilter, *verifyRestore)
+		errors = resticCli.RestoreStruct.GetError()
+		commandRun = true
+		outputManager.Register(resticCli.RestoreStruct)
+	}
 
-					}
-					if commandError != nil {
-						return
-					}
-				}
-				// After doing all backups via stdin don't forget todo the normal one
-				if _, err := os.Stat(backupDir); os.IsNotExist(err) {
-					fmt.Printf("%v does not exist, skipping file backup\n", backupDir)
-				} else {
-					backup()
-				}
+	if *stdin || !commandRun {
+		go startMetrics(outputManager)
+	}
+
+	if *stdin {
+		fmt.Println("Backup commands detected")
+		for _, stdin := range stdinOpts {
+			optsSplitted := strings.Split(stdin, ",")
+			if len(optsSplitted) < 4 {
+				finishC <- fmt.Errorf("not enough arguments %v for stdin", stdin)
+			} else if len(optsSplitted) == 4 {
+				resticCli.StdinBackup(optsSplitted[0], optsSplitted[1], optsSplitted[2], optsSplitted[3], "")
+				errors = resticCli.BackupStruct.GetError()
 			} else {
-				pruneCommand()
-			}
-			if err := updateSnapshots(); err != nil && commandError == nil {
-				commandError = err
+				resticCli.StdinBackup(optsSplitted[0], optsSplitted[1], optsSplitted[2], optsSplitted[3], optsSplitted[4])
+				errors = resticCli.BackupStruct.GetError()
 			}
 		}
-	} else if *archive {
-		if err := archiveJob(); err != nil && commandError == nil {
-			commandError = err
+	}
+
+	// Backup should run without any params but should also not run when
+	// something else is desired
+	if !commandRun {
+		resticCli.Backup()
+		errors = resticCli.BackupStruct.GetError()
+		outputManager.Register(resticCli.BackupStruct)
+		stopMetrics(outputManager)
+	}
+
+	finishC <- errors
+}
+
+func startMetrics(outputManager output.Trigger) {
+	backupStartTimestamp := prometheus.NewGauge(prometheus.GaugeOpts{
+		Namespace: restic.Namespace,
+		Subsystem: restic.Subsystem,
+		Name:      "last_start_backup_timestamp",
+		Help:      "Timestamp when the last backup was started",
+	})
+
+	backupDuration := prometheus.NewCounter(prometheus.CounterOpts{
+		Namespace: restic.Namespace,
+		Subsystem: restic.Subsystem,
+		Name:      "running_backup_duration",
+		Help:      "How long the current backup is taking",
+	})
+
+	backupStartTimestamp.SetToCurrentTime()
+	outputManager.TriggerProm(backupStartTimestamp)
+
+	tick := time.NewTicker(1 * time.Second)
+
+	for {
+		select {
+		case <-tick.C:
+			backupDuration.Inc()
+			outputManager.TriggerProm(backupDuration)
+			time.Sleep(1 * time.Second)
 		}
-	} else {
-		if err := restoreJob(*restoreSnap, *restoreType); err != nil && commandError == nil {
-			commandError = err
-		}
 	}
+
 }
 
-func startMetrics() {
-	metrics = newResticMetrics(os.Getenv(promURLEnv))
-	go metrics.startUpdating()
+func stopMetrics(outputManager output.Trigger) {
+	backupEndTimestamp := prometheus.NewGauge(prometheus.GaugeOpts{
+		Namespace: restic.Namespace,
+		Subsystem: restic.Subsystem,
+		Name:      "last_end_backup_timestamp",
+		Help:      "Timestamp when the last backup was finished",
+	})
 
-	metrics.BackupStartTimestamp.SetToCurrentTime()
-	metrics.Update(metrics.BackupStartTimestamp)
+	backupEndTimestamp.SetToCurrentTime()
+	outputManager.TriggerProm(backupEndTimestamp)
 }
 
-func getBackupDir() string {
-	if value, ok := os.LookupEnv(backupDirEnv); ok {
-		return value
-	}
-	return "/data"
-}
+func getS3Repo() string {
+	resticString := os.Getenv("RESTIC_REPOSITORY")
+	resticString = strings.ToLower(resticString)
 
-func outputToSlice(output []byte) []string {
-	stringOutput := string(output)
-	return strings.Split(stringOutput, "\n")
-}
-
-func updateProm(newMetrics rawMetrics, folder, hostname string) {
-	metrics.NewFiles.WithLabelValues(folder, hostname).Set(newMetrics.NewFiles)
-	metrics.Update(metrics.NewFiles)
-	metrics.ChangedFiles.WithLabelValues(folder, hostname).Set(newMetrics.ChangedFiles)
-	metrics.Update(metrics.ChangedFiles)
-	metrics.UnmodifiedFiles.WithLabelValues(folder, hostname).Set(newMetrics.UnmodifiedFiles)
-	metrics.Update(metrics.UnmodifiedFiles)
-	metrics.NewDirs.WithLabelValues(folder, hostname).Set(newMetrics.NewDirs)
-	metrics.Update(metrics.NewDirs)
-	metrics.ChangedDirs.WithLabelValues(folder, hostname).Set(newMetrics.ChangedDirs)
-	metrics.Update(metrics.ChangedDirs)
-	metrics.UnmodifiedDirs.WithLabelValues(folder, hostname).Set(newMetrics.UnmodifiedDirs)
-	metrics.Update(metrics.UnmodifiedDirs)
-	metrics.Errors.WithLabelValues(folder, hostname).Set(newMetrics.Errors)
-	metrics.Update(metrics.Errors)
-}
-
-func prepareBackupMetricJSON(newMetrics rawMetrics) stats {
-	snapshotList, err := listSnapshots()
-	if err != nil {
-		commandError = err
-	}
-
-	currentStats := stats{
-		Name:          os.Getenv(hostname),
-		BackupMetrics: newMetrics,
-		Snapshots:     snapshotList,
-	}
-	return currentStats
-}
-
-// postToURL will convert the object you passed to json
-// and post it to the defined stats URL
-func postToURL(data interface{}) error {
-	url := os.Getenv(statsURLEnv)
-	if url == "" {
-		return nil
-	}
-
-	JSONStats, err := json.Marshal(data)
-	if err != nil {
-		return err
-	}
-
-	postBody := bytes.NewReader(JSONStats)
-
-	resp, err := http.Post(url, "application/json", postBody)
-	if err != nil || !strings.HasPrefix(resp.Status, "200") {
-		httpCode := ""
-		if resp == nil {
-			httpCode = "http status unavailable"
-		} else {
-			httpCode = resp.Status
-		}
-		return fmt.Errorf("Could not send webhook: %v http status code: %v", err, httpCode)
-	} else {
-		fmt.Printf("Pushed stats to %v\n", url)
-		return nil
-	}
-}
-
-func getRestoreDir() string {
-	if value, ok := os.LookupEnv(restoreDirEnv); ok {
-		return value
-	}
-	return "/restore"
-}
-
-func updateSnapshots() error {
-	fmt.Println("Update webhook with snapshots")
-
-	snapshots, err := listSnapshots()
-	if err != nil {
-		return err
-	}
-
-	return postToURL(snapshots)
+	return strings.Replace(resticString, "s3:", "", -1)
 }
