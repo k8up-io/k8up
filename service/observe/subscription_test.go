@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"testing"
 
-	corev1 "k8s.io/api/core/v1"
+	batchv1 "k8s.io/api/batch/v1"
 )
 
 func TestBroker_Subscribe(t *testing.T) {
@@ -172,7 +172,7 @@ func TestBroker_Notify(t *testing.T) {
 				state: PodState{
 					BaasID:     "test",
 					Repository: "test",
-					State:      string(corev1.PodFailed),
+					State:      batchv1.JobFailed,
 				},
 			},
 		},
@@ -187,7 +187,7 @@ func TestBroker_Notify(t *testing.T) {
 				state: PodState{
 					BaasID:     "test",
 					Repository: "test",
-					State:      string(corev1.PodFailed),
+					State:      batchv1.JobFailed,
 				},
 			},
 		},

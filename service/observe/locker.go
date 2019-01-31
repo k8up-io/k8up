@@ -6,13 +6,23 @@ import (
 )
 
 const (
-	RestoreType JobType = "Restore"
-	BackupType  JobType = "Backup"
-	PruneType   JobType = "Prune"
-	CheckType   JobType = "Check"
+	RestoreName JobName = "Restore"
+	BackupName  JobName = "Backup"
+	PruneName   JobName = "Prune"
+	CheckName   JobName = "Check"
 )
 
-type JobType string
+// JobName is a type for the various job names.
+type JobName string
+
+// JobType Contains the name, timestamp and sequence of each job in the locks.
+// The timestamp is used for reporting only.
+type JobType struct {
+	Name      JobName
+	Timestamp time.Time
+	sequence  int64
+	Backend   string
+}
 
 // sempahoreMap is an interface to make the sync map type safe.
 type semaphoreMap interface {
@@ -23,7 +33,7 @@ type semaphoreMap interface {
 
 // concreteSemaphoreMap implements semaphoreMap
 type concreteSemaphoreMap struct {
-	sync.Map
+	mutexMap map[string]semaphore
 }
 
 // Locker handles the semaphores necessary to realize the locking according to
@@ -35,80 +45,125 @@ type concreteSemaphoreMap struct {
 // Due to the complexity of these rules they are handled in their service. The
 // locker doesn't contain any of the logic above.
 type Locker interface {
-	WaitForRun(backend string, jobs []JobType)
-	Increment(backend string, job JobType)
-	Decrement(backend string, job JobType)
+	WaitForRun(backend string, jobs []JobName)
+	Increment(backend string, job JobName) JobType
+	Decrement(job JobType)
 	Remove(backend string)
-	IsLocked(backend string, jobs JobType) bool
+	IsLocked(backend string, jobs JobName) bool
 }
 
 // concreteLocker implements the Locker interface
 type concreteLocker struct {
 	semaphores semaphoreMap
 	mutex      sync.Mutex
+	sequence   int64
 }
 
 // semaphore holds a counter for each job type
 type semaphore struct {
-	backup  int
-	prune   int
-	restore int
-	check   int
+	backup  []JobType
+	prune   []JobType
+	restore []JobType
+	check   []JobType
 }
 
 func newLocker() *concreteLocker {
 	locker := &concreteLocker{
-		semaphores: &concreteSemaphoreMap{},
+		semaphores: &concreteSemaphoreMap{
+			mutexMap: make(map[string]semaphore),
+		},
 	}
 
 	return locker
 }
 
 func (s *concreteSemaphoreMap) load(name string) semaphore {
-	if obj, ok := s.Map.Load(name); ok {
-		if sem, ok := obj.(semaphore); ok {
-			return sem
-		}
+	if sem, ok := s.mutexMap[name]; ok {
+		return sem
 	}
-	return semaphore{}
+	return semaphore{
+		backup:  []JobType{},
+		prune:   []JobType{},
+		restore: []JobType{},
+		check:   []JobType{},
+	}
 }
 
 func (s *concreteSemaphoreMap) add(name string, sem semaphore) {
-	s.Map.Store(name, sem)
+	s.mutexMap[name] = sem
 }
 
 func (s *concreteSemaphoreMap) remove(name string) {
-	s.Map.Delete(name)
+	delete(s.mutexMap, name)
 }
 
 // IsLocked will return true if the semaphore for the given jobType and backend
-// isn't zero.
-func (c *concreteLocker) IsLocked(backend string, job JobType) bool {
+// isn't zero. It does not consider the timestamp.
+func (c *concreteLocker) IsLocked(backend string, job JobName) bool {
 	sem := c.semaphores.load(backend)
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 	switch job {
-	case PruneType:
-		return sem.prune > 0
-	case RestoreType:
-		return sem.restore > 0
-	case BackupType:
-		return sem.backup > 0
-	case CheckType:
-		return sem.check > 0
+	case PruneName:
+		return len(sem.prune) > 0
+	case RestoreName:
+		return len(sem.restore) > 0
+	case BackupName:
+		return len(sem.backup) > 0
+	case CheckName:
+		return len(sem.check) > 0
 	default:
 		return false
 	}
 }
 
-// Increment will increment the semaphore for the backend and job type
-func (c *concreteLocker) Increment(backend string, job JobType) {
+func (c *concreteLocker) isLockedBefore(sequence int64, backend string, job JobName) bool {
+	if c.IsLocked(backend, job) {
+		c.mutex.Lock()
+		defer c.mutex.Unlock()
+		sem := c.semaphores.load(backend)
+		switch job {
+		case PruneName:
+			return c.isBefore(sem.prune, sequence)
+		case RestoreName:
+			return c.isBefore(sem.restore, sequence)
+		case BackupName:
+			return c.isBefore(sem.backup, sequence)
+		case CheckName:
+			return c.isBefore(sem.check, sequence)
+		default:
+			return false
+		}
+	}
+	return false
+}
+
+func (c *concreteLocker) isBefore(registered []JobType, sequence int64) bool {
+	for _, reg := range registered {
+		if reg.sequence <= sequence {
+			return true
+		}
+	}
+	return false
+}
+
+// Increment will increment the semaphore for the backend and job type and
+// returns an object containing information about the lock. It will be needed
+// to decrement the semaphore again.
+func (c *concreteLocker) Increment(backend string, jobName JobName) JobType {
+	job := JobType{
+		Name:      jobName,
+		sequence:  c.incrementSequence(),
+		Timestamp: time.Now(),
+		Backend:   backend,
+	}
 	c.incOrDec(backend, job, true)
+	return job
 }
 
 // Decrement will decrement the semaphore for the backend and job type
-func (c *concreteLocker) Decrement(backend string, job JobType) {
-	c.incOrDec(backend, job, false)
+func (c *concreteLocker) Decrement(job JobType) {
+	c.incOrDec(job.Backend, job, false)
 }
 
 // incOrDec will either increment or decrement the semaphore depenending on the
@@ -117,33 +172,42 @@ func (c *concreteLocker) incOrDec(backend string, job JobType, inc bool) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 	sem := c.semaphores.load(backend)
-	switch job {
-	case PruneType:
+	switch job.Name {
+	case PruneName:
 		if inc {
-			sem.prune++
+			sem.prune = append(sem.prune, job)
 		} else {
-			sem.prune--
+			sem.prune = c.removeSequence(sem.prune, job)
 		}
-	case BackupType:
+	case BackupName:
 		if inc {
-			sem.backup++
+			sem.backup = append(sem.backup, job)
 		} else {
-			sem.backup--
+			sem.backup = c.removeSequence(sem.backup, job)
 		}
-	case RestoreType:
+	case RestoreName:
 		if inc {
-			sem.restore++
+			sem.restore = append(sem.restore, job)
 		} else {
-			sem.restore--
+			sem.restore = c.removeSequence(sem.restore, job)
 		}
-	case CheckType:
+	case CheckName:
 		if inc {
-			sem.check++
+			sem.check = append(sem.check, job)
 		} else {
-			sem.check--
+			sem.check = c.removeSequence(sem.check, job)
 		}
 	}
 	c.semaphores.add(backend, sem)
+}
+
+func (c *concreteLocker) removeSequence(registered []JobType, job JobType) []JobType {
+	for i, registeredJob := range registered {
+		if registeredJob.sequence == job.sequence {
+			registered = append(registered[:i], registered[i+1:]...)
+		}
+	}
+	return registered
 }
 
 // Remove removes the backend from the locker
@@ -152,14 +216,15 @@ func (c *concreteLocker) Remove(backend string) {
 }
 
 // WaitForRun will loop through all job types passed for the given Repository.
-// As soon as no more jobs are running it will return.
-func (c *concreteLocker) WaitForRun(backend string, jobs []JobType) {
+// As soon as no all of these job types with a lower sequence than the current
+// one have finished, it will return.
+func (c *concreteLocker) WaitForRun(backend string, jobs []JobName) {
 
 	waiting := true
 	for waiting {
 		for i := range jobs {
 
-			if c.IsLocked(backend, jobs[i]) {
+			if c.isLockedBefore(c.sequence, backend, jobs[i]) {
 				// at least one job is still running so we set waiting true and
 				// break the loop so we don't override it again.
 				waiting = true
@@ -178,4 +243,11 @@ func (c *concreteLocker) WaitForRun(backend string, jobs []JobType) {
 		// complex todo.
 		time.Sleep(time.Second * 1)
 	}
+}
+
+func (c *concreteLocker) incrementSequence() int64 {
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
+	c.sequence++
+	return c.sequence
 }

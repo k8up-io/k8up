@@ -45,7 +45,8 @@ type WatchObjects struct {
 	Logger      log.Logger
 	Job         *batchv1.Job
 	Locker      Locker
-	JobType     JobType
+	jobType     JobType
+	JobName     JobName
 	Successfunc func(message PodState)
 	Failedfunc  func(message PodState)
 	Runningfunc func(message PodState)
@@ -157,20 +158,20 @@ func (s *Subscriber) WatchLoop(watch WatchObjects) {
 			if watch.Failedfunc != nil {
 				watch.Failedfunc(message)
 			}
-			watch.Locker.Decrement(backendString, watch.JobType)
+			watch.Locker.Decrement(watch.jobType)
 			return
 		case batchv1.JobComplete:
 			watch.Logger.Infof("%v finished successfully", jobString)
 			if watch.Successfunc != nil {
 				watch.Successfunc(message)
 			}
-			watch.Locker.Decrement(backendString, watch.JobType)
+			watch.Locker.Decrement(watch.jobType)
 			return
 		default:
 			watch.Logger.Infof("%v is %v", jobString, jobRunning)
 			if !running {
 				running = true
-				watch.Locker.Increment(backendString, watch.JobType)
+				watch.jobType = watch.Locker.Increment(backendString, watch.JobName)
 			}
 		}
 	}

@@ -79,7 +79,7 @@ func (c *checkRunner) watchState(job *batchv1.Job) {
 
 	watch := observe.WatchObjects{
 		Job:     job,
-		JobType: observe.CheckType,
+		JobName: observe.CheckName,
 		Locker:  c.observer.GetLocker(),
 		Logger:  c.Logger,
 		Failedfunc: func(message observe.PodState) {
