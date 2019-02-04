@@ -155,7 +155,7 @@ func (p *pruneRunner) watchState(job *batchv1.Job) {
 
 	watch := observe.WatchObjects{
 		Job:     job,
-		JobType: observe.PruneType,
+		JobName: observe.PruneName,
 		Locker:  p.observer.GetLocker(),
 		Logger:  p.Logger,
 		Failedfunc: func(message observe.PodState) {

@@ -82,7 +82,7 @@ func (a *archiveRunner) watchState(archiveJob *batchv1.Job) {
 	watch := observe.WatchObjects{
 		Logger:  a.Logger,
 		Job:     archiveJob,
-		JobType: observe.RestoreType,
+		JobName: observe.RestoreName,
 		Locker:  a.observer.GetLocker(),
 		Successfunc: func(message observe.PodState) {
 			a.archiver.Status.Finished = true

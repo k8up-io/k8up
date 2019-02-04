@@ -77,7 +77,7 @@ func (b *backupRunner) watchState(backupJob *batchv1.Job) {
 
 	watch := observe.WatchObjects{
 		Job:     backupJob,
-		JobType: observe.BackupType,
+		JobName: observe.BackupName,
 		Locker:  b.observer.GetLocker(),
 		Logger:  b.Logger,
 		Failedfunc: func(message observe.PodState) {

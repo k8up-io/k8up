@@ -6,11 +6,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Infowatch/cron"
 	backupv1alpha1 "github.com/vshn/k8up/apis/backup/v1alpha1"
 	"github.com/vshn/k8up/config"
 	"github.com/vshn/k8up/service"
 	"github.com/vshn/k8up/service/observe"
-	"github.com/Infowatch/cron"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
@@ -89,7 +89,7 @@ func (s *scheduleRunner) Start() error {
 
 			newRestore.Spec.KeepJobs = scheduleCopy.Spec.KeepJobs
 
-			s.waitForLock(newRestore.GetName(), service.GetRepository(newRestore.Spec.Backend), []observe.JobType{observe.PruneType, observe.CheckType})
+			s.waitForLock(newRestore.GetName(), service.GetRepository(newRestore.Spec.Backend), []observe.JobName{observe.PruneName, observe.CheckName})
 
 			_, err := s.BaasCLI.AppuioV1alpha1().Restores(scheduleCopy.Namespace).Create(&newRestore)
 			if err != nil {
@@ -115,17 +115,17 @@ func (s *scheduleRunner) Start() error {
 
 			repoString := service.GetRepository(scheduleCopy.Spec.Prune.Backend)
 
-			if locker.IsLocked(repoString, observe.PruneType) {
+			if locker.IsLocked(repoString, observe.PruneName) {
 				s.Logger.Infof("Prunejob on repo %v still running, skipping", repoString)
 				return
 			}
 
 			// Increase the prune semaphore beforehand so no new jobs will start
 			// while we're waiting here.
-			locker.Increment(repoString, observe.PruneType)
+			newLock := locker.Increment(repoString, observe.PruneName)
 
 			// Decrement the semaphore again after the job was created.
-			defer locker.Decrement(repoString, observe.PruneType)
+			defer locker.Decrement(newLock)
 
 			newPrune := backupv1alpha1.Prune{
 				ObjectMeta: metav1.ObjectMeta{
@@ -138,7 +138,7 @@ func (s *scheduleRunner) Start() error {
 
 			newPrune.Spec.KeepJobs = scheduleCopy.Spec.KeepJobs
 
-			s.waitForLock(newPrune.GetName(), repoString, []observe.JobType{observe.BackupType, observe.CheckType, observe.RestoreType})
+			s.waitForLock(newPrune.GetName(), repoString, []observe.JobName{observe.BackupName, observe.CheckName, observe.RestoreName})
 
 			_, err := s.BaasCLI.AppuioV1alpha1().Prunes(scheduleCopy.Namespace).Create(&newPrune)
 			if err != nil {
@@ -173,12 +173,12 @@ func (s *scheduleRunner) Start() error {
 
 			newCheck.Spec.KeepJobs = scheduleCopy.Spec.KeepJobs
 
-			if locker.IsLocked(service.GetRepository(newCheck.Spec.Backend), observe.CheckType) {
+			if locker.IsLocked(service.GetRepository(newCheck.Spec.Backend), observe.CheckName) {
 				s.Logger.Infof("Checkjob on repo %v still running, skipping", service.GetRepository(newCheck.Spec.Backend))
 				return
 			}
 
-			s.waitForLock(newCheck.GetName(), service.GetRepository(newCheck.Spec.Backend), []observe.JobType{observe.PruneType, observe.BackupType, observe.RestoreType})
+			s.waitForLock(newCheck.GetName(), service.GetRepository(newCheck.Spec.Backend), []observe.JobName{observe.PruneName, observe.BackupName, observe.RestoreName})
 
 			_, err := s.BaasCLI.AppuioV1alpha1().Checks(scheduleCopy.Namespace).Create(&newCheck)
 			if err != nil {
@@ -212,7 +212,7 @@ func (s *scheduleRunner) Start() error {
 
 			newBackup.Spec.KeepJobs = scheduleCopy.Spec.KeepJobs
 
-			s.waitForLock(newBackup.GetName(), service.GetRepository(newBackup.Spec.Backend), []observe.JobType{observe.PruneType, observe.CheckType})
+			s.waitForLock(newBackup.GetName(), service.GetRepository(newBackup.Spec.Backend), []observe.JobName{observe.PruneName, observe.CheckName})
 
 			_, err := s.BaasCLI.AppuioV1alpha1().Backups(scheduleCopy.Namespace).Create(&newBackup)
 			if err != nil {
@@ -246,7 +246,7 @@ func (s *scheduleRunner) Start() error {
 
 			newArchive.Spec.KeepJobs = scheduleCopy.Spec.KeepJobs
 
-			s.waitForLock(newArchive.GetName(), service.GetRepository(newArchive.Spec.Backend), []observe.JobType{observe.PruneType, observe.CheckType})
+			s.waitForLock(newArchive.GetName(), service.GetRepository(newArchive.Spec.Backend), []observe.JobName{observe.PruneName, observe.CheckName})
 
 			_, err := s.BaasCLI.AppuioV1alpha1().Archives(scheduleCopy.Namespace).Create(&newArchive)
 			if err != nil {
@@ -270,7 +270,7 @@ func ScheduledLabelFilter() string {
 	return strings.Join(filter, ", ")
 }
 
-func (s *scheduleRunner) waitForLock(name string, backend string, jobs []observe.JobType) {
+func (s *scheduleRunner) waitForLock(name string, backend string, jobs []observe.JobName) {
 	s.Logger.Infof("%v for repo %v is queued waiting for jobs %v to finish", name, backend, jobs)
 	s.observer.GetLocker().WaitForRun(backend, jobs)
 	s.Logger.Infof("All blocking jobs on %v for %v are now finished", backend, name)
