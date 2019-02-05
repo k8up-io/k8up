@@ -99,9 +99,11 @@ func run(finishC chan error, outputManager *output.Output) {
 
 	var errors error
 
+	resticCli.Unlock(false)
+	defer resticCli.Unlock(false)
+
 	if *prune {
 		fmt.Println("Removing all locks to clear stale locks")
-		resticCli.Unlock(true)
 		resticCli.Prune()
 		resticCli.ListSnapshots(false)
 		outputManager.Register(resticCli.PruneStruct)
