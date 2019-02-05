@@ -176,15 +176,23 @@ func (s *S3Spec) repoEnvs(awsAccessKeyIDName, awsSecretAccessKeyName, repoName s
 	}
 
 	var endpoint string
-	if s.Endpoint != "" && s.Bucket != "" {
-		endpoint = fmt.Sprintf("%v/%v", s.Endpoint, s.Bucket)
+	if s.Endpoint != "" {
+		endpoint = fmt.Sprintf("%v/", s.Endpoint)
 		if !restore {
 			endpoint = "s3:" + endpoint
 		}
 	} else if restore {
-		endpoint = fmt.Sprintf("%v/%v", config.GlobalRestoreS3Endpoint, config.GlobalRestoreS3Bucket)
+		endpoint = fmt.Sprintf("%v/", config.GlobalRestoreS3Endpoint)
 	} else {
-		endpoint = fmt.Sprintf("s3:%v/%v", config.GlobalS3Endpoint, config.GlobalS3Bucket)
+		endpoint = fmt.Sprintf("s3:%v/", config.GlobalS3Endpoint)
+	}
+
+	if s.Bucket != "" {
+		endpoint = endpoint + s.Bucket
+	} else if restore {
+		endpoint = endpoint + config.GlobalRestoreS3Bucket
+	} else {
+		endpoint = endpoint + config.GlobalS3Bucket
 	}
 
 	tmpEnvs = append(tmpEnvs, []corev1.EnvVar{
