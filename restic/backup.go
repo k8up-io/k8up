@@ -8,7 +8,6 @@ import (
 	"path"
 	"strconv"
 	"strings"
-	"time"
 
 	"git.vshn.net/vshn/wrestic/kubernetes"
 	"git.vshn.net/vshn/wrestic/output"
@@ -131,8 +130,7 @@ func (b *BackupStruct) backupFolder(folder, folderName string) {
 func (b *BackupStruct) StdinBackup(backupCommand, pod, container, namespace, fileExt string) {
 	fmt.Printf("backing up via %v stdin...\n", container)
 	host := os.Getenv(Hostname) + "-" + container
-	fileName := host + "-" + time.Now().Format(time.RFC3339)
-	args := []string{"backup", "--host", host, "--stdin", "--stdin-filename", fileName + fileExt}
+	args := []string{"backup", "--host", host, "--stdin", "--stdin-filename", host + fileExt}
 	b.genericCommand.exec(args, commandOptions{
 		print: true,
 		Params: kubernetes.Params{
@@ -144,7 +142,7 @@ func (b *BackupStruct) StdinBackup(backupCommand, pod, container, namespace, fil
 		stdin: true,
 	})
 	tmpMetrics := b.parse()
-	tmpMetrics.Folder = fileName
+	tmpMetrics.Folder = host
 	tmpMetrics.hostname = os.Getenv(Hostname)
 	b.rawMetrics = append(b.rawMetrics, tmpMetrics)
 	b.snapshots = b.snapshotLister.ListSnapshots(false)
