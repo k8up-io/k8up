@@ -1,6 +1,7 @@
 package restic
 
 import (
+	"archive/tar"
 	"bytes"
 	"compress/gzip"
 	"encoding/json"
@@ -24,6 +25,20 @@ type RestoreStruct struct {
 	restoreFilter string
 	verifyRestore bool
 	stats         *restoreStats
+}
+
+type fileNode struct {
+	Name       string    `json:"name"`
+	Type       string    `json:"type"`
+	Path       string    `json:"path"`
+	UID        int       `json:"uid"`
+	GID        int       `json:"gid"`
+	Size       int64     `json:"size"`
+	Mode       int       `json:"mode"`
+	Mtime      time.Time `json:"mtime"`
+	Atime      time.Time `json:"atime"`
+	Ctime      time.Time `json:"ctime"`
+	StructType string    `json:"struct_type"`
 }
 
 func newRestore() *RestoreStruct {
@@ -63,6 +78,7 @@ type restoreStats struct {
 
 type tarStream struct {
 	path       string
+	tarHeader  *tar.Header
 	readerChan chan io.ReadCloser
 	runFunc    func()
 }
@@ -191,7 +207,16 @@ func (r *RestoreStruct) compress(file tarStream, stats *restoreStats) io.Reader 
 
 		go file.runFunc()
 		reader := <-file.readerChan
-		_, err := io.Copy(gzpWriter, reader)
+		var writer io.Writer
+		if file.tarHeader != nil {
+			tw := tar.NewWriter(gzpWriter)
+			tw.WriteHeader(file.tarHeader)
+			writer = tw
+			defer tw.Close()
+		} else {
+			writer = gzpWriter
+		}
+		_, err := io.Copy(writer, reader)
 		if err != nil {
 			fmt.Printf("\n%v\n", err)
 			r.errorMessage = err
@@ -218,16 +243,19 @@ func (r *RestoreStruct) parsePath(paths []string) string {
 func (r *RestoreStruct) getTarReader(snapshot Snapshot) tarStream {
 	args := []string{"dump", snapshot.ID}
 
+	snapshotRoot, header := r.getSnapshotRoot(snapshot)
+
 	// Currently baas and wrestic have one path per snapshot
-	tmpArgs := append(args, snapshot.Paths[0])
+	tmpArgs := append(args, snapshotRoot)
 	cmd := exec.Command(restic, tmpArgs...)
 	cmd.Env = os.Environ()
 
 	readerChan := make(chan io.ReadCloser, 0)
 
 	return tarStream{
-		path:       snapshot.Paths[0],
+		path:       snapshotRoot,
 		readerChan: readerChan,
+		tarHeader:  header,
 		runFunc: func() {
 
 			stdOut, err := cmd.StdoutPipe()
@@ -254,4 +282,33 @@ func (r *RestoreStruct) getTarReader(snapshot Snapshot) tarStream {
 			}
 		},
 	}
+}
+
+func (r *RestoreStruct) getSnapshotRoot(snapshot Snapshot) (string, *tar.Header) {
+	cmd := newGenericCommand()
+	args := []string{"ls", snapshot.ID, "--json"}
+	cmd.exec(args, commandOptions{print: false})
+	pathJSON := cmd.GetStdOut()[1]
+
+	file := fileNode{}
+	err := json.Unmarshal([]byte(pathJSON), &file)
+	if err != nil {
+		return snapshot.Paths[0], nil
+	}
+
+	var header *tar.Header
+	if len(cmd.GetStdOut()) == 2 {
+		header = &tar.Header{
+			Name:       file.Path,
+			Size:       file.Size,
+			Mode:       int64(file.Mode),
+			Uid:        file.UID,
+			Gid:        file.GID,
+			ModTime:    file.Mtime,
+			AccessTime: file.Atime,
+			ChangeTime: file.Ctime,
+		}
+	}
+
+	return file.Path, header
 }
