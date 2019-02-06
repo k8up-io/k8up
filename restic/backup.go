@@ -130,7 +130,7 @@ func (b *BackupStruct) backupFolder(folder, folderName string) {
 func (b *BackupStruct) StdinBackup(backupCommand, pod, container, namespace, fileExt string) {
 	fmt.Printf("backing up via %v stdin...\n", container)
 	host := os.Getenv(Hostname) + "-" + container
-	args := []string{"backup", "--host", host, "--stdin", "--stdin-filename", host + fileExt}
+	args := []string{"backup", "--host", host, "--stdin", "--stdin-filename", "/" + host + fileExt}
 	b.genericCommand.exec(args, commandOptions{
 		print: true,
 		Params: kubernetes.Params{
