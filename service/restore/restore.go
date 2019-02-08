@@ -5,20 +5,23 @@ import (
 
 	backupv1alpha1 "github.com/vshn/k8up/apis/backup/v1alpha1"
 	"github.com/vshn/k8up/service"
+	"github.com/vshn/k8up/service/observe"
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
 // Restore holds the state of the restore handler. It implements ServiceHandler intrface.
 type Restore struct {
 	service.CommonObjects
-	config config
+	config   config
+	observer *observe.Observer
 }
 
 // NewRestore returns a new restore.
-func NewRestore(common service.CommonObjects) *Restore {
+func NewRestore(common service.CommonObjects, observer *observe.Observer) *Restore {
 	return &Restore{
 		CommonObjects: common,
 		config:        newConfig(),
+		observer:      observer,
 	}
 }
 
@@ -46,7 +49,7 @@ func (r *Restore) Ensure(obj runtime.Object) error {
 	// Create a restore.
 	restoreCopy := restore.DeepCopy()
 
-	rst = NewRestoreRunner(restoreCopy, r.CommonObjects)
+	rst = newRestoreRunner(restoreCopy, r.CommonObjects, r.observer)
 
 	return rst.Start()
 }

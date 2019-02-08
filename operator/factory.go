@@ -1,6 +1,11 @@
 package operator
 
 import (
+	"github.com/spotahome/kooper/client/crd"
+	"github.com/spotahome/kooper/operator"
+	"github.com/spotahome/kooper/operator/controller"
+	"github.com/spotahome/kooper/operator/resource"
+	"github.com/spotahome/kooper/operator/retrieve"
 	baas8scli "github.com/vshn/k8up/client/k8s/clientset/versioned"
 	"github.com/vshn/k8up/log"
 	"github.com/vshn/k8up/service"
@@ -11,11 +16,6 @@ import (
 	"github.com/vshn/k8up/service/prune"
 	"github.com/vshn/k8up/service/restore"
 	"github.com/vshn/k8up/service/schedule"
-	"github.com/spotahome/kooper/client/crd"
-	"github.com/spotahome/kooper/operator"
-	"github.com/spotahome/kooper/operator/controller"
-	"github.com/spotahome/kooper/operator/resource"
-	"github.com/spotahome/kooper/operator/retrieve"
 	"k8s.io/client-go/kubernetes"
 )
 
@@ -62,7 +62,7 @@ func create(options options) operator.Operator {
 	backupHandler := newHandler(options.logger, backup)
 
 	rCRD := newRestoreCRD(options.clients)
-	restore := restore.NewRestore(commonObjects)
+	restore := restore.NewRestore(commonObjects, observe.GetInstance())
 	restoreHandler := newHandler(options.logger, restore)
 
 	aCRD := newArchiveCRD(options.clients)

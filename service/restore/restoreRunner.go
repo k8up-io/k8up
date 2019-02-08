@@ -6,28 +6,32 @@ import (
 
 	backupv1alpha1 "github.com/vshn/k8up/apis/backup/v1alpha1"
 	"github.com/vshn/k8up/service"
+	"github.com/vshn/k8up/service/observe"
 	"github.com/vshn/k8up/service/schedule"
+	batchv1 "k8s.io/api/batch/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
-type RestoreRunner struct {
+type restoreRunner struct {
 	restore *backupv1alpha1.Restore
 	service.CommonObjects
-	config config
+	config   config
+	observer *observe.Observer
 }
 
-// NewRestoreRunner returns a new restore runner
-func NewRestoreRunner(restore *backupv1alpha1.Restore, common service.CommonObjects) *RestoreRunner {
-	return &RestoreRunner{
+// newRestoreRunner returns a new restore runner
+func newRestoreRunner(restore *backupv1alpha1.Restore, common service.CommonObjects, observer *observe.Observer) *restoreRunner {
+	return &restoreRunner{
 		restore:       restore,
 		CommonObjects: common,
 		config:        newConfig(),
+		observer:      observer,
 	}
 }
 
 // Start is part of the ServiceRunner interface.
-func (r *RestoreRunner) Start() error {
+func (r *restoreRunner) Start() error {
 
 	r.Logger.Infof("Received restore job %v in namespace %v", r.restore.Name, r.restore.Namespace)
 
@@ -37,6 +41,8 @@ func (r *RestoreRunner) Start() error {
 	}
 
 	restoreJob := newRestoreJob(r.restore, r.config)
+
+	go r.watchState(restoreJob)
 
 	_, err := r.K8sCli.Batch().Jobs(r.restore.Namespace).Create(restoreJob)
 	if err != nil {
@@ -55,18 +61,18 @@ func (r *RestoreRunner) Start() error {
 
 // Stop is part of the ServiceRunner interface, it's needed for permanent
 // services like the scheduler.
-func (r *RestoreRunner) Stop() error {
+func (r *restoreRunner) Stop() error {
 	// Currently noop
 	return nil
 }
 
 // SameSpec checks if the CRD instance changed. This is is only viable for
 // permanent services like the scheduler, that may change.
-func (r *RestoreRunner) SameSpec(object runtime.Object) bool {
+func (r *restoreRunner) SameSpec(object runtime.Object) bool {
 	return false
 }
 
-func (r *RestoreRunner) updateStatus() error {
+func (r *restoreRunner) updateStatus() error {
 	// Just overwrite the resource
 	result, err := r.BaasCLI.AppuioV1alpha1().Restores(r.restore.Namespace).Get(r.restore.Name, metav1.GetOptions{})
 	if err != nil {
@@ -81,7 +87,7 @@ func (r *RestoreRunner) updateStatus() error {
 	return nil
 }
 
-func (r *RestoreRunner) getScheduledCRDsInNameSpace() *backupv1alpha1.RestoreList {
+func (r *restoreRunner) getScheduledCRDsInNameSpace() *backupv1alpha1.RestoreList {
 	opts := metav1.ListOptions{
 		LabelSelector: schedule.ScheduledLabelFilter(),
 	}
@@ -94,7 +100,7 @@ func (r *RestoreRunner) getScheduledCRDsInNameSpace() *backupv1alpha1.RestoreLis
 	return restores
 }
 
-func (r *RestoreRunner) cleanupRestore(restore *backupv1alpha1.Restore) error {
+func (r *restoreRunner) cleanupRestore(restore *backupv1alpha1.Restore) error {
 	r.Logger.Infof("Cleanup restore %v", restore.Name)
 	option := metav1.DeletePropagationForeground
 	return r.BaasCLI.AppuioV1alpha1().Restores(restore.Namespace).Delete(restore.Name, &metav1.DeleteOptions{
@@ -102,7 +108,7 @@ func (r *RestoreRunner) cleanupRestore(restore *backupv1alpha1.Restore) error {
 	})
 }
 
-func (r *RestoreRunner) removeOldestPrunes(restores *backupv1alpha1.RestoreList, maxJobs int) {
+func (r *restoreRunner) removeOldestRestores(restores *backupv1alpha1.RestoreList, maxJobs int) {
 	if maxJobs == 0 {
 		maxJobs = r.config.GlobalKeepJobs
 	}
@@ -118,4 +124,31 @@ func (r *RestoreRunner) removeOldestPrunes(restores *backupv1alpha1.RestoreList,
 		r.Logger.Infof("Removing job %v limit reached", restores.Items[i].Name)
 		r.cleanupRestore(&restores.Items[i])
 	}
+}
+
+func (r *restoreRunner) watchState(restoreJob *batchv1.Job) {
+	subscription, err := r.observer.GetBroker().Subscribe(restoreJob.Labels[r.config.Identifier])
+	if err != nil {
+		r.Logger.Errorf("Cannot watch state of backup %v", r.restore.Name)
+	}
+
+	watch := observe.WatchObjects{
+		Job:     restoreJob,
+		JobName: observe.RestoreName,
+		Locker:  r.observer.GetLocker(),
+		Logger:  r.Logger,
+		Failedfunc: func(message observe.PodState) {
+			r.restore.Status.Failed = true
+			r.restore.Status.Finished = true
+			r.updateStatus()
+		},
+		Successfunc: func(message observe.PodState) {
+			r.restore.Status.Finished = true
+			r.updateStatus()
+		},
+	}
+
+	subscription.WatchLoop(watch)
+
+	r.removeOldestRestores(r.getScheduledCRDsInNameSpace(), r.restore.Spec.KeepJobs)
 }

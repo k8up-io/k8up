@@ -1,14 +1,10 @@
 package restore
 
 import (
-	"fmt"
-	"time"
-
 	backupv1alpha1 "github.com/vshn/k8up/apis/backup/v1alpha1"
 	"github.com/vshn/k8up/service"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func newRestoreJob(restore *backupv1alpha1.Restore, config config) *batchv1.Job {
@@ -54,47 +50,13 @@ func newRestoreJob(restore *backupv1alpha1.Restore, config config) *batchv1.Job 
 		methodDefined = true
 	}
 
-	jobName := fmt.Sprintf("restorejob-%v", time.Now().Unix())
-	podName := fmt.Sprintf("restorepod-%v", time.Now().Unix())
+	restoreJob := service.GetBasicJob("restore", config.Global, &restore.ObjectMeta)
 
-	return &batchv1.Job{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      jobName,
-			Namespace: restore.Namespace,
-			Labels: map[string]string{
-				config.Label: "true",
-			},
-			OwnerReferences: []metav1.OwnerReference{
-				service.NewOwnerReference(restore, backupv1alpha1.RestoreKind),
-			},
-		},
-		Spec: batchv1.JobSpec{
-			Template: corev1.PodTemplateSpec{
-				ObjectMeta: metav1.ObjectMeta{
-					Namespace: restore.Namespace,
-					Labels: map[string]string{
-						config.Label: "true",
-					},
-				},
-				Spec: corev1.PodSpec{
-					RestartPolicy: corev1.RestartPolicy(config.RestartPolicy),
-					Volumes:       volumes,
-					Containers: []corev1.Container{
-						{
-							Name:            podName,
-							Image:           config.image,
-							VolumeMounts:    mounts,
-							Env:             setUpEnvVariables(restore, config),
-							ImagePullPolicy: corev1.PullAlways,
-							TTY:             true,
-							Stdin:           true,
-							Args:            args,
-						},
-					},
-				},
-			},
-		},
-	}
+	restoreJob.Spec.Template.Spec.Containers[0].Args = args
+
+	restoreJob.Spec.Template.Spec.Containers[0].Env = setUpEnvVariables(restore, config)
+
+	return restoreJob
 }
 
 func setUpEnvVariables(restore *backupv1alpha1.Restore, config config) []corev1.EnvVar {
