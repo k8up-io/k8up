@@ -17,14 +17,15 @@ import (
 // BackupStruct holds the state of a backup command.
 type BackupStruct struct {
 	genericCommand
-	folderList     []string
-	backupDir      string
-	rawMetrics     []rawMetrics
-	snapshotLister *ListSnapshotsStruct
-	parsed         bool
-	startTimeStamp int64
-	endTimeStamp   int64
-	snapshots      []Snapshot
+	folderList        []string
+	backupDir         string
+	rawMetrics        []rawMetrics
+	snapshotLister    *ListSnapshotsStruct
+	parsed            bool
+	startTimeStamp    int64
+	endTimeStamp      int64
+	snapshots         []Snapshot
+	stdinErrorMessage error
 }
 
 type rawMetrics struct {
@@ -146,6 +147,8 @@ func (b *BackupStruct) StdinBackup(backupCommand, pod, container, namespace, fil
 	tmpMetrics.hostname = os.Getenv(Hostname)
 	b.rawMetrics = append(b.rawMetrics, tmpMetrics)
 	b.snapshots = b.snapshotLister.ListSnapshots(false)
+	b.stdinErrorMessage = b.errorMessage
+	b.errorMessage = nil
 }
 
 // GetWebhookData a slice of objects that should be sent to the webhook endpoint.
@@ -319,4 +322,26 @@ func (b *BackupStruct) newPromMetrics() *promMetrics {
 func (w *WebhookStats) ToJson() []byte {
 	jsonData, _ := json.Marshal(w)
 	return jsonData
+}
+
+// GetError returns if there was an error either in the stdin or normal backup.
+func (b *BackupStruct) GetError() error {
+	var pvcErr error
+	var stdinErr error
+	var finalError error
+	if b.errorMessage != nil {
+		pvcErr = fmt.Errorf("pvc backup error: %v", b.errorMessage)
+		finalError = pvcErr
+	}
+
+	if b.stdinErrorMessage != nil {
+		stdinErr = fmt.Errorf("stdin backup error: %v", b.stdinErrorMessage)
+		finalError = pvcErr
+	}
+
+	if b.stdinErrorMessage != nil && b.errorMessage != nil {
+		finalError = fmt.Errorf("%v\n%v", pvcErr, stdinErr)
+	}
+
+	return finalError
 }

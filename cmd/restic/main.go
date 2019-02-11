@@ -9,6 +9,8 @@ import (
 	"syscall"
 	"time"
 
+	"git.vshn.net/vshn/wrestic/kubernetes"
+
 	"git.vshn.net/vshn/wrestic/output"
 	"git.vshn.net/vshn/wrestic/restic"
 	"git.vshn.net/vshn/wrestic/s3"
@@ -18,6 +20,8 @@ import (
 const (
 	promURLEnv    = "PROM_URL"
 	webhookURLEnv = "STATS_URL"
+	commandEnv    = "BACKUPCOMMAND_ANNOTATION"
+	fileextEnv    = "FILEEXTENSION_ANNOTATION"
 )
 
 type arrayOpts []string
@@ -33,7 +37,6 @@ func (a *arrayOpts) Set(value string) error {
 
 var (
 	check         = flag.Bool("check", false, "Set if the container should run a check")
-	stdin         = flag.Bool("stdin", false, "Set to enable stdin backup")
 	prune         = flag.Bool("prune", false, "Set if the container should run a prune")
 	restore       = flag.Bool("restore", false, "Whether or not a restore should be done")
 	restoreSnap   = flag.String("restoreSnap", "", "Snapshot ID, if empty takes the latest snapshot")
@@ -45,8 +48,6 @@ var (
 )
 
 func main() {
-
-	flag.Var(&stdinOpts, "arrayOpts", "Options needed for the stding backup. Format: command,pod,container")
 
 	flag.Parse()
 
@@ -97,7 +98,7 @@ func run(finishC chan error, outputManager *output.Output) {
 		finishC <- fmt.Errorf("error contacting the repository: %v\n", resticCli.Initrepo.GetError())
 	}
 
-	var errors error
+	var criticalError error
 
 	resticCli.Unlock(false)
 	defer resticCli.Unlock(false)
@@ -108,7 +109,7 @@ func run(finishC chan error, outputManager *output.Output) {
 		resticCli.ListSnapshots(false)
 		outputManager.Register(resticCli.PruneStruct)
 		outputManager.Register(resticCli.ListSnapshotsStruct)
-		errors = resticCli.PruneStruct.GetError()
+		criticalError = resticCli.PruneStruct.GetError()
 		commandRun = true
 	}
 	if *check {
@@ -118,53 +119,68 @@ func run(finishC chan error, outputManager *output.Output) {
 		commandRun = true
 	}
 
-	if *restore && errors == nil {
+	if *restore && criticalError == nil {
 		snapshots = resticCli.ListSnapshots(false)
-		errors = resticCli.ListSnapshotsStruct.GetError()
+		criticalError = resticCli.ListSnapshotsStruct.GetError()
 		resticCli.Restore(*restoreSnap, *restoreType, snapshots, os.Getenv(restic.RestoreDirEnv), *restoreFilter, *verifyRestore)
-		errors = resticCli.RestoreStruct.GetError()
+		criticalError = resticCli.RestoreStruct.GetError()
 		commandRun = true
 		outputManager.Register(resticCli.RestoreStruct)
 	}
-	if *archive && errors == nil {
+	if *archive && criticalError == nil {
 		snapshots = resticCli.ListSnapshots(true)
-		errors = resticCli.ListSnapshotsStruct.GetError()
+		criticalError = resticCli.ListSnapshotsStruct.GetError()
 		resticCli.Archive(snapshots, *restoreType, os.Getenv(restic.RestoreDirEnv), *restoreFilter, *verifyRestore)
-		errors = resticCli.RestoreStruct.GetError()
+		criticalError = resticCli.RestoreStruct.GetError()
 		commandRun = true
 		outputManager.Register(resticCli.RestoreStruct)
-	}
-
-	if *stdin || !commandRun {
-		go startMetrics(outputManager)
-	}
-
-	if *stdin {
-		fmt.Println("Backup commands detected")
-		for _, stdin := range stdinOpts {
-			optsSplitted := strings.Split(stdin, ",")
-			if len(optsSplitted) < 4 {
-				finishC <- fmt.Errorf("not enough arguments %v for stdin", stdin)
-			} else if len(optsSplitted) == 4 {
-				resticCli.StdinBackup(optsSplitted[0], optsSplitted[1], optsSplitted[2], optsSplitted[3], "")
-				errors = resticCli.BackupStruct.GetError()
-			} else {
-				resticCli.StdinBackup(optsSplitted[0], optsSplitted[1], optsSplitted[2], optsSplitted[3], optsSplitted[4])
-				errors = resticCli.BackupStruct.GetError()
-			}
-		}
 	}
 
 	// Backup should run without any params but should also not run when
-	// something else is desired
+	// something else is desired. Also it will always try to list pods. If
+	// wrestic is run on non kubernetes hosts it will just do file backups.
 	if !commandRun {
+		go startMetrics(outputManager)
+
+		// the k8up operator passes the namespace as the hostname. So we can
+		// use that information to determine in what namespace we currently are.
+		namespace := os.Getenv(restic.Hostname)
+
+		if namespace != "" {
+
+			commandAnnotation := os.Getenv(commandEnv)
+			if commandAnnotation == "" {
+				commandAnnotation = "appuio.ch/backupcommand"
+			}
+			fileextAnnotation := os.Getenv(fileextEnv)
+			if fileextAnnotation == "" {
+				fileextAnnotation = "backup.appuio.ch/file-extension"
+			}
+
+			podLister := kubernetes.NewPodLister(commandAnnotation, fileextAnnotation, namespace)
+
+			podList, err := podLister.ListPods()
+
+			if err == nil {
+				for _, pod := range podList {
+					resticCli.StdinBackup(pod.Command, pod.PodName, pod.ContainerName, pod.Namespace, pod.FileExtension)
+					criticalError = resticCli.BackupStruct.GetError()
+				}
+			} else {
+				newErr := fmt.Errorf("error listing pods: %v", err)
+				fmt.Printf("%v\nSkipping backup commands\n", newErr)
+				criticalError = newErr
+			}
+
+		}
+
 		resticCli.Backup()
-		errors = resticCli.BackupStruct.GetError()
+		criticalError = resticCli.BackupStruct.GetError()
 		outputManager.Register(resticCli.BackupStruct)
 		stopMetrics(outputManager)
 	}
 
-	finishC <- errors
+	finishC <- criticalError
 }
 
 func startMetrics(outputManager output.Trigger) {
