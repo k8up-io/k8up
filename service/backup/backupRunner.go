@@ -1,7 +1,6 @@
 package backup
 
 import (
-	"fmt"
 	"sort"
 	"strconv"
 
@@ -38,18 +37,8 @@ func (b *backupRunner) Start() error {
 	b.updateBackupStatus()
 
 	volumes := b.listPVCs(b.config.annotation)
-	backupCommands := b.listBackupCommands()
 
 	backupJob := newBackupJob(volumes, b.backup.Name, b.backup, b.config)
-
-	if len(volumes) == 0 && len(backupCommands) == 1 {
-		b.Logger.Infof("No suitable PVCs or backup commands found in %v, skipping backup", b.backup.Namespace)
-		return nil
-	}
-
-	if len(backupCommands) > 1 {
-		backupJob.Spec.Template.Spec.Containers[0].Args = backupCommands
-	}
 
 	go b.watchState(backupJob)
 
@@ -110,14 +99,14 @@ func (b *backupRunner) listPVCs(annotation string) []corev1.Volume {
 		tmpAnnotation, ok := annotations[annotation]
 
 		if !b.containsAccessMode(item.Spec.AccessModes, "ReadWriteMany") && !ok {
-			b.Logger.Infof("PVC %v isn't RWX", item.Name)
+			b.Logger.Infof("PVC %v/%v isn't RWX", item.GetNamespace(), item.GetName())
 			continue
 		}
 
 		if !ok {
-			b.Logger.Infof("PVC %v doesn't have annotation, adding to list...", item.Name)
+			b.Logger.Infof("PVC %v/%v doesn't have annotation, adding to list...", item.GetNamespace(), item.GetName())
 		} else if anno, _ := strconv.ParseBool(tmpAnnotation); !anno {
-			b.Logger.Infof("PVC %v annotation is %v. Skipping", item.Name, tmpAnnotation)
+			b.Logger.Infof("PVC %v/%v annotation is %v. Skipping", item.GetNamespace(), item.GetName(), tmpAnnotation)
 			continue
 		} else {
 			b.Logger.Infof("Adding %v to list", item.Name)
@@ -146,46 +135,6 @@ func (b *backupRunner) containsAccessMode(s []corev1.PersistentVolumeAccessMode,
 		}
 	}
 	return false
-}
-
-func (b *backupRunner) listBackupCommands() []string {
-	b.Logger.Infof("Listing all pods with annotation %v in namespace %v", b.config.backupCommandAnnotation, b.backup.Namespace)
-
-	tmp := make([]string, 0)
-
-	pods, err := b.K8sCli.Core().Pods(b.backup.Namespace).List(metav1.ListOptions{})
-	if err != nil {
-		b.Logger.Errorf("Error listing backup commands: %v\n", err)
-		return tmp
-	}
-
-	tmp = append(tmp, "-stdin")
-
-	sameOwner := make(map[string]bool)
-
-	for _, pod := range pods.Items {
-		if pod.Status.Phase != corev1.PodRunning {
-			continue
-		}
-		annotations := pod.GetAnnotations()
-
-		if command, ok := annotations[b.config.backupCommandAnnotation]; ok {
-
-			fileExtension := annotations[b.config.fileExtensionAnnotation]
-
-			owner := pod.OwnerReferences
-			firstOwnerID := string(owner[0].UID)
-
-			if _, ok := sameOwner[firstOwnerID]; !ok {
-				sameOwner[firstOwnerID] = true
-				args := fmt.Sprintf("%v,%v,%v,%v,%v", command, pod.Name, pod.Spec.Containers[0].Name, b.backup.Namespace, fileExtension)
-				tmp = append(tmp, "-arrayOpts", args)
-			}
-
-		}
-	}
-
-	return tmp
 }
 
 func (b *backupRunner) removeOldestBackups(backups *backupv1alpha1.BackupList, maxJobs int) {
