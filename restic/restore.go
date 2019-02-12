@@ -247,7 +247,7 @@ func (r *RestoreStruct) getTarReader(snapshot Snapshot) tarStream {
 
 	// Currently baas and wrestic have one path per snapshot
 	tmpArgs := append(args, snapshotRoot)
-	cmd := exec.Command(restic, tmpArgs...)
+	cmd := exec.Command(getResticBin(), tmpArgs...)
 	cmd.Env = os.Environ()
 
 	readerChan := make(chan io.ReadCloser, 0)
