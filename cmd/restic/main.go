@@ -95,12 +95,17 @@ func run(finishC chan error, outputManager *output.Output) {
 	resticCli.InitRepository(s3BackupClient)
 
 	if resticCli.Initrepo.GetError() != nil {
-		finishC <- fmt.Errorf("error contacting the repository: %v\n", resticCli.Initrepo.GetError())
+		finishC <- fmt.Errorf("error contacting the repository: %v", resticCli.Initrepo.GetError())
+		return
 	}
 
 	var criticalError error
 
 	resticCli.Unlock(false)
+	if resticCli.UnlockStruct.GetError() != nil {
+		finishC <- fmt.Errorf("could not unlock repository: %v", resticCli.UnlockStruct.GetError())
+		return
+	}
 	defer resticCli.Unlock(false)
 
 	if *prune {
