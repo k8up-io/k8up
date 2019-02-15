@@ -260,6 +260,7 @@ func (r *RestoreStruct) getTarReader(snapshot Snapshot) tarStream {
 
 			stdOut, err := cmd.StdoutPipe()
 			if err != nil {
+				r.errorMessage = err
 				return
 			}
 			var stdErr bytes.Buffer
@@ -268,6 +269,7 @@ func (r *RestoreStruct) getTarReader(snapshot Snapshot) tarStream {
 			err = cmd.Start()
 			if err != nil {
 				fmt.Println(err)
+				r.errorMessage = err
 				return
 			}
 
@@ -278,6 +280,7 @@ func (r *RestoreStruct) getTarReader(snapshot Snapshot) tarStream {
 			if err != nil {
 				fmt.Printf("Command failed with: '%v'\n", err)
 				fmt.Printf("Output: %v\n", stdErr.String())
+				r.errorMessage = err
 				return
 			}
 		},
