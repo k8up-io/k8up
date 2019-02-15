@@ -25,6 +25,7 @@ const (
 	BackupDirEnv   = "BACKUP_DIR"
 	restoreDirEnv  = "RESTORE_DIR"
 	listTimeoutEnv = "BACKUP_LIST_TIMEOUT"
+	repositoryEnv  = "RESTIC_REPOSITORY"
 	//Arguments for restic
 	keepLastArg    = "--keep-last"
 	keepHourlyArg  = "--keep-hourly"

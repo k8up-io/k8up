@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"net/url"
 	"os"
 	"path"
 	"strconv"
@@ -47,9 +48,10 @@ type rawMetrics struct {
 }
 
 type WebhookStats struct {
-	Name          string     `json: "name"`
-	BackupMetrics rawMetrics `json:"backup_metrics"`
-	Snapshots     []Snapshot `json:"snapshots"`
+	Name          string     `json:"name,omitempty"`
+	BucketName    string     `json:"bucket_name,omitempty"`
+	BackupMetrics rawMetrics `json:"backup_metrics,omitempty"`
+	Snapshots     []Snapshot `json:"snapshots,omitempty"`
 }
 
 type promMetrics struct {
@@ -155,10 +157,23 @@ func (b *BackupStruct) StdinBackup(backupCommand, pod, container, namespace, fil
 func (b *BackupStruct) GetWebhookData() []output.JsonMarshaller {
 	stats := make([]output.JsonMarshaller, 0)
 
+	var bucket string
+	name := os.Getenv(Hostname)
+
+	repo := strings.Replace(os.Getenv(repositoryEnv), "s3:", "", 1)
+
+	u, err := url.Parse(repo)
+	if err != nil {
+		bucket = ""
+	} else {
+		bucket = strings.Replace(u.Path, "/", "", 1)
+	}
+
 	for _, stat := range b.rawMetrics {
 		stats = append(stats, &WebhookStats{
-			Name:          os.Getenv(Hostname),
+			Name:          name,
 			BackupMetrics: stat,
+			BucketName:    bucket,
 			Snapshots:     b.snapshots,
 		})
 	}
