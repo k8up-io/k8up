@@ -1,0 +1,20 @@
+#!/bin/bash
+
+set -ev
+
+local_image="k8up"
+docker_hub_image=docker.io/vshn/k8up
+
+docker build -t "${local_image}" .
+
+docker login -u "${DOCKER_HUB_USER}" -p "${DOCKER_HUB_PASSWORD}"
+
+if [[ "${TRAVIS_BRANCH}" == "master" ]]; then
+  docker tag "${local_image}" "${docker_hub_image}:latest"
+  docker push "${docker_hub_image}:latest"
+else
+  docker tag "${local_image}" "${docker_hub_image}:${TRAVIS_BRANCH}"
+  docker push "${docker_hub_image}:${TRAVIS_BRANCH}"
+fi
+
+exit 0

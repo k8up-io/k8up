@@ -1,0 +1,10 @@
+language: go
+
+services:
+  - docker
+
+jobs:
+  include:
+    - stage: build
+      if: branch = master OR branch = dev OR tag IS present
+      script: ./script/docker-build-and-push
