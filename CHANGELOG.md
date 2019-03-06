@@ -20,9 +20,9 @@ management. Also this version needs at least v0.0.10 of wrestic.
 - Fix detection of failed jobs
 - Locking considers chronology of the jobs
 - Restore job handling
-## Changed
+### Changed
 - TraviCI instead of GitlabCI
-## Removed
+### Removed
 - Pod lockups from the operator
 
 ## [v0.1.3] - 2018-12-09
