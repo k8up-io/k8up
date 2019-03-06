@@ -1,0 +1,18 @@
+# Here we only override the restic password and the bucket from the global
+# settings.
+apiVersion: backup.appuio.ch/v1alpha1
+kind: Restore
+metadata:
+  name: restore-test
+
+spec:
+  restoreMethod:
+    s3:
+      bucket: baas-restore
+  backend:
+    repoPasswordSecretRef:
+      key: repopw
+      name: repopw
+    s3:
+      bucket: baas-namespace
+
