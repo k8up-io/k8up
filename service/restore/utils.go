@@ -62,7 +62,9 @@ func newRestoreJob(restore *backupv1alpha1.Restore, config config) *batchv1.Job 
 func setUpEnvVariables(restore *backupv1alpha1.Restore, config config) []corev1.EnvVar {
 	vars := service.DefaultEnvs(restore.Spec.Backend, config.Global)
 
-	vars = append(vars, restore.Spec.Backend.S3.RestoreEnvs(config.Global)...)
+	if restore.Spec.RestoreMethod.S3 != nil {
+		vars = append(vars, restore.Spec.RestoreMethod.S3.RestoreEnvs(config.Global)...)
+	}
 
 	return vars
 }

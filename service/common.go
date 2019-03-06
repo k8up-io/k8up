@@ -6,11 +6,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/spotahome/kooper/client/crd"
 	backupv1alpha1 "github.com/vshn/k8up/apis/backup/v1alpha1"
 	baas8scli "github.com/vshn/k8up/client/k8s/clientset/versioned"
 	"github.com/vshn/k8up/config"
 	"github.com/vshn/k8up/log"
-	"github.com/spotahome/kooper/client/crd"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
