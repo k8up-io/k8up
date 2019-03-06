@@ -1,3 +1,5 @@
+![Build status](https://api.travis-ci.com/vshn/k8up.svg?branch=master)
+
 # Overview
 
 K8up is a backup operator that will handle PVC and app backups on a k8s/OpenShift cluster.
