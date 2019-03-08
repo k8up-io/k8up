@@ -167,6 +167,12 @@ func run(finishC chan error, outputManager *output.Output) {
 			podList, err := podLister.ListPods()
 
 			if err == nil {
+
+				// List the snapshots before doing any stdIn backups. This will
+				// ensure that the cache is already pupulated before any stdIn
+				// connections over TCP/IP are opened.
+				resticCli.ListSnapshots(false)
+
 				for _, pod := range podList {
 					resticCli.StdinBackup(pod.Command, pod.PodName, pod.ContainerName, pod.Namespace, pod.FileExtension)
 					criticalError = resticCli.BackupStruct.GetError()
