@@ -4,10 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"net/url"
 	"os"
 	"path"
-	"strings"
 
 	"git.vshn.net/vshn/wrestic/kubernetes"
 	"git.vshn.net/vshn/wrestic/output"
@@ -19,7 +17,7 @@ type BackupStruct struct {
 	genericCommand
 	folderList        []string
 	backupDir         string
-	rawMetrics        []rawMetrics
+	rawMetrics        []rawMetrics // used to derive prom and webhook information
 	snapshotLister    *ListSnapshotsStruct
 	parsed            bool
 	startTimeStamp    int64
@@ -27,6 +25,7 @@ type BackupStruct struct {
 	snapshots         []Snapshot
 	stdinErrorMessage error
 	liveOutput        chan string
+	webhookSender     WebhookSender
 }
 
 type rawMetrics struct {
@@ -48,10 +47,10 @@ type rawMetrics struct {
 }
 
 type WebhookStats struct {
-	Name          string     `json:"name,omitempty"`
-	BucketName    string     `json:"bucket_name,omitempty"`
-	BackupMetrics rawMetrics `json:"backup_metrics,omitempty"`
-	Snapshots     []Snapshot `json:"snapshots,omitempty"`
+	Name          string      `json:"name,omitempty"`
+	BucketName    string      `json:"bucket_name,omitempty"`
+	BackupMetrics *rawMetrics `json:"backup_metrics,omitempty"`
+	Snapshots     []Snapshot  `json:"snapshots,omitempty"`
 }
 
 type promMetrics struct {
@@ -124,12 +123,13 @@ func (p *promMetrics) toSlice() []prometheus.Collector {
 	}
 }
 
-func newBackup(backupDir string, listSnapshots *ListSnapshotsStruct) *BackupStruct {
+func newBackup(backupDir string, listSnapshots *ListSnapshotsStruct, webhookSender WebhookSender) *BackupStruct {
 	return &BackupStruct{
 		backupDir:      backupDir,
 		snapshotLister: listSnapshots,
 		rawMetrics:     []rawMetrics{},
 		liveOutput:     make(chan string, 0),
+		webhookSender:  webhookSender,
 	}
 }
 
@@ -163,6 +163,7 @@ func (b *BackupStruct) Backup() {
 	}
 
 	b.snapshots = b.snapshotLister.ListSnapshots(false)
+
 }
 
 func (b *BackupStruct) backupFolder(folder, folderName string) {
@@ -188,34 +189,22 @@ func (b *BackupStruct) StdinBackup(backupCommand, pod, container, namespace, fil
 		stdin: true,
 	})
 	b.snapshots = b.snapshotLister.ListSnapshots(false)
-	b.stdinErrorMessage = b.errorMessage
-	b.errorMessage = nil
+	if b.errorMessage != nil {
+		b.stdinErrorMessage = b.errorMessage
+		b.errorMessage = nil
+	}
+
 }
 
 // GetWebhookData a slice of objects that should be sent to the webhook endpoint.
 func (b *BackupStruct) GetWebhookData() []output.JsonMarshaller {
 	stats := make([]output.JsonMarshaller, 0)
 
-	var bucket string
-	name := os.Getenv(Hostname)
-
-	repo := strings.Replace(os.Getenv(repositoryEnv), "s3:", "", 1)
-
-	u, err := url.Parse(repo)
-	if err != nil {
-		bucket = ""
-	} else {
-		bucket = strings.Replace(u.Path, "/", "", 1)
-	}
-
-	for _, stat := range b.rawMetrics {
-		stats = append(stats, &WebhookStats{
-			Name:          name,
-			BackupMetrics: stat,
-			BucketName:    bucket,
-			Snapshots:     b.snapshots,
-		})
-	}
+	stats = append(stats, &WebhookStats{
+		Name:       os.Getenv(Hostname),
+		BucketName: getBucket(),
+		Snapshots:  b.snapshotLister.ListSnapshots(false),
+	})
 
 	return stats
 }
@@ -372,7 +361,7 @@ func (b *BackupStruct) GetError() error {
 
 	if b.stdinErrorMessage != nil {
 		stdinErr = fmt.Errorf("stdin backup error: %v", b.stdinErrorMessage)
-		finalError = pvcErr
+		finalError = stdinErr
 	}
 
 	if b.stdinErrorMessage != nil && b.errorMessage != nil {

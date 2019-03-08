@@ -2,8 +2,12 @@ package restic
 
 import (
 	"encoding/json"
+	"net/url"
 	"os"
+	"strings"
 	"time"
+
+	"git.vshn.net/vshn/wrestic/output"
 )
 
 const (
@@ -55,6 +59,12 @@ type Snapshot struct {
 	Tags     []string  `json:"tags"`
 }
 
+// WebhookSender describes an object that receives a JsonMarshaller and
+// sends it to its target.
+type WebhookSender interface {
+	TriggerHook(data output.JsonMarshaller)
+}
+
 // dummy type to make snapshots sortable by date and satisfy the output.JsonMarshaller interface
 type snapList []Snapshot
 
@@ -89,12 +99,12 @@ type Restic struct {
 }
 
 // New returns a new restic object.
-func New(backupDir string) *Restic {
+func New(backupDir string, webhookSender WebhookSender) *Restic {
 	return &Restic{
 		UnlockStruct:        newUnlock(),
 		RestoreStruct:       newRestore(),
-		PruneStruct:         newPrune(),
-		BackupStruct:        newBackup(backupDir, newListSnapshots()),
+		PruneStruct:         newPrune(newListSnapshots(), webhookSender),
+		BackupStruct:        newBackup(backupDir, newListSnapshots(), webhookSender),
 		CheckStruct:         newCheck(),
 		Initrepo:            newInitrepo(),
 		ListSnapshotsStruct: newListSnapshots(),
@@ -114,4 +124,16 @@ func getResticBin() string {
 		resticBin = "restic"
 	}
 	return resticBin
+}
+
+func getBucket() string {
+	bucket := ""
+	repo := strings.Replace(os.Getenv(repositoryEnv), "s3:", "", 1)
+
+	u, err := url.Parse(repo)
+	if err == nil {
+		bucket = strings.Replace(u.Path, "/", "", 1)
+	}
+
+	return bucket
 }

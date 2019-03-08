@@ -4,15 +4,22 @@ import (
 	"fmt"
 	"os"
 	"strings"
+
+	"git.vshn.net/vshn/wrestic/output"
 )
 
 // PruneStruct holds the state of the prune command.
 type PruneStruct struct {
 	genericCommand
+	webhookSender  WebhookSender
+	snapshotLister *ListSnapshotsStruct
 }
 
-func newPrune() *PruneStruct {
-	return &PruneStruct{}
+func newPrune(snapshotLister *ListSnapshotsStruct, webhookSender WebhookSender) *PruneStruct {
+	return &PruneStruct{
+		webhookSender:  webhookSender,
+		snapshotLister: snapshotLister,
+	}
 }
 
 func (p *PruneStruct) Prune() {
@@ -47,4 +54,17 @@ func (p *PruneStruct) Prune() {
 	fmt.Println("Run forget and update the webhook")
 	fmt.Println("forget params: ", strings.Join(args, " "))
 	p.genericCommand.exec(args, commandOptions{print: true})
+}
+
+// GetWebhookData prepares and returns the data that gets sent via webhook at the end
+func (p *PruneStruct) GetWebhookData() []output.JsonMarshaller {
+	stats := make([]output.JsonMarshaller, 0)
+
+	stats = append(stats, &WebhookStats{
+		Name:       os.Getenv(Hostname),
+		BucketName: getBucket(),
+		Snapshots:  p.snapshotLister.ListSnapshots(false),
+	})
+
+	return stats
 }
