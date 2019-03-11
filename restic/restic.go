@@ -2,6 +2,7 @@ package restic
 
 import (
 	"encoding/json"
+	"os"
 	"time"
 )
 
@@ -10,22 +11,22 @@ const (
 	Namespace = "baas"
 	Subsystem = "backup_restic"
 	//general
-	restic   = "/usr/local/bin/restic"
 	Hostname = "HOSTNAME"
 	//Env variable names
-	keepLastEnv    = "KEEP_LAST"
-	keepHourlyEnv  = "KEEP_HOURLY"
-	keepDailyEnv   = "KEEP_DAILY"
-	keepWeeklyEnv  = "KEEP_WEEKLY"
-	keepMonthlyEnv = "KEEP_MONTHLY"
-	keepYearlyEnv  = "KEEP_YEARLY"
-	keepTagEnv     = "KEEP_TAG"
-	promURLEnv     = "PROM_URL"
-	statsURLEnv    = "STATS_URL"
-	BackupDirEnv   = "BACKUP_DIR"
-	restoreDirEnv  = "RESTORE_DIR"
-	listTimeoutEnv = "BACKUP_LIST_TIMEOUT"
-	repositoryEnv  = "RESTIC_REPOSITORY"
+	keepLastEnv       = "KEEP_LAST"
+	keepHourlyEnv     = "KEEP_HOURLY"
+	keepDailyEnv      = "KEEP_DAILY"
+	keepWeeklyEnv     = "KEEP_WEEKLY"
+	keepMonthlyEnv    = "KEEP_MONTHLY"
+	keepYearlyEnv     = "KEEP_YEARLY"
+	keepTagEnv        = "KEEP_TAG"
+	promURLEnv        = "PROM_URL"
+	statsURLEnv       = "STATS_URL"
+	BackupDirEnv      = "BACKUP_DIR"
+	restoreDirEnv     = "RESTORE_DIR"
+	listTimeoutEnv    = "BACKUP_LIST_TIMEOUT"
+	resticLocationEnv = "RESTIC_BINARY"
+	repositoryEnv     = "RESTIC_REPOSITORY"
 	//Arguments for restic
 	keepLastArg    = "--keep-last"
 	keepHourlyArg  = "--keep-hourly"
@@ -105,4 +106,12 @@ func New(backupDir string) *Restic {
 type Stats interface {
 	GetJson() []byte
 	GetProm()
+}
+
+func getResticBin() string {
+	resticBin := os.Getenv(resticLocationEnv)
+	if resticBin == "" {
+		resticBin = "restic"
+	}
+	return resticBin
 }

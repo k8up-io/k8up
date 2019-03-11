@@ -33,7 +33,7 @@ func newGenericCommand() *genericCommand {
 
 func (g *genericCommand) exec(args []string, options commandOptions) {
 
-	cmd := exec.Command(restic, args...)
+	cmd := exec.Command(getResticBin(), args...)
 	cmd.Env = os.Environ()
 
 	if options.stdin {
