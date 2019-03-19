@@ -49,6 +49,7 @@ kubectl apply -f manifest-examples/pvc.yaml
 ## Build and push the Restic container
 The container has to exist on the registry in order for the operator to find the correct one.
 
+
 ```
 minishift start
 oc login -u developer
