@@ -8,6 +8,10 @@ Just create a `schedule` object in the namespace you’d like to backup. It’s 
 
 K8up is currently under heavy development and far from feature complete. But it should already be stable enough for production use.
 
+# Documentation
+
+The docs are WIP: https://vshn.github.io/k8up/
+
 # Dev Environment
 You'll need:
 
