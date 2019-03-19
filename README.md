@@ -57,3 +57,11 @@ docker login -u developer -p $(oc whoami -t) $(minishift openshift registry)
 docker build -t $(minishift openshift registry)/myproject/baas:0.0.1 .
 docker push $(minishift openshift registry)/myproject/baas:0.0.1
 ```
+
+# Docker tags
+
+(AMD64/x86 arch only)
+
+* latest: master branch
+* dev: dev branch (useful for pre-releases)
+* versioned: tagged git releases
