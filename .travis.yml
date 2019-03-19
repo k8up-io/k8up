@@ -1,10 +1,43 @@
-language: go
+language: minimal
 
 services:
   - docker
 
+env:
+  global:
+    - IMAGE_NAME_DOCKER_HUB="vshn/k8up"
+
+before_script:
+  - docker info
+  - echo ${DOCKER_HUB_PASSWORD} | docker login -u ${DOCKER_HUB_USER} --password-stdin
+
+script:
+  - docker build . -t docker.io/${IMAGE_NAME_DOCKER_HUB}:${IMAGE_TAG}
+
+deploy:
+  - provider: script
+    script: docker push docker.io/${IMAGE_NAME_DOCKER_HUB}:${IMAGE_TAG}
+    on:
+      branch: master
+  - provider: script
+    script: docker push docker.io/${IMAGE_NAME_DOCKER_HUB}:${IMAGE_TAG}
+    on:
+      branch: dev
+  - provider: script
+    script: docker push docker.io/${IMAGE_NAME_DOCKER_HUB}:${IMAGE_TAG}
+    on:
+      tags: true
+
 jobs:
   include:
-    - stage: build
-      if: branch = master OR branch = dev OR tag IS present
-      script: ./script/docker-build-and-push
+    - if: branch = master
+      env:
+        - IMAGE_TAG=latest
+
+    - if: branch = dev
+      env:
+        - IMAGE_TAG=dev
+
+    - if: tag IS present
+      env:
+        - IMAGE_TAG="${TRAVIS_TAG}"
