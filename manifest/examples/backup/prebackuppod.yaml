@@ -1,0 +1,25 @@
+apiVersion: backup.appuio.ch/v1alpha1
+kind: PreBackupPod
+metadata:
+  name: mysqldump
+spec:
+  backupCommand: mysqldump -uroot -psecure
+  pod:
+    spec:
+      containers:
+        - env:
+            - name: MYSQL_ROOT_PASSWORD
+              value: secure
+          image: mariadb
+          imagePullPolicy: Always
+          name: mariadb
+          ports:
+            - containerPort: 3306
+              protocol: TCP
+          volumeMounts:
+            - mountPath: /var/lib/mysql
+              name: mariadb
+      volumes:
+        - name: mariadb
+          persistentVolumeClaim:
+          claimName: mariadb

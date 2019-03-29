@@ -7,6 +7,7 @@ import (
 	"github.com/vshn/k8up/service"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
+	extensionsv1 "k8s.io/api/extensions/v1beta1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -33,12 +34,17 @@ func newBackupJob(volumes []corev1.Volume, controllerName string, backup *backup
 	return job
 }
 
-// TODO: move most of this into service, too
+// TODO: evaluate if it makes sense to make these functions part of backupv1alpha1.Backu
 func setUpEnvVariables(backup *backupv1alpha1.Backup, config config) []corev1.EnvVar {
 
 	promURL := config.GlobalPromURL
 	if backup.Spec.PromURL != "" {
 		promURL = backup.Spec.PromURL
+	}
+
+	statsURL := config.GlobalStatsURL
+	if backup.Spec.StatsURL != "" {
+		statsURL = backup.Spec.StatsURL
 	}
 
 	vars := service.DefaultEnvs(backup.Spec.Backend, config.Global)
@@ -47,6 +53,15 @@ func setUpEnvVariables(backup *backupv1alpha1.Backup, config config) []corev1.En
 		{
 			Name:  service.PromURL,
 			Value: promURL,
+		},
+		// TODO: This is a hack as the statsurl is already set in DefaultEnvs.
+		// But DefaultEnvs doesn't have the necessary information to do the
+		// actual merge... As k8s will apply the last env var it finds this
+		// actually works but should be fixed properly sometime, to avoid
+		// problems.
+		{
+			Name:  service.StatsURL,
+			Value: statsURL,
 		},
 	}...)
 	return vars
@@ -114,6 +129,53 @@ func newServiceAccountDefinition(backup *backupv1alpha1.Backup, config config) s
 		roleBinding: &roleBinding,
 		account:     &account,
 	}
+}
+
+func (b *backupRunner) getReplicaSets() []extensionsv1.ReplicaSet {
+	tmp := []extensionsv1.ReplicaSet{}
+	replicas := int32(1)
+
+	templates, err := b.BaasCLI.Appuio().PreBackupPods(b.backup.GetNamespace()).List(metav1.ListOptions{})
+
+	if err != nil {
+		b.Logger.Errorf("could not list podtemplates: %v", err)
+	} else {
+		for _, template := range templates.Items {
+
+			template.Spec.Pod.PodTemplateSpec.ObjectMeta.Annotations = map[string]string{
+				b.config.backupCommandAnnotation: template.Spec.BackupCommand,
+				b.config.fileExtensionAnnotation: template.Spec.FileExtension,
+			}
+
+			podLabels := map[string]string{
+				"backupCommandPod": "true",
+			}
+
+			template.Spec.Pod.PodTemplateSpec.ObjectMeta.Labels = podLabels
+
+			set := extensionsv1.ReplicaSet{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      template.GetName(),
+					Namespace: template.GetNamespace(),
+					OwnerReferences: []metav1.OwnerReference{
+						service.NewOwnerReference(b.backup, backupv1alpha1.BackupKind),
+					},
+				},
+				Spec: extensionsv1.ReplicaSetSpec{
+					Replicas: &replicas,
+					Template: template.Spec.Pod.PodTemplateSpec,
+					Selector: &metav1.LabelSelector{
+						MatchLabels: podLabels,
+					},
+				},
+			}
+
+			tmp = append(tmp, set)
+		}
+	}
+
+	return tmp
+
 }
 
 type serviceAccount struct {

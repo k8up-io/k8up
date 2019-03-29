@@ -44,3 +44,12 @@ rules:
   - roles
   verbs:
   - '*'
+- apiGroups:
+    - extensions
+  resources:
+    - replicasets
+    - replicasets/scale
+  verbs:
+    - create
+    - delete
+    - watch

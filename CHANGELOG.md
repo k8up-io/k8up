@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [Unreleased]
 ### Fixed
 - Memory leak due to incorrectly unregistering jobs
+### Added
+- Ability to define podtemplates that will be started before the actual backup is run
+### Fixed
+- Bug that prevents from overriding the global statsURL -> need to be fixed properly though (APPU-1673)
 
 ## [v0.1.4] - 2019-03-06
 From now on the K8up operator uses go modules instead of dep for dependency

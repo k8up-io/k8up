@@ -40,6 +40,10 @@ func (c *FakeAppuioV1alpha1) Checks(namespace string) v1alpha1.CheckInterface {
 	return &FakeChecks{c, namespace}
 }
 
+func (c *FakeAppuioV1alpha1) PreBackupPods(namespace string) v1alpha1.PreBackupPodInterface {
+	return &FakePreBackupPods{c, namespace}
+}
+
 func (c *FakeAppuioV1alpha1) Prunes(namespace string) v1alpha1.PruneInterface {
 	return &FakePrunes{c, namespace}
 }
