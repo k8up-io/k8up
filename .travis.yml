@@ -5,38 +5,34 @@ services:
 
 env:
   global:
-    - IMAGE_NAME_DOCKER_HUB="vshn/k8up"
+    - IMAGE_NAME="docker.io/${TRAVIS_REPO_SLUG}"
 
 before_script:
   - docker info
   - echo ${DOCKER_HUB_PASSWORD} | docker login -u ${DOCKER_HUB_USER} --password-stdin
 
 script:
-  - docker build . -t docker.io/${IMAGE_NAME_DOCKER_HUB}:${IMAGE_TAG}
+  - docker build . -t docker.io/${IMAGE_NAME}:${IMAGE_TAG}
 
 deploy:
   - provider: script
-    script: docker push docker.io/${IMAGE_NAME_DOCKER_HUB}:${IMAGE_TAG}
+    script: docker push docker.io/${IMAGE_NAME}:${IMAGE_TAG}
     on:
-      branch: master
+      condition: branch =~ ^dev|master$
   - provider: script
-    script: docker push docker.io/${IMAGE_NAME_DOCKER_HUB}:${IMAGE_TAG}
-    on:
-      branch: dev
-  - provider: script
-    script: docker push docker.io/${IMAGE_NAME_DOCKER_HUB}:${IMAGE_TAG}
+    script: docker push docker.io/${IMAGE_NAME}:${IMAGE_TAG}
     on:
       tags: true
 
 jobs:
   include:
-    - if: branch = master
-      env:
-        - IMAGE_TAG=latest
-
     - if: branch = dev
       env:
         - IMAGE_TAG=dev
+
+    - if: branch = master
+      env:
+        - IMAGE_TAG=latest
 
     - if: tag IS present
       env:
