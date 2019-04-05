@@ -12,15 +12,15 @@ before_script:
   - echo ${DOCKER_HUB_PASSWORD} | docker login -u ${DOCKER_HUB_USER} --password-stdin
 
 script:
-  - docker build . -t docker.io/${IMAGE_NAME}:${IMAGE_TAG}
+  - docker build . -t ${IMAGE_NAME}:${IMAGE_TAG}
 
 deploy:
   - provider: script
-    script: docker push docker.io/${IMAGE_NAME}:${IMAGE_TAG}
+    script: docker push ${IMAGE_NAME}:${IMAGE_TAG}
     on:
       condition: branch =~ ^dev|master$
   - provider: script
-    script: docker push docker.io/${IMAGE_NAME}:${IMAGE_TAG}
+    script: docker push ${IMAGE_NAME}:${IMAGE_TAG}
     on:
       tags: true
 
