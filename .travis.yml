@@ -15,10 +15,18 @@ script:
   - docker build . -t ${IMAGE_NAME}:${IMAGE_TAG}
 
 deploy:
+  # Merging the master/dev conditions like "branch =~ /(master|dev)/" does not work,
+  # Travis would always skip it with "Skipping a deployment with the script provider
+  # because a custom condition was not met", even though this is 1:1 from official
+  # documentation
   - provider: script
     script: docker push ${IMAGE_NAME}:${IMAGE_TAG}
     on:
-      condition: branch =~ ^dev|master$
+      branch: dev
+  - provider: script
+    script: docker push ${IMAGE_NAME}:${IMAGE_TAG}
+    on:
+      branch: master
   - provider: script
     script: docker push ${IMAGE_NAME}:${IMAGE_TAG}
     on:
