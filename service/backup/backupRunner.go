@@ -221,6 +221,8 @@ func (b *backupRunner) startPodTemplates() {
 			return
 		}
 
+		defer watcher.Stop()
+
 		for event := range watcher.ResultChan() {
 			runningDeployment = event.Object.(*appsv1.Deployment)
 
@@ -239,10 +241,10 @@ func (b *backupRunner) startPodTemplates() {
 
 				// Wait until at least one replica is available and continue
 				if runningDeployment.Status.AvailableReplicas > 0 {
-					watcher.Stop()
-				} else {
-					b.Logger.Infof("waiting for command pod %v to get ready", name)
+					return
 				}
+
+				b.Logger.Infof("waiting for command pod %v to get ready", name)
 
 			case watch.Error:
 
@@ -259,7 +261,7 @@ func (b *backupRunner) startPodTemplates() {
 
 			default:
 				b.Logger.Errorf("unexpected event during %v watching: %v ", name, event.Type)
-				watcher.Stop()
+				return
 			}
 		}
 	}
