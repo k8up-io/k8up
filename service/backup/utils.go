@@ -137,8 +137,6 @@ func (b *backupRunner) getDeployments() []appsv1.Deployment {
 
 	templates, err := b.BaasCLI.Appuio().PreBackupPods(b.backup.GetNamespace()).List(metav1.ListOptions{})
 
-	deadLine := int32(30)
-
 	if err != nil {
 		b.Logger.Errorf("could not list podtemplates: %v", err)
 	} else {
@@ -170,7 +168,6 @@ func (b *backupRunner) getDeployments() []appsv1.Deployment {
 					Selector: &metav1.LabelSelector{
 						MatchLabels: podLabels,
 					},
-					ProgressDeadlineSeconds: &deadLine,
 				},
 			}
 
