@@ -154,7 +154,7 @@ func (b *backupRunner) getDeployments() []appsv1.Deployment {
 
 			template.Spec.Pod.PodTemplateSpec.ObjectMeta.Labels = podLabels
 
-			set := appsv1.Deployment{
+			dep := appsv1.Deployment{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      template.GetName(),
 					Namespace: template.GetNamespace(),
@@ -171,7 +171,7 @@ func (b *backupRunner) getDeployments() []appsv1.Deployment {
 				},
 			}
 
-			tmp = append(tmp, set)
+			tmp = append(tmp, dep)
 		}
 	}
 

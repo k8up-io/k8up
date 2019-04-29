@@ -3,7 +3,6 @@ module github.com/vshn/k8up
 require (
 	github.com/Infowatch/cron v0.0.0-20170529141252-2514e6ea36fd
 	github.com/beorn7/perks v0.0.0-20180321164747-3a771d992973 // indirect
-	github.com/fsnotify/fsnotify v1.4.7 // indirect
 	github.com/ghodss/yaml v1.0.0 // indirect
 	github.com/gogo/protobuf v1.1.1 // indirect
 	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b // indirect
@@ -30,20 +29,22 @@ require (
 	github.com/prometheus/client_model v0.0.0-20180712105110-5c3871d89910 // indirect
 	github.com/prometheus/common v0.0.0-20180801064454-c7de2306084e // indirect
 	github.com/prometheus/procfs v0.0.0-20180725123919-05ee40e3a273 // indirect
+	github.com/saibing/bingo v0.0.0-20190331051950-76bcd777316d // indirect
+	github.com/sourcegraph/jsonrpc2 v0.0.0-20190106185902-35a74f039c6a // indirect
 	github.com/spf13/afero v1.1.1 // indirect
 	github.com/spf13/cast v1.2.0 // indirect
 	github.com/spf13/jwalterweatherman v0.0.0-20180109140146-7c0cea34c8ec // indirect
 	github.com/spf13/pflag v1.0.1 // indirect
 	github.com/spf13/viper v1.1.0
 	github.com/spotahome/kooper v0.4.0
-	github.com/stretchr/testify v1.3.0 // indirect
-	golang.org/x/crypto v0.0.0-20180807104621-f027049dab0a // indirect
-	golang.org/x/net v0.0.0-20180808004115-f9ce57c11b24 // indirect
+	github.com/stretchr/objx v0.2.0 // indirect
+	golang.org/x/crypto v0.0.0-20190426145343-a29dc8fdc734 // indirect
+	golang.org/x/net v0.0.0-20190424112056-4829fb13d2c6 // indirect
 	golang.org/x/oauth2 v0.0.0-20180724155351-3d292e4d0cdc // indirect
-	golang.org/x/sync v0.0.0-20180314180146-1d60e4601c6f // indirect
-	golang.org/x/sys v0.0.0-20180807162357-acbc56fc7007 // indirect
-	golang.org/x/text v0.3.0 // indirect
+	golang.org/x/sys v0.0.0-20190428183149-804c0c7841b5 // indirect
+	golang.org/x/text v0.3.2 // indirect
 	golang.org/x/time v0.0.0-20180412165947-fbb02b2291d2 // indirect
+	golang.org/x/tools v0.0.0-20190428024724-550556f78a90 // indirect
 	google.golang.org/appengine v1.1.0 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.2.1 // indirect
