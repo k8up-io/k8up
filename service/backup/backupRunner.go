@@ -1,6 +1,7 @@
 package backup
 
 import (
+	"fmt"
 	"sort"
 	"strconv"
 
@@ -218,23 +219,58 @@ func (b *backupRunner) startPodTemplates() {
 		}
 
 		for event := range watcher.ResultChan() {
+			runningDeployment = event.Object.(*appsv1.Deployment)
+
+			name := fmt.Sprintf("%v/%v", runningDeployment.GetNamespace(), runningDeployment.GetName())
+
 			switch event.Type {
 			case watch.Modified:
-				runningDeployment = event.Object.(*appsv1.Deployment)
+
+				last := b.getLastDeploymentCondition(runningDeployment)
+
+				if last != nil {
+					// if the deadline can't be respected https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#progress-deadline-seconds
+					if last.Type == "Progressing" && last.Status == "False" && last.Reason == "ProgressDeadlineExceeded" {
+						b.Logger.Errorf("error starting pre backup pod %v: %v", name, last.Message)
+						return
+					}
+				}
 
 				// Wait until at least one replica is available and continue
 				if runningDeployment.Status.AvailableReplicas > 0 {
 					watcher.Stop()
 				} else {
-					b.Logger.Infof("waiting for command pod %v/%v to get ready", runningDeployment.GetNamespace(), runningDeployment.GetName())
+					b.Logger.Infof("waiting for command pod %v to get ready", name)
 				}
 
+			case watch.Error:
+
+				last := b.getLastDeploymentCondition(runningDeployment)
+
+				if last != nil {
+					b.Logger.Errorf("there was an error while starting pre backup pod %v: %v", name, last.Message)
+
+				} else {
+					b.Logger.Errorf("there was an unknown error while starting pre backup pod %v", name)
+				}
+
+				return
+
 			default:
-				b.Logger.Errorf("unexpected event during %v/%v watching: %v ", runningDeployment.GetNamespace(), runningDeployment.GetName(), event.Type)
+				b.Logger.Errorf("unexpected event during %v watching: %v ", name, event.Type)
 				watcher.Stop()
 			}
 		}
 	}
+}
+
+func (b *backupRunner) getLastDeploymentCondition(deployment *appsv1.Deployment) *appsv1.DeploymentCondition {
+	conditions := deployment.Status.Conditions
+
+	if len(conditions) > 0 {
+		return &conditions[len(conditions)-1]
+	}
+	return nil
 }
 
 func (b *backupRunner) stopPodTemplates() {

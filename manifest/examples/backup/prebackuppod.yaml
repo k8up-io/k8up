@@ -10,7 +10,7 @@ spec:
         - env:
             - name: MYSQL_ROOT_PASSWORD
               value: secure
-          image: mariadb
+          image: mariadb1
           imagePullPolicy: Always
           name: mariadb
           ports:
