@@ -8,9 +8,9 @@ import (
 	"github.com/vshn/k8up/service"
 	"github.com/vshn/k8up/service/observe"
 	"github.com/vshn/k8up/service/schedule"
+	appsv1 "k8s.io/api/apps/v1"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
-	v1beta1 "k8s.io/api/extensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"
@@ -18,10 +18,10 @@ import (
 
 type backupRunner struct {
 	service.CommonObjects
-	config      config
-	backup      *backupv1alpha1.Backup
-	observer    *observe.Observer
-	runningSets []v1beta1.ReplicaSet
+	config             config
+	backup             *backupv1alpha1.Backup
+	observer           *observe.Observer
+	runningDeployments []appsv1.Deployment
 }
 
 func newBackupRunner(backup *backupv1alpha1.Backup, common service.CommonObjects, observer *observe.Observer) *backupRunner {
@@ -200,17 +200,17 @@ func (b *backupRunner) updateBackupStatus() {
 // startPodTemplates will start and wait all pods defined in the template and
 // wait for at least one replication to be available for each pod.
 func (b *backupRunner) startPodTemplates() {
-	b.runningSets = b.getReplicaSets()
-	for _, set := range b.runningSets {
-		b.Logger.Infof("Creating command pod %v/%v\n", b.backup.GetNamespace(), set.GetName())
-		runningSet, err := b.K8sCli.Extensions().ReplicaSets(b.backup.GetNamespace()).Create(&set)
+	b.runningDeployments = b.getDeployments()
+	for _, deployment := range b.runningDeployments {
+		b.Logger.Infof("Creating command pod %v/%v\n", b.backup.GetNamespace(), deployment.GetName())
+		runningDeployment, err := b.K8sCli.Apps().Deployments(b.backup.GetNamespace()).Create(&deployment)
 		if err != nil {
-			b.Logger.Errorf("error creating command pod %v: %v\n", set.GetName(), err)
+			b.Logger.Errorf("error creating command pod %v: %v\n", deployment.GetName(), err)
 			return
 		}
 
-		watcher, err := b.K8sCli.Extensions().ReplicaSets(b.backup.GetNamespace()).Watch(
-			metav1.SingleObject(runningSet.ObjectMeta),
+		watcher, err := b.K8sCli.Apps().Deployments(b.backup.GetNamespace()).Watch(
+			metav1.SingleObject(runningDeployment.ObjectMeta),
 		)
 		if err != nil {
 			b.Logger.Errorf("cannot watch replicaset: %v", err)
@@ -220,17 +220,17 @@ func (b *backupRunner) startPodTemplates() {
 		for event := range watcher.ResultChan() {
 			switch event.Type {
 			case watch.Modified:
-				runningSet = event.Object.(*v1beta1.ReplicaSet)
+				runningDeployment = event.Object.(*appsv1.Deployment)
 
 				// Wait until at least one replica is available and continue
-				if runningSet.Status.AvailableReplicas > 0 {
+				if runningDeployment.Status.AvailableReplicas > 0 {
 					watcher.Stop()
 				} else {
-					b.Logger.Infof("waiting for command pod %v/%v to get ready", runningSet.GetNamespace(), runningSet.GetName())
+					b.Logger.Infof("waiting for command pod %v/%v to get ready", runningDeployment.GetNamespace(), runningDeployment.GetName())
 				}
 
 			default:
-				b.Logger.Errorf("unexpected event during %v/%v watching: %v ", runningSet.GetNamespace(), runningSet.GetName(), event.Type)
+				b.Logger.Errorf("unexpected event during %v/%v watching: %v ", runningDeployment.GetNamespace(), runningDeployment.GetName(), event.Type)
 				watcher.Stop()
 			}
 		}
@@ -238,10 +238,10 @@ func (b *backupRunner) startPodTemplates() {
 }
 
 func (b *backupRunner) stopPodTemplates() {
-	for _, set := range b.runningSets {
+	for _, set := range b.runningDeployments {
 		b.Logger.Infof("removing command pod %v/%v", set.GetNamespace(), set.GetName())
 		option := metav1.DeletePropagationForeground
-		err := b.K8sCli.Extensions().ReplicaSets(b.backup.GetNamespace()).Delete(set.GetName(), &metav1.DeleteOptions{
+		err := b.K8sCli.Apps().Deployments(b.backup.GetNamespace()).Delete(set.GetName(), &metav1.DeleteOptions{
 			PropagationPolicy: &option,
 		})
 		if err != nil {

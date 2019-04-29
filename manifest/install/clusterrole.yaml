@@ -45,10 +45,10 @@ rules:
   verbs:
   - '*'
 - apiGroups:
-    - extensions
+    - apps
   resources:
-    - replicasets
-    - replicasets/scale
+    - deployments
+    - deployments/scale
   verbs:
     - create
     - delete

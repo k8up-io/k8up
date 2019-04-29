@@ -5,9 +5,9 @@ import (
 
 	backupv1alpha1 "github.com/vshn/k8up/apis/backup/v1alpha1"
 	"github.com/vshn/k8up/service"
+	appsv1 "k8s.io/api/apps/v1"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
-	extensionsv1 "k8s.io/api/extensions/v1beta1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -131,8 +131,8 @@ func newServiceAccountDefinition(backup *backupv1alpha1.Backup, config config) s
 	}
 }
 
-func (b *backupRunner) getReplicaSets() []extensionsv1.ReplicaSet {
-	tmp := []extensionsv1.ReplicaSet{}
+func (b *backupRunner) getDeployments() []appsv1.Deployment {
+	tmp := []appsv1.Deployment{}
 	replicas := int32(1)
 
 	templates, err := b.BaasCLI.Appuio().PreBackupPods(b.backup.GetNamespace()).List(metav1.ListOptions{})
@@ -149,11 +149,12 @@ func (b *backupRunner) getReplicaSets() []extensionsv1.ReplicaSet {
 
 			podLabels := map[string]string{
 				"backupCommandPod": "true",
+				"preBackupPod":     template.GetName(),
 			}
 
 			template.Spec.Pod.PodTemplateSpec.ObjectMeta.Labels = podLabels
 
-			set := extensionsv1.ReplicaSet{
+			set := appsv1.Deployment{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      template.GetName(),
 					Namespace: template.GetNamespace(),
@@ -161,7 +162,7 @@ func (b *backupRunner) getReplicaSets() []extensionsv1.ReplicaSet {
 						service.NewOwnerReference(b.backup, backupv1alpha1.BackupKind),
 					},
 				},
-				Spec: extensionsv1.ReplicaSetSpec{
+				Spec: appsv1.DeploymentSpec{
 					Replicas: &replicas,
 					Template: template.Spec.Pod.PodTemplateSpec,
 					Selector: &metav1.LabelSelector{
