@@ -203,10 +203,13 @@ func (b *backupRunner) updateBackupStatus() {
 func (b *backupRunner) startPodTemplates() {
 	b.runningDeployments = b.getDeployments()
 	for _, deployment := range b.runningDeployments {
-		b.Logger.Infof("Creating command pod %v/%v\n", b.backup.GetNamespace(), deployment.GetName())
+
+		name := fmt.Sprintf("%v/%v", deployment.GetNamespace(), deployment.GetName())
+
+		b.Logger.Infof("Creating command pod %v\n", name)
 		runningDeployment, err := b.K8sCli.Apps().Deployments(b.backup.GetNamespace()).Create(&deployment)
 		if err != nil {
-			b.Logger.Errorf("error creating command pod %v: %v\n", deployment.GetName(), err)
+			b.Logger.Errorf("error creating command pod %v: %v\n", name, err)
 			return
 		}
 
@@ -220,8 +223,6 @@ func (b *backupRunner) startPodTemplates() {
 
 		for event := range watcher.ResultChan() {
 			runningDeployment = event.Object.(*appsv1.Deployment)
-
-			name := fmt.Sprintf("%v/%v", runningDeployment.GetNamespace(), runningDeployment.GetName())
 
 			switch event.Type {
 			case watch.Modified:
