@@ -51,7 +51,7 @@ kubectl create -f https://github.com/minio/minio/blob/master/docs/orchestration/
 kubectl create -f https://github.com/minio/minio/blob/master/docs/orchestration/kubernetes/minio-standalone-service.yaml?raw=true
 ```
 
-After a few minutes you should be able to see your Minio installation on the browser using `minikube service minio-service`.
+After a few minutes you should be able to see your Minio installation on the browser using `minikube service minio-service`. The default Minio installation uses the access key `minio` and secret key `minio123`.
 
 ### Create a PersistentVolumenClaim Resource
 
