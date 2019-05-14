@@ -41,14 +41,10 @@ The most convenient way to install K8up is via [helm](https://helm.sh/):
 ```bash
 helm repo add appuio https://charts.appuio.ch
 
-export TILLER_NAMESPACE=tiller
-helm install appuio/baas-operator -n K8up --namespace k8up-operator
-
-# Also install our prometheus instance
-helm install appuio/prometheus -n K8up --namespace k8up-operator
+helm install appuio/baas-operator --name k8up --namespace k8up-operator
 ```
 
-For advanced cofniguration of the operator please see TODO: link.
+For advanced configuration of the operator please see [Advanced config](advanced-config.md)
 
 ## Enable backup schedule in a namespace
 
