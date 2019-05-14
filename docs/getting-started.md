@@ -3,7 +3,7 @@
 - [Getting Started](#getting-started)
   - [Prerequisites](#prerequisites)
     - [Install K8up](#install-k8up)
-    - [Install Minio](#install-minio)
+    - [Install MinIO](#install-minio)
     - [Create a PersistentVolumenClaim Resource](#create-a-persistentvolumenclaim-resource)
     - [Create Backup Credentials](#create-backup-credentials)
   - [Set Up a Backup Schedule](#set-up-a-backup-schedule)
@@ -33,15 +33,15 @@ Then install K8up itself:
 helm install appuio/k8up
 ```
 
-### Install Minio
+### Install MinIO
 
-[Minio](https://min.io/) is a distributed object storage service for high performance, high scale data infrastructures. It is a drop in replacement for AWS S3 in your own environment. We are going to install it to simulate a remote S3 bucket where our backups are going to be stored.
+[MinIO](https://min.io/) is a distributed object storage service for high performance, high scale data infrastructures. It is a drop in replacement for AWS S3 in your own environment. We are going to install it to simulate a remote S3 bucket where our backups are going to be stored.
 
 ```bash
 helm install stable/minio
 ```
 
-Then make Minio available locally in Minikube:
+Then make MinIO available locally in Minikube:
 
 ```bash
 kubectl create -f https://github.com/minio/minio/blob/master/docs/orchestration/kubernetes/minio-standalone-pvc.yaml?raw=true
@@ -51,7 +51,7 @@ kubectl create -f https://github.com/minio/minio/blob/master/docs/orchestration/
 kubectl create -f https://github.com/minio/minio/blob/master/docs/orchestration/kubernetes/minio-standalone-service.yaml?raw=true
 ```
 
-After a few minutes you should be able to see your Minio installation on the browser using `minikube service minio-service`. The default Minio installation uses the access key `minio` and secret key `minio123`.
+After a few minutes you should be able to see your MinIO installation on the browser using `minikube service minio-service`. The default Minio installation uses the access key `minio` and secret key `minio123`.
 
 ### Create a PersistentVolumenClaim Resource
 
@@ -101,7 +101,7 @@ data:
 
 Save the YAML above in a file named `secrets.yml` and use the `kubectl apply -f secrets.yml` command to deploy this configuration to your cluster.
 
-The values of the secrets need to be encoded in Base64 encoding. The default Minio installation uses the access key `minio` and secret key `minio123`, which are encoded as Base64 in the `backup-credentials` Secret definition.
+The values of the secrets need to be encoded in Base64 encoding. The default MinIO installation uses the access key `minio` and secret key `minio123`, which are encoded as Base64 in the `backup-credentials` Secret definition.
 
 You can easily convert a string to Base64 format in a terminal session as follows:
 
