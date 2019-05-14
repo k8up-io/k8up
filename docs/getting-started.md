@@ -35,13 +35,7 @@ helm install appuio/k8up
 
 ### Install MinIO
 
-[MinIO](https://min.io/) is a distributed object storage service for high performance, high scale data infrastructures. It is a drop in replacement for AWS S3 in your own environment. We are going to install it to simulate a remote S3 bucket where our backups are going to be stored.
-
-```bash
-helm install stable/minio
-```
-
-Then make MinIO available locally in Minikube:
+[MinIO](https://min.io/) is a distributed object storage service for high performance, high scale data infrastructures. It is a drop in replacement for AWS S3 in your own environment. We are going to install it to simulate a remote S3 bucket where our backups are going to be stored:
 
 ```bash
 kubectl create -f https://github.com/minio/minio/blob/master/docs/orchestration/kubernetes/minio-standalone-pvc.yaml?raw=true
@@ -165,6 +159,10 @@ spec:
 Save the YAML above in a file named `backup.yml` and use the `kubectl apply -f backup.yml` command to deploy this configuration to your cluster.
 
 The file above will instruct the operator to do backups every 5 minutes, as well as monthly prune and check jobs for repository maintenance. It will also archive the latest snapshots to the `archive` bucket once each week.
+
+After 5 minutes of running this demo, you should be able to run the command `minikube service minio-service` and see the backups in a `backups` bucket inside the web administration. Remember that the default access and secret keys are `minio` and `minio123` respectively.
+
+![](images/minio_browser.png)
 
 Feel free to adjust the frequencies to your liking. To help you with the crontab syntax, we recommend to check [crontab.guru](https://crontab.guru).
 
