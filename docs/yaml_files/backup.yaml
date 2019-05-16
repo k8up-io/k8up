@@ -1,0 +1,42 @@
+apiVersion: backup.appuio.ch/v1alpha1
+kind: Schedule
+metadata:
+  name: schedule-test
+spec:
+  backend:
+    s3:
+      endpoint: http://minio-service:9000
+      bucket: backups
+      accessKeyIDSecretRef:
+        name: backup-credentials
+        key: username
+      secretAccessKeySecretRef:
+        name: backup-credentials
+        key: password
+    repoPasswordSecretRef:
+      name: backup-repo
+      key: password
+  archive:
+    schedule: '0 0 1 * *'
+    restoreMethod:
+      s3:
+        endpoint: http://minio-service:9000
+        bucket: archive
+        accessKeyIDSecretRef:
+          name: backup-credentials
+          key: username
+        secretAccessKeySecretRef:
+          name: backup-credentials
+          key: password
+  backup:
+    schedule: '*/5 * * * *'
+    keepJobs: 4
+    promURL: http://minio-service:9000
+  check:
+    schedule: '0 1 * * 1'
+    promURL: http://minio-service:9000
+  prune:
+    schedule: '0 1 * * 0'
+    retention:
+      keepLast: 5
+      keepDaily: 14
