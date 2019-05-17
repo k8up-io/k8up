@@ -35,8 +35,9 @@ type Broker struct {
 // Subscriber holds a channel that will receive the updates. The id is for
 // internal tracking.
 type Subscriber struct {
-	CH chan PodState
-	id int // ID has to be uniqe within a topic
+	CH        chan PodState
+	id        int    // ID has to be uniqe within a topic
+	TopicName string // contains the name that this subscriber is registered with
 }
 
 // WatchObjects contains everything needed to watch jobs. It can also hold
@@ -71,8 +72,9 @@ func (b *Broker) Subscribe(topicName string) (*Subscriber, error) {
 		tmpSlice := make([]Subscriber, 0)
 
 		tmpSub := Subscriber{
-			CH: make(chan PodState, 0),
-			id: rand.Int(),
+			CH:        make(chan PodState, 0),
+			id:        rand.Int(),
+			TopicName: topicName,
 		}
 
 		tmpSlice = append(tmpSlice, tmpSub)
@@ -150,6 +152,8 @@ func (s *Subscriber) WatchLoop(watch WatchObjects) {
 	backendString := service.GetRepository(&corev1.Pod{Spec: watch.Job.Spec.Template.Spec})
 
 	jobString := fmt.Sprintf("%v/%v", watch.Job.GetNamespace(), watch.Job.GetName())
+
+	defer GetInstance().GetBroker().Unsubscribe(s.TopicName, s)
 
 	for message := range s.CH {
 		switch message.State {

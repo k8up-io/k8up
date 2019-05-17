@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Fixed
+- Memory leak due to incorrectly unregistering jobs
 
 ## [v0.1.4] - 2019-03-06
 From now on the K8up operator uses go modules instead of dep for dependency
