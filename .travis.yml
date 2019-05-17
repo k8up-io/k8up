@@ -20,15 +20,19 @@ deploy:
   # because a custom condition was not met", even though this is 1:1 from official
   # documentation
   - provider: script
-    script: docker push ${IMAGE_NAME}:${IMAGE_TAG}
+    script: bash scripts/deploy.sh push
     on:
       branch: dev
   - provider: script
-    script: docker push ${IMAGE_NAME}:${IMAGE_TAG}
+    script: bash scripts/deploy.sh docspush
     on:
       branch: master
   - provider: script
-    script: docker push ${IMAGE_NAME}:${IMAGE_TAG}
+    script: bash scripts/deploy.sh docs
+    on:
+      branch: docs_automation
+  - provider: script
+    script: bash scripts/deploy.sh push
     on:
       tags: true
 

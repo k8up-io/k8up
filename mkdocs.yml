@@ -1,6 +1,7 @@
 site_name: K8up
 
-theme: readthedocs
+theme:
+  name: material
 
 nav:
   - Home: index.md
