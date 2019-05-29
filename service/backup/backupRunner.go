@@ -210,7 +210,7 @@ func (b *backupRunner) startPodTemplates() {
 		runningDeployment, err := b.K8sCli.Apps().Deployments(b.backup.GetNamespace()).Create(&deployment)
 		if err != nil {
 			b.Logger.Errorf("error creating command pod %v: %v\n", name, err)
-			return
+			continue
 		}
 
 		watcher, err := b.K8sCli.Apps().Deployments(b.backup.GetNamespace()).Watch(
@@ -218,10 +218,8 @@ func (b *backupRunner) startPodTemplates() {
 		)
 		if err != nil {
 			b.Logger.Errorf("cannot watch replicaset: %v", err)
-			return
+			continue
 		}
-
-		defer watcher.Stop()
 
 		for event := range watcher.ResultChan() {
 			runningDeployment = event.Object.(*appsv1.Deployment)
@@ -235,13 +233,13 @@ func (b *backupRunner) startPodTemplates() {
 					// if the deadline can't be respected https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#progress-deadline-seconds
 					if last.Type == "Progressing" && last.Status == "False" && last.Reason == "ProgressDeadlineExceeded" {
 						b.Logger.Errorf("error starting pre backup pod %v: %v", name, last.Message)
-						return
+						watcher.Stop()
 					}
 				}
 
 				// Wait until at least one replica is available and continue
 				if runningDeployment.Status.AvailableReplicas > 0 {
-					return
+					watcher.Stop()
 				}
 
 				b.Logger.Infof("waiting for command pod %v to get ready", name)
@@ -257,13 +255,14 @@ func (b *backupRunner) startPodTemplates() {
 					b.Logger.Errorf("there was an unknown error while starting pre backup pod %v", name)
 				}
 
-				return
+				watcher.Stop()
 
 			default:
 				b.Logger.Errorf("unexpected event during %v watching: %v ", name, event.Type)
-				return
+				watcher.Stop()
 			}
 		}
+
 	}
 }
 
