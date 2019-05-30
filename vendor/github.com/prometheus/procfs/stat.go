@@ -78,16 +78,6 @@ type Stat struct {
 	SoftIRQ SoftIRQStat
 }
 
-// NewStat returns kernel/system statistics read from /proc/stat.
-func NewStat() (Stat, error) {
-	fs, err := NewFS(DefaultMountPoint)
-	if err != nil {
-		return Stat{}, err
-	}
-
-	return fs.NewStat()
-}
-
 // Parse a cpu statistics line and returns the CPUStat struct plus the cpu id (or -1 for the overall sum).
 func parseCPUStat(line string) (CPUStat, int64, error) {
 	cpuStat := CPUStat{}
@@ -149,11 +139,11 @@ func parseSoftIRQStat(line string) (SoftIRQStat, uint64, error) {
 	return softIRQStat, total, nil
 }
 
-// NewStat returns an information about current kernel/system statistics.
-func (fs FS) NewStat() (Stat, error) {
+// Stat returns an information about current kernel/system statistics.
+func (fs FS) Stat() (Stat, error) {
 	// See https://www.kernel.org/doc/Documentation/filesystems/proc.txt
 
-	f, err := os.Open(fs.Path("stat"))
+	f, err := os.Open(fs.proc.Path("stat"))
 	if err != nil {
 		return Stat{}, err
 	}

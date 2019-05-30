@@ -30,7 +30,7 @@ require (
 	github.com/prometheus/client_golang v0.0.0-20180808080507-5b23715facde
 	github.com/prometheus/client_model v0.0.0-20180712105110-5c3871d89910 // indirect
 	github.com/prometheus/common v0.0.0-20180801064454-c7de2306084e // indirect
-	github.com/prometheus/procfs v0.0.0-20180725123919-05ee40e3a273 // indirect
+	github.com/prometheus/procfs v0.0.0-20190530144707-0c11a8e341bf // indirect
 	github.com/spf13/afero v1.1.1 // indirect
 	github.com/spf13/cast v1.2.0 // indirect
 	github.com/spf13/jwalterweatherman v0.0.0-20180109140146-7c0cea34c8ec // indirect
@@ -40,7 +40,6 @@ require (
 	golang.org/x/crypto v0.0.0-20180807104621-f027049dab0a // indirect
 	golang.org/x/net v0.0.0-20180808004115-f9ce57c11b24 // indirect
 	golang.org/x/oauth2 v0.0.0-20180724155351-3d292e4d0cdc // indirect
-	golang.org/x/sync v0.0.0-20180314180146-1d60e4601c6f // indirect
 	golang.org/x/sys v0.0.0-20180807162357-acbc56fc7007 // indirect
 	golang.org/x/text v0.3.0 // indirect
 	golang.org/x/time v0.0.0-20180412165947-fbb02b2291d2 // indirect
