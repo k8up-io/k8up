@@ -12,6 +12,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"
@@ -217,7 +218,7 @@ func (b *backupRunner) startPodTemplates() {
 			metav1.SingleObject(runningDeployment.ObjectMeta),
 		)
 		if err != nil {
-			b.Logger.Errorf("cannot watch replicaset: %v", err)
+			b.Logger.Errorf("cannot watch deployment: %v", err)
 			continue
 		}
 
@@ -283,7 +284,11 @@ func (b *backupRunner) stopPodTemplates() {
 			PropagationPolicy: &option,
 		})
 		if err != nil {
-			b.Logger.Errorf("could not remove replicaSet, maybe already deleted? %v", err)
+			if errors.IsNotFound(err) {
+				b.Logger.Infof("deployment already removed: ", err)
+			} else {
+				b.Logger.Errorf("could not remove deployment: %v", err)
+			}
 		}
 	}
 }
