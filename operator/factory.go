@@ -2,12 +2,14 @@ package operator
 
 import (
 	"github.com/spotahome/kooper/client/crd"
+	"github.com/spotahome/kooper/monitoring/metrics"
 	"github.com/spotahome/kooper/operator"
 	"github.com/spotahome/kooper/operator/controller"
 	"github.com/spotahome/kooper/operator/resource"
 	"github.com/spotahome/kooper/operator/retrieve"
 	baas8scli "github.com/vshn/k8up/client/k8s/clientset/versioned"
 	"github.com/vshn/k8up/log"
+	"github.com/vshn/k8up/monitoring"
 	"github.com/vshn/k8up/service"
 	"github.com/vshn/k8up/service/archive"
 	"github.com/vshn/k8up/service/backup"
@@ -22,7 +24,8 @@ import (
 type options struct {
 	cfg Config
 	clients
-	logger log.Logger
+	logger  log.Logger
+	metrics *metrics.Prometheus
 }
 
 type clients struct {
@@ -31,7 +34,7 @@ type clients struct {
 	kubeCli kubernetes.Interface
 }
 
-// New returns pod terminator operator.
+// New returns a new K8up operator
 func New(cfg Config, baasCLI baas8scli.Interface, crdCli crd.Interface, kubeCli kubernetes.Interface, logger log.Logger) (operator.Operator, error) {
 
 	options := options{
@@ -41,7 +44,8 @@ func New(cfg Config, baasCLI baas8scli.Interface, crdCli crd.Interface, kubeCli 
 			crdCli:  crdCli,
 			kubeCli: kubeCli,
 		},
-		logger: logger,
+		logger:  logger,
+		metrics: monitoring.GetInstance().Metrics,
 	}
 
 	operators := create(options)
@@ -196,13 +200,13 @@ func create(options options) operator.Operator {
 	}
 
 	ctrls := []controller.Controller{}
-	ctrls = append(ctrls, controller.New(&cfg[0], backupHandler, &retr[0], nil, nil, nil, options.logger))
-	ctrls = append(ctrls, controller.New(&cfg[1], restoreHandler, &retr[1], nil, nil, nil, options.logger))
-	ctrls = append(ctrls, controller.New(&cfg[2], archiveHandler, &retr[2], nil, nil, nil, options.logger))
-	ctrls = append(ctrls, controller.New(&cfg[3], scheduleHandler, &retr[3], nil, nil, nil, options.logger))
-	ctrls = append(ctrls, controller.New(&cfg[4], podObserverHandler, &retr[4], nil, nil, nil, options.logger))
-	ctrls = append(ctrls, controller.New(&cfg[5], jobObserverHandler, &retr[5], nil, nil, nil, options.logger))
-	ctrls = append(ctrls, controller.New(&cfg[6], checkHandler, &retr[6], nil, nil, nil, options.logger))
-	ctrls = append(ctrls, controller.New(&cfg[7], pruneHandler, &retr[7], nil, nil, nil, options.logger))
+	ctrls = append(ctrls, controller.New(&cfg[0], backupHandler, &retr[0], nil, nil, options.metrics, options.logger))
+	ctrls = append(ctrls, controller.New(&cfg[1], restoreHandler, &retr[1], nil, nil, options.metrics, options.logger))
+	ctrls = append(ctrls, controller.New(&cfg[2], archiveHandler, &retr[2], nil, nil, options.metrics, options.logger))
+	ctrls = append(ctrls, controller.New(&cfg[3], scheduleHandler, &retr[3], nil, nil, options.metrics, options.logger))
+	ctrls = append(ctrls, controller.New(&cfg[4], podObserverHandler, &retr[4], nil, nil, options.metrics, options.logger))
+	ctrls = append(ctrls, controller.New(&cfg[5], jobObserverHandler, &retr[5], nil, nil, options.metrics, options.logger))
+	ctrls = append(ctrls, controller.New(&cfg[6], checkHandler, &retr[6], nil, nil, options.metrics, options.logger))
+	ctrls = append(ctrls, controller.New(&cfg[7], pruneHandler, &retr[7], nil, nil, options.metrics, options.logger))
 	return operator.NewMultiOperator(CRDs, ctrls, options.logger)
 }
