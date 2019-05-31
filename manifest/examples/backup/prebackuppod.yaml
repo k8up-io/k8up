@@ -3,14 +3,20 @@ kind: PreBackupPod
 metadata:
   name: mysqldump
 spec:
-  backupCommand: mysqldump -uroot -psecure
+  backupCommand: mysqldump -u$USER -p$PW -h $DB_HOST --all-databases
   pod:
     spec:
       containers:
         - env:
             - name: MYSQL_ROOT_PASSWORD
-              value: secure
-          image: mariadb1
+              value: secure #Needed to correctly start the container
+            - name: USER
+              value: dumper
+            - name: PW
+              value: topsecret
+            - name: DB_HOST
+              value: mariadb.example.com
+          image: mariadb
           imagePullPolicy: Always
           name: mariadb
           ports:
@@ -22,4 +28,4 @@ spec:
       volumes:
         - name: mariadb
           persistentVolumeClaim:
-          claimName: mariadb
+            claimName: mariadb
