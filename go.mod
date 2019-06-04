@@ -15,7 +15,7 @@ require (
 	github.com/hashicorp/golang-lru v0.0.0-20180201235237-0fb14efe8c47 // indirect
 	github.com/hashicorp/hcl v0.0.0-20180404174102-ef8a98b0bbce // indirect
 	github.com/howeyc/gopass v0.0.0-20170109162249-bf9dde6d0d2c // indirect
-	github.com/imdario/mergo v0.3.6 // indirect
+	github.com/imdario/mergo v0.3.7 // indirect
 	github.com/json-iterator/go v1.1.5 // indirect
 	github.com/magiconair/properties v1.8.0 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.1 // indirect
