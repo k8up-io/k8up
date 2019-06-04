@@ -30,6 +30,7 @@ type AppuioV1alpha1Interface interface {
 	ArchivesGetter
 	BackupsGetter
 	ChecksGetter
+	PreBackupPodsGetter
 	PrunesGetter
 	RestoresGetter
 	SchedulesGetter
@@ -50,6 +51,10 @@ func (c *AppuioV1alpha1Client) Backups(namespace string) BackupInterface {
 
 func (c *AppuioV1alpha1Client) Checks(namespace string) CheckInterface {
 	return newChecks(c, namespace)
+}
+
+func (c *AppuioV1alpha1Client) PreBackupPods(namespace string) PreBackupPodInterface {
+	return newPreBackupPods(c, namespace)
 }
 
 func (c *AppuioV1alpha1Client) Prunes(namespace string) PruneInterface {

@@ -44,3 +44,12 @@ rules:
   - roles
   verbs:
   - '*'
+- apiGroups:
+    - apps
+  resources:
+    - deployments
+    - deployments/scale
+  verbs:
+    - create
+    - delete
+    - watch

@@ -24,6 +24,8 @@ type BackupExpansion interface{}
 
 type CheckExpansion interface{}
 
+type PreBackupPodExpansion interface{}
+
 type PruneExpansion interface{}
 
 type RestoreExpansion interface{}

@@ -38,6 +38,10 @@ const (
 	PruneName   = "prune"
 	PrunePlural = "prunes"
 
+	PreBackupPodKind   = "PreBackupPod"
+	PreBackupPodName   = "prebackuppod"
+	PreBackupPodPlural = "prebackuppods"
+
 	NamespaceScope = apiextensionsv1beta1.NamespaceScoped
 	ClusterScope   = apiextensionsv1beta1.ClusterScoped
 )
@@ -80,6 +84,8 @@ func addKnownTypes(scheme *runtime.Scheme) error {
 		&CheckList{},
 		&Prune{},
 		&PruneList{},
+		&PreBackupPod{},
+		&PreBackupPodList{},
 	)
 	metav1.AddToGroupVersion(scheme, SchemeGroupVersion)
 	return nil
