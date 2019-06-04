@@ -47,12 +47,12 @@ func (b *backupRunner) Start() error {
 
 	backupJob := newBackupJob(volumes, b.backup.Name, b.backup, b.config)
 
-	go b.watchState(backupJob)
-
-	_, err := b.K8sCli.Batch().Jobs(b.backup.Namespace).Create(backupJob)
+	createdJob, err := b.K8sCli.Batch().Jobs(b.backup.Namespace).Create(backupJob)
 	if err != nil {
 		return err
 	}
+
+	go b.watchState(createdJob)
 
 	return nil
 }
@@ -76,6 +76,7 @@ func (b *backupRunner) watchState(backupJob *batchv1.Job) {
 		JobName: observe.BackupName,
 		Locker:  b.observer.GetLocker(),
 		Logger:  b.Logger,
+		K8sCli:  b.K8sCli,
 		Failedfunc: func(message observe.PodState) {
 			b.backup.Status.Failed = true
 			b.backup.Status.Finished = true

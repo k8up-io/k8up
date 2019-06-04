@@ -52,7 +52,7 @@ func new() *MetricExporter {
 	m := mux.NewRouter()
 	m.Handle("/metrics", promhttp.Handler())
 
-	tmp := &MetricExporter{
+	me := &MetricExporter{
 		log: &applogger.Std{},
 		httpServer: &http.Server{
 			Addr:           viper.GetString("metricbind"),
@@ -63,15 +63,15 @@ func new() *MetricExporter {
 		},
 		mutex: &sync.Mutex{},
 	}
-	tmp.log.Infof("Starting prometheus endpoint")
+	me.log.Infof("Starting prometheus endpoint")
 	go func() {
-		err := tmp.httpServer.ListenAndServe()
+		err := me.httpServer.ListenAndServe()
 		if err != nil {
 			panic(err)
 		}
 	}()
-	tmp.Metrics = metrics.NewPrometheus(prometheus.DefaultRegisterer)
-	return tmp
+	me.Metrics = metrics.NewPrometheus(prometheus.DefaultRegisterer)
+	return me
 }
 
 // Register registers a prometheus collector
