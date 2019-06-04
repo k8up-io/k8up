@@ -22,7 +22,7 @@ require (
 	github.com/mitchellh/mapstructure v0.0.0-20180715050151-f15292f7a699 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v0.0.0-20180701023420-4b7aa43c6742 // indirect
-	github.com/opentracing/opentracing-go v1.0.2 // indirect
+	github.com/opentracing/opentracing-go v1.1.0 // indirect
 	github.com/pborman/uuid v0.0.0-20170612153648-e790cca94e6c // indirect
 	github.com/pelletier/go-toml v1.2.0 // indirect
 	github.com/prometheus/client_golang v0.0.0-20180808080507-5b23715facde
