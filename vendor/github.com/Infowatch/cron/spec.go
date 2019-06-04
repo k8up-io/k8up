@@ -6,7 +6,6 @@ import "time"
 // traditional crontab specification. It is computed initially and stored as bit sets.
 type SpecSchedule struct {
 	Second, Minute, Hour, Dom, Month, Dow uint64
-	Location                              *time.Location
 }
 
 // bounds provides a range of acceptable values (plus a map of name to value).
@@ -62,11 +61,6 @@ func (s *SpecSchedule) Next(t time.Time) time.Time {
 	// of the field list (since it is necessary to re-verify previous field
 	// values)
 
-	// Convert the given time into the schedule's timezone.
-	// Save the original timezone so we can convert back after we find a time.
-	origLocation := t.Location()
-	t = t.In(s.Location)
-
 	// Start at the earliest possible time (the upcoming second).
 	t = t.Add(1*time.Second - time.Duration(t.Nanosecond())*time.Nanosecond)
 
@@ -88,7 +82,7 @@ WRAP:
 		if !added {
 			added = true
 			// Otherwise, set the date at the beginning (since the current time is irrelevant).
-			t = time.Date(t.Year(), t.Month(), 1, 0, 0, 0, 0, s.Location)
+			t = time.Date(t.Year(), t.Month(), 1, 0, 0, 0, 0, t.Location())
 		}
 		t = t.AddDate(0, 1, 0)
 
@@ -102,7 +96,7 @@ WRAP:
 	for !dayMatches(s, t) {
 		if !added {
 			added = true
-			t = time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, s.Location)
+			t = time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, t.Location())
 		}
 		t = t.AddDate(0, 0, 1)
 
@@ -114,7 +108,7 @@ WRAP:
 	for 1<<uint(t.Hour())&s.Hour == 0 {
 		if !added {
 			added = true
-			t = t.Truncate(time.Hour)
+			t = time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), 0, 0, 0, t.Location())
 		}
 		t = t.Add(1 * time.Hour)
 
@@ -147,7 +141,7 @@ WRAP:
 		}
 	}
 
-	return t.In(origLocation)
+	return t
 }
 
 // dayMatches returns true if the schedule's day-of-week and day-of-month
@@ -157,7 +151,6 @@ func dayMatches(s *SpecSchedule, t time.Time) bool {
 		domMatch bool = 1<<uint(t.Day())&s.Dom > 0
 		dowMatch bool = 1<<uint(t.Weekday())&s.Dow > 0
 	)
-
 	if s.Dom&starBit > 0 || s.Dow&starBit > 0 {
 		return domMatch && dowMatch
 	}
