@@ -8,8 +8,6 @@ spec:
     spec:
       containers:
         - env:
-            - name: MYSQL_ROOT_PASSWORD
-              value: secure #Needed to correctly start the container
             - name: USER
               value: dumper
             - name: PW
@@ -17,15 +15,8 @@ spec:
             - name: DB_HOST
               value: mariadb.example.com
           image: mariadb
+          command:
+            - 'sleep'
+            - '9999999'
           imagePullPolicy: Always
-          name: mariadb
-          ports:
-            - containerPort: 3306
-              protocol: TCP
-          volumeMounts:
-            - mountPath: /var/lib/mysql
-              name: mariadb
-      volumes:
-        - name: mariadb
-          persistentVolumeClaim:
-            claimName: mariadb
+          name: mysqldump
