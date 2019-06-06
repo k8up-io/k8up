@@ -197,4 +197,4 @@ But it should work with any command that has the ability to output the backup to
 
 === What is Next?
 
-For advanced configuration of the operator please see link:advanced-config.md[Advanced config].
+For advanced configuration of the operator please see xref:advanced-config.adoc[Advanced config].
