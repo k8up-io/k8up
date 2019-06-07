@@ -52,7 +52,7 @@ spec:
       keepDaily: 14
 ----
 
-==== Settings
+=== Settings
 
 * `archive`: see archive for further explaination
 * `backend`: see backend for further explanaition
