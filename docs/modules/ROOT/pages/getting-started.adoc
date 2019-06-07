@@ -1,14 +1,14 @@
-== Getting Started
+= Getting Started
 
 This document provides a quick introduction to K8up, how it works and how to use it.
 
-=== Prerequisites
+== Prerequisites
 
 This section provides information about the minimum requirements for testing K8up on Minikube.
 
 Before starting please make sure Minikube is installed and started, and that `helm` is installed and properly initialized in your Minikube.
 
-==== Install K8up
+=== Install K8up
 
 The most convenient way to install K8up is with https://helm.sh/[helm]. First add the `appuio` repository:
 
@@ -25,7 +25,7 @@ Then install K8up itself:
 helm install appuio/k8up
 ----
 
-==== Install MinIO
+=== Install MinIO
 
 https://min.io/[MinIO] is a distributed object storage service for high performance, high scale data infrastructures. It is a drop in replacement for AWS S3 in your own environment. We are going to install it to simulate a remote S3 bucket where our backups are going to be stored:
 
@@ -40,7 +40,7 @@ kubectl create -f https://github.com/minio/minio/blob/master/docs/orchestration/
 
 After a few minutes you should be able to see your MinIO installation on the browser using `minikube service minio-service`. The default Minio installation uses the access key `minio` and secret key `minio123`.
 
-==== Create a PersistentVolumenClaim Resource
+=== Create a PersistentVolumenClaim Resource
 
 This will be the resource backed up by K8up:
 
@@ -60,7 +60,7 @@ spec:
 
 Save the YAML above in a file named `pvc.yml` and use the `kubectl apply -f pvc.yml` command to deploy this configuration to your cluster.
 
-==== Create Backup Credentials
+=== Create Backup Credentials
 
 Create the secret credentials for the backup repository:
 
@@ -163,11 +163,11 @@ Feel free to adjust the frequencies to your liking. To help you with the crontab
 
 TIP: You can always check the state and configuration of your backup by using `kubectl describe schedule` * By default all PVCs are stored in backup. By adding the annotation `appuio.ch/backup=false` to a PVC object it will get excluded from backup.
 
-=== Checking the Status of Backup Jobs
+== Checking the Status of Backup Jobs
 
 Every time a job starts, it creates a separate pod in your namespace. You can see them using `kubectl pods`. You can then use the usual `kubectl logs <POD NAME>` command to troubleshoot a failed backup job.
 
-=== Application-Aware Backups
+== Application-Aware Backups
 
 It is possible to define annotations on pods with backup commands. These backup commands should create an application-aware backup and stream it to stdout.
 
@@ -195,6 +195,6 @@ Tested with:
 
 But it should work with any command that has the ability to output the backup to stdout.
 
-=== What is Next?
+== What is Next?
 
 For advanced configuration of the operator please see xref:advanced-config.adoc[Advanced config].

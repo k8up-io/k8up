@@ -1,8 +1,8 @@
-== Object Specifications
+= Object Specifications
 
 The K8up operator includes various CRDs which get added to the cluster. Here We’ll explain them in more detail.
 
-=== Schedule
+== Schedule
 
 With the schedule CRD it is possible to put all other CRDs on a schedule.
 
@@ -59,7 +59,7 @@ spec:
 * `check`: see check for further explanaition
 * `prune`: see prune for further explanaition
 
-=== Restore
+== Restore
 
 It’s now possible to define various restore jobs. Currently these kinds of restores are supported:
 
@@ -97,11 +97,11 @@ spec:
 
 This will restore the latest snapshot from `http://10.144.1.224:9000` to the PVC with the name `restore`.
 
-==== Settings
+=== Settings
 
 TODO:
 
-=== Archive
+== Archive
 
 The archive CRD will take the latest snapshots from each namespace/project in the repository. Thus you should only run one schedule per repository for archival as there’s a chance that you’ll archive snapshots more than once.
 
@@ -137,11 +137,11 @@ spec:
         key: password
 ----
 
-==== Settings
+=== Settings
 
 TODO:
 
-=== Backup
+== Backup
 
 This will trigger a single backup.
 
@@ -172,11 +172,11 @@ spec:
     key: password
 ----
 
-==== Settings
+=== Settings
 
 TODO:
 
-=== Check
+== Check
 
 This will trigger a single check run on the repository.
 
@@ -203,11 +203,11 @@ spec:
     key: password
 ----
 
-==== Settings
+=== Settings
 
 TODO:
 
-=== Prune
+== Prune
 
 This will trigger a single prune run and delete the snapshots according to the defined retention rules. This one needs to run exclusively on the repository. No other jobs must run on the same repository while this one is still running. The operator ensures that the prune will run exclusively on the repository.
 
@@ -237,14 +237,14 @@ spec:
   promURL: http://10.144.1.224:9000
 ----
 
-==== Settings
+=== Settings
 
 TODO:
 
-=== Backend
+== Backend
 
 TODO:
 
-==== Settings
+=== Settings
 
 TODO:

@@ -1,4 +1,4 @@
-== Restore
+= Restore
 
 It is possible to tell the operator to perform restores either to a PVC or an S3 bucket.
 
@@ -38,7 +38,7 @@ spec:
 
 This will trigger a one time job to restore the latest snapshot to S3.
 
-=== Manual restore via Restic
+== Manual restore via Restic
 
 To manually restore you’ll need: * Linux machine with https://github.com/restic/restic[restic] * Fuse (Optional for mounting)
 
