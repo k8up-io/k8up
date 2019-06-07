@@ -54,16 +54,7 @@ This will be the resource backed up by K8up:
 
 [source,yaml]
 ----
-kind: PersistentVolumeClaim
-apiVersion: v1
-metadata:
-  name: apvc
-spec:
-  accessModes:
-    - ReadWriteMany
-  resources:
-    requests:
-      storage: 1Gi
+include::../assets/yaml_files/pvc.yaml[]
 ----
 
 Save the YAML above in a file named `pvc.yml` and use the `kubectl apply -f pvc.yml` command to deploy this configuration to your cluster.
@@ -74,26 +65,7 @@ Create the secret credentials for the backup repository:
 
 [source,yaml]
 ----
-apiVersion: v1
-kind: Secret
-metadata:
-  name: backup-credentials
-  namespace: default
-type: Opaque
-data:
-  username: bWluaW8=
-  password: bWluaW8xMjM=
-
----
-
-apiVersion: v1
-kind: Secret
-metadata:
-  name: backup-repo
-  namespace: default
-type: Opaque
-data:
-  password: cEBzc3cwcmQ=
+include::../assets/yaml_files/credentials.yaml[]
 ----
 
 Save the YAML above in a file named `secrets.yml` and use the `kubectl apply -f secrets.yml` command to deploy this configuration to your cluster.
@@ -115,48 +87,7 @@ The custom Schedule object below defines the frequency, destination and secrets 
 
 [source,yaml]
 ----
-apiVersion: backup.appuio.ch/v1alpha1
-kind: Schedule
-metadata:
-  name: schedule-test
-spec:
-  backend:
-    s3:
-      endpoint: http://minio-service:9000
-      bucket: backups
-      accessKeyIDSecretRef:
-        name: backup-credentials
-        key: username
-      secretAccessKeySecretRef:
-        name: backup-credentials
-        key: password
-    repoPasswordSecretRef:
-      name: backup-repo
-      key: password
-  archive:
-    schedule: '0 0 1 * *'
-    restoreMethod:
-      s3:
-        endpoint: http://minio-service:9000
-        bucket: archive
-        accessKeyIDSecretRef:
-          name: backup-credentials
-          key: username
-        secretAccessKeySecretRef:
-          name: backup-credentials
-          key: password
-  backup:
-    schedule: '*/5 * * * *'
-    keepJobs: 4
-    promURL: http://minio-service:9000
-  check:
-    schedule: '0 1 * * 1'
-    promURL: http://minio-service:9000
-  prune:
-    schedule: '0 1 * * 0'
-    retention:
-      keepLast: 5
-      keepDaily: 14
+include::../assets/yaml_files/backup.yaml[]
 ----
 
 Save the YAML above in a file named `backup.yml` and use the `kubectl apply -f backup.yml` command to deploy this configuration to your cluster.
