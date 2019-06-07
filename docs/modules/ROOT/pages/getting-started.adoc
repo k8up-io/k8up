@@ -54,7 +54,7 @@ This will be the resource backed up by K8up:
 
 [source,yaml]
 ----
-include::../assets/yaml_files/pvc.yaml[]
+include::example$pvc.yaml[]
 ----
 
 Save the YAML above in a file named `pvc.yml` and use the `kubectl apply -f pvc.yml` command to deploy this configuration to your cluster.
@@ -65,7 +65,7 @@ Create the secret credentials for the backup repository:
 
 [source,yaml]
 ----
-include::../assets/yaml_files/credentials.yaml[]
+include::example$credentials.yaml[]
 ----
 
 Save the YAML above in a file named `secrets.yml` and use the `kubectl apply -f secrets.yml` command to deploy this configuration to your cluster.
@@ -87,7 +87,7 @@ The custom Schedule object below defines the frequency, destination and secrets 
 
 [source,yaml]
 ----
-include::../assets/yaml_files/backup.yaml[]
+include::example$backup.yaml[]
 ----
 
 Save the YAML above in a file named `backup.yml` and use the `kubectl apply -f backup.yml` command to deploy this configuration to your cluster.
