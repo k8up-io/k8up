@@ -10,7 +10,6 @@ The following movie shows the sequence of steps explained in this document.
 <asciinema-player src="_attachments/backup.cast" idle-time-limit="1" poster="npt:0:40" speed="1.0" font-size="medium" theme="tango"></asciinema-player>
 ++++
 
-
 == Prerequisites
 
 This section provides information about the minimum requirements for testing K8up on Minikube.
