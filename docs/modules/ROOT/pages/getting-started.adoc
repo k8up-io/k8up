@@ -7,10 +7,7 @@ This document provides a quick introduction to K8up, how it works and how to use
 The following movie shows the sequence of steps explained in this document.
 
 ++++
-<asciinema-player src="_videos/backup.cast" idle-time-limit="1" poster="npt:0:40" speed="1.0" font-size="medium" theme="tango"></asciinema-player>
-
-<link rel="stylesheet" href="lib/asciinema/asciinema-player.css">
-<script src="lib/asciinema/asciinema-player.js"></script>
+<asciinema-player src="{attachmentsdir}/backup.cast" idle-time-limit="1" poster="npt:0:40" speed="1.0" font-size="medium" theme="tango"></asciinema-player>
 ++++
 
 
@@ -210,3 +207,8 @@ But it should work with any command that has the ability to output the backup to
 == What is Next?
 
 For advanced configuration of the operator please see xref:advanced-config.adoc[Advanced config].
+
+++++
+<link rel="stylesheet" href="{attachmentsdir}/asciinema-player.css">
+<script src="{attachmentsdir}/asciinema-player.js"></script>
+++++
