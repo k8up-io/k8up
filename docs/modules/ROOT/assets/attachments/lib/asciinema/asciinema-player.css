@@ -1,6 +1,7 @@
 .asciinema-player-wrapper {
   position: relative;
-  text-align: center;
+  text-align: left;
+  padding-top: 1em;
   outline: none;
 }
 .asciinema-player-wrapper .title-bar {
@@ -122,14 +123,14 @@
   box-sizing: content-box;
   -moz-box-sizing: content-box;
   -webkit-box-sizing: content-box;
-  overflow: hidden;
+  overflow: hidden!important;
   max-width: 100%;
 }
 .asciinema-terminal {
   box-sizing: content-box;
   -moz-box-sizing: content-box;
   -webkit-box-sizing: content-box;
-  overflow: hidden;
+  overflow: hidden!important;
   padding: 0;
   margin: 0px;
   display: block;
@@ -1997,7 +1998,7 @@
 }
 .asciinema-theme-tango .asciinema-terminal {
   color: #cccccc;
-  background-color: #121314;
+  background-color: #121314!important;
   border-color: #121314;
 }
 .asciinema-theme-tango .fg-bg {
