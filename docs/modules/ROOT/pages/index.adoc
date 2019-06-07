@@ -6,6 +6,6 @@ Just create a `schedule` object in the namespace you’d like to backup. It’s 
 
 K8up is currently under heavy development and far from feature complete. But it should already be stable enough for production use.
 
-****
+++++
 <iframe src="_attachments/slides_embedded.html" width="640" height="480"></iframe>
-****
+++++
