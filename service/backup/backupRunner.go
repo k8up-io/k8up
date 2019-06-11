@@ -1,6 +1,7 @@
 package backup
 
 import (
+	"fmt"
 	"sort"
 	"strconv"
 
@@ -8,17 +9,21 @@ import (
 	"github.com/vshn/k8up/service"
 	"github.com/vshn/k8up/service/observe"
 	"github.com/vshn/k8up/service/schedule"
+	appsv1 "k8s.io/api/apps/v1"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/watch"
 )
 
 type backupRunner struct {
 	service.CommonObjects
-	config   config
-	backup   *backupv1alpha1.Backup
-	observer *observe.Observer
+	config             config
+	backup             *backupv1alpha1.Backup
+	observer           *observe.Observer
+	runningDeployments []appsv1.Deployment
 }
 
 func newBackupRunner(backup *backupv1alpha1.Backup, common service.CommonObjects, observer *observe.Observer) *backupRunner {
@@ -37,6 +42,8 @@ func (b *backupRunner) Start() error {
 	b.updateBackupStatus()
 
 	volumes := b.listPVCs(b.config.annotation)
+
+	b.startPodTemplates()
 
 	backupJob := newBackupJob(volumes, b.backup.Name, b.backup, b.config)
 
@@ -73,10 +80,12 @@ func (b *backupRunner) watchState(backupJob *batchv1.Job) {
 			b.backup.Status.Failed = true
 			b.backup.Status.Finished = true
 			b.updateBackupStatus()
+			b.stopPodTemplates()
 		},
 		Successfunc: func(message observe.PodState) {
 			b.backup.Status.Finished = true
 			b.updateBackupStatus()
+			b.stopPodTemplates()
 		},
 	}
 
@@ -187,5 +196,99 @@ func (b *backupRunner) updateBackupStatus() {
 	_, updateErr := b.BaasCLI.AppuioV1alpha1().Backups(b.backup.Namespace).Update(result)
 	if updateErr != nil {
 		b.Logger.Errorf("Coud not update backup resource: %v", updateErr)
+	}
+}
+
+// startPodTemplates will start and wait all pods defined in the template and
+// wait for at least one replication to be available for each pod.
+func (b *backupRunner) startPodTemplates() {
+	b.runningDeployments = b.getDeployments()
+	for _, deployment := range b.runningDeployments {
+
+		name := fmt.Sprintf("%v/%v", deployment.GetNamespace(), deployment.GetName())
+
+		b.Logger.Infof("Creating command pod %v\n", name)
+		runningDeployment, err := b.K8sCli.Apps().Deployments(b.backup.GetNamespace()).Create(&deployment)
+		if err != nil {
+			b.Logger.Errorf("error creating command pod %v: %v\n", name, err)
+			continue
+		}
+
+		watcher, err := b.K8sCli.Apps().Deployments(b.backup.GetNamespace()).Watch(
+			metav1.SingleObject(runningDeployment.ObjectMeta),
+		)
+		if err != nil {
+			b.Logger.Errorf("cannot watch deployment: %v", err)
+			continue
+		}
+
+		for event := range watcher.ResultChan() {
+			runningDeployment = event.Object.(*appsv1.Deployment)
+
+			switch event.Type {
+			case watch.Modified:
+
+				last := b.getLastDeploymentCondition(runningDeployment)
+
+				if last != nil {
+					// if the deadline can't be respected https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#progress-deadline-seconds
+					if last.Type == "Progressing" && last.Status == "False" && last.Reason == "ProgressDeadlineExceeded" {
+						b.Logger.Errorf("error starting pre backup pod %v: %v", name, last.Message)
+						watcher.Stop()
+					}
+				}
+
+				// Wait until at least one replica is available and continue
+				if runningDeployment.Status.AvailableReplicas > 0 {
+					watcher.Stop()
+				}
+
+				b.Logger.Infof("waiting for command pod %v to get ready", name)
+
+			case watch.Error:
+
+				last := b.getLastDeploymentCondition(runningDeployment)
+
+				if last != nil {
+					b.Logger.Errorf("there was an error while starting pre backup pod %v: %v", name, last.Message)
+
+				} else {
+					b.Logger.Errorf("there was an unknown error while starting pre backup pod %v", name)
+				}
+
+				watcher.Stop()
+
+			default:
+				b.Logger.Errorf("unexpected event during %v watching: %v ", name, event.Type)
+				watcher.Stop()
+			}
+		}
+
+	}
+}
+
+func (b *backupRunner) getLastDeploymentCondition(deployment *appsv1.Deployment) *appsv1.DeploymentCondition {
+	conditions := deployment.Status.Conditions
+
+	if len(conditions) > 0 {
+		return &conditions[len(conditions)-1]
+	}
+	return nil
+}
+
+func (b *backupRunner) stopPodTemplates() {
+	for _, set := range b.runningDeployments {
+		b.Logger.Infof("removing command pod %v/%v", set.GetNamespace(), set.GetName())
+		option := metav1.DeletePropagationForeground
+		err := b.K8sCli.Apps().Deployments(b.backup.GetNamespace()).Delete(set.GetName(), &metav1.DeleteOptions{
+			PropagationPolicy: &option,
+		})
+		if err != nil {
+			if errors.IsNotFound(err) {
+				b.Logger.Infof("deployment already removed: ", err)
+			} else {
+				b.Logger.Errorf("could not remove deployment: %v", err)
+			}
+		}
 	}
 }

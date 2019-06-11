@@ -90,6 +90,8 @@ func create(options options) operator.Operator {
 	prune := prune.NewPruner(commonObjects, observe.GetInstance())
 	pruneHandler := newHandler(options.logger, prune)
 
+	ptCRD := newPreBackupPodCRD(options.clients)
+
 	CRDs := []resource.CRD{
 		bCRD,
 		rCRD,
@@ -185,6 +187,12 @@ func create(options options) operator.Operator {
 			Object:        pCRD.GetObject(),
 			ListerWatcher: pCRD.GetListerWatcher(),
 		},
+	}
+
+	// Register non-controlled CRDs
+	err := ptCRD.Initialize()
+	if err != nil {
+		options.logger.Errorf("Error initializing podTemplate CRD:", err)
 	}
 
 	ctrls := []controller.Controller{}

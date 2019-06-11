@@ -15,19 +15,20 @@
             "program": "${workspaceFolder}/cmd/operator",
             "env": {
                 "BACKUP_IMAGE": "172.30.1.1:5000/myproject/wrestic:0.0.1",
-                "BACKUP_GLOBALS3ENDPOINT": "http://10.144.1.249:9000",
+                "BACKUP_GLOBALS3ENDPOINT": "http://10.144.1.196:9000",
                 "BACKUP_GLOBALS3BUCKET": "baas",
                 "BACKUP_GLOBALSECRETACCESSKEY": "ip3cdrkXcHmH4S7if7erKPNoxDn27V0vrg6CHHem",
                 "BACKUP_GLOBALACCESSKEYID": "8U0UDNYPNUDTUS1LIAF3",
                 "BACKUP_GLOBALREPOPASSWORD": "password",
                 "BACKUP_GLOBALRESTORES3BUCKET": "restoremini",
-                "BACKUP_GLOBALRESTORES3ENDPOINT": "http://10.144.1.249:9000",
+                "BACKUP_GLOBALRESTORES3ENDPOINT": "http://10.144.1.196:9000",
                 "BACKUP_GLOBALRESTORES3ACCESSKEYID": "8U0UDNYPNUDTUS1LIAF3",
                 "BACKUP_GLOBALRESTORES3SECRETACCESSKEY": "ip3cdrkXcHmH4S7if7erKPNoxDn27V0vrg6CHHem",
                 "BACKUP_BACKOFFLIMIT": "2",
             },
             "args": ["-development"],
-            "showLog": true
+            "showLog": true,
+            "showGlobalVariables": false
         }
     ]
 }
