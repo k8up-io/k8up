@@ -44,7 +44,7 @@ require (
 	golang.org/x/sys v0.0.0-20190428183149-804c0c7841b5 // indirect
 	golang.org/x/text v0.3.2 // indirect
 	golang.org/x/time v0.0.0-20180412165947-fbb02b2291d2 // indirect
-	golang.org/x/tools v0.0.0-20190428024724-550556f78a90 // indirect
+	golang.org/x/tools v0.0.0-20190614214856-5aca471b1d59 // indirect
 	google.golang.org/appengine v1.1.0 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.2.1 // indirect
