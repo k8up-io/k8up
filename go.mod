@@ -1,7 +1,7 @@
 module github.com/vshn/k8up
 
 require (
-	github.com/Infowatch/cron v0.0.0-20170529141252-2514e6ea36fd
+	github.com/Infowatch/cron v0.0.0-20190617084958-736158dc09e1
 	github.com/beorn7/perks v0.0.0-20180321164747-3a771d992973 // indirect
 	github.com/ghodss/yaml v1.0.0 // indirect
 	github.com/gogo/protobuf v1.1.1 // indirect

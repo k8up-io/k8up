@@ -1,5 +1,6 @@
 github.com/Infowatch/cron v0.0.0-20170529141252-2514e6ea36fd h1:UoRe2Olw5+AozzQ63Kl68kfgqqBQEA9eZ5dJuM6w9bw=
 github.com/Infowatch/cron v0.0.0-20170529141252-2514e6ea36fd/go.mod h1:Ifp6XnrAzvojNAsrIui2SJPVviwd+mwa80TXUIjHJhA=
+github.com/Infowatch/cron v0.0.0-20190617084958-736158dc09e1/go.mod h1:Ifp6XnrAzvojNAsrIui2SJPVviwd+mwa80TXUIjHJhA=
 github.com/beorn7/perks v0.0.0-20180321164747-3a771d992973 h1:xJ4a3vCFaGF/jqvzLMYoU8P317H5OQ+Via4RmuPwCS0=
 github.com/beorn7/perks v0.0.0-20180321164747-3a771d992973/go.mod h1:Dwedo/Wpr24TaqPxmxbtue+5NUziq4I4S80YR8gNf3Q=
 github.com/davecgh/go-spew v1.1.0 h1:ZDRjVQ15GmhC3fiQ8ni8+OwkZQO4DARzQgrnXU1Liz8=
