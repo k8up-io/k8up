@@ -1,4 +1,4 @@
-= Object Specifications
+= Object Specifications Reference
 
 The K8up operator includes various CRDs which get added to the cluster. Here We’ll explain them in more detail.
 

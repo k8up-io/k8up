@@ -1,4 +1,4 @@
-= Restore
+= How to Restore a Backup
 
 It is possible to tell the operator to perform restores either to a PVC or an S3 bucket.
 

@@ -1,4 +1,4 @@
-= Advanced config
+= Advanced Config Reference
 
 The operator has two ways for configuration:
 

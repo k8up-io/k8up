@@ -1,14 +1,6 @@
-= Getting Started
+= Getting Started Tutorial
 
-This document provides a quick introduction to K8up, how it works and how to use it.
-
-== Summary
-
-The following movie shows the sequence of steps explained in this document.
-
-++++
-<asciinema-player src="_attachments/casts/backup.cast" idle-time-limit="1" poster="npt:0:40" speed="1.0" font-size="medium" theme="tango"></asciinema-player>
-++++
+This tutorial provides a quick introduction to K8up, how it works and how to use it.
 
 == Prerequisites
 
@@ -101,6 +93,14 @@ image::minio_browser.png[]
 Feel free to adjust the frequencies to your liking. To help you with the crontab syntax, we recommend to check https://crontab.guru[crontab.guru].
 
 TIP: You can always check the state and configuration of your backup by using `kubectl describe schedule` * By default all PVCs are stored in backup. By adding the annotation `appuio.ch/backup=false` to a PVC object it will get excluded from backup.
+
+== Summary
+
+The following movie shows the sequence of steps explained in this tutorial.
+
+++++
+<asciinema-player src="_attachments/casts/backup.cast" idle-time-limit="1" poster="npt:0:40" speed="1.0" font-size="medium" theme="tango"></asciinema-player>
+++++
 
 == Checking the Status of Backup Jobs
 
