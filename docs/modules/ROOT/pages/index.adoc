@@ -1,7 +1,17 @@
-# Overview
+= K8up
 
 K8up is a backup operator that will handle PVC and app backups on a k8s/OpenShift cluster.
 
 Just create a `schedule` object in the namespace you’d like to backup. It’s that easy. K8up takes care of the rest. It also provides a Prometheus endpoint for monitoring.
 
 K8up is currently under heavy development and far from feature complete. But it should already be stable enough for production use.
+
+== Presentation
+
+The slides below were presented at the https://www.meetup.com/Cloud-Native-Computing-Switzerland/events/261545051/[KubeCon & CloudNativeCon 2019 Recap Meetup] at VSHN, on Wednesday, June 5, 2019.
+
+Click on them and use the arrow keys to navigate from left to right.
+
+++++
+<iframe src="_attachments/slides_embedded.html" width="640" height="480"></iframe>
+++++

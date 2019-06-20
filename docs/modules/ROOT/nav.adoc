@@ -1,0 +1,5 @@
+* xref:index.adoc[Home]
+* xref:getting-started.adoc[Getting Started]
+* xref:object-specifications.adoc[Object Specifications]
+* xref:restore.adoc[Restore]
+* xref:advanced-config.adoc[Advanced Configuration]

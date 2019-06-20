@@ -1,10 +1,11 @@
-# Restore
+= How to Restore a Backup
 
 It is possible to tell the operator to perform restores either to a PVC or an S3 bucket.
 
 For this you can create a restore object:
 
-```yaml
+[source,yaml]
+----
 apiVersion: backup.appuio.ch/v1alpha1
 kind: Restore
 metadata:
@@ -33,18 +34,18 @@ spec:
       secretAccessKeySecretRef:
         name: backup-credentials
         key: password
-```
+----
 
 This will trigger a one time job to restore the latest snapshot to S3.
 
-## Manual restore via Restic
+== Manual restore via Restic
 
-To manually restore you'll need:
-* Linux machine with [restic](https://github.com/restic/restic)
-* Fuse (Optional for mounting)
+To manually restore you’ll need: * Linux machine with https://github.com/restic/restic[restic] * Fuse (Optional for mounting)
 
-Let's take this `backend` example from a schedule:
-```yaml
+Let’s take this `backend` example from a schedule:
+
+[source,yaml]
+----
 backend:
   s3:
     endpoint: http://localhost:9000
@@ -55,19 +56,22 @@ backend:
     secretAccessKeySecretRef:
       name: backup-credentials
       key: password
-```
+----
 
-You'll need the credentials from the secrets as well as the encryption key. With that information you can configure restic:
+You’ll need the credentials from the secrets as well as the encryption key. With that information you can configure restic:
 
-```bash
+[source,bash]
+----
 export RESTIC_REPOSITORY=s3:http://localhost/baas
 export RESTIC_PASSWORD=p@assword
 export AWS_ACCESS_KEY_ID=8U0UDNYPNUDTUS1LIAF3
 export AWS_SECRET_ACCESS_KEY=ip3cdrkXcHmH4S7if7erKPNoxDn27V0vrg6CHHem
-```
+----
+
 Now you can use Restic to browse and restore snapshots:
 
-```bash
+[source,bash]
+----
 # List snapshots
 restic snapshots
 repository dec6d66c opened successfully, password is correct
@@ -93,6 +97,6 @@ dr-xr-xr-x  1 simonbeck  staff    0 Jun  8 09:21 hosts
 dr-xr-xr-x  1 simonbeck  staff    0 Jun  8 09:21 ids
 dr-xr-xr-x  1 simonbeck  staff    0 Jun  8 09:21 snapshots
 dr-xr-xr-x  1 simonbeck  staff    0 Jun  8 09:21 tags
-```
+----
 
 Here you can browse all backups by host, ids, snapshots or tags.
