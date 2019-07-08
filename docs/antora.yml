@@ -1,4 +1,4 @@
-name: k8up
+name: docs
 title: K8up Documentation
 version: 0.1.5
 start_page: ROOT:index.adoc
