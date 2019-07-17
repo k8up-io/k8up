@@ -9,7 +9,7 @@ import (
 	"git.vshn.net/vshn/wrestic/output"
 )
 
-const notInitialisedError = "Not initialised yet"
+const notInitialisedError = "not initialised yet"
 
 // ListSnapshotsStruct holds the state of the listsnapshots command.
 type ListSnapshotsStruct struct {
@@ -27,10 +27,9 @@ func (l *ListSnapshotsStruct) ListSnapshots(last bool) []Snapshot {
 	if last {
 		args = append(args, "--last")
 	}
-	var timeout int
 
 	l.genericCommand.exec(args, commandOptions{print: false})
-	fmt.Printf("Listing snapshots, timeout: %v\n", timeout)
+	fmt.Printf("Listing snapshots\n")
 	if len(l.stdErrOut) > 1 && strings.Contains(l.stdErrOut[1], "following location?") {
 		l.errorMessage = errors.New(notInitialisedError)
 		return nil
