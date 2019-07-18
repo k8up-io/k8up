@@ -4,15 +4,38 @@ import (
 	"fmt"
 	"math/rand"
 
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/vshn/k8up/log"
 	"github.com/vshn/k8up/service"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/client-go/kubernetes"
 )
 
 const (
 	jobRunning = "running"
 	jobDeleted = "deleted"
+)
+
+var (
+	metricsFailureCounter = promauto.NewCounterVec(prometheus.CounterOpts{
+		Name: "k8up_jobs_failed_counter",
+		Help: "The total number of backups that failed",
+	}, promLabels)
+	metricsSuccessCounter = promauto.NewCounterVec(prometheus.CounterOpts{
+		Name: "k8up_jobs_successful_counter",
+		Help: "The total number of backups that went through cleanly",
+	}, promLabels)
+	metricsTotalCounter = promauto.NewCounterVec(prometheus.CounterOpts{
+		Name: "k8up_jobs_total",
+		Help: "The total amount of all jobs run",
+	}, promLabels)
+
+	promLabels = []string{
+		"namespace",
+		"jobType",
+	}
 )
 
 type topic string
@@ -52,6 +75,7 @@ type WatchObjects struct {
 	Failedfunc  func(message PodState)
 	Runningfunc func(message PodState)
 	Defaultfunc func(message PodState)
+	K8sCli      kubernetes.Interface
 }
 
 // update sends an update to a single subscriber
@@ -155,6 +179,10 @@ func (s *Subscriber) WatchLoop(watch WatchObjects) {
 
 	defer GetInstance().GetBroker().Unsubscribe(s.TopicName, s)
 
+	// initialise the metrics, as there's no rate change if it just pops up with
+	// the value of 1.
+	initMetrics(watch.Job.GetNamespace(), string(watch.JobName))
+
 	for message := range s.CH {
 		switch message.State {
 		case batchv1.JobFailed:
@@ -163,6 +191,7 @@ func (s *Subscriber) WatchLoop(watch WatchObjects) {
 				watch.Failedfunc(message)
 			}
 			watch.Locker.Decrement(watch.jobType)
+			incrFailure(watch.Job.GetNamespace(), string(watch.jobType.Name))
 			return
 		case batchv1.JobComplete:
 			watch.Logger.Infof("%v finished successfully", jobString)
@@ -170,6 +199,7 @@ func (s *Subscriber) WatchLoop(watch WatchObjects) {
 				watch.Successfunc(message)
 			}
 			watch.Locker.Decrement(watch.jobType)
+			incSuccess(watch.Job.GetNamespace(), string(watch.jobType.Name))
 			return
 		default:
 			watch.Logger.Infof("%v is %v", jobString, jobRunning)
@@ -179,4 +209,19 @@ func (s *Subscriber) WatchLoop(watch WatchObjects) {
 			}
 		}
 	}
+}
+
+func incrFailure(namespace, jobType string) {
+	metricsFailureCounter.WithLabelValues(namespace, jobType).Inc()
+	metricsTotalCounter.WithLabelValues(namespace, jobType).Inc()
+}
+
+func incSuccess(namespace, jobType string) {
+	metricsSuccessCounter.WithLabelValues(namespace, jobType).Inc()
+	metricsTotalCounter.WithLabelValues(namespace, jobType).Inc()
+}
+
+func initMetrics(namespace, jobType string) {
+	metricsFailureCounter.WithLabelValues(namespace, jobType).Add(0)
+	metricsSuccessCounter.WithLabelValues(namespace, jobType).Add(0)
 }

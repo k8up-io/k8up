@@ -5,12 +5,13 @@ import (
 	"sync"
 	"time"
 
-	"github.com/vshn/k8up/log"
 	"github.com/gorilla/mux"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/viper"
 	applogger "github.com/spotahome/kooper/log"
+	"github.com/spotahome/kooper/monitoring/metrics"
+	"github.com/vshn/k8up/log"
 )
 
 // Interface check for MetricExporter
@@ -22,6 +23,7 @@ type MetricExporter struct {
 	log        log.Logger
 	httpServer *http.Server
 	mutex      *sync.Mutex
+	Metrics    *metrics.Prometheus
 }
 
 // MonitorEndpoint defines the monitoring handler
@@ -50,7 +52,7 @@ func new() *MetricExporter {
 	m := mux.NewRouter()
 	m.Handle("/metrics", promhttp.Handler())
 
-	tmp := &MetricExporter{
+	me := &MetricExporter{
 		log: &applogger.Std{},
 		httpServer: &http.Server{
 			Addr:           viper.GetString("metricbind"),
@@ -61,14 +63,15 @@ func new() *MetricExporter {
 		},
 		mutex: &sync.Mutex{},
 	}
-	tmp.log.Infof("Starting prometheus endpoint")
+	me.log.Infof("Starting prometheus endpoint")
 	go func() {
-		err := tmp.httpServer.ListenAndServe()
+		err := me.httpServer.ListenAndServe()
 		if err != nil {
 			panic(err)
 		}
 	}()
-	return tmp
+	me.Metrics = metrics.NewPrometheus(prometheus.DefaultRegisterer)
+	return me
 }
 
 // Register registers a prometheus collector

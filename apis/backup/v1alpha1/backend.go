@@ -3,6 +3,7 @@ package v1alpha1
 import (
 	"fmt"
 
+	"github.com/imdario/mergo"
 	"github.com/vshn/k8up/config"
 	corev1 "k8s.io/api/core/v1"
 )
@@ -66,26 +67,22 @@ func (b *Backend) String() string {
 
 }
 
-func (b *Backend) Merge(config config.Global) {
+// Merge will merge the backend configuration with the global config. It also
+// accepts another backend with defaults.
+// Precedence (highest to lowest): b -> defaults -> config
+func (b *Backend) Merge(config config.Global, defaults *Backend) {
 
 	if b == nil {
 		b = &Backend{}
 	}
 
-	// Currently only S3 is implemented
-	if b.S3 == nil {
-		b.S3 = &S3Spec{
-			Endpoint: config.GlobalS3Endpoint,
-			Bucket:   config.GlobalS3Bucket,
-		}
-	} else {
-		if b.S3.Endpoint == "" {
-			b.S3.Endpoint = config.GlobalS3Endpoint
-		}
-		if b.S3.Bucket == "" {
-			b.S3.Bucket = config.GlobalS3Bucket
-		}
+	if defaults != nil {
+		mergo.Merge(b, defaults)
 	}
+
+	// Currently only S3 is implemented
+	b.S3.merge(config)
+
 }
 
 func (b *Backend) PasswordEnvVar(config config.Global) corev1.EnvVar {
@@ -124,6 +121,22 @@ type S3Spec struct {
 	SecretAccessKeySecretRef *SecretKeySelector `json:"secretAccessKeySecretRef,omitempty"`
 	Username                 string             `json:"username,omitempty"` //ONLY for development
 	Password                 string             `json:"password,omitempty"` //ONLY for development
+}
+
+func (s *S3Spec) merge(config config.Global) {
+	if s == nil {
+		s = &S3Spec{
+			Endpoint: config.GlobalS3Endpoint,
+			Bucket:   config.GlobalS3Bucket,
+		}
+	} else {
+		if s.Endpoint == "" {
+			s.Endpoint = config.GlobalS3Endpoint
+		}
+		if s.Bucket == "" {
+			s.Bucket = config.GlobalS3Bucket
+		}
+	}
 }
 
 func (s *S3Spec) BackupEnvs(config config.Global) []corev1.EnvVar {

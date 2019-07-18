@@ -7,6 +7,8 @@ import (
 	"time"
 
 	"github.com/Infowatch/cron"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 	backupv1alpha1 "github.com/vshn/k8up/apis/backup/v1alpha1"
 	"github.com/vshn/k8up/config"
 	"github.com/vshn/k8up/service"
@@ -15,9 +17,28 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
-var labels = map[string]string{
-	"scheduled": "true",
-}
+var (
+	labels = map[string]string{
+		"scheduled": "true",
+	}
+
+	promLabels = []string{
+		"namespace",
+		"jobType",
+	}
+
+	scheduleCount = promauto.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "k8up_schedules_gauge",
+		Help: "How many schedules this k8up manages",
+	}, []string{
+		"namespace",
+	})
+
+	queueCount = promauto.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "k8up_jobs_queued_gauge",
+		Help: "How many jobs are currently queued up",
+	}, promLabels)
+)
 
 type scheduleRunner struct {
 	*service.CommonObjects
@@ -39,6 +60,7 @@ func newScheduleRunner(schedule *backupv1alpha1.Schedule, common *service.Common
 // Stop stops the currently running schedule. It implements the ServiceRunner interface.
 func (s *scheduleRunner) Stop() error {
 	s.cron.Stop()
+	s.decrRegisteredSchedules(s.schedule.GetNamespace())
 	return nil
 }
 
@@ -64,15 +86,9 @@ func (s *scheduleRunner) Start() error {
 
 	if scheduleCopy.Spec.Restore != nil {
 		if scheduleCopy.Spec.Restore.Backend == nil {
-			if scheduleCopy.Spec.Backend != nil {
-				scheduleCopy.Spec.Restore.Backend = scheduleCopy.Spec.Backend
-			} else {
-				if scheduleCopy.Spec.Restore.Backend == nil {
-					scheduleCopy.Spec.Restore.Backend = &backupv1alpha1.Backend{}
-				}
-				scheduleCopy.Spec.Restore.Backend.Merge(config.New())
-			}
+			scheduleCopy.Spec.Restore.Backend = &backupv1alpha1.Backend{}
 		}
+		scheduleCopy.Spec.Restore.Backend.Merge(config.New(), scheduleCopy.Spec.Backend)
 
 		s.Logger.Infof("Registering restore schedule %v in namespace %v", scheduleCopy.Name, scheduleCopy.Namespace)
 
@@ -89,7 +105,7 @@ func (s *scheduleRunner) Start() error {
 
 			newRestore.Spec.KeepJobs = scheduleCopy.Spec.KeepJobs
 
-			s.waitForLock(newRestore.GetName(), service.GetRepository(newRestore.Spec.Backend), []observe.JobName{observe.PruneName, observe.CheckName})
+			s.waitForLock(newRestore.GetName(), service.GetRepository(newRestore.Spec.Backend), []observe.JobName{observe.PruneName, observe.CheckName}, "restore")
 
 			_, err := s.BaasCLI.AppuioV1alpha1().Restores(scheduleCopy.Namespace).Create(&newRestore)
 			if err != nil {
@@ -100,15 +116,9 @@ func (s *scheduleRunner) Start() error {
 
 	if scheduleCopy.Spec.Prune != nil {
 		if scheduleCopy.Spec.Prune.Backend == nil {
-			if scheduleCopy.Spec.Backend != nil {
-				scheduleCopy.Spec.Prune.Backend = scheduleCopy.Spec.Backend
-			} else {
-				if scheduleCopy.Spec.Prune.Backend == nil {
-					scheduleCopy.Spec.Prune.Backend = &backupv1alpha1.Backend{}
-				}
-				scheduleCopy.Spec.Prune.Backend.Merge(config.New())
-			}
+			scheduleCopy.Spec.Prune.Backend = &backupv1alpha1.Backend{}
 		}
+		scheduleCopy.Spec.Prune.Backend.Merge(config.New(), scheduleCopy.Spec.Backend)
 
 		s.Logger.Infof("Registering prune schedule %v in namespace %v", scheduleCopy.Name, scheduleCopy.Namespace)
 		s.cron.AddFunc(scheduleCopy.Spec.Prune.Schedule, func() {
@@ -138,7 +148,7 @@ func (s *scheduleRunner) Start() error {
 
 			newPrune.Spec.KeepJobs = scheduleCopy.Spec.KeepJobs
 
-			s.waitForLock(newPrune.GetName(), repoString, []observe.JobName{observe.BackupName, observe.CheckName, observe.RestoreName})
+			s.waitForLock(newPrune.GetName(), repoString, []observe.JobName{observe.BackupName, observe.CheckName, observe.RestoreName}, "prune")
 
 			_, err := s.BaasCLI.AppuioV1alpha1().Prunes(scheduleCopy.Namespace).Create(&newPrune)
 			if err != nil {
@@ -149,15 +159,9 @@ func (s *scheduleRunner) Start() error {
 
 	if scheduleCopy.Spec.Check != nil {
 		if scheduleCopy.Spec.Check.Backend == nil {
-			if scheduleCopy.Spec.Backend != nil {
-				scheduleCopy.Spec.Check.Backend = scheduleCopy.Spec.Backend
-			} else {
-				if scheduleCopy.Spec.Check.Backend == nil {
-					scheduleCopy.Spec.Check.Backend = &backupv1alpha1.Backend{}
-				}
-				scheduleCopy.Spec.Check.Backend.Merge(config.New())
-			}
+			scheduleCopy.Spec.Check.Backend = &backupv1alpha1.Backend{}
 		}
+		scheduleCopy.Spec.Check.Backend.Merge(config.New(), scheduleCopy.Spec.Backend)
 
 		s.Logger.Infof("Registering check schedule %v in namespace %v", scheduleCopy.Name, scheduleCopy.Namespace)
 		s.cron.AddFunc(scheduleCopy.Spec.Check.Schedule, func() {
@@ -178,7 +182,7 @@ func (s *scheduleRunner) Start() error {
 				return
 			}
 
-			s.waitForLock(newCheck.GetName(), service.GetRepository(newCheck.Spec.Backend), []observe.JobName{observe.PruneName, observe.BackupName, observe.RestoreName})
+			s.waitForLock(newCheck.GetName(), service.GetRepository(newCheck.Spec.Backend), []observe.JobName{observe.PruneName, observe.BackupName, observe.RestoreName}, "check")
 
 			_, err := s.BaasCLI.AppuioV1alpha1().Checks(scheduleCopy.Namespace).Create(&newCheck)
 			if err != nil {
@@ -189,15 +193,9 @@ func (s *scheduleRunner) Start() error {
 
 	if scheduleCopy.Spec.Backup != nil {
 		if scheduleCopy.Spec.Backup.Backend == nil {
-			if scheduleCopy.Spec.Backend != nil {
-				scheduleCopy.Spec.Backup.Backend = scheduleCopy.Spec.Backend
-			} else {
-				if scheduleCopy.Spec.Backup.Backend == nil {
-					scheduleCopy.Spec.Backup.Backend = &backupv1alpha1.Backend{}
-				}
-				scheduleCopy.Spec.Backup.Backend.Merge(config.New())
-			}
+			scheduleCopy.Spec.Backup.Backend = &backupv1alpha1.Backend{}
 		}
+		scheduleCopy.Spec.Backup.Backend.Merge(config.New(), scheduleCopy.Spec.Backend)
 
 		s.Logger.Infof("Registering backup schedule %v in namespace %v", scheduleCopy.Name, scheduleCopy.Namespace)
 		s.cron.AddFunc(scheduleCopy.Spec.Backup.Schedule, func() {
@@ -212,7 +210,7 @@ func (s *scheduleRunner) Start() error {
 
 			newBackup.Spec.KeepJobs = scheduleCopy.Spec.KeepJobs
 
-			s.waitForLock(newBackup.GetName(), service.GetRepository(newBackup.Spec.Backend), []observe.JobName{observe.PruneName, observe.CheckName})
+			s.waitForLock(newBackup.GetName(), service.GetRepository(newBackup.Spec.Backend), []observe.JobName{observe.PruneName, observe.CheckName}, "backup")
 
 			_, err := s.BaasCLI.AppuioV1alpha1().Backups(scheduleCopy.Namespace).Create(&newBackup)
 			if err != nil {
@@ -223,15 +221,9 @@ func (s *scheduleRunner) Start() error {
 
 	if scheduleCopy.Spec.Archive != nil {
 		if scheduleCopy.Spec.Archive.Backend == nil {
-			if scheduleCopy.Spec.Backend != nil {
-				scheduleCopy.Spec.Archive.Backend = scheduleCopy.Spec.Backend
-			} else {
-				if scheduleCopy.Spec.Archive.Backend == nil {
-					scheduleCopy.Spec.Archive.Backend = &backupv1alpha1.Backend{}
-				}
-				scheduleCopy.Spec.Archive.Backend.Merge(config.New())
-			}
+			scheduleCopy.Spec.Archive.Backend = &backupv1alpha1.Backend{}
 		}
+		scheduleCopy.Spec.Archive.Backend.Merge(config.New(), scheduleCopy.Spec.Backend)
 
 		s.Logger.Infof("Registering archive schedule %v in namespace %v", scheduleCopy.Name, scheduleCopy.Namespace)
 		s.cron.AddFunc(scheduleCopy.Spec.Archive.Schedule, func() {
@@ -246,7 +238,7 @@ func (s *scheduleRunner) Start() error {
 
 			newArchive.Spec.KeepJobs = scheduleCopy.Spec.KeepJobs
 
-			s.waitForLock(newArchive.GetName(), service.GetRepository(newArchive.Spec.Backend), []observe.JobName{observe.PruneName, observe.CheckName})
+			s.waitForLock(newArchive.GetName(), service.GetRepository(newArchive.Spec.Backend), []observe.JobName{observe.PruneName, observe.CheckName}, "archive")
 
 			_, err := s.BaasCLI.AppuioV1alpha1().Archives(scheduleCopy.Namespace).Create(&newArchive)
 			if err != nil {
@@ -256,6 +248,8 @@ func (s *scheduleRunner) Start() error {
 	}
 
 	s.cron.Start()
+
+	s.incrRegisteredSchedules(s.schedule.GetNamespace())
 
 	return nil
 }
@@ -270,8 +264,20 @@ func ScheduledLabelFilter() string {
 	return strings.Join(filter, ", ")
 }
 
-func (s *scheduleRunner) waitForLock(name string, backend string, jobs []observe.JobName) {
+func (s *scheduleRunner) waitForLock(name string, backend string, jobs []observe.JobName, jobType string) {
+	queue := queueCount.WithLabelValues(s.schedule.GetNamespace(), jobType)
+
 	s.Logger.Infof("%v for repo %v is queued waiting for jobs %v to finish", name, backend, jobs)
+	queue.Inc()
+	defer queue.Dec()
 	s.observer.GetLocker().WaitForRun(backend, jobs)
 	s.Logger.Infof("All blocking jobs on %v for %v are now finished", backend, name)
+}
+
+func (s *scheduleRunner) incrRegisteredSchedules(namespace string) {
+	scheduleCount.WithLabelValues(namespace).Inc()
+}
+
+func (s *scheduleRunner) decrRegisteredSchedules(namespace string) {
+	scheduleCount.WithLabelValues(namespace).Dec()
 }
