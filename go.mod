@@ -38,7 +38,7 @@ require (
 	github.com/spf13/viper v1.1.0
 	github.com/spotahome/kooper v0.4.0
 	github.com/stretchr/objx v0.2.0 // indirect
-	golang.org/x/crypto v0.0.0-20190426145343-a29dc8fdc734 // indirect
+	golang.org/x/crypto v0.0.0-20190718145432-4def268fd1a4 // indirect
 	golang.org/x/net v0.0.0-20190424112056-4829fb13d2c6 // indirect
 	golang.org/x/oauth2 v0.0.0-20180724155351-3d292e4d0cdc // indirect
 	golang.org/x/sys v0.0.0-20190428183149-804c0c7841b5 // indirect

@@ -106,7 +106,7 @@ github.com/spotahome/kooper/operator/retrieve
 github.com/spotahome/kooper/wrapper/time
 github.com/spotahome/kooper/operator/controller/leaderelection
 github.com/spotahome/kooper/operator/handler
-# golang.org/x/crypto v0.0.0-20190426145343-a29dc8fdc734
+# golang.org/x/crypto v0.0.0-20190718145432-4def268fd1a4
 golang.org/x/crypto/ssh/terminal
 # golang.org/x/net v0.0.0-20190424112056-4829fb13d2c6
 golang.org/x/net/http2
