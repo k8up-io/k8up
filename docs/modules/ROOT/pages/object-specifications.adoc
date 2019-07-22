@@ -14,6 +14,9 @@ metadata:
   name: schedule-test
 spec:
   backend:
+    repoPasswordSecretRef:
+      name: backup-repo
+      key: password
     s3:
       endpoint: http://10.144.1.224:9000
       bucket: baas
@@ -22,9 +25,6 @@ spec:
         key: username
       secretAccessKeySecretRef:
         name: backup-credentials
-        key: password
-      repoPasswordSecretRef:
-        name: backup-repo
         key: password
   archive:
     schedule: '0 * * * *'
@@ -54,10 +54,10 @@ spec:
 
 === Settings
 
-* `archive`: see archive for further explaination
-* `backend`: see backend for further explanaition
-* `check`: see check for further explanaition
-* `prune`: see prune for further explanaition
+* `archive`: see <<Archive, archive>> for further explaination
+* `backend`: see <<Backend, backend>> for further explanaition
+* `check`: see <<Check, check>> for further explanaition
+* `prune`: see <<Prune, prune>> for further explanaition
 
 == Restore
 
@@ -76,14 +76,14 @@ metadata:
   name: restore-test
 
 spec:
-  repoPasswordSecretRef:
-    name: backup-repo
-    key: password
   restoreMethod:
     folder:
       claimName: restore
 
   backend:
+    repoPasswordSecretRef:
+      name: backup-repo
+      key: password
     s3:
       endpoint: http://10.144.1.224:9000
       bucket: baas
@@ -99,7 +99,11 @@ This will restore the latest snapshot from `http://10.144.1.224:9000` to the PVC
 
 === Settings
 
-TODO:
+* `backend`: see <<Backend, backend>> for further explanation
+* `restoreMethod`: is either `s3` or `folder`. For s3 please see `backend` for `folder` you just need to provide a valid claim name as shown in the example above
+* `restoreFiler`: a filter passed to the underlying Restic, which will be used. Please consult the https://restic.readthedocs.io/en/latest/050_restore.html[Restic docs] for valid path filters.
+* `snapshot`: valid snapshot ID that should get restored. If not provided will restore the latest one.
+* `keepJobs`: amount of jobs that should be left after cleanup, e.g. how many job/pod objects should be left after they finished. Defaults to 6. Only applicable when used within a <<Schedule, schedule>>.
 
 == Archive
 
@@ -137,9 +141,7 @@ spec:
         key: password
 ----
 
-=== Settings
-
-TODO:
+Archive is just a wrapper for <<Restore, restore>>, intended for use with the schedule. Will restore all namespaces on a given <<Backend, backend>> to a given s3 location.
 
 == Backup
 
@@ -154,6 +156,9 @@ metadata:
 spec:
   keepJobs: 4
   backend:
+    repoPasswordSecretRef:
+      name: backup-repo
+      key: password
     s3:
       endpoint: http://10.144.1.224:9000
       bucket: baas
@@ -163,18 +168,15 @@ spec:
       secretAccessKeySecretRef:
         name: backup-credentials
         key: password
-  retention:
-    keepLast: 5
-    keepDaily: 14
   promURL: http://10.144.1.224:9000
-  repoPasswordSecretRef:
-    name: backup-repo
-    key: password
 ----
 
 === Settings
 
-TODO:
+* `backend`: see <<Backend, backend>>
+* `keepJobs`: amount of jobs that should be left after cleanup, e.g. how many job/pod objects should be left after they finished. Defaults to 6. Only applicable when used within a <<Schedule, schedule>>.
+* `promURL`: sends backup statistics to this Prometheus pushgateway while the backups are running.
+* `statsURL`: will send a JSON webhook containing backup information information to this endpoint. Can be used to gather a list with available backups.
 
 == Check
 
@@ -188,6 +190,9 @@ metadata:
   name: check-test
 spec:
   backend:
+    repoPasswordSecretRef:
+      name: backup-repo
+      key: password
     s3:
       endpoint: http://10.144.1.224:9000
       bucket: baas
@@ -198,18 +203,17 @@ spec:
         name: backup-credentials
         key: password
   promURL: http://10.144.1.224:9000
-  repoPasswordSecretRef:
-    name: backup-repo
-    key: password
 ----
 
 === Settings
 
-TODO:
+* `statsURL`: will send a JSON webhook containing check information information to this endpoint.
+* `backend`: see <<Backend, backend>>
+* `keepJobs`: amount of jobs that should be left after cleanup, e.g. how many job/pod objects should be left after they finished. Defaults to 6. Only applicable when used within a <<Schedule, schedule>>.
 
 == Prune
 
-This will trigger a single prune run and delete the snapshots according to the defined retention rules. This one needs to run exclusively on the repository. No other jobs must run on the same repository while this one is still running. The operator ensures that the prune will run exclusively on the repository.
+This will trigger a single prune run and delete the snapshots according to the defined retention rules. This one needs to run exclusively on the repository. No other jobs must run on the same repository while this one is still running. The operator ensures that the prune will run exclusively on the repository when run on a schedule. If manually triggering a prune the wrestic locking will kick in and prevent it from damaging the repository. It will also fail the whole pod in that case.
 
 [source,yaml]
 ----
@@ -222,6 +226,9 @@ spec:
     keepLast: 5
     keepDaily: 14
   backend:
+    repoPasswordSecretRef:
+      name: backup-repo
+      key: password
     s3:
       endpoint: http://10.144.1.224:9000
       bucket: baas
@@ -231,20 +238,64 @@ spec:
       secretAccessKeySecretRef:
         name: backup-credentials
         key: password
-      repoPasswordSecretRef:
-        name: backup-repo
-        key: password
-  promURL: http://10.144.1.224:9000
 ----
 
 === Settings
 
-TODO:
+* `retention`: see <<Retention, retention>>
+* `backend`: see <<Backend, backend>>
+* `keepJobs`: amount of jobs that should be left after cleanup, e.g. how many job/pod objects should be left after they finished. Defaults to 6. Only applicable when used within a <<Schedule, schedule>>.
+
+=== Retention
+Retention is part of the prune object. It defines how the retention of a given backend should look like. Most upstream Restic rules are support except for the once working with labels. Please see the upstream https://restic.readthedocs.io/en/latest/060_forget.html[Restic docs] for more info.
+
+[source,yaml]
+----
+retention:
+  keepLast: 5
+  keepDaily: 14
+----
+
+List of available settings:
+
+* keepLast
+* keepHourly
+* keepDaily
+* keepWeekly
+* keepMonthly
+* keepYearly
+* keepTags
 
 == Backend
+Currently only S3 is supported as a backend.
 
-TODO:
+[source,yaml]
+----
+backend:
+  repoPasswordSecretRef:
+    name: backup-repo
+    key: password
+  s3:
+    endpoint: http://10.144.1.224:9000
+    bucket: baas
+    accessKeyIDSecretRef:
+      name: backup-credentials
+      key: username
+    secretAccessKeySecretRef:
+      name: backup-credentials
+      key: password
+----
 
 === Settings
 
-TODO:
+* `repoPasswordSecretRef`: kubernetes secret reference containing the Restic encryption key. *Attention*: don't lose this key or you won't be able to access your backup data again! So keep a copy of that somewhere off the actual cluster.
+* `s3`: see <<S3,s3>>
+
+=== S3
+This object is part of <<Backend,backend>>.
+
+Settings:
+* `endpoint`: http(s) endpoint of the S3 instance
+* `bucket`: name of the bucket that should be used
+* `accessKeyIDSecretRef`: Kubernetes secret reference containing the the Access Key ID
+* `secretAccessKeySecretRef`: Kubernetes secret reference containing the Secret Access Key
