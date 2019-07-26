@@ -106,6 +106,8 @@ The following movie shows the sequence of steps explained in this tutorial.
 
 Every time a job starts, it creates a separate pod in your namespace. You can see them using `kubectl pods`. You can then use the usual `kubectl logs <POD NAME>` command to troubleshoot a failed backup job.
 
+Additionally the operator exposes a `:8080/metrics` endpoint for prometheus scraping. This will give you additional metrics that can be used to find failed jobs. See the (https://github.com/vshn/k8up/tree/master/manifest/examples/prometheus)[Prometheus examples] in our Github repository.
+
 == Application-Aware Backups
 
 It is possible to define annotations on pods with backup commands. These backup commands should create an application-aware backup and stream it to stdout.
