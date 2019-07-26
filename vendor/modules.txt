@@ -31,7 +31,7 @@ github.com/googleapis/gnostic/extensions
 github.com/gorilla/context
 # github.com/gorilla/mux v1.6.2
 github.com/gorilla/mux
-# github.com/hashicorp/golang-lru v0.0.0-20180201235237-0fb14efe8c47
+# github.com/hashicorp/golang-lru v0.5.3
 github.com/hashicorp/golang-lru
 github.com/hashicorp/golang-lru/simplelru
 # github.com/hashicorp/hcl v0.0.0-20180404174102-ef8a98b0bbce
