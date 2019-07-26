@@ -40,6 +40,41 @@ Each variable starting with `BACKUP_GLOBAL*` is used to configure a global defau
 
 NOTE: It is possible to overwrite the global settings. Simply set the specific configuration in the CRD and it will use that instead.
 
+== PreBackup pods
+
+Although K8up supports executing backup commands in already running pods. But what if the backup command you'd like to run doesn't belong to a running pod? Or you want to backup something that's running on a RWO PVC? Or even outside the Kubernetes cluster?
+
+[source,yaml]
+----
+apiVersion: backup.appuio.ch/v1alpha1
+kind: PreBackupPod
+metadata:
+  name: mysqldump
+spec:
+  backupCommand: mysqldump -u$USER -p$PW -h $DB_HOST --all-databases
+  pod:
+    spec:
+      containers:
+        - env:
+            - name: USER
+              value: dumper
+            - name: PW
+              value: topsecret
+            - name: DB_HOST
+              value: mariadb.example.com
+          image: mariadb
+          command:
+            - 'sleep'
+            - '9999999'
+          imagePullPolicy: Always
+          name: mysqldump
+
+----
+
+That's the perfect use case for using PreBackup pods! They are pod definitions that live in your namespaces. Once the operator triggers a backup on that specific namespace it will loop thorugh all these pod definitions, run them and clean them up again after the backup has finished. This allows much more flexibility, as they support everything a normal pod template does. So for instance you are able to set pod affinity so the PreBackup pods get started on a specific node. That will allow you to get access to data that is RWO and then trigger backups for them via a backup command. We will enhance this feature in the future so it will support file system backups, too.
+
+See <<object-specifications.adoc#PreBackup-pods,PreBackup pods>> for detailed object specifications.
+
 == Manual Installation
 
 All required definitions for the installation are located at `manifest/install/`:
