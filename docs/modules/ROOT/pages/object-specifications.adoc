@@ -213,7 +213,7 @@ spec:
 
 == Prune
 
-This will trigger a single prune run and delete the snapshots according to the defined retention rules. This one needs to run exclusively on the repository. No other jobs must run on the same repository while this one is still running. The operator ensures that the prune will run exclusively on the repository when run on a schedule. If manually triggering a prune the wrestic locking will kick in and prevent it from damaging the repository. It will also fail the whole pod in that case.
+This will trigger a single prune run, and delete the snapshots according to the defined retention rules. This one needs to run exclusively on the repository. No other jobs must run on the same repository while this one is still running. The operator ensures that the prune will run exclusively on the repository when run on a schedule. If manually triggering a prune the wrestic locking will kick in and prevent it from damaging the repository. It will also fail the whole pod in that case.
 
 [source,yaml]
 ----
@@ -299,3 +299,38 @@ Settings:
 * `bucket`: name of the bucket that should be used
 * `accessKeyIDSecretRef`: Kubernetes secret reference containing the the Access Key ID
 * `secretAccessKeySecretRef`: Kubernetes secret reference containing the Secret Access Key
+
+== PreBackup
+PreBackup are objects that live in the namespace that should be backed up. They are completely optional though. Their main goal is to provide some sort of pre backup scripts. They can be used for various use cases though, see <<advanced-config.adoc#PreBackup-pods,PreBackup pods>>.
+
+[source,yaml]
+----
+apiVersion: backup.appuio.ch/v1alpha1
+kind: PreBackupPod
+metadata:
+  name: mysqldump
+spec:
+  backupCommand: mysqldump -u$USER -p$PW -h $DB_HOST --all-databases
+  pod:
+    spec:
+      containers:
+        - env:
+            - name: USER
+              value: dumper
+            - name: PW
+              value: topsecret
+            - name: DB_HOST
+              value: mariadb.example.com
+          image: mariadb
+          command:
+            - 'sleep'
+            - '9999999'
+          imagePullPolicy: Always
+          name: mysqldump
+----
+
+=== Settings
+
+* `backupCommand`: command that should get executed within the pod. *Attention* the command should output its data to stdout so that wrestic can pick it up correctly
+* `fileExtension`: as this leverages the stdin backup capabilities of Restic it will generate a "virtual" file. That file name is by default just the name of the PreBackup pod. But to make restores easier you can define a file extension, that gets appended to the filename. For example: ".sql" for a mysql dump
+* `pod`: pod is default podTemplateSpec of Kubernetes: https://kubernetes.io/docs/concepts/workloads/pods/pod-overview/#pod-templates[Kubernetes docs]

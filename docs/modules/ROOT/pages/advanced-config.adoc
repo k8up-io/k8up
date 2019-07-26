@@ -42,7 +42,7 @@ NOTE: It is possible to overwrite the global settings. Simply set the specific c
 
 == PreBackup pods
 
-Although K8up supports executing backup commands in already running pods. But what if the backup command you'd like to run doesn't belong to a running pod? Or you want to backup something that's running on a RWO PVC? Or even outside the Kubernetes cluster?
+Although K8up supports executing backup commands in already running pods, there might be a need to start a specific pod for the backup. Or what if the backup command you'd like to run doesn't belong to a running pod? Or you want to backup something that's running on a RWO PVC? Or even outside the Kubernetes cluster?
 
 [source,yaml]
 ----
