@@ -51,7 +51,7 @@ github.com/howeyc/gopass
 github.com/imdario/mergo
 # github.com/json-iterator/go v1.1.5
 github.com/json-iterator/go
-# github.com/magiconair/properties v1.8.0
+# github.com/magiconair/properties v1.8.1
 github.com/magiconair/properties
 # github.com/matttproud/golang_protobuf_extensions v1.0.1
 github.com/matttproud/golang_protobuf_extensions/pbutil
