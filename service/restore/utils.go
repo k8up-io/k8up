@@ -54,6 +54,9 @@ func newRestoreJob(restore *backupv1alpha1.Restore, config config) *batchv1.Job 
 
 	restoreJob.Spec.Template.Spec.Containers[0].Args = args
 
+	restoreJob.Spec.Template.Spec.Volumes = volumes
+	restoreJob.Spec.Template.Spec.Containers[0].VolumeMounts = mounts
+
 	restoreJob.Spec.Template.Spec.Containers[0].Env = setUpEnvVariables(restore, config)
 
 	return restoreJob
@@ -64,6 +67,13 @@ func setUpEnvVariables(restore *backupv1alpha1.Restore, config config) []corev1.
 
 	if restore.Spec.RestoreMethod.S3 != nil {
 		vars = append(vars, restore.Spec.RestoreMethod.S3.RestoreEnvs(config.Global)...)
+	}
+
+	if restore.Spec.RestoreMethod.Folder != nil {
+		vars = append(vars, corev1.EnvVar{
+			Name:  "RESTORE_DIR",
+			Value: service.RestorePath,
+		})
 	}
 
 	return vars
