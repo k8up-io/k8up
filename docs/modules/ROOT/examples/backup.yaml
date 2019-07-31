@@ -16,18 +16,6 @@ spec:
     repoPasswordSecretRef:
       name: backup-repo
       key: password
-  archive:
-    schedule: '0 0 1 * *'
-    restoreMethod:
-      s3:
-        endpoint: http://minio-service:9000
-        bucket: archive
-        accessKeyIDSecretRef:
-          name: backup-credentials
-          key: username
-        secretAccessKeySecretRef:
-          name: backup-credentials
-          key: password
   backup:
     schedule: '*/5 * * * *'
     keepJobs: 4
