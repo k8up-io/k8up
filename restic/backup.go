@@ -7,7 +7,6 @@ import (
 	"net/url"
 	"os"
 	"path"
-	"strconv"
 	"strings"
 
 	"git.vshn.net/vshn/wrestic/kubernetes"
@@ -27,6 +26,7 @@ type BackupStruct struct {
 	endTimeStamp      int64
 	snapshots         []Snapshot
 	stdinErrorMessage error
+	liveOutput        chan string
 }
 
 type rawMetrics struct {
@@ -66,6 +66,50 @@ type promMetrics struct {
 	DataTransferred    *prometheus.GaugeVec
 }
 
+type backupEnvelope struct {
+	MessageType string `json:"message_type,omitempty"`
+	backupStatus
+	backupSummary
+	backupError
+}
+
+type backupStatus struct {
+	PercentDone  float64  `json:"percent_done"`
+	TotalFiles   int      `json:"total_files"`
+	FilesDone    int      `json:"files_done"`
+	TotalBytes   int      `json:"total_bytes"`
+	BytesDone    int      `json:"bytes_done"`
+	CurrentFiles []string `json:"current_files"`
+	ErrorCount   int      `json:"error_count"`
+}
+
+type backupSummary struct {
+	MessageType         string  `json:"message_type"`
+	FilesNew            int     `json:"files_new"`
+	FilesChanged        int     `json:"files_changed"`
+	FilesUnmodified     int     `json:"files_unmodified"`
+	DirsNew             int     `json:"dirs_new"`
+	DirsChanged         int     `json:"dirs_changed"`
+	DirsUnmodified      int     `json:"dirs_unmodified"`
+	DataBlobs           int     `json:"data_blobs"`
+	TreeBlobs           int     `json:"tree_blobs"`
+	DataAdded           int     `json:"data_added"`
+	TotalFilesProcessed int     `json:"total_files_processed"`
+	TotalBytesProcessed int     `json:"total_bytes_processed"`
+	TotalDuration       float64 `json:"total_duration"`
+	SnapshotID          string  `json:"snapshot_id"`
+}
+
+type backupError struct {
+	Error struct {
+		Op   string `json:"Op"`
+		Path string `json:"Path"`
+		Err  int    `json:"Err"`
+	} `json:"error"`
+	During string `json:"during"`
+	Item   string `json:"item"`
+}
+
 func (p *promMetrics) toSlice() []prometheus.Collector {
 	return []prometheus.Collector{
 		p.Errors,
@@ -85,6 +129,7 @@ func newBackup(backupDir string, listSnapshots *ListSnapshotsStruct) *BackupStru
 		backupDir:      backupDir,
 		snapshotLister: listSnapshots,
 		rawMetrics:     []rawMetrics{},
+		liveOutput:     make(chan string, 0),
 	}
 }
 
@@ -113,19 +158,16 @@ func (b *BackupStruct) Backup() {
 
 	for _, folder := range b.folderList {
 		fmt.Printf("Starting backup for folder %v\n", folder)
+		go b.parse(folder) //needs to contain the whole metrics logic from now on.
 		b.backupFolder(path.Join(b.backupDir, folder), folder)
-		tmpMetrics := b.parse()
-		tmpMetrics.Folder = folder
-		tmpMetrics.hostname = os.Getenv(Hostname)
-		b.rawMetrics = append(b.rawMetrics, tmpMetrics)
 	}
 
 	b.snapshots = b.snapshotLister.ListSnapshots(false)
 }
 
 func (b *BackupStruct) backupFolder(folder, folderName string) {
-	args := []string{"backup", folder, "--host", os.Getenv(Hostname)}
-	b.genericCommand.exec(args, commandOptions{print: true})
+	args := []string{"backup", folder, "--host", os.Getenv(Hostname), "--json"}
+	b.genericCommand.exec(args, commandOptions{print: false, output: b.liveOutput})
 }
 
 // StdinBackup triggers a backup that attaches itself to the given container
@@ -133,7 +175,8 @@ func (b *BackupStruct) backupFolder(folder, folderName string) {
 func (b *BackupStruct) StdinBackup(backupCommand, pod, container, namespace, fileExt string) {
 	fmt.Printf("backing up via %v stdin...\n", container)
 	host := os.Getenv(Hostname) + "-" + container
-	args := []string{"backup", "--host", host, "--stdin", "--stdin-filename", "/" + host + fileExt}
+	args := []string{"backup", "--host", host, "--stdin", "--stdin-filename", "/" + host + fileExt, "--json"}
+	go b.parse(host)
 	b.genericCommand.exec(args, commandOptions{
 		print: true,
 		Params: kubernetes.Params{
@@ -144,10 +187,6 @@ func (b *BackupStruct) StdinBackup(backupCommand, pod, container, namespace, fil
 		},
 		stdin: true,
 	})
-	tmpMetrics := b.parse()
-	tmpMetrics.Folder = host
-	tmpMetrics.hostname = os.Getenv(Hostname)
-	b.rawMetrics = append(b.rawMetrics, tmpMetrics)
 	b.snapshots = b.snapshotLister.ListSnapshots(false)
 	b.stdinErrorMessage = b.errorMessage
 	b.errorMessage = nil
@@ -201,52 +240,34 @@ func (b *BackupStruct) ToProm() []prometheus.Collector {
 	return promSlice
 }
 
-func (b *BackupStruct) parse() rawMetrics {
-	if len(b.stdOut) < 6 || b.parsed {
-		return rawMetrics{}
-	}
-	files := strings.Fields(strings.Split(b.stdOut[len(b.stdOut)-6], ":")[1])
-	dirs := strings.Fields(strings.Split(b.stdOut[len(b.stdOut)-5], ":")[1])
+func (b *BackupStruct) parse(folder string) {
 
-	var errorCount = len(b.stdErrOut)
+	i := 0
+	errorCount := 0
 
-	if errorCount > 0 {
-		fmt.Println("These errors occurred during the backup of the folder:")
-		for _, line := range b.stdErrOut {
-			fmt.Println(line)
+	for message := range b.liveOutput {
+		be := &backupEnvelope{}
+		err := json.Unmarshal([]byte(message), be)
+
+		if err != nil {
+			fmt.Printf("could not parse restic output: %v\n", err)
+		}
+
+		switch be.MessageType {
+		case "error":
+			errorCount++
+			b.parseError(be.backupError)
+		case "status":
+			// Restic does the json output with 60hz, which is a bit much...
+			if i%60 == 0 {
+				b.parseStatus(be.backupStatus)
+			}
+			i++
+		case "summary":
+			b.parseSummary(be.backupSummary, errorCount, folder)
 		}
 	}
 
-	newFiles, err := strconv.Atoi(files[0])
-	changedFiles, err := strconv.Atoi(files[2])
-	unmodifiedFiles, err := strconv.Atoi(files[4])
-
-	newDirs, err := strconv.Atoi(dirs[0])
-	changedDirs, err := strconv.Atoi(dirs[2])
-	unmodifiedDirs, err := strconv.Atoi(dirs[4])
-
-	if err != nil {
-		errorMessage := fmt.Sprintln("There was a problem convertig the metrics: ", err)
-		fmt.Println(errorMessage)
-		return rawMetrics{}
-	}
-
-	if b.errorMessage != nil {
-		errorCount++
-	}
-
-	fmt.Println("Get snapshots for backup metrics")
-	return rawMetrics{
-		NewDirs:            float64(newDirs),
-		NewFiles:           float64(newFiles),
-		ChangedFiles:       float64(changedFiles),
-		UnmodifiedFiles:    float64(unmodifiedFiles),
-		ChangedDirs:        float64(changedDirs),
-		UnmodifiedDirs:     float64(unmodifiedDirs),
-		Errors:             float64(errorCount),
-		MountedPVCs:        b.folderList,
-		availableSnapshots: float64(len(b.snapshotLister.ListSnapshots(false))),
-	}
 }
 
 func (b *BackupStruct) newPromMetrics() *promMetrics {
@@ -359,4 +380,30 @@ func (b *BackupStruct) GetError() error {
 	}
 
 	return finalError
+}
+
+func (b *BackupStruct) parseStatus(status backupStatus) {
+	percent := status.PercentDone * 100
+	fmt.Printf("done: %.2f%% \n", percent)
+}
+
+func (b *BackupStruct) parseSummary(summary backupSummary, errorCount int, folder string) {
+	fmt.Printf("backup finished! new files: %v changed files: %v bytes added: %v\n", summary.FilesNew, summary.FilesChanged, summary.DataAdded)
+	b.rawMetrics = append(b.rawMetrics, rawMetrics{
+		NewDirs:            float64(summary.DirsNew),
+		NewFiles:           float64(summary.FilesNew),
+		ChangedFiles:       float64(summary.FilesChanged),
+		UnmodifiedFiles:    float64(summary.FilesUnmodified),
+		ChangedDirs:        float64(summary.DirsChanged),
+		UnmodifiedDirs:     float64(summary.DirsUnmodified),
+		Errors:             float64(errorCount),
+		MountedPVCs:        b.folderList,
+		availableSnapshots: float64(len(b.snapshotLister.ListSnapshots(false))),
+		Folder:             folder,
+		hostname:           os.Getenv(Hostname),
+	})
+}
+
+func (b *BackupStruct) parseError(fileErrs backupError) {
+	fmt.Printf("error cannot %v on file %v\n", fileErrs.Error.Op, fileErrs.Item)
 }

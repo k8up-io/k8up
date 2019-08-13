@@ -22,6 +22,7 @@ type commandOptions struct {
 	print bool
 	stdin bool
 	kubernetes.Params
+	output chan string
 }
 
 func newGenericCommand() *genericCommand {
@@ -86,13 +87,13 @@ func (g *genericCommand) exec(args []string, options commandOptions) {
 
 	go func() {
 		var collectErr error
-		g.stdOut, collectErr = g.collectOutput(commandStdout, options.print)
+		g.stdOut, collectErr = g.collectOutput(commandStdout, options.print, options.output)
 		finished <- collectErr
 	}()
 
 	go func() {
 		var collectErr error
-		g.stdErrOut, collectErr = g.collectOutput(commandStderr, options.print)
+		g.stdErrOut, collectErr = g.collectOutput(commandStderr, options.print, options.output)
 		finished <- collectErr
 	}()
 
@@ -115,7 +116,7 @@ func (g *genericCommand) exec(args []string, options commandOptions) {
 	}
 }
 
-func (g *genericCommand) collectOutput(output io.ReadCloser, print bool) ([]string, error) {
+func (g *genericCommand) collectOutput(output io.Reader, print bool, out chan string) ([]string, error) {
 	collectedOutput := make([]string, 0)
 	scanner := bufio.NewScanner(output)
 	buff := make([]byte, 64*1024*1024)
@@ -127,6 +128,9 @@ func (g *genericCommand) collectOutput(output io.ReadCloser, print bool) ([]stri
 			fmt.Println(m)
 		}
 		collectedOutput = append(collectedOutput, m)
+		if out != nil {
+			out <- m
+		}
 	}
 	return collectedOutput, scanner.Err()
 }
