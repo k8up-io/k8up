@@ -81,7 +81,7 @@ func run(finishC chan error, outputManager *output.Output) {
 	} else {
 		dir = os.Getenv(restic.BackupDirEnv)
 	}
-	resticCli := restic.New(dir)
+	resticCli := restic.New(dir, outputManager)
 
 	var commandRun bool
 	var snapshots []restic.Snapshot
@@ -111,9 +111,7 @@ func run(finishC chan error, outputManager *output.Output) {
 	if *prune {
 		fmt.Println("Removing all locks to clear stale locks")
 		resticCli.Prune()
-		resticCli.ListSnapshots(false)
 		outputManager.Register(resticCli.PruneStruct)
-		outputManager.Register(resticCli.ListSnapshotsStruct)
 		criticalError = resticCli.PruneStruct.GetError()
 		commandRun = true
 	}
@@ -128,7 +126,9 @@ func run(finishC chan error, outputManager *output.Output) {
 		snapshots = resticCli.ListSnapshots(false)
 		criticalError = resticCli.ListSnapshotsStruct.GetError()
 		resticCli.Restore(*restoreSnap, *restoreType, snapshots, os.Getenv(restic.RestoreDirEnv), *restoreFilter, *verifyRestore)
-		criticalError = resticCli.RestoreStruct.GetError()
+		if resticCli.RestoreStruct.GetError() != nil {
+			criticalError = resticCli.RestoreStruct.GetError()
+		}
 		commandRun = true
 		outputManager.Register(resticCli.RestoreStruct)
 	}
@@ -136,7 +136,9 @@ func run(finishC chan error, outputManager *output.Output) {
 		snapshots = resticCli.ListSnapshots(true)
 		criticalError = resticCli.ListSnapshotsStruct.GetError()
 		resticCli.Archive(snapshots, *restoreType, os.Getenv(restic.RestoreDirEnv), *restoreFilter, *verifyRestore)
-		criticalError = resticCli.RestoreStruct.GetError()
+		if resticCli.RestoreStruct.GetError() != nil {
+			criticalError = resticCli.RestoreStruct.GetError()
+		}
 		commandRun = true
 		outputManager.Register(resticCli.RestoreStruct)
 	}
@@ -167,9 +169,17 @@ func run(finishC chan error, outputManager *output.Output) {
 			podList, err := podLister.ListPods()
 
 			if err == nil {
+
+				// List the snapshots before doing any stdIn backups. This will
+				// ensure that the cache is already pupulated before any stdIn
+				// connections over TCP/IP are opened.
+				resticCli.ListSnapshots(false)
+
 				for _, pod := range podList {
 					resticCli.StdinBackup(pod.Command, pod.PodName, pod.ContainerName, pod.Namespace, pod.FileExtension)
-					criticalError = resticCli.BackupStruct.GetError()
+					if resticCli.BackupStruct.GetError() != nil {
+						criticalError = resticCli.BackupStruct.GetError()
+					}
 				}
 			} else {
 				newErr := fmt.Errorf("error listing pods: %v", err)
@@ -180,7 +190,9 @@ func run(finishC chan error, outputManager *output.Output) {
 		}
 
 		resticCli.Backup()
-		criticalError = resticCli.BackupStruct.GetError()
+		if resticCli.BackupStruct.GetError() != nil {
+			criticalError = resticCli.BackupStruct.GetError()
+		}
 		outputManager.Register(resticCli.BackupStruct)
 		stopMetrics(outputManager)
 	}
