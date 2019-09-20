@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"time"
 
 	"git.vshn.net/vshn/wrestic/kubernetes"
 	"git.vshn.net/vshn/wrestic/output"
@@ -44,6 +45,7 @@ type rawMetrics struct {
 	availableSnapshots    float64
 	Folder                string
 	hostname              string
+	ID                    string `json:"id"`
 }
 
 type WebhookStats struct {
@@ -92,7 +94,7 @@ type backupSummary struct {
 	DirsUnmodified      int     `json:"dirs_unmodified"`
 	DataBlobs           int     `json:"data_blobs"`
 	TreeBlobs           int     `json:"tree_blobs"`
-	DataAdded           int     `json:"data_added"`
+	DataAdded           int64   `json:"data_added"`
 	TotalFilesProcessed int     `json:"total_files_processed"`
 	TotalBytesProcessed int     `json:"total_bytes_processed"`
 	TotalDuration       float64 `json:"total_duration"`
@@ -156,11 +158,17 @@ func (b *BackupStruct) Backup() {
 		}
 	}
 
+	parsedSummary := make(chan rawMetrics, 0)
+
 	for _, folder := range b.folderList {
 		fmt.Printf("Starting backup for folder %v\n", folder)
-		go b.parse(folder) //needs to contain the whole metrics logic from now on.
+		go b.parse(folder, parsedSummary) //needs to contain the whole metrics logic from now on.
 		b.backupFolder(path.Join(b.backupDir, folder), folder)
+
+		b.sendPostFolderWebhook(os.Getenv(Hostname), folder, parsedSummary)
 	}
+
+	close(parsedSummary)
 
 	b.snapshots = b.snapshotLister.ListSnapshots(false)
 
@@ -177,7 +185,8 @@ func (b *BackupStruct) StdinBackup(backupCommand, pod, container, namespace, fil
 	fmt.Printf("backing up via %v stdin...\n", container)
 	host := os.Getenv(Hostname) + "-" + container
 	args := []string{"backup", "--host", host, "--stdin", "--stdin-filename", "/" + host + fileExt, "--json"}
-	go b.parse(host)
+	parsedSummary := make(chan rawMetrics, 0)
+	go b.parse(host, parsedSummary)
 	b.genericCommand.exec(args, commandOptions{
 		print: true,
 		Params: kubernetes.Params{
@@ -188,12 +197,32 @@ func (b *BackupStruct) StdinBackup(backupCommand, pod, container, namespace, fil
 		},
 		stdin: true,
 	})
+
+	// Because stdin backups don't have folders we'll use the hostname +
+	// container name distingquish them
+	b.sendPostFolderWebhook(host, host, parsedSummary)
+
+	close(parsedSummary)
+
 	b.snapshots = b.snapshotLister.ListSnapshots(false)
 	if b.errorMessage != nil {
 		b.stdinErrorMessage = b.errorMessage
 		b.errorMessage = nil
 	}
 
+}
+
+func (b *BackupStruct) sendPostFolderWebhook(host string, folder string, parsedSummary chan rawMetrics) {
+	tmpMetrics := <-parsedSummary
+	tmpMetrics.Folder = folder
+	tmpMetrics.hostname = os.Getenv(Hostname)
+
+	fmt.Printf("sending webhook ")
+	b.webhookSender.TriggerHook(&WebhookStats{
+		Name:          tmpMetrics.hostname,
+		BucketName:    getBucket(),
+		BackupMetrics: &tmpMetrics,
+	})
 }
 
 // GetWebhookData a slice of objects that should be sent to the webhook endpoint.
@@ -229,10 +258,11 @@ func (b *BackupStruct) ToProm() []prometheus.Collector {
 	return promSlice
 }
 
-func (b *BackupStruct) parse(folder string) {
+func (b *BackupStruct) parse(folder string, parsedSummary chan rawMetrics) {
 
 	i := 0
 	errorCount := 0
+	startTimestamp := time.Now().Unix()
 
 	for message := range b.liveOutput {
 		be := &backupEnvelope{}
@@ -253,7 +283,10 @@ func (b *BackupStruct) parse(folder string) {
 			}
 			i++
 		case "summary":
-			b.parseSummary(be.backupSummary, errorCount, folder)
+			endTimeStamp := time.Now().Unix()
+			b.parseSummary(be.backupSummary, errorCount, folder, startTimestamp, endTimeStamp)
+			// send back the last item in the metrics slice
+			parsedSummary <- b.rawMetrics[len(b.rawMetrics)-1]
 		}
 	}
 
@@ -376,20 +409,25 @@ func (b *BackupStruct) parseStatus(status backupStatus) {
 	fmt.Printf("done: %.2f%% \n", percent)
 }
 
-func (b *BackupStruct) parseSummary(summary backupSummary, errorCount int, folder string) {
+func (b *BackupStruct) parseSummary(summary backupSummary, errorCount int, folder string, startTimestamp, endTimestamp int64) {
 	fmt.Printf("backup finished! new files: %v changed files: %v bytes added: %v\n", summary.FilesNew, summary.FilesChanged, summary.DataAdded)
 	b.rawMetrics = append(b.rawMetrics, rawMetrics{
-		NewDirs:            float64(summary.DirsNew),
-		NewFiles:           float64(summary.FilesNew),
-		ChangedFiles:       float64(summary.FilesChanged),
-		UnmodifiedFiles:    float64(summary.FilesUnmodified),
-		ChangedDirs:        float64(summary.DirsChanged),
-		UnmodifiedDirs:     float64(summary.DirsUnmodified),
-		Errors:             float64(errorCount),
-		MountedPVCs:        b.folderList,
-		availableSnapshots: float64(len(b.snapshotLister.ListSnapshots(false))),
-		Folder:             folder,
-		hostname:           os.Getenv(Hostname),
+		NewDirs:               float64(summary.DirsNew),
+		NewFiles:              float64(summary.FilesNew),
+		ChangedFiles:          float64(summary.FilesChanged),
+		UnmodifiedFiles:       float64(summary.FilesUnmodified),
+		ChangedDirs:           float64(summary.DirsChanged),
+		UnmodifiedDirs:        float64(summary.DirsUnmodified),
+		Errors:                float64(errorCount),
+		MountedPVCs:           b.folderList,
+		availableSnapshots:    float64(len(b.snapshotLister.ListSnapshots(false))),
+		Folder:                folder,
+		hostname:              os.Getenv(Hostname),
+		BackupStartTimestamp:  float64(startTimestamp),
+		BackupEndTimestamp:    float64(endTimestamp),
+		runningBackupDuration: summary.TotalDuration,
+		DataTransferred:       float64(summary.DataAdded),
+		ID:                    summary.SnapshotID,
 	})
 }
 
