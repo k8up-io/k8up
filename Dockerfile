@@ -10,7 +10,7 @@ RUN go install -v ./...
 FROM docker.io/alpine:3
 WORKDIR /app
 
-RUN apk --no-cache add ca-certificates tzdata
+RUN apk --no-cache add tzdata
 
 COPY --from=build /go/bin/operator /app/
 
