@@ -54,9 +54,12 @@ The container has to exist on the registry in order for the operator to find the
 ```
 minishift start
 oc login -u developer
-eval $(minishift docker-env)
-docker login -u developer -p $(oc whoami -t) $(minishift openshift registry)
 docker build -t $(minishift openshift registry)/myproject/baas:0.0.1 .
+docker save $(minishift openshift registry)/myproject/baas:0.0.1 > tmp.tar
+eval $(minishift docker-env)
+docker load -i tmp.tar
+rm tmp.tar
+docker login -u developer -p $(oc whoami -t) $(minishift openshift registry)
 docker push $(minishift openshift registry)/myproject/baas:0.0.1
 ```
 
