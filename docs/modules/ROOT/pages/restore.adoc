@@ -1,6 +1,6 @@
 = How to Restore a Backup
 
-It is possible to tell the operator to perform restores either to a PVC or an S3 bucket.
+It's possible to tell the operator to perform restores either to a PVC or an S3 bucket.
 
 For this you can create a restore object:
 
@@ -58,7 +58,7 @@ backend:
       key: password
 ----
 
-You’ll need the credentials from the secrets as well as the encryption key. With that information you can configure restic:
+You’ll need the credentials from the secrets and the encryption key. With that information you can configure restic:
 
 [source,bash]
 ----
