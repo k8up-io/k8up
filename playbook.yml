@@ -1,0 +1,34 @@
+site:
+  title: "DRAFT: K8up Documentation"
+  url: http://localhost/
+  start_page: docs::index.adoc
+content:
+  sources:
+  - url: .                 # The current folder is a git repo
+    branches: HEAD         # "HEAD" uses whichever branch is currently checked out
+    start_path: docs
+ui:
+  bundle:
+    url: https://github.com/vshn/antora-ui-default/releases/download/1.2.1/ui-bundle.zip
+    snapshot: false
+asciidoc:
+  attributes:
+    toc: 'auto'
+    toc-title: ''
+    toclevels: 2
+    hide-uri-scheme: ''
+    experimental: ''
+    stem: ''
+    plantuml-server-url: http://www.plantuml.com/plantuml
+    plantuml-fetch-diagram: ''
+  extensions:
+  - asciidoctor-plantuml
+output:
+  destinations:
+  - provider: fs
+    path: ./_public
+    clean: true
+  - provider: archive
+    path: ./_archive/site.zip
+    clean: true
+

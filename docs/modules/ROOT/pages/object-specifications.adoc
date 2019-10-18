@@ -4,7 +4,7 @@ The K8up operator includes various CRDs which get added to the cluster. Here Weâ
 
 == Schedule
 
-With the schedule CRD it is possible to put all other CRDs on a schedule.
+With the schedule CRD it's possible to put all other CRDs on a schedule.
 
 [source,yaml]
 ----
@@ -55,7 +55,7 @@ spec:
 === Settings
 
 * `archive`: see <<Archive, archive>> for further explaination
-* `backend`: see <<Backend, backend>> for further explanaition
+* `backend`: see <<Back-end, back-end>> for further explanaition
 * `check`: see <<Check, check>> for further explanaition
 * `prune`: see <<Prune, prune>> for further explanaition
 
@@ -99,11 +99,11 @@ This will restore the latest snapshot from `http://10.144.1.224:9000` to the PVC
 
 === Settings
 
-* `backend`: see <<Backend, backend>> for further explanation
+* `backend`: see <<Backend, back-end>> for further explanation
 * `restoreMethod`: is either `s3` or `folder`. For s3 please see `backend` for `folder` you just need to provide a valid claim name as shown in the example above
 * `restoreFiler`: a filter passed to the underlying Restic, which will be used. Please consult the https://restic.readthedocs.io/en/latest/050_restore.html[Restic docs] for valid path filters.
 * `snapshot`: valid snapshot ID that should get restored. If not provided will restore the latest one.
-* `keepJobs`: amount of jobs that should be left after cleanup, e.g. how many job/pod objects should be left after they finished. Defaults to 6. Only applicable when used within a <<Schedule, schedule>>.
+* `keepJobs`: amount of jobs that should be left after cleanup, for example how many job/pod objects should be left after they finished. Defaults to 6. Only applicable when used within a <<Schedule, schedule>>.
 
 == Archive
 
@@ -141,7 +141,7 @@ spec:
         key: password
 ----
 
-Archive is just a wrapper for <<Restore, restore>>, intended for use with the schedule. Will restore all namespaces on a given <<Backend, backend>> to a given s3 location.
+Archive is just a wrapper for <<Restore, restore>>, intended for use with the schedule. Will restore all namespaces on a given <<Backend, back-end>> to a given s3 location.
 
 == Backup
 
@@ -173,8 +173,8 @@ spec:
 
 === Settings
 
-* `backend`: see <<Backend, backend>>
-* `keepJobs`: amount of jobs that should be left after cleanup, e.g. how many job/pod objects should be left after they finished. Defaults to 6. Only applicable when used within a <<Schedule, schedule>>.
+* `backend`: see <<Backend, back-end>>
+* `keepJobs`: amount of jobs that should be left after cleanup, for example how many job/pod objects should be left after they finished. Defaults to 6. Only applicable when used within a <<Schedule, schedule>>.
 * `promURL`: sends backup statistics to this Prometheus pushgateway while the backups are running.
 * `statsURL`: will send a JSON webhook containing backup information information to this endpoint. Can be used to gather a list with available backups.
 
@@ -208,8 +208,8 @@ spec:
 === Settings
 
 * `statsURL`: will send a JSON webhook containing check information information to this endpoint.
-* `backend`: see <<Backend, backend>>
-* `keepJobs`: amount of jobs that should be left after cleanup, e.g. how many job/pod objects should be left after they finished. Defaults to 6. Only applicable when used within a <<Schedule, schedule>>.
+* `backend`: see <<Backend, back-end>>
+* `keepJobs`: amount of jobs that should be left after cleanup, for example how many job/pod objects should be left after they finished. Defaults to 6. Only applicable when used within a <<Schedule, schedule>>.
 
 == Prune
 
@@ -243,11 +243,11 @@ spec:
 === Settings
 
 * `retention`: see <<Retention, retention>>
-* `backend`: see <<Backend, backend>>
-* `keepJobs`: amount of jobs that should be left after cleanup, e.g. how many job/pod objects should be left after they finished. Defaults to 6. Only applicable when used within a <<Schedule, schedule>>.
+* `backend`: see <<Backend, back-end>>
+* `keepJobs`: amount of jobs that should be left after cleanup, for example how many job/pod objects should be left after they finished. Defaults to 6. Only applicable when used within a <<Schedule, schedule>>.
 
 === Retention
-Retention is part of the prune object. It defines how the retention of a given backend should look like. Most upstream Restic rules are support except for the once working with labels. Please see the upstream https://restic.readthedocs.io/en/latest/060_forget.html[Restic docs] for more info.
+Retention is part of the prune object. It defines how the retention of a given back-end should look like. Most upstream Restic rules are support except for the once working with labels. Please see the upstream https://restic.readthedocs.io/en/latest/060_forget.html[Restic docs] for more info.
 
 [source,yaml]
 ----
@@ -266,8 +266,8 @@ List of available settings:
 * keepYearly
 * keepTags
 
-== Backend
-Currently only S3 is supported as a backend.
+== Back-end
+Currently only S3 is supported as a back-end.
 
 [source,yaml]
 ----
@@ -292,7 +292,7 @@ backend:
 * `s3`: see <<S3,s3>>
 
 === S3
-This object is part of <<Backend,backend>>.
+This object is part of <<Backend,back-end>>.
 
 Settings:
 * `endpoint`: http(s) endpoint of the S3 instance
@@ -301,7 +301,7 @@ Settings:
 * `secretAccessKeySecretRef`: Kubernetes secret reference containing the Secret Access Key
 
 == PreBackup
-PreBackup are objects that live in the namespace that should be backed up. They are completely optional though. Their main goal is to provide some sort of pre backup scripts. They can be used for various use cases though, see <<advanced-config.adoc#PreBackup-pods,PreBackup pods>>.
+PreBackup are objects that live in the namespace that should be backed up. They're completely optional though. Their main goal is to provide some sort of pre backup scripts. They can be used for various use cases though, see <<advanced-config.adoc#PreBackup-pods,PreBackup pods>>.
 
 [source,yaml]
 ----
@@ -332,5 +332,5 @@ spec:
 === Settings
 
 * `backupCommand`: command that should get executed within the pod. *Attention* the command should output its data to stdout so that wrestic can pick it up correctly
-* `fileExtension`: as this leverages the stdin backup capabilities of Restic it will generate a "virtual" file. That file name is by default just the name of the PreBackup pod. But to make restores easier you can define a file extension, that gets appended to the filename. For example: ".sql" for a mysql dump
+* `fileExtension`: as this leverages the stdin backup capabilities of Restic it will generate a virtual file. That file name is by default just the name of the PreBackup pod. But to make restores easier you can define a file extension, that gets appended to the filename. For example: ".sql" for a mysql dump
 * `pod`: pod is default podTemplateSpec of Kubernetes: https://kubernetes.io/docs/concepts/workloads/pods/pod-overview/#pod-templates[Kubernetes docs]

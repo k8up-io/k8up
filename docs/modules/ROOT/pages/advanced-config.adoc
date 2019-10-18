@@ -7,7 +7,7 @@ The operator has two ways for configuration:
 
 == Environment variables
 
-* `BACKUP_IMAGE` URL for the restic image, default: `172.30.1.1:5000/myproject/restic`
+* `BACKUP_IMAGE` URL of the restic image, default: `172.30.1.1:5000/myproject/restic`
 * `BACKUP_ANNOTATION` the annotation to be used for filtering, default: `appuio.ch/backup`
 * `BACKUP_CHECKSCHEDULE` the default check schedule, default: `0 0 * * 0`
 * `BACKUP_PODFILTER` the filter used to find the backup pods, default: `backupPod=true`
@@ -26,7 +26,7 @@ The operator has two ways for configuration:
 * `BACKUP_GLOBALKEEPJOBS` set the count of jobs to keep globally
 * `BACKUP_GLOBALS3ENDPOINT` set the S3 endpoint to be used globally
 * `BACKUP_GLOBALS3BUCKET` set the S3 bucket to be used globally
-* `BACKUP_GLOBALSTATSURL` set the URL for wrestic to post additional metrics gloablly, default `""`
+* `BACKUP_GLOBALSTATSURL` set the URL of wrestic to post additional metrics gloablly, default `""`
 * `BACKUP_GLOBALRESTORES3BUCKET` set the global restore S3 bucket for restores
 * `BACKUP_GLOBALRESTORES3ENDPOINT` set the global restore S3 endpoint for the restores (needs the scheme [http/https]
 * `BACKUP_GLOBALRESTORES3ACCESKEYID` set the global resotre S3 accessKeyID for restores
@@ -38,7 +38,7 @@ You only need to adjust `BACKUP_IMAGE` everything else can be left default.
 
 Each variable starting with `BACKUP_GLOBAL*` is used to configure a global default for all namespaces. F.e. if you configure the S3 bucket and credentials you won’t have to specify them in the schedule or backup CRDs.
 
-NOTE: It is possible to overwrite the global settings. Simply set the specific configuration in the CRD and it will use that instead.
+NOTE: It's possible to overwrite the global settings. Simply set the specific configuration in the CRD and it will use that instead.
 
 == PreBackup pods
 
@@ -71,7 +71,7 @@ spec:
 
 ----
 
-That's the perfect use case for using PreBackup pods! They are pod definitions that live in your namespaces. Once the operator triggers a backup on that specific namespace it will loop thorugh all these pod definitions, run them and clean them up again after the backup has finished. This allows much more flexibility, as they support everything a normal pod template does. So for instance you are able to set pod affinity so the PreBackup pods get started on a specific node. That will allow you to get access to data that is RWO and then trigger backups for them via a backup command. We will enhance this feature in the future so it will support file system backups, too.
+That's the perfect use case for using PreBackup pods! They're pod definitions that live in your namespaces. Once the operator triggers a backup on that specific namespace it will loop thorugh all these pod definitions, run them and clean them up again after the backup has finished. This allows much more flexibility, as they support everything a normal pod template does. So for instance you are able to set pod affinity so the PreBackup pods get started on a specific node. That will allow you to get access to data that's RWO and then trigger backups for them via a backup command. We will enhance this feature in the future so it will support file system backups, too.
 
 See <<object-specifications.adoc#PreBackup-pods,PreBackup pods>> for detailed object specifications.
 
@@ -84,4 +84,4 @@ All required definitions for the installation are located at `manifest/install/`
 kubectl apply -f manifest/install/
 ----
 
-Please be aware that these manifests are intended for dev and as examples. They are not the official way to install the operator in production. For this we provide a helm chart at https://github.com/appuio/charts. You may need to adjust the namespaces in the manifests. There are various other examples under `manifest/examples/`.
+Please be aware that these manifests are intended for dev and as examples. They're not the official way to install the operator in production. For this we provide a helm chart at https://github.com/appuio/charts. You may need to adjust the namespaces in the manifests. There are various other examples under `manifest/examples/`.
