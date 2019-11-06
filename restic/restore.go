@@ -108,8 +108,10 @@ func (r *RestoreStruct) restoreCommand(snapshotID, method string, snaps []Snapsh
 		fmt.Printf("Snapshot %v is being restored.\n", snapshot.Time)
 	} else {
 		for i := range snaps {
-			if snaps[i].ID == snapshotID {
+			// Doing substrings so we can also use short IDs here.
+			if snaps[i].ID[0:len(snapshotID)] == snapshotID {
 				snapshot = snaps[i]
+				break
 			}
 		}
 		if snapshot.ID == "" {
