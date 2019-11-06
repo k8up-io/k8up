@@ -188,7 +188,8 @@ func (b *BackupStruct) StdinBackup(backupCommand, pod, container, namespace, fil
 	parsedSummary := make(chan rawMetrics, 0)
 	go b.parse(host, parsedSummary)
 	b.genericCommand.exec(args, commandOptions{
-		print: true,
+		print:  false,
+		output: b.liveOutput,
 		Params: kubernetes.Params{
 			Pod:           pod,
 			Container:     container,
