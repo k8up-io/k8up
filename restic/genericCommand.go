@@ -22,6 +22,9 @@ type commandOptions struct {
 	print bool
 	stdin bool
 	kubernetes.Params
+	// output can be used to get realtime output from the restic command
+	// not all subcommands have realtime output though, so it's not mandatory
+	// to set it.
 	output chan string
 }
 
