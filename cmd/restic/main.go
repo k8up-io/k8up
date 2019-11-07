@@ -56,7 +56,15 @@ func main() {
 	signal.Notify(signalC, syscall.SIGTERM, syscall.SIGINT)
 	outputManager := output.New(os.Getenv(webhookURLEnv), os.Getenv(promURLEnv), os.Getenv(restic.Hostname))
 
-	go run(finishC, outputManager)
+	var dir string
+	if os.Getenv(restic.BackupDirEnv) == "" {
+		dir = "/data"
+	} else {
+		dir = os.Getenv(restic.BackupDirEnv)
+	}
+	resticCli := restic.New(dir, outputManager)
+
+	go run(finishC, outputManager, resticCli)
 
 	select {
 	case err := <-finishC:
@@ -66,22 +74,15 @@ func main() {
 			os.Exit(1)
 		}
 
-	case <-signalC:
+	case sig := <-signalC:
 		fmt.Println("Signal captured, removing locks and exiting...")
 		outputManager.TriggerAll()
+		resticCli.SendSignal(sig)
 		os.Exit(1)
 	}
 }
 
-func run(finishC chan error, outputManager *output.Output) {
-
-	var dir string
-	if os.Getenv(restic.BackupDirEnv) == "" {
-		dir = "/data"
-	} else {
-		dir = os.Getenv(restic.BackupDirEnv)
-	}
-	resticCli := restic.New(dir, outputManager)
+func run(finishC chan error, outputManager *output.Output, resticCli *restic.Restic) {
 
 	var commandRun bool
 	var snapshots []restic.Snapshot

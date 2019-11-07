@@ -125,13 +125,15 @@ func (p *promMetrics) toSlice() []prometheus.Collector {
 	}
 }
 
-func newBackup(backupDir string, listSnapshots *ListSnapshotsStruct, webhookSender WebhookSender) *BackupStruct {
+func newBackup(backupDir string, listSnapshots *ListSnapshotsStruct, webhookSender WebhookSender, commandState *commandState) *BackupStruct {
+	genericCommand := newGenericCommand(commandState)
 	return &BackupStruct{
 		backupDir:      backupDir,
 		snapshotLister: listSnapshots,
 		rawMetrics:     []rawMetrics{},
 		liveOutput:     make(chan string, 0),
 		webhookSender:  webhookSender,
+		genericCommand: *genericCommand,
 	}
 }
 

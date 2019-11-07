@@ -17,8 +17,11 @@ type ListSnapshotsStruct struct {
 	snaps snapList
 }
 
-func newListSnapshots() *ListSnapshotsStruct {
-	return &ListSnapshotsStruct{}
+func newListSnapshots(commandState *commandState) *ListSnapshotsStruct {
+	genericCommand := newGenericCommand(commandState)
+	return &ListSnapshotsStruct{
+		genericCommand: *genericCommand,
+	}
 }
 
 // ListSnapshots executes the list snapshots command of restic.

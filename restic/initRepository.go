@@ -11,8 +11,11 @@ type Initrepo struct {
 	genericCommand
 }
 
-func newInitrepo() *Initrepo {
-	return &Initrepo{}
+func newInitrepo(commandState *commandState) *Initrepo {
+	genericCommand := newGenericCommand(commandState)
+	return &Initrepo{
+		genericCommand: *genericCommand,
+	}
 }
 
 // InitRepository checks if there's a repository and initializes it. It expects

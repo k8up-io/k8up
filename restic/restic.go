@@ -2,6 +2,7 @@ package restic
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/url"
 	"os"
 	"strings"
@@ -96,18 +97,27 @@ type Restic struct {
 	*CheckStruct
 	*Initrepo
 	*ListSnapshotsStruct
+	commandState *commandState
+}
+
+// command contians the currently running genericCommand
+type commandState struct {
+	running *genericCommand
 }
 
 // New returns a new restic object.
 func New(backupDir string, webhookSender WebhookSender) *Restic {
+	commandState := &commandState{}
+	snapshotLister := newListSnapshots(commandState)
 	return &Restic{
-		UnlockStruct:        newUnlock(),
-		RestoreStruct:       newRestore(),
-		PruneStruct:         newPrune(newListSnapshots(), webhookSender),
-		BackupStruct:        newBackup(backupDir, newListSnapshots(), webhookSender),
-		CheckStruct:         newCheck(),
-		Initrepo:            newInitrepo(),
-		ListSnapshotsStruct: newListSnapshots(),
+		UnlockStruct:        newUnlock(commandState),
+		RestoreStruct:       newRestore(commandState),
+		PruneStruct:         newPrune(snapshotLister, webhookSender, commandState),
+		BackupStruct:        newBackup(backupDir, snapshotLister, webhookSender, commandState),
+		CheckStruct:         newCheck(commandState),
+		Initrepo:            newInitrepo(commandState),
+		ListSnapshotsStruct: snapshotLister,
+		commandState:        commandState,
 	}
 }
 
@@ -136,4 +146,15 @@ func getBucket() string {
 	}
 
 	return bucket
+}
+
+// SendSignal will send a signal to the currently running restic process
+// so it can shutdown cleanly.
+func (r *Restic) SendSignal(sig os.Signal) {
+	if r.commandState.running != nil {
+		err := r.commandState.running.sendSignal(sig)
+		if err != nil {
+			fmt.Printf("error sending signal to restic: %s\n", err)
+		}
+	}
 }
