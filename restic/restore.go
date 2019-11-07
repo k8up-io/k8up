@@ -10,6 +10,8 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
@@ -137,7 +139,26 @@ func (r *RestoreStruct) restoreCommand(snapshotID, method string, snaps []Snapsh
 
 func (r *RestoreStruct) folderRestore(snapshot Snapshot) error {
 
-	args := []string{"restore", snapshot.ID, "--target", r.restoreDir}
+	var linkedDir string
+	var trim bool
+	if os.Getenv("TRIM_RESTOREPATH") == "" {
+		trim = true
+	}
+	trim, err := strconv.ParseBool(os.Getenv("TRIM_RESTOREPATH"))
+	if err != nil {
+		trim = true
+	}
+	if trim {
+		linkedDir, err = r.linkRestorePaths(snapshot)
+		if err != nil {
+			return err
+		}
+		defer os.RemoveAll(linkedDir)
+	} else {
+		linkedDir = r.restoreDir
+	}
+
+	args := []string{"restore", snapshot.ID, "--target", linkedDir}
 
 	if r.restoreFilter != "" {
 		args = append(args, "--include", r.restoreFilter)
@@ -160,6 +181,34 @@ func (r *RestoreStruct) folderRestore(snapshot Snapshot) error {
 	fmt.Println("Restore successful.")
 
 	return nil
+}
+
+// linkRestorePaths will trim away the first two levels of the snapshotpath
+// then create the first level as a folder in the temp dir and the second
+// level as a symlink pointing to the mounted volume (usually /restore). It
+// returns that temp path as the string used for the actual restore.This way the
+// root of the backed up PVC will be the root of the restored PVC thus creating
+// a carbon copy of the original and ready to be used again.
+func (r *RestoreStruct) linkRestorePaths(snapshot Snapshot) (string, error) {
+	// wrestic snapshots only every contain exactly one path
+	splitted := strings.Split(snapshot.Paths[0], "/")
+
+	joined := filepath.Join(splitted[:3]...)
+
+	restoreRoot := filepath.Join(os.TempDir(), "wresticRestore")
+
+	absolute := filepath.Join(restoreRoot, joined)
+	makePath := filepath.Dir(absolute)
+
+	os.MkdirAll(r.restoreDir, os.ModeDir+os.ModePerm)
+	os.MkdirAll(makePath, os.ModeDir+os.ModePerm)
+
+	err := os.Symlink(r.restoreDir, absolute)
+	if err != nil {
+		return "", err
+	}
+
+	return restoreRoot, nil
 }
 
 func (r *RestoreStruct) s3Restore(snapshot Snapshot) error {
