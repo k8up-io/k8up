@@ -9,8 +9,11 @@ type CheckStruct struct {
 	genericCommand
 }
 
-func newCheck() *CheckStruct {
-	return &CheckStruct{}
+func newCheck(commandState *commandState) *CheckStruct {
+	genericCommand := newGenericCommand(commandState)
+	return &CheckStruct{
+		genericCommand: *genericCommand,
+	}
 }
 
 // Check runs the check command.

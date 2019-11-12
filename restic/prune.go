@@ -15,10 +15,12 @@ type PruneStruct struct {
 	snapshotLister *ListSnapshotsStruct
 }
 
-func newPrune(snapshotLister *ListSnapshotsStruct, webhookSender WebhookSender) *PruneStruct {
+func newPrune(snapshotLister *ListSnapshotsStruct, webhookSender WebhookSender, commandState *commandState) *PruneStruct {
+	genericCommand := newGenericCommand(commandState)
 	return &PruneStruct{
 		webhookSender:  webhookSender,
 		snapshotLister: snapshotLister,
+		genericCommand: *genericCommand,
 	}
 }
 

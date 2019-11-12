@@ -43,8 +43,11 @@ type fileNode struct {
 	StructType string    `json:"struct_type"`
 }
 
-func newRestore() *RestoreStruct {
-	return &RestoreStruct{}
+func newRestore(commandState *commandState) *RestoreStruct {
+	genericCommand := newGenericCommand(commandState)
+	return &RestoreStruct{
+		genericCommand: *genericCommand,
+	}
 }
 
 func (r *RestoreStruct) setState(restoreType, restoreDir, restoreFilter string, verifyRestore bool) {
@@ -339,7 +342,7 @@ func (r *RestoreStruct) getTarReader(snapshot Snapshot) tarStream {
 }
 
 func (r *RestoreStruct) getSnapshotRoot(snapshot Snapshot) (string, *tar.Header) {
-	cmd := newGenericCommand()
+	cmd := newGenericCommand(r.genericCommand.commandState)
 	args := []string{"ls", snapshot.ID, "--json"}
 	cmd.exec(args, commandOptions{print: false})
 	pathJSON := cmd.GetStdOut()[1]

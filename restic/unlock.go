@@ -7,8 +7,11 @@ type UnlockStruct struct {
 	genericCommand
 }
 
-func newUnlock() *UnlockStruct {
-	return &UnlockStruct{}
+func newUnlock(commandState *commandState) *UnlockStruct {
+	genericCommand := newGenericCommand(commandState)
+	return &UnlockStruct{
+		genericCommand: *genericCommand,
+	}
 }
 
 // Unlock removes stale locks. A lock is stale either if the pid isn't found on

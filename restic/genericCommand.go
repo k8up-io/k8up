@@ -16,6 +16,11 @@ import (
 type genericCommand struct {
 	errorMessage      error
 	stdOut, stdErrOut []string
+	// command is the actual instance of the command that is handled by this
+	// instance of genericCommand
+	command *exec.Cmd
+	// commandState holds the global state what command is currently running
+	commandState *commandState
 }
 
 type commandOptions struct {
@@ -28,10 +33,11 @@ type commandOptions struct {
 	output chan string
 }
 
-func newGenericCommand() *genericCommand {
+func newGenericCommand(commandState *commandState) *genericCommand {
 	return &genericCommand{
-		stdOut:    make([]string, 0),
-		stdErrOut: make([]string, 0),
+		stdOut:       make([]string, 0),
+		stdErrOut:    make([]string, 0),
+		commandState: commandState,
 	}
 }
 
@@ -39,6 +45,8 @@ func (g *genericCommand) exec(args []string, options commandOptions) {
 
 	cmd := exec.Command(getResticBin(), args...)
 	cmd.Env = os.Environ()
+
+	g.command = cmd
 
 	if options.stdin {
 		stdout, stderr, err := kubernetes.PodExec(options.Params)
@@ -87,6 +95,8 @@ func (g *genericCommand) exec(args []string, options commandOptions) {
 		g.errorMessage = err
 		return
 	}
+
+	g.commandState.running = g
 
 	go func() {
 		var collectErr error
@@ -157,4 +167,8 @@ func (g *genericCommand) GetWebhookData() []output.JsonMarshaller {
 // the prometheus push gateway.
 func (g *genericCommand) ToProm() []prometheus.Collector {
 	return nil
+}
+
+func (g *genericCommand) sendSignal(signal os.Signal) error {
+	return g.command.Process.Signal(signal)
 }
