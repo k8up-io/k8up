@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Simplyfied merging logic for backend configs using mergo
 ### Added
 - More monitoring metrics
+### Fixed
+- PVC restores now work correctly
 
 ## [v0.1.5]
 ### Fixed
