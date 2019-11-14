@@ -28,11 +28,12 @@ type webhookserver struct {
 }
 
 type testEnvironment struct {
-	s3Client *s3.Client
-	output   *output.Output
-	webhook  *webhookserver
-	finishC  chan error
-	t        *testing.T
+	s3Client  *s3.Client
+	output    *output.Output
+	webhook   *webhookserver
+	finishC   chan error
+	t         *testing.T
+	resticCli *restic.Restic
 }
 
 func assertOK(t *testing.T, err error) {
@@ -71,6 +72,15 @@ func (w *webhookserver) runWebServer(t *testing.T) {
 }
 
 func initTest(t *testing.T) *testEnvironment {
+	output := newTestOutput()
+	var dir string
+	if os.Getenv(restic.BackupDirEnv) == "" {
+		dir = "/data"
+	} else {
+		dir = os.Getenv(restic.BackupDirEnv)
+	}
+	resticCli := restic.New(dir, output)
+
 	webhook := &webhookserver{}
 	webhook.runWebServer(t)
 	s3client := s3.New(getS3Repo(), os.Getenv("AWS_ACCESS_KEY_ID"), os.Getenv("AWS_SECRET_ACCESS_KEY"))
@@ -78,11 +88,12 @@ func initTest(t *testing.T) *testEnvironment {
 	s3client.DeleteBucket()
 	resetFlags()
 	return &testEnvironment{
-		output:   newTestOutput(),
-		finishC:  newTestErrorChannel(),
-		webhook:  webhook,
-		s3Client: s3client,
-		t:        t,
+		output:    output,
+		finishC:   newTestErrorChannel(),
+		webhook:   webhook,
+		s3Client:  s3client,
+		t:         t,
+		resticCli: resticCli,
 	}
 }
 
@@ -102,7 +113,7 @@ func resetFlags() {
 func testBackup(t *testing.T) *testEnvironment {
 	env := initTest(t)
 
-	go run(env.finishC, env.output)
+	go run(env.finishC, env.output, env.resticCli)
 
 	assertOK(t, <-env.finishC)
 
@@ -165,7 +176,7 @@ func TestRestore(t *testing.T) {
 	rstType := "s3"
 	restoreType = &rstType
 
-	go run(env.finishC, env.output)
+	go run(env.finishC, env.output, env.resticCli)
 
 	assertOK(t, <-env.finishC)
 
@@ -197,7 +208,9 @@ func TestRestoreDisk(t *testing.T) {
 	rstType := "folder"
 	restoreType = &rstType
 
-	go run(env.finishC, env.output)
+	os.Setenv("TRIM_RESTOREPATH", "false")
+
+	go run(env.finishC, env.output, env.resticCli)
 
 	assertOK(t, <-env.finishC)
 
@@ -218,7 +231,7 @@ func TestInitRepoFail(t *testing.T) {
 	env := initTest(t)
 	defer testResetEnvVars(oldEnvVars)
 
-	go run(env.finishC, env.output)
+	go run(env.finishC, env.output, env.resticCli)
 
 	err := <-env.finishC
 
@@ -238,7 +251,7 @@ func TestArchive(t *testing.T) {
 	restoreTypeVar := "s3"
 	restoreType = &restoreTypeVar
 
-	go run(env.finishC, env.output)
+	go run(env.finishC, env.output, env.resticCli)
 
 	assertOK(t, <-env.finishC)
 
