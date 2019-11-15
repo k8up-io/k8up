@@ -25,7 +25,6 @@ type BackupStruct struct {
 	endTimeStamp      int64
 	snapshots         []Snapshot
 	stdinErrorMessage error
-	liveOutput        chan string
 	webhookSender     WebhookSender
 }
 
@@ -131,7 +130,6 @@ func newBackup(backupDir string, listSnapshots *ListSnapshotsStruct, webhookSend
 		backupDir:      backupDir,
 		snapshotLister: listSnapshots,
 		rawMetrics:     []rawMetrics{},
-		liveOutput:     make(chan string, 0),
 		webhookSender:  webhookSender,
 		genericCommand: *genericCommand,
 	}
@@ -164,8 +162,10 @@ func (b *BackupStruct) Backup() {
 
 	for _, folder := range b.folderList {
 		fmt.Printf("Starting backup for folder %v\n", folder)
-		go b.parse(folder, parsedSummary) //needs to contain the whole metrics logic from now on.
-		b.backupFolder(path.Join(b.backupDir, folder), folder)
+		liveOutput := make(chan string, 0)
+		go b.parse(folder, parsedSummary, liveOutput) //needs to contain the whole metrics logic from now on.
+		b.backupFolder(path.Join(b.backupDir, folder), folder, liveOutput)
+		close(liveOutput)
 
 		b.sendPostFolderWebhook(os.Getenv(Hostname), folder, parsedSummary)
 	}
@@ -176,9 +176,9 @@ func (b *BackupStruct) Backup() {
 
 }
 
-func (b *BackupStruct) backupFolder(folder, folderName string) {
+func (b *BackupStruct) backupFolder(folder, folderName string, liveOutput chan string) {
 	args := []string{"backup", folder, "--host", os.Getenv(Hostname), "--json"}
-	b.genericCommand.exec(args, commandOptions{print: false, output: b.liveOutput})
+	b.genericCommand.exec(args, commandOptions{print: false, output: liveOutput})
 }
 
 // StdinBackup triggers a backup that attaches itself to the given container
@@ -188,10 +188,11 @@ func (b *BackupStruct) StdinBackup(backupCommand, pod, container, namespace, fil
 	host := os.Getenv(Hostname) + "-" + container
 	args := []string{"backup", "--host", host, "--stdin", "--stdin-filename", "/" + host + fileExt, "--json"}
 	parsedSummary := make(chan rawMetrics, 0)
-	go b.parse(host, parsedSummary)
+	liveOutput := make(chan string, 0)
+	go b.parse(host, parsedSummary, liveOutput)
 	b.genericCommand.exec(args, commandOptions{
 		print:  false,
-		output: b.liveOutput,
+		output: liveOutput,
 		Params: kubernetes.Params{
 			Pod:           pod,
 			Container:     container,
@@ -200,6 +201,7 @@ func (b *BackupStruct) StdinBackup(backupCommand, pod, container, namespace, fil
 		},
 		stdin: true,
 	})
+	close(liveOutput)
 
 	// Because stdin backups don't have folders we'll use the hostname +
 	// container name distingquish them
@@ -261,13 +263,13 @@ func (b *BackupStruct) ToProm() []prometheus.Collector {
 	return promSlice
 }
 
-func (b *BackupStruct) parse(folder string, parsedSummary chan rawMetrics) {
+func (b *BackupStruct) parse(folder string, parsedSummary chan rawMetrics, liveOutput chan string) {
 
 	i := 0
 	errorCount := 0
 	startTimestamp := time.Now().Unix()
 
-	for message := range b.liveOutput {
+	for message := range liveOutput {
 		be := &backupEnvelope{}
 		err := json.Unmarshal([]byte(message), be)
 
@@ -288,10 +290,11 @@ func (b *BackupStruct) parse(folder string, parsedSummary chan rawMetrics) {
 		case "summary":
 			endTimeStamp := time.Now().Unix()
 			b.parseSummary(be.backupSummary, errorCount, folder, startTimestamp, endTimeStamp)
-			// send back the last item in the metrics slice
-			parsedSummary <- b.rawMetrics[len(b.rawMetrics)-1]
 		}
 	}
+
+	// send back the last item in the metrics slice
+	parsedSummary <- b.rawMetrics[len(b.rawMetrics)-1]
 
 }
 
