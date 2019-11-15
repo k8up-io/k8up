@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"os"
 	"strings"
+	"sync"
 	"time"
 
 	"git.vshn.net/vshn/wrestic/output"
@@ -103,11 +104,26 @@ type Restic struct {
 // command contians the currently running genericCommand
 type commandState struct {
 	running *genericCommand
+	mutex   *sync.Mutex
+}
+
+func (c *commandState) getRunning() *genericCommand {
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
+	return c.running
+}
+
+func (c *commandState) setRunning(running *genericCommand) {
+	c.mutex.Lock()
+	c.running = running
+	c.mutex.Unlock()
 }
 
 // New returns a new restic object.
 func New(backupDir string, webhookSender WebhookSender) *Restic {
-	commandState := &commandState{}
+	commandState := &commandState{
+		mutex: &sync.Mutex{},
+	}
 	snapshotLister := newListSnapshots(commandState)
 	return &Restic{
 		UnlockStruct:        newUnlock(commandState),
@@ -152,7 +168,7 @@ func getBucket() string {
 // so it can shutdown cleanly.
 func (r *Restic) SendSignal(sig os.Signal) {
 	if r.commandState.running != nil {
-		err := r.commandState.running.sendSignal(sig)
+		err := r.commandState.getRunning().sendSignal(sig)
 		if err != nil {
 			fmt.Printf("error sending signal to restic: %s\n", err)
 		}

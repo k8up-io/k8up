@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"sync"
 
 	"git.vshn.net/vshn/wrestic/kubernetes"
 	"git.vshn.net/vshn/wrestic/output"
@@ -21,6 +22,7 @@ type genericCommand struct {
 	command *exec.Cmd
 	// commandState holds the global state what command is currently running
 	commandState *commandState
+	mutex        *sync.Mutex
 }
 
 type commandOptions struct {
@@ -38,6 +40,7 @@ func newGenericCommand(commandState *commandState) *genericCommand {
 		stdOut:       make([]string, 0),
 		stdErrOut:    make([]string, 0),
 		commandState: commandState,
+		mutex:        &sync.Mutex{},
 	}
 }
 
@@ -96,17 +99,21 @@ func (g *genericCommand) exec(args []string, options commandOptions) {
 		return
 	}
 
-	g.commandState.running = g
+	g.commandState.setRunning(g)
 
 	go func() {
 		var collectErr error
+		g.mutex.Lock()
 		g.stdOut, collectErr = g.collectOutput(commandStdout, options.print, options.output)
+		g.mutex.Unlock()
 		finished <- collectErr
 	}()
 
 	go func() {
 		var collectErr error
+		g.mutex.Lock()
 		g.stdErrOut, collectErr = g.collectOutput(commandStderr, options.print, options.output)
+		g.mutex.Unlock()
 		finished <- collectErr
 	}()
 
@@ -116,6 +123,7 @@ func (g *genericCommand) exec(args []string, options commandOptions) {
 
 	// Avoid overwriting any errors produced by the
 	// copy command
+	g.mutex.Lock()
 	if g.errorMessage == nil {
 		if err != nil {
 			g.errorMessage = err
@@ -127,6 +135,7 @@ func (g *genericCommand) exec(args []string, options commandOptions) {
 			g.errorMessage = collectErr2
 		}
 	}
+	g.mutex.Unlock()
 }
 
 func (g *genericCommand) collectOutput(output io.Reader, print bool, out chan string) ([]string, error) {
