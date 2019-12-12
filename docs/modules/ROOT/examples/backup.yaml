@@ -19,10 +19,12 @@ spec:
   backup:
     schedule: '*/5 * * * *'
     keepJobs: 4
-    promURL: http://minio-service:9000
+    # optional
+    #promURL: https://prometheus-io-instance:8443
   check:
     schedule: '0 1 * * 1'
-    promURL: http://minio-service:9000
+    # optional
+    #promURL: https://prometheus-io-instance:8443
   prune:
     schedule: '0 1 * * 0'
     retention:
