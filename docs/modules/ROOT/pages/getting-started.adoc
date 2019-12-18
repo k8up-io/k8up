@@ -23,7 +23,7 @@ Then install K8up itself:
 [source,bash]
 ----
 kubectl create namespace k8up-operator
-helm install appuio/k8up
+helm install appuio/k8up --namespace k8up-operator --generate-name
 ----
 
 === Install MinIO
