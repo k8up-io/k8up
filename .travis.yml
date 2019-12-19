@@ -9,7 +9,7 @@ env:
 
 before_script:
   - docker info
-  - echo ${DOCKER_HUB_PASSWORD} | docker login -u ${DOCKER_HUB_USER} --password-stdin
+  - docker login --username "${DOCKER_HUB_USER}" --password "${DOCKER_HUB_PASSWORD}"
 
 script:
   - docker build . -t ${IMAGE_NAME}:${IMAGE_TAG}
