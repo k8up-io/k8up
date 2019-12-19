@@ -40,7 +40,10 @@ This will trigger a one time job to restore the latest snapshot to S3.
 
 == Manual restore via Restic
 
-To manually restore you’ll need: * Linux machine with https://github.com/restic/restic[restic] * Fuse (Optional for mounting)
+To manually restore you’ll need: 
+
+* Linux machine with https://github.com/restic/restic[restic]
+* Fuse (Optional for mounting)
 
 Let’s take this `backend` example from a schedule:
 
