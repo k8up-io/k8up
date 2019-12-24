@@ -96,10 +96,6 @@ func (a *archiveRunner) watchState(archiveJob *batchv1.Job) {
 
 	subscription.WatchLoop(watch)
 
-	defer func() {
-		a.observer.GetBroker().Unsubscribe(archiveJob.Labels[a.config.Identifier], subscription)
-	}()
-
 	a.removeOldestArchives(a.getScheduledCRDsInNameSpace(), a.archiver.Spec.KeepJobs)
 
 }
