@@ -2,6 +2,8 @@
 
 It's possible to tell the operator to perform restores either to a PVC or an S3 bucket.
 
+== Restore from S3 to S3 bucket
+
 For this you can create a restore object:
 
 [source,yaml]
@@ -37,6 +39,64 @@ spec:
 ----
 
 This will trigger a one time job to restore the latest snapshot to S3.
+
+== Restore from S3 to PVC
+
+First, create a new PVC to extract the data to:
+
+[source,yaml]
+----
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: restore-test-mfw
+  # Optional:
+  #namespace: snapshot-test
+  annotations:
+    # set to "true" to include in future backups
+    appuio.ch/backup: "false"
+  # Optional:
+  #labels:
+  #  app: multi-file-writer
+spec:
+  # Optional:
+  # storageClassName: <YOUR_STORAGE_CLASS_NAME>
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      # Must be sufficient to hold your data
+      storage: 250Mi
+----
+
+Then create a restore job
+
+[code,yaml]
+----
+apiVersion: backup.appuio.ch/v1alpha1
+kind: Restore
+metadata:
+  name: restore-test-mfw
+  namespace: snapshot-test
+
+spec:
+  repoPasswordSecretRef:
+    name: backup-repo
+    key: password
+  restoreMethod:
+    folder:
+      claimName: mfw-restore
+  backend:
+    s3:
+      endpoint: http://minio-service:9000
+      bucket: k8up
+      accessKeyIDSecretRef:
+        name: backup-credentials
+        key: username
+      secretAccessKeySecretRef:
+        name: backup-credentials
+        key: password
+----
 
 == Manual restore via Restic
 
