@@ -33,15 +33,15 @@ func (l *ListSnapshotsStruct) ListSnapshots(last bool) []Snapshot {
 
 	l.genericCommand.exec(args, commandOptions{print: false})
 	fmt.Printf("Listing snapshots\n")
-	if len(l.stdErrOut) > 1 && strings.Contains(l.stdErrOut[1], "following location?") {
+	if len(l.GetStdErrOut()) > 1 && strings.Contains(l.GetStdErrOut()[1], "following location?") {
 		l.errorMessage = errors.New(notInitialisedError)
 		return nil
 	}
 	snaps := make([]Snapshot, 0)
-	output := strings.Join(l.stdOut, "\n")
+	output := strings.Join(l.GetStdOut(), "\n")
 	err := json.Unmarshal([]byte(output), &snaps)
 	if err != nil {
-		fmt.Printf("Error listing snapshots:\n%v\n%v\n%v\n", err, output, strings.Join(l.stdErrOut, "\n"))
+		fmt.Printf("Error listing snapshots:\n%v\n%v\n%v\n", err, output, strings.Join(l.GetStdErrOut(), "\n"))
 		l.errorMessage = err
 		return nil
 	}
