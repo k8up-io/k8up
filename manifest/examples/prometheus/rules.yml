@@ -24,8 +24,8 @@ groups:
     annotations:
       summary: "No K8up jobs were run in {{ $labels.namespace }} within the last 24 hours. Check the operator, there might be a deadlock"
   - alert: K8upJobStuck
-    expr: rate(k8up_jobs_queued_gauge[2h]) == 0 and on(namespace) k8up_schedules_gauge > 0
-    for: 23h
+    expr: k8up_jobs_queued_gauge{jobType="backup"} > 0 and on(namespace) k8up_schedules_gauge > 0
+    for: 24h
     labels:
       severity: critical
     annotations:
