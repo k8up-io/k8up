@@ -6,9 +6,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [v0.1.7] 2020-01-03
 ### Fixed
 - Archive cleanup panic, the archives were cleaned up twice which lead to a nilpointer
-
 
 ## [v0.1.6] 2019-11-14
 ### Changed
