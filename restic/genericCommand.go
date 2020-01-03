@@ -91,6 +91,7 @@ func (g *genericCommand) exec(args []string, options commandOptions) {
 	commandStderr, err := cmd.StderrPipe()
 
 	finished := make(chan error, 0)
+	defer close(finished)
 
 	err = cmd.Start()
 	if err != nil {
@@ -103,18 +104,20 @@ func (g *genericCommand) exec(args []string, options commandOptions) {
 
 	go func() {
 		var collectErr error
-		g.mutex.Lock()
-		g.stdOut, collectErr = g.collectOutput(commandStdout, options.print, options.output)
-		g.mutex.Unlock()
+		stdOut, collectErr := g.collectOutput(commandStdout, options.print, options.output)
 		finished <- collectErr
+		g.mutex.Lock()
+		g.stdOut = stdOut
+		g.mutex.Unlock()
 	}()
 
 	go func() {
 		var collectErr error
-		g.mutex.Lock()
-		g.stdErrOut, collectErr = g.collectOutput(commandStderr, options.print, options.output)
-		g.mutex.Unlock()
+		stdErr, collectErr := g.collectOutput(commandStderr, options.print, options.output)
 		finished <- collectErr
+		g.mutex.Lock()
+		g.stdErrOut = stdErr
+		g.mutex.Unlock()
 	}()
 
 	collectErr1 := <-finished
@@ -161,10 +164,18 @@ func (g *genericCommand) collectOutput(output io.Reader, print bool, out chan st
 func (g *genericCommand) GetError() error { return g.errorMessage }
 
 // GetStdOut returns the complete output of the command
-func (g *genericCommand) GetStdOut() []string { return g.stdOut }
+func (g *genericCommand) GetStdOut() []string {
+	g.mutex.Lock()
+	defer g.mutex.Unlock()
+	return g.stdOut
+}
 
 // GetStdErrOut returns the complete StdErr of the command
-func (g *genericCommand) GetStdErrOut() []string { return g.stdErrOut }
+func (g *genericCommand) GetStdErrOut() []string {
+	g.mutex.Lock()
+	defer g.mutex.Unlock()
+	return g.stdErrOut
+}
 
 // GetWebhookData returns all objects that should get marshalled to json and
 // sent to the webhook endpoint. Returns nil by default.
