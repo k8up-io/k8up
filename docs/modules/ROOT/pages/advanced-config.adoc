@@ -76,7 +76,7 @@ spec:
 ====
 If you want to pass environment variables to the `backupCommand` you'll have to wrap them in a shell. Example:
 
-`kubectl -n wordpress-demo annotate pods ${YOUR_POD_NAME} "appuio.ch/backupcommand=/bin/bash -c 'mysqldump -uroot -p\"\${MARIADB_ROOT_PASSWORD}\" --all-databases'" --overwrite`
+`kubectl -n ${YOUR_NAMESPACE} annotate pods ${YOUR_POD_NAME} "appuio.ch/backupcommand=/bin/bash -c 'mysqldump -uroot -p\"\${MARIADB_ROOT_PASSWORD}\" --all-databases'" --overwrite`
 ====
 
 That's the perfect use case for using PreBackup pods! They're pod definitions that live in your namespaces. Once the operator triggers a backup on that specific namespace it will loop thorugh all these pod definitions, run them and clean them up again after the backup has finished. This allows much more flexibility, as they support everything a normal pod template does. So for instance you are able to set pod affinity so the PreBackup pods get started on a specific node. That will allow you to get access to data that's RWO and then trigger backups for them via a backup command. We will enhance this feature in the future so it will support file system backups, too.
