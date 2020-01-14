@@ -89,6 +89,12 @@ func GetBasicJob(kind string, config config.Global, object metav1.Object) *batch
 		config.Label:      "true",
 		config.Identifier: PseudoUUID(),
 	}
+	
+	pullPolicy := corev1.PullIfNotPresent
+	if strings.HasSuffix(config.Image, ":latest") {
+		pullPolicy = corev1.PullAlways
+	}
+	
 	return &batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      nameJob,
@@ -118,7 +124,7 @@ func GetBasicJob(kind string, config config.Global, object metav1.Object) *batch
 									Value: object.GetNamespace(),
 								},
 							},
-							ImagePullPolicy: corev1.PullAlways,
+							ImagePullPolicy: pullPolicy,
 							TTY:             true,
 							Stdin:           true,
 						},
