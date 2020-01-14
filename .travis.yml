@@ -9,7 +9,6 @@ env:
 
 before_script:
   - docker info
-  - docker login --username "${DOCKER_HUB_USER}" --password "${DOCKER_HUB_PASSWORD}"
 
 script:
   - docker build . -t ${IMAGE_NAME}:${IMAGE_TAG}
@@ -20,15 +19,21 @@ deploy:
   # because a custom condition was not met", even though this is 1:1 from official
   # documentation
   - provider: script
-    script: docker push ${IMAGE_NAME}:${IMAGE_TAG}
+    script:
+    - docker login --username "${DOCKER_HUB_USER}" --password "${DOCKER_HUB_PASSWORD}"
+    - docker push ${IMAGE_NAME}:${IMAGE_TAG}
     on:
       branch: dev
   - provider: script
-    script: docker push ${IMAGE_NAME}:${IMAGE_TAG}
+    script:
+    - docker login --username "${DOCKER_HUB_USER}" --password "${DOCKER_HUB_PASSWORD}"
+    - docker push ${IMAGE_NAME}:${IMAGE_TAG}
     on:
       branch: master
   - provider: script
-    script: docker push ${IMAGE_NAME}:${IMAGE_TAG}
+    script:
+    - docker login --username "${DOCKER_HUB_USER}" --password "${DOCKER_HUB_PASSWORD}"
+    - docker push ${IMAGE_NAME}:${IMAGE_TAG}
     on:
       tags: true
 
