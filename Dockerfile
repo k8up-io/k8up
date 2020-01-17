@@ -1,9 +1,10 @@
-FROM golang:1.11-alpine as build
+FROM golang:1.13-alpine as build
 
-RUN apk add --no-cache tzdata
+ENV CGO_ENABLED=0
 
 WORKDIR /go/src/github.com/vshn/k8up
 COPY . .
+RUN go test -v ./...
 RUN go install -v ./...
 
 # runtime image
