@@ -21,7 +21,7 @@ jobs:
       if: startsWith(github.ref, 'refs/tags/v')
       run: echo ::set-env name=VERSION::$(echo ${GITHUB_REF#refs/tags/})
     - name: Build Image
-      run: docker build -t "${IMAGE}:${VERSION}"
+      run: docker build -t "${IMAGE}:${VERSION}" .
     - name: Push Image
       uses: elgohr/Publish-Docker-Github-Action@master
       with:
