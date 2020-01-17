@@ -275,6 +275,7 @@ func (b *BackupStruct) parse(folder string, parsedSummary chan rawMetrics, liveO
 
 		if err != nil {
 			fmt.Printf("could not parse restic output: %v\n", err)
+			continue
 		}
 
 		switch be.MessageType {
