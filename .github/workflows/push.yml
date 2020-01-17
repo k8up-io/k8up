@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       DOCKER_BUILDKIT: "1"
-      IMAGE: docker.io/${{ env.GITHUB_REPOSITORY }}
+      IMAGE: docker.io/${{ github.repository }}
     steps:
     - uses: actions/checkout@v1
     - name: Set version latest
