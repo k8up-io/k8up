@@ -1,0 +1,32 @@
+name: Build & Push Container Image
+on:
+  push:
+    branches:
+    - master
+    tags:
+    - v*
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      DOCKER_BUILDKIT: "1"
+      IMAGE: docker.io/${{ env.GITHUB_REPOSITORY }}
+    steps:
+    - uses: actions/checkout@v1
+    - name: Set version latest
+      if: github.ref == 'refs/heads/master'
+      run: echo ::set-env name=VERSION::latest
+    - name: Set version from tag
+      if: startsWith(github.ref, 'refs/tags/v')
+      run: echo ::set-env name=VERSION::$(echo ${GITHUB_REF#refs/tags/})
+    - name: Build Image
+      run: docker build -t "${IMAGE_NAME}"
+      env:
+        IMAGE_NAME: "${IMAGE}:${VERSION}"
+    - name: Push Image
+      uses: elgohr/Publish-Docker-Github-Action@master
+      with:
+        name: "${{ env.IMAGE }}:${{ env.VERSION }}"
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
