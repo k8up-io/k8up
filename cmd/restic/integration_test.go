@@ -15,6 +15,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"git.vshn.net/vshn/wrestic/s3"
 
@@ -24,7 +25,16 @@ import (
 
 type webhookserver struct {
 	jsonData []byte
-	srv      *http.Server
+	srv      *testServer
+}
+
+type testServer struct {
+	http.Server
+}
+
+func (s *testServer) Shutdown(ctx context.Context) {
+	s.Server.Shutdown(ctx)
+	time.Sleep(1 * time.Second)
 }
 
 type testEnvironment struct {
@@ -57,9 +67,11 @@ func (w *webhookserver) runWebServer(t *testing.T) {
 		w.jsonData, _ = ioutil.ReadAll(r.Body)
 	})
 
-	srv := &http.Server{
-		Addr:    ":8091",
-		Handler: mux,
+	srv := &testServer{
+		Server: http.Server{
+			Addr:    ":8091",
+			Handler: mux,
+		},
 	}
 
 	go func() {
