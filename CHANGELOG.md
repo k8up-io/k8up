@@ -6,6 +6,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Changed
+- Change defaults for `BACKUP_ANNOTATION` and `BACKUP_BACKUPCOMMANDANNOTATION`
+  to use `k8up.syn.tools` as their prefix.
 
 ## [v0.1.7] 2020-01-03
 ### Fixed
