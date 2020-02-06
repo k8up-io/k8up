@@ -1,8 +1,8 @@
 package backup
 
 import (
-	configPackage "github.com/vshn/k8up/config"
 	"github.com/spf13/viper"
+	configPackage "github.com/vshn/k8up/config"
 )
 
 type config struct {
@@ -38,13 +38,13 @@ func newConfig() config {
 }
 
 func setDefaults() {
-	viper.SetDefault("annotation", "appuio.ch/backup")
+	viper.SetDefault("annotation", "k8up.syn.tools/backup")
 	viper.SetDefault("checkSchedule", "0 0 * * 0")
-	viper.SetDefault("backupCommandAnnotation", "appuio.ch/backupcommand")
+	viper.SetDefault("backupCommandAnnotation", "k8up.syn.tools/backupcommand")
 	viper.SetDefault("dataPath", "/data")
 	viper.SetDefault("jobName", "backupjob")
 	viper.SetDefault("podName", "backupjob-pod")
 	viper.SetDefault("PodExecRoleName", "pod-executor")
 	viper.SetDefault("PodExecAccountName", "pod-executor")
-	viper.SetDefault("FileExtensionAnnotation", "backup.appuio.ch/file-extension")
+	viper.SetDefault("FileExtensionAnnotation", "k8up.syn.tools/file-extension")
 }
