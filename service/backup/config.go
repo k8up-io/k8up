@@ -46,5 +46,5 @@ func setDefaults() {
 	viper.SetDefault("podName", "backupjob-pod")
 	viper.SetDefault("PodExecRoleName", "pod-executor")
 	viper.SetDefault("PodExecAccountName", "pod-executor")
-	viper.SetDefault("FileExtensionAnnotation", "backup.appuio.ch/file-extension")
+	viper.SetDefault("FileExtensionAnnotation", "k8up.syn.tools/file-extension")
 }
