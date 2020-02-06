@@ -8,7 +8,7 @@ The operator has two ways for configuration:
 == Environment variables
 
 * `BACKUP_IMAGE` URL of the restic image, default: `172.30.1.1:5000/myproject/restic`
-* `BACKUP_ANNOTATION` the annotation to be used for filtering, default: `appuio.ch/backup`
+* `BACKUP_ANNOTATION` the annotation to be used for filtering, default: `k8up.syn.tools/backup`
 * `BACKUP_CHECKSCHEDULE` the default check schedule, default: `0 0 * * 0`
 * `BACKUP_PODFILTER` the filter used to find the backup pods, default: `backupPod=true`
 * `BACKUP_DATAPATH` where the PVCs should get mounted in the container, default `/data`
@@ -17,7 +17,7 @@ The operator has two ways for configuration:
 * `BACKUP_RESTARTPOLICY` set the RestartPolicy for the backup jobs. According to the https://kubernetes.io/docs/concepts/workloads/controllers/jobs-run-to-completion/[docs] this should be `OnFailure` for jobs that terminate, default: `OnFailure`
 * `BACKUP_METRICBIND` set the bind address for the prometheus endpoint, default: `:8080`
 * `BACKUP_PROMURL` set the operator wide default prometheus push gateway, default `http://127.0.0.1/`
-* `BACKUP_BACKUPCOMMANDANNOTATION` set the annotation name where the backup commands are stored, default `appuio.ch/backupcommand`
+* `BACKUP_BACKUPCOMMANDANNOTATION` set the annotation name where the backup commands are stored, default `k8up.syn.tools/backupcommand`
 * `BACKUP_PODEXECROLENAME` set the rolename that should be used for pod command execution, default `pod-executor`
 * `BACKUP_PODEXECACCOUNTNAME` set the service account name that should be used for the pod command execution, default: `pod-executor`
 * `BACKUP_GLOBALACCESSKEYID` set the S3 access key id to be used globaly
@@ -87,7 +87,7 @@ You can also add it to any pods that are running in the namespace:
 [source]
 --
 via kubectl:
-kubectl -n ${YOUR_NAMESPACE} annotate pods ${YOUR_POD_NAME} "appuio.ch/backupcommand=/bin/bash -c 'mysqldump -uroot -p\"\${MARIADB_ROOT_PASSWORD}\" --all-databases'" --overwrite
+kubectl -n ${YOUR_NAMESPACE} annotate pods ${YOUR_POD_NAME} "k8up.syn.tools/backupcommand=/bin/bash -c 'mysqldump -uroot -p\"\${MARIADB_ROOT_PASSWORD}\" --all-databases'" --overwrite
 
 in the manifest:
 spec:
@@ -98,7 +98,7 @@ spec:
       labels:
         app: mariadb
       annotations:
-        appuio.ch/backupcommand: /bin/bash -c 'mysqldump -uroot -p "${MARIADB_ROOT_PASSWORD}" --all-databases'
+        k8up.syn.tools/backupcommand: /bin/bash -c 'mysqldump -uroot -p "${MARIADB_ROOT_PASSWORD}" --all-databases'
 --
 ====
 
