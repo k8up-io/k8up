@@ -11,6 +11,7 @@ The operator has two ways for configuration:
 * `BACKUP_BACKUPCOMMANDANNOTATION` set the annotation name where the backup commands are stored, default `k8up.syn.tools/backupcommand`
 * `BACKUP_CHECKSCHEDULE` the default check schedule, default: `0 0 * * 0`
 * `BACKUP_DATAPATH` where the PVCs should get mounted in the container, default `/data`
+* `BACKUP_FILEEXTENSIONANNOTATION` set the annotation name where the file extension is stored for backupcommands, default `k8up.syn.tools/file-extension`
 * `BACKUP_GLOBALACCESSKEYID` set the S3 access key id to be used globaly
 * `BACKUP_GLOBALKEEPJOBS` set the count of jobs to keep globally
 * `BACKUP_GLOBALREPOPASSWORD` set the restic repository password to be used globaly
