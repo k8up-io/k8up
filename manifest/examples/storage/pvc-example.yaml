@@ -3,7 +3,7 @@ apiVersion: v1
 metadata:
   name: myclaim
   annotations:
-    appuio.ch/backup: 'true'
+    k8up.syn.tools/backup: 'true'
   namespace: myproject
 spec:
   accessModes:
