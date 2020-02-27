@@ -11,6 +11,7 @@ import (
 
 	"git.vshn.net/vshn/wrestic/kubernetes"
 
+	"git.vshn.net/vshn/wrestic/cmd/wrestic/args"
 	"git.vshn.net/vshn/wrestic/output"
 	"git.vshn.net/vshn/wrestic/restic"
 	"git.vshn.net/vshn/wrestic/s3"
@@ -24,17 +25,6 @@ const (
 	fileextEnv    = "FILEEXTENSION_ANNOTATION"
 )
 
-type arrayOpts []string
-
-func (a *arrayOpts) String() string {
-	return "my string representation"
-}
-
-func (a *arrayOpts) Set(value string) error {
-	*a = append(*a, value)
-	return nil
-}
-
 var (
 	check         = flag.Bool("check", false, "Set if the container should run a check")
 	prune         = flag.Bool("prune", false, "Set if the container should run a prune")
@@ -44,11 +34,12 @@ var (
 	restoreType   = flag.String("restoreType", "", "Type of this restore, folder or S3")
 	restoreFilter = flag.String("restoreFilter", "", "Simple filter to define what should get restored. For example the PVC name")
 	archive       = flag.Bool("archive", false, "")
-	stdinOpts     arrayOpts
+	tags          args.ArrayOpts
 )
 
 func main() {
 
+	flag.Var(&tags, "tag", "List of tags to consider for given operation")
 	flag.Parse()
 
 	finishC := make(chan error)
@@ -111,22 +102,22 @@ func run(finishC chan error, outputManager *output.Output, resticCli *restic.Res
 
 	if *prune {
 		fmt.Println("Removing all locks to clear stale locks")
-		resticCli.Prune()
+		resticCli.Prune(tags.BuildArgs())
 		outputManager.Register(resticCli.PruneStruct)
 		criticalError = resticCli.PruneStruct.GetError()
 		commandRun = true
 	}
 	if *check {
 		resticCli.Check()
-		resticCli.ListSnapshots(false)
+		resticCli.ListSnapshots(false, tags.BuildArgs())
 		outputManager.Register(resticCli.CheckStruct)
 		commandRun = true
 	}
 
 	if *restore && criticalError == nil {
-		snapshots = resticCli.ListSnapshots(false)
+		snapshots = resticCli.ListSnapshots(false, tags.BuildArgs())
 		criticalError = resticCli.ListSnapshotsStruct.GetError()
-		resticCli.Restore(*restoreSnap, *restoreType, snapshots, os.Getenv(restic.RestoreDirEnv), *restoreFilter, *verifyRestore)
+		resticCli.Restore(*restoreSnap, *restoreType, snapshots, os.Getenv(restic.RestoreDirEnv), *restoreFilter, *verifyRestore, tags)
 		if resticCli.RestoreStruct.GetError() != nil {
 			criticalError = resticCli.RestoreStruct.GetError()
 		}
@@ -134,9 +125,9 @@ func run(finishC chan error, outputManager *output.Output, resticCli *restic.Res
 		outputManager.Register(resticCli.RestoreStruct)
 	}
 	if *archive && criticalError == nil {
-		snapshots = resticCli.ListSnapshots(true)
+		snapshots = resticCli.ListSnapshots(true, tags.BuildArgs())
 		criticalError = resticCli.ListSnapshotsStruct.GetError()
-		resticCli.Archive(snapshots, *restoreType, os.Getenv(restic.RestoreDirEnv), *restoreFilter, *verifyRestore)
+		resticCli.Archive(snapshots, *restoreType, os.Getenv(restic.RestoreDirEnv), *restoreFilter, *verifyRestore, tags.BuildArgs())
 		if resticCli.RestoreStruct.GetError() != nil {
 			criticalError = resticCli.RestoreStruct.GetError()
 		}
@@ -174,10 +165,10 @@ func run(finishC chan error, outputManager *output.Output, resticCli *restic.Res
 				// List the snapshots before doing any stdIn backups. This will
 				// ensure that the cache is already pupulated before any stdIn
 				// connections over TCP/IP are opened.
-				resticCli.ListSnapshots(false)
+				resticCli.ListSnapshots(false, tags.BuildArgs())
 
 				for _, pod := range podList {
-					resticCli.StdinBackup(pod.Command, pod.PodName, pod.ContainerName, pod.Namespace, pod.FileExtension)
+					resticCli.StdinBackup(pod.Command, pod.PodName, pod.ContainerName, pod.Namespace, pod.FileExtension, tags.BuildArgs())
 					if resticCli.BackupStruct.GetError() != nil {
 						criticalError = resticCli.BackupStruct.GetError()
 					}
@@ -190,7 +181,7 @@ func run(finishC chan error, outputManager *output.Output, resticCli *restic.Res
 
 		}
 
-		resticCli.Backup()
+		resticCli.Backup(tags.BuildArgs())
 		if resticCli.BackupStruct.GetError() != nil {
 			criticalError = resticCli.BackupStruct.GetError()
 		}

@@ -136,7 +136,7 @@ func newBackup(backupDir string, listSnapshots *ListSnapshotsStruct, webhookSend
 }
 
 // Backup executes a backup command.
-func (b *BackupStruct) Backup() {
+func (b *BackupStruct) Backup(tags []string) {
 
 	if _, err := os.Stat(b.backupDir); os.IsNotExist(err) {
 		fmt.Printf("Backupdir %v does not exist, skipping\n", b.backupDir)
@@ -164,7 +164,7 @@ func (b *BackupStruct) Backup() {
 		fmt.Printf("Starting backup for folder %v\n", folder)
 		liveOutput := make(chan string, 0)
 		go b.parse(folder, parsedSummary, liveOutput) //needs to contain the whole metrics logic from now on.
-		b.backupFolder(path.Join(b.backupDir, folder), folder, liveOutput)
+		b.backupFolder(path.Join(b.backupDir, folder), folder, liveOutput, tags)
 		close(liveOutput)
 
 		b.sendPostFolderWebhook(os.Getenv(Hostname), folder, parsedSummary)
@@ -172,21 +172,21 @@ func (b *BackupStruct) Backup() {
 
 	close(parsedSummary)
 
-	b.snapshots = b.snapshotLister.ListSnapshots(false)
+	b.snapshots = b.snapshotLister.ListSnapshots(false, tags)
 
 }
 
-func (b *BackupStruct) backupFolder(folder, folderName string, liveOutput chan string) {
-	args := []string{"backup", folder, "--host", os.Getenv(Hostname), "--json"}
+func (b *BackupStruct) backupFolder(folder, folderName string, liveOutput chan string, tags []string) {
+	args := append([]string{"backup", folder, "--host", os.Getenv(Hostname), "--json"}, tags...)
 	b.genericCommand.exec(args, commandOptions{print: false, output: liveOutput})
 }
 
 // StdinBackup triggers a backup that attaches itself to the given container
 // on a Kubernetes cluster.
-func (b *BackupStruct) StdinBackup(backupCommand, pod, container, namespace, fileExt string) {
+func (b *BackupStruct) StdinBackup(backupCommand, pod, container, namespace, fileExt string, tags []string) {
 	fmt.Printf("backing up via %v stdin...\n", container)
 	host := os.Getenv(Hostname) + "-" + container
-	args := []string{"backup", "--host", host, "--stdin", "--stdin-filename", "/" + host + fileExt, "--json"}
+	args := append([]string{"backup", "--host", host, "--stdin", "--stdin-filename", "/" + host + fileExt, "--json"}, tags...)
 	parsedSummary := make(chan rawMetrics, 0)
 	liveOutput := make(chan string, 0)
 	go b.parse(host, parsedSummary, liveOutput)
@@ -209,7 +209,7 @@ func (b *BackupStruct) StdinBackup(backupCommand, pod, container, namespace, fil
 
 	close(parsedSummary)
 
-	b.snapshots = b.snapshotLister.ListSnapshots(false)
+	b.snapshots = b.snapshotLister.ListSnapshots(false, tags)
 	if b.errorMessage != nil {
 		b.stdinErrorMessage = b.errorMessage
 		b.errorMessage = nil
@@ -237,7 +237,7 @@ func (b *BackupStruct) GetWebhookData() []output.JsonMarshaller {
 	stats = append(stats, &WebhookStats{
 		Name:       os.Getenv(Hostname),
 		BucketName: getBucket(),
-		Snapshots:  b.snapshotLister.ListSnapshots(false),
+		Snapshots:  b.snapshotLister.ListSnapshots(false, []string{}),
 	})
 
 	return stats
@@ -427,7 +427,7 @@ func (b *BackupStruct) parseSummary(summary backupSummary, errorCount int, folde
 		UnmodifiedDirs:        float64(summary.DirsUnmodified),
 		Errors:                float64(errorCount),
 		MountedPVCs:           b.folderList,
-		availableSnapshots:    float64(len(b.snapshotLister.ListSnapshots(false))),
+		availableSnapshots:    float64(len(b.snapshotLister.ListSnapshots(false, []string{}))),
 		Folder:                folder,
 		hostname:              os.Getenv(Hostname),
 		BackupStartTimestamp:  float64(startTimestamp),
