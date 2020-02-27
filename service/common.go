@@ -26,7 +26,7 @@ const (
 	KeepWeekly  = "KEEP_WEEKLY"
 	KeepMonthly = "KEEP_MONTHLY"
 	KeepYearly  = "KEEP_YEARLY"
-	KeepTag     = "KEEP_TAG"
+	KeepTag     = "KEEP_TAGS"
 	StatsURL    = "STATS_URL"
 	RestorePath = "/restore"
 	PromURL     = "PROM_URL"
@@ -159,6 +159,7 @@ func DefaultEnvs(backend *backupv1alpha1.Backend, config config.Global) []corev1
 }
 
 // BuildTagArgs will prepend "--tag " to every element in the given []string
+// TODO: this is wrong, needs fixing!!
 func BuildTagArgs(tagList []string) []string {
 	var args []string
 	for i := range tagList {
