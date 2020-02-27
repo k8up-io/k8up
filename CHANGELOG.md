@@ -11,6 +11,8 @@ The annotations for including/excluding PVCs as well as the backupcommand annota
 ### Changed
 - Change defaults for `BACKUP_ANNOTATION` and `BACKUP_BACKUPCOMMANDANNOTATION`
   to use `k8up.syn.tools` as their prefix.
+### Fixed
+- Race conditions in the locking logic
 
 ## [v0.1.7] 2020-01-03
 ### Fixed

@@ -3,6 +3,7 @@ package observe
 import (
 	"fmt"
 	"math/rand"
+	"sync"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
@@ -53,6 +54,7 @@ type PodState struct {
 // resource gets assigned during creation.
 type Broker struct {
 	subscribers map[topic][]Subscriber
+	mutex       sync.Mutex
 }
 
 // Subscriber holds a channel that will receive the updates. The id is for
@@ -86,12 +88,15 @@ func (s *Subscriber) update(state PodState) {
 func newBroker() *Broker {
 	return &Broker{
 		subscribers: make(map[topic][]Subscriber, 0),
+		mutex:       sync.Mutex{},
 	}
 }
 
 // Subscribe adds a subscriber to the broker under the correct topic and returns
 // the subscriber. The subscriber contains the means to listen to events if necessary.
 func (b *Broker) Subscribe(topicName string) (*Subscriber, error) {
+	b.mutex.Lock()
+	defer b.mutex.Unlock()
 	if subs, ok := b.subscribers[topic(topicName)]; !ok {
 		tmpSlice := make([]Subscriber, 0)
 
@@ -134,6 +139,8 @@ func (b *Broker) Subscribe(topicName string) (*Subscriber, error) {
 
 // Unsubscribe removes the provided subscriber from the topic.
 func (b *Broker) Unsubscribe(topicName string, subscriber *Subscriber) {
+	b.mutex.Lock()
+	defer b.mutex.Unlock()
 	if subs, ok := b.subscribers[topic(topicName)]; ok {
 		deleteIndex := 0
 		for i := range subs {
@@ -153,6 +160,8 @@ func (b *Broker) Unsubscribe(topicName string, subscriber *Subscriber) {
 // operator should also register jobs that aren't created by the same, for cases
 // where the operator gets evicted or HA setups.
 func (b *Broker) Notify(topicName string, state PodState) error {
+	b.mutex.Lock()
+	defer b.mutex.Unlock()
 	if subs, ok := b.subscribers[topic(topicName)]; ok {
 		for i := range subs {
 			go subs[i].update(state)
