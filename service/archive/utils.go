@@ -12,6 +12,10 @@ func newArchiveJob(archive *backupv1alpha1.Archive, config config.Global) *batch
 
 	args := []string{"-archive", "-restoreType", "s3"}
 
+	if len(archive.Spec.Tags) > 0 {
+		args = append(args, service.BuildTagArgs(archive.Spec.Tags)...)
+	}
+
 	job := service.GetBasicJob(backupv1alpha1.ArchiveKind, config, &archive.ObjectMeta)
 	job.Spec.Template.Spec.Containers[0].Args = args
 	finalEnv := append(job.Spec.Template.Spec.Containers[0].Env, setUpEnvVariables(archive, config)...)

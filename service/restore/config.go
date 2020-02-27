@@ -1,8 +1,8 @@
 package restore
 
 import (
-	configPackage "github.com/vshn/k8up/config"
 	"github.com/spf13/viper"
+	configPackage "github.com/vshn/k8up/config"
 )
 
 type config struct {
