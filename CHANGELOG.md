@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [v0.1.8] 2020-03-03
 The annotations for including/excluding PVCs as well as the backupcommand annotation have changed. If you're using them this is a breaking change and needs to be adjusted properly.
 
 ### Changed
