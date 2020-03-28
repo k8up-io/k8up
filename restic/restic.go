@@ -1,15 +1,12 @@
 package restic
 
 import (
-	"encoding/json"
-	"fmt"
-	"net/url"
+	"context"
 	"os"
+	"path"
 	"strings"
-	"sync"
-	"time"
 
-	"git.vshn.net/vshn/wrestic/output"
+	"github.com/go-logr/logr"
 )
 
 const (
@@ -48,130 +45,47 @@ const (
 	RestoreDirEnv            = "RESTORE_DIR"
 )
 
-// snapshot models a restic a single snapshot from the
-// snapshots --json subcommand.
-type Snapshot struct {
-	ID       string    `json:"id"`
-	Time     time.Time `json:"time"`
-	Tree     string    `json:"tree"`
-	Paths    []string  `json:"paths"`
-	Hostname string    `json:"hostname"`
-	Username string    `json:"username"`
-	UID      int       `json:"uid"`
-	Gid      int       `json:"gid"`
-	Tags     []string  `json:"tags"`
+type ArrayOpts []string
+
+func (a *ArrayOpts) String() string {
+	return strings.Join(*a, ", ")
 }
 
-// WebhookSender describes an object that receives a JsonMarshaller and
-// sends it to its target.
-type WebhookSender interface {
-	TriggerHook(data output.JsonMarshaller)
+func (a *ArrayOpts) BuildArgs() []string {
+	argList := []string{}
+	for _, elem := range *a {
+		argList = append(argList, "--tag", elem)
+	}
+	return argList
 }
 
-// dummy type to make snapshots sortable by date and satisfy the output.JsonMarshaller interface
-type snapList []Snapshot
-
-func (s snapList) Len() int {
-	return len(s)
-}
-func (s snapList) Swap(i, j int) {
-	s[i], s[j] = s[j], s[i]
+func (a *ArrayOpts) Set(value string) error {
+	*a = append(*a, value)
+	return nil
 }
 
-func (s snapList) Less(i, j int) bool {
-	return s[i].Time.Before(s[j].Time)
-}
-
-func (s snapList) ToJson() []byte {
-	data, _ := json.Marshal(s)
-	return data
-}
-
-// Restic is an API representation for restic. You can trigger the defined
-// command very easily. Every command stores its own output and errors (if any)
-// which should provice an easy way to handle logging, outputparsing and error
-// handling.
 type Restic struct {
-	*UnlockStruct
-	*RestoreStruct
-	*PruneStruct
-	*BackupStruct
-	*CheckStruct
-	*Initrepo
-	*ListSnapshotsStruct
-	commandState *commandState
+	resticPath   string
+	logger       logr.Logger
+	snapshots    []Snapshot
+	ctx          context.Context
+	bucket       string
+	statsHandler StatsHandler
 }
 
-// command contians the currently running genericCommand
-type commandState struct {
-	running *genericCommand
-	mutex   *sync.Mutex
-}
+// New returns a new Restic reference
+func New(ctx context.Context, logger logr.Logger, statsHandler StatsHandler) *Restic {
 
-func (c *commandState) getRunning() *genericCommand {
-	c.mutex.Lock()
-	defer c.mutex.Unlock()
-	return c.running
-}
-
-func (c *commandState) setRunning(running *genericCommand) {
-	c.mutex.Lock()
-	c.running = running
-	c.mutex.Unlock()
-}
-
-// New returns a new restic object.
-func New(backupDir string, webhookSender WebhookSender) *Restic {
-	commandState := &commandState{
-		mutex: &sync.Mutex{},
+	bin := os.Getenv(resticLocationEnv)
+	if bin == "" {
+		bin = "/usr/local/bin/restic"
 	}
-	snapshotLister := newListSnapshots(commandState)
+
 	return &Restic{
-		UnlockStruct:        newUnlock(commandState),
-		RestoreStruct:       newRestore(commandState),
-		PruneStruct:         newPrune(snapshotLister, webhookSender, commandState),
-		BackupStruct:        newBackup(backupDir, snapshotLister, webhookSender, commandState),
-		CheckStruct:         newCheck(commandState),
-		Initrepo:            newInitrepo(commandState),
-		ListSnapshotsStruct: snapshotLister,
-		commandState:        commandState,
-	}
-}
-
-// Stats is an interface that returns an interface containing the stats that
-// should get pushed via webhook/prom.
-type Stats interface {
-	GetJson() []byte
-	GetProm()
-}
-
-func getResticBin() string {
-	resticBin := os.Getenv(resticLocationEnv)
-	if resticBin == "" {
-		resticBin = "restic"
-	}
-	return resticBin
-}
-
-func getBucket() string {
-	bucket := ""
-	repo := strings.Replace(os.Getenv(repositoryEnv), "s3:", "", 1)
-
-	u, err := url.Parse(repo)
-	if err == nil {
-		bucket = strings.Replace(u.Path, "/", "", 1)
-	}
-
-	return bucket
-}
-
-// SendSignal will send a signal to the currently running restic process
-// so it can shutdown cleanly.
-func (r *Restic) SendSignal(sig os.Signal) {
-	if r.commandState.running != nil {
-		err := r.commandState.getRunning().sendSignal(sig)
-		if err != nil {
-			fmt.Printf("error sending signal to restic: %s\n", err)
-		}
+		logger:       logger,
+		resticPath:   bin,
+		ctx:          ctx,
+		bucket:       path.Base(os.Getenv("RESTIC_REPOSITORY")),
+		statsHandler: statsHandler,
 	}
 }

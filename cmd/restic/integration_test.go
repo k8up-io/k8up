@@ -17,10 +17,12 @@ import (
 	"testing"
 	"time"
 
-	"git.vshn.net/vshn/wrestic/s3"
+	"github.com/go-logr/glogr"
+	"github.com/go-logr/logr"
+	"github.com/vshn/wrestic/s3"
+	"github.com/vshn/wrestic/stats"
 
-	"git.vshn.net/vshn/wrestic/output"
-	"git.vshn.net/vshn/wrestic/restic"
+	"github.com/vshn/wrestic/restic"
 )
 
 type webhookserver struct {
@@ -39,21 +41,18 @@ func (s *testServer) Shutdown(ctx context.Context) {
 
 type testEnvironment struct {
 	s3Client  *s3.Client
-	output    *output.Output
 	webhook   *webhookserver
 	finishC   chan error
 	t         *testing.T
 	resticCli *restic.Restic
+	log       logr.Logger
+	stats     *stats.Handler
 }
 
 func assertOK(t *testing.T, err error) {
 	if err != nil {
 		t.Error(err)
 	}
-}
-
-func newTestOutput() *output.Output {
-	return output.New(os.Getenv(webhookURLEnv), os.Getenv(promURLEnv), os.Getenv(restic.Hostname))
 }
 
 func newTestErrorChannel() chan error {
@@ -83,15 +82,20 @@ func (w *webhookserver) runWebServer(t *testing.T) {
 	w.srv = srv
 }
 
+func getS3Repo() string {
+	resticString := os.Getenv("RESTIC_REPOSITORY")
+	resticString = strings.ToLower(resticString)
+
+	return strings.Replace(resticString, "s3:", "", -1)
+}
+
 func initTest(t *testing.T) *testEnvironment {
-	output := newTestOutput()
-	var dir string
-	if os.Getenv(restic.BackupDirEnv) == "" {
-		dir = "/data"
-	} else {
-		dir = os.Getenv(restic.BackupDirEnv)
-	}
-	resticCli := restic.New(dir, output)
+
+	mainLogger := glogr.New().WithName("wrestic")
+
+	statHandler := stats.NewHandler(os.Getenv(promURLEnv), os.Getenv(restic.Hostname), os.Getenv(webhookURLEnv), mainLogger)
+
+	resticCli := restic.New(context.TODO(), mainLogger, statHandler)
 
 	webhook := &webhookserver{}
 	webhook.runWebServer(t)
@@ -100,12 +104,13 @@ func initTest(t *testing.T) *testEnvironment {
 	s3client.DeleteBucket()
 	resetFlags()
 	return &testEnvironment{
-		output:    output,
 		finishC:   newTestErrorChannel(),
 		webhook:   webhook,
 		s3Client:  s3client,
 		t:         t,
 		resticCli: resticCli,
+		log:       mainLogger,
+		stats:     statHandler,
 	}
 }
 
@@ -125,11 +130,7 @@ func resetFlags() {
 func testBackup(t *testing.T) *testEnvironment {
 	env := initTest(t)
 
-	go run(env.finishC, env.output, env.resticCli)
-
-	assertOK(t, <-env.finishC)
-
-	env.output.TriggerAll()
+	assertOK(t, run(env.resticCli, env.log))
 
 	return env
 }
@@ -188,9 +189,7 @@ func TestRestore(t *testing.T) {
 	rstType := "s3"
 	restoreType = &rstType
 
-	go run(env.finishC, env.output, env.resticCli)
-
-	assertOK(t, <-env.finishC)
+	assertOK(t, run(env.resticCli, env.log))
 
 	env.webhook.srv.Shutdown(context.TODO())
 
@@ -201,7 +200,7 @@ func TestRestore(t *testing.T) {
 func TestBackup(t *testing.T) {
 	env := testBackup(t)
 
-	webhookData := restic.WebhookStats{}
+	webhookData := restic.BackupStats{}
 	assertOK(t, json.Unmarshal(env.webhook.jsonData, &webhookData))
 
 	if len(webhookData.Snapshots) != 2 {
@@ -222,9 +221,7 @@ func TestRestoreDisk(t *testing.T) {
 
 	os.Setenv("TRIM_RESTOREPATH", "false")
 
-	go run(env.finishC, env.output, env.resticCli)
-
-	assertOK(t, <-env.finishC)
+	assertOK(t, run(env.resticCli, env.log))
 
 	env.webhook.srv.Shutdown(context.TODO())
 
@@ -243,9 +240,7 @@ func TestInitRepoFail(t *testing.T) {
 	env := initTest(t)
 	defer testResetEnvVars(oldEnvVars)
 
-	go run(env.finishC, env.output, env.resticCli)
-
-	err := <-env.finishC
+	err := run(env.resticCli, env.log)
 
 	if err == nil || !strings.Contains(err.Error(), "connection refused") {
 		t.Errorf("command did not fail with expected error, received error was: %v", err)
@@ -263,11 +258,7 @@ func TestArchive(t *testing.T) {
 	restoreTypeVar := "s3"
 	restoreType = &restoreTypeVar
 
-	go run(env.finishC, env.output, env.resticCli)
-
-	assertOK(t, <-env.finishC)
-
-	env.output.TriggerAll()
+	assertOK(t, run(env.resticCli, env.log))
 
 	env.webhook.srv.Shutdown(context.TODO())
 
