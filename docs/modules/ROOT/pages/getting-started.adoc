@@ -63,7 +63,7 @@ include::example$credentials.yaml[]
 
 Save the YAML above in a file named `secrets.yml` and use the `kubectl apply -f secrets.yml` command to deploy this configuration to your cluster.
 
-The default MinIO installation uses the access key `minio` and secret key `minio123`. They are in plain text inside the `backup-credentials` Secret definition and will be encoded as Base64 when the Secret is created on your cluster.
+The default MinIO installation uses the access key `minio` and secret key `minio123`. They're in plain text inside the `backup-credentials` Secret definition and will be encoded as Base64 when the Secret is created on your cluster.
 
 WARNING: Please store the password of the `backup-repo` Secret somewhere safe. This is the encryption password for Restic. Without it you will lose access to the backup permanently.
 
