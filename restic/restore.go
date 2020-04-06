@@ -180,7 +180,7 @@ func (r *RestoreStruct) folderRestore(snapshot Snapshot, tags []string) error {
 
 	r.genericCommand.exec(args, commandOptions{print: true})
 	notIgnoredErrors := 0
-	for _, errLine := range r.stdErrOut {
+	for _, errLine := range r.GetStdErrOut() {
 		if !strings.Contains(errLine, "Lchown") {
 			notIgnoredErrors++
 		}
