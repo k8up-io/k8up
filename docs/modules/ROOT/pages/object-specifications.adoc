@@ -76,6 +76,9 @@ metadata:
   name: restore-test
 
 spec:
+  tags:
+    - prod
+    - archive
   restoreMethod:
     folder:
       claimName: restore
@@ -104,6 +107,7 @@ This will restore the latest snapshot from `http://10.144.1.224:9000` to the PVC
 * `restoreFiler`: a filter passed to the underlying Restic, which will be used. Please consult the https://restic.readthedocs.io/en/latest/050_restore.html[Restic docs] for valid path filters.
 * `snapshot`: valid snapshot ID that should get restored. If not provided will restore the latest one.
 * `keepJobs`: amount of jobs that should be left after cleanup, for example how many job/pod objects should be left after they finished. Defaults to 6. Only applicable when used within a <<Schedule, schedule>>.
+* `tags`: list of tags to be considered for the restore. They are ignored if a snapshot ID is provided.
 
 == Archive
 
@@ -154,6 +158,10 @@ kind: Backup
 metadata:
   name: baas-test
 spec:
+  tags:
+    - prod
+    - archive
+    - important
   keepJobs: 4
   backend:
     repoPasswordSecretRef:
@@ -177,6 +185,7 @@ spec:
 * `keepJobs`: amount of jobs that should be left after cleanup, for example how many job/pod objects should be left after they finished. Defaults to 6. Only applicable when used within a <<Schedule, schedule>>.
 * `promURL`: sends backup statistics to this Prometheus pushgateway while the backups are running.
 * `statsURL`: will send a JSON webhook containing backup information information to this endpoint. Can be used to gather a list with available backups.
+* `tags`: list of tags to be added to the backup. Can be used in restores and archives again.
 
 == Check
 
@@ -265,6 +274,8 @@ List of available settings:
 * keepMonthly
 * keepYearly
 * keepTags
+
+WARNING: please do not confuse `tags` and `keepTags` here. If you specify `keepTags` it will remove all snapshots that don't have the tag! If you use the `tags` array it will apply the retention only to snapshots with that specific tag. That way there can be multiple backup sets on a repository e.g. `prod` and `dev`.
 
 == Back-end
 Currently only S3 is supported as a back-end.

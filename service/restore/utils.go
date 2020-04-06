@@ -31,6 +31,10 @@ func newRestoreJob(restore *backupv1alpha1.Restore, config config) *batchv1.Job 
 
 	args := []string{"-restore"}
 
+	if len(restore.Spec.Tags) > 0 {
+		args = append(args, service.BuildTagArgs(restore.Spec.Tags)...)
+	}
+
 	if restore.Spec.RestoreFilter != "" {
 		args = append(args, "-restoreFilter", restore.Spec.RestoreFilter)
 	}

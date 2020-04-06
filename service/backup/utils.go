@@ -26,6 +26,10 @@ func newBackupJob(volumes []corev1.Volume, controllerName string, backup *backup
 
 	finalEnv := append(job.Spec.Template.Spec.Containers[0].Env, setUpEnvVariables(backup, config)...)
 
+	if len(backup.Spec.Tags) > 0 {
+		job.Spec.Template.Spec.Containers[0].Args = service.BuildTagArgs(backup.Spec.Tags)
+	}
+
 	job.Spec.Template.Spec.Volumes = volumes
 	job.Spec.Template.Spec.ServiceAccountName = "pod-executor"
 	job.Spec.Template.Spec.Containers[0].VolumeMounts = mounts
@@ -34,7 +38,7 @@ func newBackupJob(volumes []corev1.Volume, controllerName string, backup *backup
 	return job
 }
 
-// TODO: evaluate if it makes sense to make these functions part of backupv1alpha1.Backu
+// TODO: evaluate if it makes sense to make these functions part of backupv1alpha1.Backup
 func setUpEnvVariables(backup *backupv1alpha1.Backup, config config) []corev1.EnvVar {
 
 	promURL := config.GlobalPromURL

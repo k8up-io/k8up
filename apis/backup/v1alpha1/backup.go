@@ -40,6 +40,8 @@ type BackupSpec struct {
 	// information about the snapshots to. This is in addition to the prometheus
 	// pushgateway.
 	StatsURL string `json:"statsURL,omitempty"`
+	// Tags is a list of arbitrary tags that get added to the backup via Restic's tagging system
+	Tags []string `json:"tags,omitempty"`
 }
 
 type BackupStatus struct {

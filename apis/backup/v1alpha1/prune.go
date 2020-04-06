@@ -1,6 +1,8 @@
 package v1alpha1
 
-import metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+import (
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+)
 
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -41,6 +43,11 @@ type RetentionPolicy struct {
 	KeepMonthly int      `json:"keepMonthly,omitempty"`
 	KeepYearly  int      `json:"keepYearly,omitempty"`
 	KeepTags    []string `json:"keepTags,omitempty"`
+	// Tags is a filter on what tags the policy should be applied
+	// DO NOT CONFUSE THIS WITH KeepTags OR YOU'LL have a bad time
+	Tags []string `json:"tags,omitempty"`
+	// Hosntames is a filter on what hostnames the policy should be applied
+	Hostnames []string `json:"hostnames,omitempty"`
 }
 
 func (p PruneList) Len() int      { return len(p.Items) }
