@@ -25,11 +25,12 @@ func newListSnapshots(commandState *commandState) *ListSnapshotsStruct {
 }
 
 // ListSnapshots executes the list snapshots command of restic.
-func (l *ListSnapshotsStruct) ListSnapshots(last bool) []Snapshot {
+func (l *ListSnapshotsStruct) ListSnapshots(last bool, tags []string) []Snapshot {
 	args := []string{"snapshots", "--json", "-q", "--no-lock"}
 	if last {
 		args = append(args, "--last")
 	}
+	args = append(args, tags...)
 
 	l.genericCommand.exec(args, commandOptions{print: false})
 	fmt.Printf("Listing snapshots\n")

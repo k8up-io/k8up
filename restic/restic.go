@@ -25,7 +25,7 @@ const (
 	keepWeeklyEnv     = "KEEP_WEEKLY"
 	keepMonthlyEnv    = "KEEP_MONTHLY"
 	keepYearlyEnv     = "KEEP_YEARLY"
-	keepTagEnv        = "KEEP_TAG"
+	keepTagsEnv       = "KEEP_TAGS"
 	promURLEnv        = "PROM_URL"
 	statsURLEnv       = "STATS_URL"
 	BackupDirEnv      = "BACKUP_DIR"
@@ -40,6 +40,7 @@ const (
 	keepWeeklyArg  = "--keep-weekly"
 	keepMonthlyArg = "--keep-monthly"
 	keepYearlyArg  = "--keep-yearly"
+	keepTagsArg    = "--keep-tag"
 	//Restore
 	RestoreS3EndpointEnv     = "RESTORE_S3ENDPOINT"
 	RestoreS3AccessKeyIDEnv  = "RESTORE_ACCESSKEYID"

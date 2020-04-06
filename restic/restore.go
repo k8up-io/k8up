@@ -15,6 +15,7 @@ import (
 	"strings"
 	"time"
 
+	"git.vshn.net/vshn/wrestic/cmd/wrestic/args"
 	"git.vshn.net/vshn/wrestic/output"
 	"git.vshn.net/vshn/wrestic/s3"
 )
@@ -58,7 +59,7 @@ func (r *RestoreStruct) setState(restoreType, restoreDir, restoreFilter string, 
 }
 
 // Archive uploads the last version of each snapshot to S3.
-func (r *RestoreStruct) Archive(snaps []Snapshot, restoreType, restoreDir, restoreFilter string, verifyRestore bool) {
+func (r *RestoreStruct) Archive(snaps []Snapshot, restoreType, restoreDir, restoreFilter string, verifyRestore bool, tags args.ArrayOpts) {
 
 	r.setState(restoreType, restoreDir, restoreFilter, verifyRestore)
 
@@ -67,7 +68,7 @@ func (r *RestoreStruct) Archive(snaps []Snapshot, restoreType, restoreDir, resto
 	for _, v := range snaps {
 		PVCname := r.parsePath(v.Paths)
 		fmt.Printf("Archive running for %v\n", fmt.Sprintf("%v-%v", v.Hostname, PVCname))
-		if err := r.restoreCommand(v.ID, r.restoreType, snaps); err != nil {
+		if err := r.restoreCommand(v.ID, r.restoreType, snaps, tags); err != nil {
 			r.errorMessage = err
 			return
 		}
@@ -95,20 +96,24 @@ func (r *restoreStats) ToJson() []byte {
 }
 
 // Restore takes a snapshotID and a method to create a restore job.
-func (r *RestoreStruct) Restore(snapshotID, method string, snaps []Snapshot, restoreDir, restoreFilter string, verifyRestore bool) {
+func (r *RestoreStruct) Restore(snapshotID, method string, snaps []Snapshot, restoreDir, restoreFilter string, verifyRestore bool, tags args.ArrayOpts) {
 
 	r.setState(method, restoreDir, restoreFilter, verifyRestore)
 
-	r.errorMessage = r.restoreCommand(snapshotID, method, snaps)
+	r.errorMessage = r.restoreCommand(snapshotID, method, snaps, tags)
 }
 
-func (r *RestoreStruct) restoreCommand(snapshotID, method string, snaps []Snapshot) error {
+func (r *RestoreStruct) restoreCommand(snapshotID, method string, snaps []Snapshot, tags args.ArrayOpts) error {
 	fmt.Println("Starting restore...")
 
 	snapshot := Snapshot{}
 
 	if snapshotID == "" {
-		fmt.Println("No snapshot defined, using latest one.")
+		if len(tags) > 0 {
+			fmt.Printf("Restoring latest snapshot with tags: %s\n", tags.String())
+		} else {
+			fmt.Println("No snapshot defined, using latest one.")
+		}
 		snapshot = snaps[len(snaps)-1]
 		fmt.Printf("Snapshot %v is being restored.\n", snapshot.Time)
 	} else {
@@ -130,17 +135,17 @@ func (r *RestoreStruct) restoreCommand(snapshotID, method string, snaps []Snapsh
 
 	// TODO: implement some enum here: https://blog.learngoprogramming.com/golang-const-type-enums-iota-bc4befd096d3
 	if method == "folder" {
-		return r.folderRestore(snapshot)
+		return r.folderRestore(snapshot, tags)
 	}
 
 	if method == "s3" {
-		return r.s3Restore(snapshot)
+		return r.s3Restore(snapshot, tags)
 	}
 
 	return fmt.Errorf("%v is not a valid restore type", r.restoreType)
 }
 
-func (r *RestoreStruct) folderRestore(snapshot Snapshot) error {
+func (r *RestoreStruct) folderRestore(snapshot Snapshot, tags []string) error {
 
 	var linkedDir string
 	var trim bool
@@ -163,6 +168,8 @@ func (r *RestoreStruct) folderRestore(snapshot Snapshot) error {
 
 	args := []string{"restore", snapshot.ID, "--target", linkedDir}
 
+	args = append(args, tags...)
+
 	if r.restoreFilter != "" {
 		args = append(args, "--include", r.restoreFilter)
 	}
@@ -173,7 +180,7 @@ func (r *RestoreStruct) folderRestore(snapshot Snapshot) error {
 
 	r.genericCommand.exec(args, commandOptions{print: true})
 	notIgnoredErrors := 0
-	for _, errLine := range r.stdErrOut {
+	for _, errLine := range r.GetStdErrOut() {
 		if !strings.Contains(errLine, "Lchown") {
 			notIgnoredErrors++
 		}
@@ -214,7 +221,7 @@ func (r *RestoreStruct) linkRestorePaths(snapshot Snapshot) (string, error) {
 	return restoreRoot, nil
 }
 
-func (r *RestoreStruct) s3Restore(snapshot Snapshot) error {
+func (r *RestoreStruct) s3Restore(snapshot Snapshot, tags []string) error {
 	fmt.Println("S3 chosen as restore destination")
 
 	endpoint := os.Getenv(RestoreS3EndpointEnv)

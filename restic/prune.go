@@ -24,7 +24,7 @@ func newPrune(snapshotLister *ListSnapshotsStruct, webhookSender WebhookSender, 
 	}
 }
 
-func (p *PruneStruct) Prune() {
+func (p *PruneStruct) Prune(tags []string) {
 
 	// TODO: check for integers
 	args := []string{"forget", "--prune"}
@@ -53,6 +53,14 @@ func (p *PruneStruct) Prune() {
 		args = append(args, keepYearlyArg, yearly)
 	}
 
+	if keepTags := os.Getenv(keepTagsEnv); keepTags != "" {
+		for _, tag := range strings.Split(keepTags, ",") {
+			args = append(args, keepTagsArg, tag)
+		}
+	}
+
+	args = append(args, tags...)
+
 	fmt.Println("Run forget and update the webhook")
 	fmt.Println("forget params: ", strings.Join(args, " "))
 	p.genericCommand.exec(args, commandOptions{print: true})
@@ -65,7 +73,7 @@ func (p *PruneStruct) GetWebhookData() []output.JsonMarshaller {
 	stats = append(stats, &WebhookStats{
 		Name:       os.Getenv(Hostname),
 		BucketName: getBucket(),
-		Snapshots:  p.snapshotLister.ListSnapshots(false),
+		Snapshots:  p.snapshotLister.ListSnapshots(false, []string{}),
 	})
 
 	return stats
