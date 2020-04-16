@@ -149,11 +149,11 @@ func run(finishC chan error, outputManager *output.Output, resticCli *restic.Res
 
 			commandAnnotation := os.Getenv(commandEnv)
 			if commandAnnotation == "" {
-				commandAnnotation = "appuio.ch/backupcommand"
+				commandAnnotation = "k8up.syn.tools/backupcommand"
 			}
 			fileextAnnotation := os.Getenv(fileextEnv)
 			if fileextAnnotation == "" {
-				fileextAnnotation = "backup.appuio.ch/file-extension"
+				fileextAnnotation = "k8up.syn.tools/file-extension"
 			}
 
 			podLister := kubernetes.NewPodLister(commandAnnotation, fileextAnnotation, namespace)
