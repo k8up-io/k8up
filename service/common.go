@@ -159,7 +159,6 @@ func DefaultEnvs(backend *backupv1alpha1.Backend, config config.Global) []corev1
 }
 
 // BuildTagArgs will prepend "--tag " to every element in the given []string
-// TODO: this is wrong, needs fixing!!
 func BuildTagArgs(tagList []string) []string {
 	var args []string
 	for i := range tagList {
