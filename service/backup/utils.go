@@ -67,6 +67,14 @@ func setUpEnvVariables(backup *backupv1alpha1.Backup, config config) []corev1.En
 			Name:  service.StatsURL,
 			Value: statsURL,
 		},
+		{
+			Name:  "BACKUPCOMMAND_ANNOTATION",
+			Value: config.backupCommandAnnotation,
+		},
+		{
+			Name:  "FILEEXTENSION_ANNOTATION",
+			Value: config.fileExtensionAnnotation,
+		},
 	}...)
 	return vars
 }
