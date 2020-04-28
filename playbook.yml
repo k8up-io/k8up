@@ -9,7 +9,7 @@ content:
     start_path: docs
 ui:
   bundle:
-    url: https://github.com/vshn/antora-ui-default/releases/download/1.5/ui-bundle.zip
+    url: https://github.com/vshn/antora-ui-default/releases/download/1.6/ui-bundle.zip
     snapshot: false
 asciidoc:
   attributes:
