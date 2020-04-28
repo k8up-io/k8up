@@ -37,7 +37,7 @@ endif
 # This will clean the Antora Artifacts, nothing else
 .PHONY: clean
 clean:
-	rm -rf $(out_dir) $(web_dir)
+	rm -rf $(out_dir) $(web_dir) .cache
 
 .PHONY: open
 open: $(web_dir)/index.html
