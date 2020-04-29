@@ -388,6 +388,11 @@ func (in *BackupSpec) DeepCopyInto(out *BackupSpec) {
 			(*in).DeepCopyInto(*out)
 		}
 	}
+	if in.Tags != nil {
+		in, out := &in.Tags, &out.Tags
+		*out = make([]string, len(*in))
+		copy(*out, *in)
+	}
 	return
 }
 
@@ -1024,6 +1029,11 @@ func (in *RestoreSpec) DeepCopyInto(out *RestoreSpec) {
 			(*in).DeepCopyInto(*out)
 		}
 	}
+	if in.Tags != nil {
+		in, out := &in.Tags, &out.Tags
+		*out = make([]string, len(*in))
+		copy(*out, *in)
+	}
 	return
 }
 
@@ -1059,6 +1069,16 @@ func (in *RetentionPolicy) DeepCopyInto(out *RetentionPolicy) {
 	*out = *in
 	if in.KeepTags != nil {
 		in, out := &in.KeepTags, &out.KeepTags
+		*out = make([]string, len(*in))
+		copy(*out, *in)
+	}
+	if in.Tags != nil {
+		in, out := &in.Tags, &out.Tags
+		*out = make([]string, len(*in))
+		copy(*out, *in)
+	}
+	if in.Hostnames != nil {
+		in, out := &in.Hostnames, &out.Hostnames
 		*out = make([]string, len(*in))
 		copy(*out, *in)
 	}
