@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [Unreleased]
 ### Fixed
 - The operator passes the cofnigured annotation names to Wrestic
+- KeepJobs value of sub items in Schedule are not overridden
 
 ## [v0.1.8] 2020-03-03
 The annotations for including/excluding PVCs as well as the backupcommand annotation have changed. If you're using them this is a breaking change and needs to be adjusted properly.
