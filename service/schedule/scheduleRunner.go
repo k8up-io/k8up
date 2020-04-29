@@ -103,8 +103,9 @@ func (s *scheduleRunner) Start() error {
 				Spec: scheduleCopy.Spec.Restore.RestoreSpec.DeepCopy(),
 			}
 
-			newRestore.Spec.KeepJobs = scheduleCopy.Spec.KeepJobs
-
+			if newRestore.Spec.KeepJobs == 0 {
+				newRestore.Spec.KeepJobs = scheduleCopy.Spec.KeepJobs
+			}
 			s.waitForLock(newRestore.GetName(), service.GetRepository(newRestore.Spec.Backend), []observe.JobName{observe.PruneName, observe.CheckName}, "restore")
 
 			_, err := s.BaasCLI.AppuioV1alpha1().Restores(scheduleCopy.Namespace).Create(&newRestore)
@@ -146,8 +147,9 @@ func (s *scheduleRunner) Start() error {
 				Spec: scheduleCopy.Spec.Prune.PruneSpec.DeepCopy(),
 			}
 
-			newPrune.Spec.KeepJobs = scheduleCopy.Spec.KeepJobs
-
+			if newPrune.Spec.KeepJobs == 0 {
+				newPrune.Spec.KeepJobs = scheduleCopy.Spec.KeepJobs
+			}
 			s.waitForLock(newPrune.GetName(), repoString, []observe.JobName{observe.BackupName, observe.CheckName, observe.RestoreName}, "prune")
 
 			_, err := s.BaasCLI.AppuioV1alpha1().Prunes(scheduleCopy.Namespace).Create(&newPrune)
@@ -175,8 +177,9 @@ func (s *scheduleRunner) Start() error {
 				Spec: scheduleCopy.Spec.Check.CheckSpec.DeepCopy(),
 			}
 
-			newCheck.Spec.KeepJobs = scheduleCopy.Spec.KeepJobs
-
+			if newCheck.Spec.KeepJobs == 0 {
+				newCheck.Spec.KeepJobs = scheduleCopy.Spec.KeepJobs
+			}
 			if locker.IsLocked(service.GetRepository(newCheck.Spec.Backend), observe.CheckName) {
 				s.Logger.Infof("Checkjob on repo %v still running, skipping", service.GetRepository(newCheck.Spec.Backend))
 				return
@@ -208,8 +211,9 @@ func (s *scheduleRunner) Start() error {
 				Spec: scheduleCopy.Spec.Backup.BackupSpec.DeepCopy(),
 			}
 
-			newBackup.Spec.KeepJobs = scheduleCopy.Spec.KeepJobs
-
+			if newBackup.Spec.KeepJobs == 0 {
+				newBackup.Spec.KeepJobs = scheduleCopy.Spec.KeepJobs
+			}
 			s.waitForLock(newBackup.GetName(), service.GetRepository(newBackup.Spec.Backend), []observe.JobName{observe.PruneName, observe.CheckName}, "backup")
 
 			_, err := s.BaasCLI.AppuioV1alpha1().Backups(scheduleCopy.Namespace).Create(&newBackup)
@@ -236,8 +240,9 @@ func (s *scheduleRunner) Start() error {
 				Spec: scheduleCopy.Spec.Archive.ArchiveSpec.DeepCopy(),
 			}
 
-			newArchive.Spec.KeepJobs = scheduleCopy.Spec.KeepJobs
-
+			if newArchive.Spec.KeepJobs == 0 {
+				newArchive.Spec.KeepJobs = scheduleCopy.Spec.KeepJobs
+			}
 			s.waitForLock(newArchive.GetName(), service.GetRepository(newArchive.Spec.Backend), []observe.JobName{observe.PruneName, observe.CheckName}, "archive")
 
 			_, err := s.BaasCLI.AppuioV1alpha1().Archives(scheduleCopy.Namespace).Create(&newArchive)
