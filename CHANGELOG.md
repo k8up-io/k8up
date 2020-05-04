@@ -6,8 +6,11 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [v0.1.9] 2020-05-04
+### Added
+- The operator passes the configured annotation names to Wrestic
 ### Fixed
-- The operator passes the cofnigured annotation names to Wrestic
 - KeepJobs value of sub items in Schedule are not overridden
 
 ## [v0.1.8] 2020-03-03
