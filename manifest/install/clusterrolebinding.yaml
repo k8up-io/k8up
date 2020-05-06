@@ -2,12 +2,12 @@
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1beta1
 metadata:
-  name: baas-operator
+  name: k8up-operator
 subjects:
 - kind: ServiceAccount
   namespace: myproject
-  name: baas-operator
+  name: k8up-operator
 roleRef:
   kind: ClusterRole
-  name: baas-operator
+  name: k8up-operator
   apiGroup: rbac.authorization.k8s.io

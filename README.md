@@ -43,7 +43,7 @@ oc login -u system:admin # default developer account doesn't have the rights to 
 #The operator has the be run at least once before to create the CRD
 go run cmd/operator/*.go -development
 #Add a demo backupworker (adjust the variables to your liking first)
-kubectl apply -f manifest-examples/baas.yaml
+kubectl apply -f manifest-examples/k8up.yaml
 #Add a demo PVC if necessary
 kubectl apply -f manifest-examples/pvc.yaml
 ```
@@ -54,13 +54,13 @@ The container has to exist on the registry in order for the operator to find the
 ```
 minishift start
 oc login -u developer
-docker build -t $(minishift openshift registry)/myproject/baas:0.0.1 .
-docker save $(minishift openshift registry)/myproject/baas:0.0.1 > tmp.tar
+docker build -t $(minishift openshift registry)/myproject/k8up:0.0.1 .
+docker save $(minishift openshift registry)/myproject/k8up:0.0.1 > tmp.tar
 eval $(minishift docker-env)
 docker load -i tmp.tar
 rm tmp.tar
 docker login -u developer -p $(oc whoami -t) $(minishift openshift registry)
-docker push $(minishift openshift registry)/myproject/baas:0.0.1
+docker push $(minishift openshift registry)/myproject/k8up:0.0.1
 ```
 
 # Docker tags

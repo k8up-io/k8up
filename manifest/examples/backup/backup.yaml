@@ -1,13 +1,13 @@
 apiVersion: backup.appuio.ch/v1alpha1
 kind: Backup
 metadata:
-  name: baas-test
+  name: k8up-test
 spec:
   keepJobs: 4
   backend:
     s3:
       endpoint: http://10.144.1.224:9000
-      bucket: baas
+      bucket: k8up
       accessKeyIDSecretRef:
         name: backup-credentials
         key: username
