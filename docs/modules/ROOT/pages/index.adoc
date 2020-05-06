@@ -4,9 +4,28 @@ image::k8up_logo.png[]
 
 K8up is a backup operator that will handle PVC and app backups on a k8s/OpenShift cluster.
 
-Just create a `schedule` object in the namespace you’d like to backup. It’s that easy. K8up takes care of the rest. It also provides a Prometheus endpoint for monitoring.
+All you need to do is create a backup `Schedule` object in the namespace you’d like to backup.
+It’s that easy. K8up takes care of the rest. It also provides a Prometheus endpoint for monitoring.
 
 K8up is currently under heavy development and far from feature complete. But it should already be stable enough for production use.
+
+== How it works
+
+A cluster wide Kubernetes Operator is responsible for processing the ``Backup`` objects and handle
+the backup schedules. When it's time to do a backup, the operator scans the namespace for matching
+PVCs and creates a backup job in the corresponding namespace, while mounting the matching PVCs under
+``/data/<pvcname>``. Restic then backups the data from this location to the configured endpoint.
+
+== Current limitations
+
+. Only supports data from PVCs with access mode ``ReadWriteMany`` at the moment
+. Backups aren't actively monitored / alerted yet
+
+== Plans
+
+. Active and automated monitoring by APPUiO staff
+. Backup of cluster objects (deployments, configmaps, ...)
+. Additional back-ends to S3 by using the rclone back-end of Restic
 
 == Presentation
 

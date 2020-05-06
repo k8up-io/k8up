@@ -19,7 +19,7 @@ spec:
       key: password
     s3:
       endpoint: http://10.144.1.224:9000
-      bucket: baas
+      bucket: k8up
       accessKeyIDSecretRef:
         name: backup-credentials
         key: username
@@ -89,7 +89,7 @@ spec:
       key: password
     s3:
       endpoint: http://10.144.1.224:9000
-      bucket: baas
+      bucket: k8up
       accessKeyIDSecretRef:
         name: backup-credentials
         key: username
@@ -136,7 +136,7 @@ spec:
   backend:
     s3:
       endpoint: http://10.144.1.224:9000
-      bucket: baas
+      bucket: k8up
       accessKeyIDSecretRef:
         name: backup-credentials
         key: username
@@ -156,7 +156,7 @@ This will trigger a single backup.
 apiVersion: backup.appuio.ch/v1alpha1
 kind: Backup
 metadata:
-  name: baas-test
+  name: k8up-test
 spec:
   tags:
     - prod
@@ -169,7 +169,7 @@ spec:
       key: password
     s3:
       endpoint: http://10.144.1.224:9000
-      bucket: baas
+      bucket: k8up
       accessKeyIDSecretRef:
         name: backup-credentials
         key: username
@@ -204,7 +204,7 @@ spec:
       key: password
     s3:
       endpoint: http://10.144.1.224:9000
-      bucket: baas
+      bucket: k8up
       accessKeyIDSecretRef:
         name: backup-credentials
         key: username
@@ -240,7 +240,7 @@ spec:
       key: password
     s3:
       endpoint: http://10.144.1.224:9000
-      bucket: baas
+      bucket: k8up
       accessKeyIDSecretRef:
         name: backup-credentials
         key: username
@@ -275,7 +275,7 @@ List of available settings:
 * keepYearly
 * keepTags
 
-WARNING: please don't confuse `tags` and `keepTags` here. If you specify `keepTags` it will remove all snapshots that don't have the tag! If you use the `tags` array it will apply the retention only to snapshots with that specific tag. That way there can be multiple backup sets on a repository, for example `prod` and `dev`.
+WARNING: Please don't confuse `tags` and `keepTags` here. If you specify `keepTags` it will remove all snapshots that don't have the tag! If you use the `tags` array it will apply the retention only to snapshots with that specific tag. That way there can be multiple backup sets on a repository, for example `prod` and `dev`.
 
 == Back-end
 Currently only S3 is supported as a back-end.
@@ -288,7 +288,7 @@ backend:
     key: password
   s3:
     endpoint: http://10.144.1.224:9000
-    bucket: baas
+    bucket: k8up
     accessKeyIDSecretRef:
       name: backup-credentials
       key: username
