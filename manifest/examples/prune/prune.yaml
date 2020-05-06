@@ -9,7 +9,7 @@ spec:
   backend:
     s3:
       endpoint: http://10.144.1.224:9000
-      bucket: baas
+      bucket: k8up
       accessKeyIDSecretRef:
         name: backup-credentials
         key: username
@@ -20,4 +20,3 @@ spec:
         name: backup-repo
         key: password
   promURL: http://10.144.1.224:9000
-

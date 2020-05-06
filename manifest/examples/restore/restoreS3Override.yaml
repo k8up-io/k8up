@@ -8,11 +8,10 @@ metadata:
 spec:
   restoreMethod:
     s3:
-      bucket: baas-restore
+      bucket: k8up-restore
   backend:
     repoPasswordSecretRef:
       key: repopw
       name: repopw
     s3:
-      bucket: baas-namespace
-
+      bucket: k8up-namespace

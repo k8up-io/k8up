@@ -37,10 +37,10 @@ scrape_configs:
   - role: pod
   relabel_configs:
   - source_labels: [__meta_kubernetes_namespace]
-    regex: appuio-baas-operator
+    regex: appuio-k8up-operator
     action: keep
   - source_labels: [__meta_kubernetes_pod_label_app]
-    regex: baas-operator
+    regex: k8up-operator
     action: keep
   - source_labels: [__meta_kubernetes_pod_container_port_number]
     regex:

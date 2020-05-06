@@ -2,7 +2,7 @@
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: baas-user-edit
+  name: k8up-user-edit
   labels:
     # Add these permissions to the "admin" and "edit" default roles.
     rbac.authorization.k8s.io/aggregate-to-admin: "true"
@@ -18,7 +18,7 @@ rules:
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: baas-user-view
+  name: k8up-user-view
   labels:
     # Add these permissions to the "view" default role.
     rbac.authorization.k8s.io/aggregate-to-view: "true"

@@ -2,22 +2,22 @@
 apiVersion: apps/v1beta1
 kind: Deployment
 metadata:
-  name: baas
+  name: k8up
   labels:
-    app: baas
+    app: k8up
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: baas
+      app: k8up
   template:
     metadata:
       labels:
-        app: baas
+        app: k8up
     spec:
       containers:
-        - name: baas-operator
-          image: 172.30.1.1:5000/myproject/baas:0.0.1
+        - name: k8up-operator
+          image: 172.30.1.1:5000/myproject/k8up:0.0.1
           imagePullPolicy: Always
           env:
             - name: BACKUP_IMAGE
@@ -39,7 +39,7 @@ spec:
             - name: BACKUP_GLOBALS3ENDPOINT
               value: http://10.144.1.224:9000
             - name: BACKUP_GLOBALS3BUCKET
-              value: baas
-      serviceAccountName: baas-operator
+              value: k8up
+      serviceAccountName: k8up-operator
 
 #kubectl create clusterrolebinding cluster-admin-binding-2   --clusterrole=cluster-admin   --user=system:system:serviceaccount:myproject:default
