@@ -242,7 +242,7 @@ func TestInitRepoFail(t *testing.T) {
 
 	err := run(env.resticCli, env.log)
 
-	if err == nil || !strings.Contains(err.Error(), "connection refused") {
+	if err == nil || !strings.Contains(err.Error(), "exit status 1") {
 		t.Errorf("command did not fail with expected error, received error was: %v", err)
 	}
 

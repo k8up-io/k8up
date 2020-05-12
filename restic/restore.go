@@ -296,19 +296,17 @@ func (r *Restic) getSnapshotRoot(snapshot Snapshot, log logr.Logger) (string, *t
 	cmd := NewCommand(r.ctx, log, opts)
 	cmd.Run()
 
-	// A backup from stdin will always contain exactly three elemts when executing ls
+	// A backup from stdin will always contain exactly one file when executing ls.
+	// This logic will also work if it's not a stdin backup. For the sake of the
+	// dump this is the same case.
 	split := strings.Split(buf.String(), "\n")
 
-	if len(split) == 3 {
-		node := &fileNode{}
-		err := json.Unmarshal([]byte(split[1]), node)
-		if err != nil {
-			return snapshot.Paths[len(snapshot.Paths)-1], nil
-		}
-		return node.Path, r.getTarHeaderFromFileNode(node)
-	} else {
-		return snapshot.Paths[len(snapshot.Paths)-1], nil
+	amountOfFiles, lastNode := r.countFileNodes(split)
+
+	if amountOfFiles == 1 {
+		return lastNode.Path, r.getTarHeaderFromFileNode(lastNode)
 	}
+	return snapshot.Paths[len(snapshot.Paths)-1], nil
 }
 
 func (r *Restic) getTarHeaderFromFileNode(file *fileNode) *tar.Header {
@@ -323,4 +321,21 @@ func (r *Restic) getTarHeaderFromFileNode(file *fileNode) *tar.Header {
 		AccessTime: file.Atime,
 		ChangeTime: file.Ctime,
 	}
+}
+
+func (r *Restic) countFileNodes(rawJSON []string) (int, *fileNode) {
+	count := 0
+	lastNode := &fileNode{}
+	for _, fileJSON := range rawJSON {
+		node := &fileNode{}
+		err := json.Unmarshal([]byte(fileJSON), node)
+		if err != nil {
+			continue
+		}
+		if node.Type == "file" {
+			count++
+			lastNode = node
+		}
+	}
+	return count, lastNode
 }
