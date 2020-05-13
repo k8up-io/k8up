@@ -29,7 +29,7 @@ spec:
   backend:
     s3:
       endpoint: http://localhost:9000
-      bucket: baas
+      bucket: k8up
       accessKeyIDSecretRef:
         name: backup-credentials
         key: username
@@ -71,7 +71,7 @@ spec:
 
 Then create a restore job
 
-[code,yaml]
+[source,yaml]
 ----
 apiVersion: backup.appuio.ch/v1alpha1
 kind: Restore
@@ -100,7 +100,7 @@ spec:
 
 == Manual restore via Restic
 
-To manually restore you’ll need: 
+To manually restore you’ll need:
 
 * Linux machine with https://github.com/restic/restic[restic]
 * Fuse (Optional for mounting)
@@ -112,7 +112,7 @@ Let’s take this `backend` example from a schedule:
 backend:
   s3:
     endpoint: http://localhost:9000
-    bucket: baas
+    bucket: k8up
     accessKeyIDSecretRef:
       name: backup-credentials
       key: username

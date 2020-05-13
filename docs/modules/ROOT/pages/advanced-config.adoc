@@ -2,8 +2,8 @@
 
 The operator has two ways for configuration:
 
-* Per namespace backups. Optimal for shared clusters
-* Global settings with namespaced schedules. Optimal for private clusters
+. Per namespace backups. Optimal for shared clusters
+. Global settings with namespaced schedules. Optimal for private clusters
 
 == Environment variables
 
