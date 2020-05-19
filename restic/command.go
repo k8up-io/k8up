@@ -2,6 +2,7 @@ package restic
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"os"
 	"os/exec"
@@ -25,6 +26,7 @@ type Command struct {
 	Errors     []error
 	cmdLogger  logr.Logger
 	ctx        context.Context
+	cmd        *exec.Cmd
 }
 
 // NewCommand returns a new command
@@ -40,28 +42,49 @@ func NewCommand(ctx context.Context, log logr.Logger, commandOptions CommandOpti
 // Run will run the currently configured command
 func (c *Command) Run() {
 
-	cmd := exec.CommandContext(c.ctx, c.options.Path, c.options.Args...)
-	cmd.Env = os.Environ()
+	c.Configure()
+
+	c.Start()
+
+	c.Wait()
+
+}
+
+func (c *Command) Configure() {
+	c.cmd = exec.CommandContext(c.ctx, c.options.Path, c.options.Args...)
+	c.cmd.Env = os.Environ()
 
 	if c.options.StdIn != nil {
-		cmd.Stdin = c.options.StdIn
+		c.cmd.Stdin = c.options.StdIn
 	}
 
 	if c.options.StdOut != nil {
-		cmd.Stdout = c.options.StdOut
+		c.cmd.Stdout = c.options.StdOut
 	}
 
 	if c.options.StdErr != nil {
-		cmd.Stderr = c.options.StdErr
+		c.cmd.Stderr = c.options.StdErr
 	}
+}
 
-	err := cmd.Start()
+func (c *Command) Start() {
+	if c.cmd == nil {
+		c.FatalError = fmt.Errorf("command not configured")
+		return
+	}
+	err := c.cmd.Start()
 	if err != nil {
 		c.FatalError = err
 		return
 	}
+}
 
-	err = cmd.Wait()
+func (c *Command) Wait() {
+	if c.cmd == nil {
+		c.FatalError = fmt.Errorf("command not configured")
+		return
+	}
+	err := c.cmd.Wait()
 	if err != nil {
 		c.FatalError = err
 		return

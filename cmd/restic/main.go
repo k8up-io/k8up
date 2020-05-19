@@ -39,7 +39,7 @@ var (
 )
 
 func printVersion(log logr.Logger) {
-	log.Info(fmt.Sprintf("Operator Version: %s", Version))
+	log.Info(fmt.Sprintf("Wrestic Version: %s", Version))
 	log.Info(fmt.Sprintf("Operator Build Date: %s", BuildDate))
 	log.Info(fmt.Sprintf("Go Version: %s", runtime.Version()))
 	log.Info(fmt.Sprintf("Go OS/Arch: %s/%s", runtime.GOOS, runtime.GOARCH))
@@ -61,8 +61,6 @@ func main() {
 	defer glog.Flush()
 
 	printVersion(mainLogger)
-
-	mainLogger.Info("Hello World!")
 
 	ctx, cancel := context.WithCancel(context.Background())
 	cancelOnTermination(cancel, mainLogger)
@@ -143,11 +141,11 @@ func run(resticCLI *restic.Restic, mainLogger logr.Logger) error {
 	if !commandRun {
 		commandAnnotation := os.Getenv(commandEnv)
 		if commandAnnotation == "" {
-			commandAnnotation = "appuio.ch/backupcommand"
+			commandAnnotation = "k8up.syn.tools/backupcommand"
 		}
 		fileextAnnotation := os.Getenv(fileextEnv)
 		if fileextAnnotation == "" {
-			fileextAnnotation = "backup.appuio.ch/file-extension"
+			fileextAnnotation = "k8up.syn.tools/file-extension"
 		}
 
 		podLister := kubernetes.NewPodLister(commandAnnotation, fileextAnnotation, os.Getenv(restic.Hostname), mainLogger)
@@ -168,11 +166,12 @@ func run(resticCLI *restic.Restic, mainLogger logr.Logger) error {
 					return err
 				}
 			}
+			mainLogger.Info("all pod commands have finished successfully")
 		} else {
 			mainLogger.Error(err, "could not list pods", "namespace", os.Getenv(restic.Hostname))
 		}
 
-		err = resticCLI.Backup(os.Getenv(restic.BackupDirEnv), tags)
+		err = resticCLI.Backup(getBackupDir(), tags)
 		if err != nil {
 			mainLogger.Error(err, "backup job failed")
 			return err
@@ -190,4 +189,12 @@ func cancelOnTermination(cancel context.CancelFunc, mainLogger logr.Logger) {
 		mainLogger.Info("received signal", "signal", <-s)
 		cancel()
 	}()
+}
+
+func getBackupDir() string {
+	backupDir := os.Getenv(restic.BackupDirEnv)
+	if backupDir == "" {
+		return "/data"
+	}
+	return backupDir
 }

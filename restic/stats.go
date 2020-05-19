@@ -195,9 +195,15 @@ func (r *Restic) getMountedFolders() []string {
 
 	folders := []string{}
 
-	files, err := ioutil.ReadDir(os.Getenv(BackupDirEnv))
+	backupDir := os.Getenv(BackupDirEnv)
+	if backupDir == "" {
+		backupDir = "/data"
+	}
+
+	files, err := ioutil.ReadDir(backupDir)
 	if err != nil {
 		r.logger.WithName("MountCollector").Error(err, "can't list mounted folders for stats")
+		return folders
 	}
 
 	for _, f := range files {

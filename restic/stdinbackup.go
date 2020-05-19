@@ -4,10 +4,12 @@ import (
 	"fmt"
 	"io"
 	"os"
+
+	"github.com/vshn/wrestic/kubernetes"
 )
 
 // StdinBackup create a snapshot with the data contained in the given reader.
-func (r *Restic) StdinBackup(data io.ReadCloser, filename, fileExt string, tags ArrayOpts) error {
+func (r *Restic) StdinBackup(data *kubernetes.ExecData, filename, fileExt string, tags ArrayOpts) error {
 
 	stdinlogger := r.logger.WithName("stdinBackup")
 
@@ -32,7 +34,7 @@ func (r *Restic) StdinBackup(data io.ReadCloser, filename, fileExt string, tags 
 		},
 		StdOut: writePipe,
 		StdErr: writePipe,
-		StdIn:  data,
+		StdIn:  data.Reader,
 	}
 
 	if len(tags) > 0 {
@@ -40,9 +42,16 @@ func (r *Restic) StdinBackup(data io.ReadCloser, filename, fileExt string, tags 
 	}
 
 	cmd := NewCommand(r.ctx, stdinlogger, opts)
-	cmd.Run()
+	cmd.Configure()
 
-	data.Close()
+	cmd.Start()
+
+	// wait for data to finish writing, before waiting for the command
+	<-data.Done
+
+	cmd.Wait()
+
+	data.Reader.Close()
 
 	return cmd.FatalError
 }

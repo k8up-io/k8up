@@ -123,7 +123,9 @@ func (r *Restic) folderBackup(folder string, backuplogger logr.Logger, tags Arra
 	return cmd.FatalError
 }
 
-func (r *Restic) parseBackupOutput(reader io.Reader, log logr.Logger, folder string) {
+func (r *Restic) parseBackupOutput(reader io.ReadCloser, log logr.Logger, folder string) {
+	defer reader.Close()
+
 	decoder := json.NewDecoder(reader)
 
 	progressLogger := log.WithName("progress")
