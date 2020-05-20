@@ -74,7 +74,7 @@ func (c *Command) Start() {
 	}
 	err := c.cmd.Start()
 	if err != nil {
-		c.FatalError = err
+		c.FatalError = fmt.Errorf("cmd.Start() err: %v", err)
 		return
 	}
 }
@@ -86,7 +86,10 @@ func (c *Command) Wait() {
 	}
 	err := c.cmd.Wait()
 	if err != nil {
-		c.FatalError = err
+		if err == io.EOF {
+			return
+		}
+		c.FatalError = fmt.Errorf("cmd.Wait() err: %v", err)
 		return
 	}
 }

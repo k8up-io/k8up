@@ -7,9 +7,11 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"sync"
 	"time"
 
 	"github.com/go-logr/logr"
+	"github.com/vshn/wrestic/kubernetes"
 )
 
 type backupEnvelope struct {
@@ -90,13 +92,10 @@ func (r *Restic) Backup(backupDir string, tags ArrayOpts) error {
 
 }
 
+// TODO: this shares quite some code with stdinBackup
 func (r *Restic) folderBackup(folder string, backuplogger logr.Logger, tags ArrayOpts) error {
 
 	readPipe, writePipe := io.Pipe()
-	defer readPipe.Close()
-	defer writePipe.Close()
-
-	go r.parseBackupOutput(readPipe, backuplogger, folder)
 
 	backuplogger.Info("starting backup for folder", "foldername", path.Base(folder))
 
@@ -113,18 +112,10 @@ func (r *Restic) folderBackup(folder string, backuplogger logr.Logger, tags Arra
 		StdErr: writePipe,
 	}
 
-	if len(tags) > 0 {
-		opts.Args = append(opts.Args, tags.BuildArgs()...)
-	}
-
-	cmd := NewCommand(r.ctx, backuplogger, opts)
-	cmd.Run()
-
-	return cmd.FatalError
+	return r.triggerBackup(folder, backuplogger, tags, readPipe, opts, nil)
 }
 
-func (r *Restic) parseBackupOutput(reader io.ReadCloser, log logr.Logger, folder string) {
-	defer reader.Close()
+func (r *Restic) parseBackupOutput(reader *io.PipeReader, log logr.Logger, folder string) {
 
 	decoder := json.NewDecoder(reader)
 
@@ -202,4 +193,39 @@ func (r *Restic) sendPostWebhook() {
 		r.logger.Error(err, "webhook send failed")
 	}
 
+}
+
+func (r *Restic) triggerBackup(name string, logger logr.Logger, tags ArrayOpts, readPipe *io.PipeReader, opts CommandOptions, data *kubernetes.ExecData) error {
+	if len(tags) > 0 {
+		opts.Args = append(opts.Args, tags.BuildArgs()...)
+	}
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+	go func() {
+		r.parseBackupOutput(readPipe, logger, name)
+		wg.Done()
+	}()
+
+	cmd := NewCommand(r.ctx, logger, opts)
+	cmd.Configure()
+
+	cmd.Start()
+
+	// All std* io has to be finished before calling Wait() as it will block
+	// otherwise.
+	if data != nil {
+		// wait for data to finish writing, before waiting for the command
+		<-data.Done
+	}
+	// wait for the outputparsing to finish
+	wg.Wait()
+
+	err := readPipe.CloseWithError(io.EOF)
+	if err != nil {
+		return fmt.Errorf("error during pipe close: %v", err)
+	}
+
+	cmd.Wait()
+
+	return cmd.FatalError
 }

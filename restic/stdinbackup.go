@@ -16,10 +16,6 @@ func (r *Restic) StdinBackup(data *kubernetes.ExecData, filename, fileExt string
 	stdinlogger.Info("starting stdin backup", "filename", filename, "extension", fileExt)
 
 	readPipe, writePipe := io.Pipe()
-	defer readPipe.Close()
-	defer writePipe.Close()
-
-	go r.parseBackupOutput(readPipe, stdinlogger, filename+fileExt)
 
 	opts := CommandOptions{
 		Path: r.resticPath,
@@ -37,21 +33,5 @@ func (r *Restic) StdinBackup(data *kubernetes.ExecData, filename, fileExt string
 		StdIn:  data.Reader,
 	}
 
-	if len(tags) > 0 {
-		opts.Args = append(opts.Args, tags.BuildArgs()...)
-	}
-
-	cmd := NewCommand(r.ctx, stdinlogger, opts)
-	cmd.Configure()
-
-	cmd.Start()
-
-	// wait for data to finish writing, before waiting for the command
-	<-data.Done
-
-	cmd.Wait()
-
-	data.Reader.Close()
-
-	return cmd.FatalError
+	return r.triggerBackup(filename+fileExt, stdinlogger, tags, readPipe, opts, data)
 }
