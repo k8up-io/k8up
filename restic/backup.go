@@ -1,13 +1,11 @@
 package restic
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
 	"path"
-	"sync"
 	"time"
 
 	"github.com/go-logr/logr"
@@ -92,10 +90,9 @@ func (r *Restic) Backup(backupDir string, tags ArrayOpts) error {
 
 }
 
-// TODO: this shares quite some code with stdinBackup
 func (r *Restic) folderBackup(folder string, backuplogger logr.Logger, tags ArrayOpts) error {
 
-	readPipe, writePipe := io.Pipe()
+	outputWriter := r.newParseBackupOutput(backuplogger, folder)
 
 	backuplogger.Info("starting backup for folder", "foldername", path.Base(folder))
 
@@ -108,50 +105,23 @@ func (r *Restic) folderBackup(folder string, backuplogger logr.Logger, tags Arra
 			os.Getenv(Hostname),
 			"--json",
 		},
-		StdOut: writePipe,
-		StdErr: writePipe,
+		StdOut: outputWriter,
+		StdErr: outputWriter,
 	}
 
-	return r.triggerBackup(folder, backuplogger, tags, readPipe, opts, nil)
+	return r.triggerBackup(folder, backuplogger, tags, opts, nil)
 }
 
-func (r *Restic) parseBackupOutput(reader *io.PipeReader, log logr.Logger, folder string) {
-
-	decoder := json.NewDecoder(reader)
+func (r *Restic) newParseBackupOutput(log logr.Logger, folder string) io.Writer {
 
 	progressLogger := log.WithName("progress")
 
-	i := 0
-	errorCount := 0
-	for {
-		envelope := &backupEnvelope{}
-
-		err := decoder.Decode(envelope)
-		if err == io.EOF {
-			return
-		}
-		if err != nil {
-			progressLogger.Error(err, "can't decode restic json output")
-		}
-
-		switch envelope.MessageType {
-		case "error":
-			errorCount++
-			progressLogger.Error(fmt.Errorf("error occurred during backup"), envelope.Item+" during "+envelope.During+" "+envelope.Error.Op)
-		case "status":
-			// Restic does the json output with 60hz, which is a bit much...
-			if i%60 == 0 {
-				percent := envelope.PercentDone * 100
-				progressLogger.Info("progress of backup", "percentage", fmt.Sprintf("%.2f%%", percent))
-			}
-			i++
-		case "summary":
-			progressLogger.Info("backup finished", "new files", envelope.FilesNew, "changed files", envelope.FilesChanged, "errors", errorCount)
-			progressLogger.Info("stats", "time", envelope.TotalDuration, "bytes added", envelope.DataAdded, "bytes processed", envelope.TotalBytesProcessed)
-			r.sendBackupStats(envelope.backupSummary, errorCount, folder, 1, time.Now().Unix())
-			return
-		}
-
+	return &outputWrapper{
+		parser: &backupOutputParser{
+			folder:      folder,
+			log:         progressLogger,
+			summaryfunc: r.sendBackupStats,
+		},
 	}
 
 }
@@ -195,16 +165,10 @@ func (r *Restic) sendPostWebhook() {
 
 }
 
-func (r *Restic) triggerBackup(name string, logger logr.Logger, tags ArrayOpts, readPipe *io.PipeReader, opts CommandOptions, data *kubernetes.ExecData) error {
+func (r *Restic) triggerBackup(name string, logger logr.Logger, tags ArrayOpts, opts CommandOptions, data *kubernetes.ExecData) error {
 	if len(tags) > 0 {
 		opts.Args = append(opts.Args, tags.BuildArgs()...)
 	}
-	wg := sync.WaitGroup{}
-	wg.Add(1)
-	go func() {
-		r.parseBackupOutput(readPipe, logger, name)
-		wg.Done()
-	}()
 
 	cmd := NewCommand(r.ctx, logger, opts)
 	cmd.Configure()
@@ -216,13 +180,6 @@ func (r *Restic) triggerBackup(name string, logger logr.Logger, tags ArrayOpts, 
 	if data != nil {
 		// wait for data to finish writing, before waiting for the command
 		<-data.Done
-	}
-	// wait for the outputparsing to finish
-	wg.Wait()
-
-	err := readPipe.CloseWithError(io.EOF)
-	if err != nil {
-		return fmt.Errorf("error during pipe close: %v", err)
 	}
 
 	cmd.Wait()

@@ -2,7 +2,6 @@ package restic
 
 import (
 	"fmt"
-	"io"
 	"os"
 
 	"github.com/vshn/wrestic/kubernetes"
@@ -15,7 +14,7 @@ func (r *Restic) StdinBackup(data *kubernetes.ExecData, filename, fileExt string
 
 	stdinlogger.Info("starting stdin backup", "filename", filename, "extension", fileExt)
 
-	readPipe, writePipe := io.Pipe()
+	outputWriter := r.newParseBackupOutput(stdinlogger, filename+fileExt)
 
 	opts := CommandOptions{
 		Path: r.resticPath,
@@ -28,10 +27,10 @@ func (r *Restic) StdinBackup(data *kubernetes.ExecData, filename, fileExt string
 			"--stdin-filename",
 			fmt.Sprintf("%s%s", filename, fileExt),
 		},
-		StdOut: writePipe,
-		StdErr: writePipe,
+		StdOut: outputWriter,
+		StdErr: outputWriter,
 		StdIn:  data.Reader,
 	}
 
-	return r.triggerBackup(filename+fileExt, stdinlogger, tags, readPipe, opts, data)
+	return r.triggerBackup(filename+fileExt, stdinlogger, tags, opts, data)
 }

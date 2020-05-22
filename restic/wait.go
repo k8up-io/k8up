@@ -93,8 +93,9 @@ func (r *Restic) getLockList(log logr.Logger) ([]string, error) {
 
 type locklist []string
 
-func (l *locklist) Parse(s string) {
+func (l *locklist) Parse(s string) error {
 	*l = append(*l, s)
+	return nil
 }
 
 func (r *Restic) isLockExclusive(log logr.Logger, lockID string) bool {
@@ -146,19 +147,4 @@ func (r *Restic) isLockExclusive(log logr.Logger, lockID string) bool {
 	}
 
 	return lock.Exclusive
-}
-
-type stdErrCatcher struct {
-	buf bytes.Buffer
-	io.Writer
-}
-
-func (s *stdErrCatcher) write(p []byte) (n int, err error) {
-	_, err = s.buf.Write(p)
-	if err != nil {
-		return len(p), err
-	}
-
-	return s.Writer.Write(p)
-
 }

@@ -262,6 +262,8 @@ func (r *Restic) s3Restore(log logr.Logger, snapshot Snapshot) error {
 		},
 	}
 
+	log.Info("starting restore", "s3 filename", fileName)
+
 	cmd := NewCommand(r.ctx, log, opts)
 	cmd.Run()
 
@@ -272,6 +274,8 @@ func (r *Restic) s3Restore(log logr.Logger, snapshot Snapshot) error {
 	// Send EOF so minio client knows it's finished
 	// or else the chanel will block forever
 	writePipe.Close()
+
+	log.Info("restore finished")
 
 	return <-errorChanel
 
