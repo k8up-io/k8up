@@ -2,6 +2,7 @@ package observe
 
 import (
 	"reflect"
+	"sync"
 	"testing"
 
 	batchv1 "k8s.io/api/batch/v1"
@@ -27,9 +28,10 @@ func TestBroker_Subscribe(t *testing.T) {
 			loops: 10000,
 			fields: fields{
 				map[topic][]Subscriber{
-					"testTopic": []Subscriber{
+					"testTopic": {
 						{
-							id: 5577006791947779410,
+							id:    5577006791947779410,
+							mutex: &sync.Mutex{},
 						},
 					},
 				},
@@ -38,7 +40,8 @@ func TestBroker_Subscribe(t *testing.T) {
 				topicName: "testTopic",
 			},
 			want: &Subscriber{
-				CH: make(chan PodState),
+				CH:    make(chan PodState),
+				mutex: &sync.Mutex{},
 			},
 		},
 		{
@@ -59,6 +62,7 @@ func TestBroker_Subscribe(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			b := &Broker{
 				subscribers: tt.fields.subscribers,
+				mutex:       &sync.Mutex{},
 			}
 			for i := 0; i < tt.loops; i++ {
 				got, err := b.Subscribe(tt.args.topicName)
@@ -91,14 +95,15 @@ func TestBroker_Unsubscribe(t *testing.T) {
 		{
 			name: "Unsubscribe",
 			want: map[topic][]Subscriber{
-				"test": []Subscriber{},
+				"test": {},
 			},
 			fields: fields{
 				subscribers: map[topic][]Subscriber{
-					"test": []Subscriber{
+					"test": {
 						{
-							CH: make(chan PodState, 0),
-							id: 512,
+							CH:    make(chan PodState, 0),
+							id:    512,
+							mutex: &sync.Mutex{},
 						},
 					},
 				},
@@ -106,8 +111,9 @@ func TestBroker_Unsubscribe(t *testing.T) {
 			args: args{
 				topicName: "test",
 				subscriber: &Subscriber{
-					CH: make(chan PodState, 0),
-					id: 512,
+					CH:    make(chan PodState, 0),
+					id:    512,
+					mutex: &sync.Mutex{},
 				},
 			},
 		},
@@ -120,8 +126,9 @@ func TestBroker_Unsubscribe(t *testing.T) {
 			args: args{
 				topicName: "test",
 				subscriber: &Subscriber{
-					CH: make(chan PodState, 0),
-					id: 512,
+					CH:    make(chan PodState, 0),
+					id:    512,
+					mutex: &sync.Mutex{},
 				},
 			},
 		},
@@ -130,6 +137,7 @@ func TestBroker_Unsubscribe(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			b := &Broker{
 				subscribers: tt.fields.subscribers,
+				mutex:       &sync.Mutex{},
 			}
 			b.Unsubscribe(tt.args.topicName, tt.args.subscriber)
 
@@ -161,8 +169,9 @@ func TestBroker_Notify(t *testing.T) {
 				subscribers: map[topic][]Subscriber{
 					"test": []Subscriber{
 						{
-							CH: make(chan PodState, 0),
-							id: 1337,
+							CH:    make(chan PodState, 0),
+							id:    1337,
+							mutex: &sync.Mutex{},
 						},
 					},
 				},
@@ -196,6 +205,7 @@ func TestBroker_Notify(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			b := &Broker{
 				subscribers: tt.fields.subscribers,
+				mutex:       &sync.Mutex{},
 			}
 			if err := b.Notify(tt.args.topicName, tt.args.state); (err != nil) != tt.wantErr {
 				t.Errorf("Broker.Notify() error = %v, wantErr %v", err, tt.wantErr)
