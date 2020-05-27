@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [Unreleased]
 ### Changed
 - Split up documentation into smaller chapters
+### Fixed
+- Race condition in subscriber, causing panics
 
 ## [v0.1.9] 2020-05-04
 ### Added
