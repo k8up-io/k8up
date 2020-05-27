@@ -148,30 +148,36 @@ func run(resticCLI *restic.Restic, mainLogger logr.Logger) error {
 			fileextAnnotation = "k8up.syn.tools/file-extension"
 		}
 
-		podLister := kubernetes.NewPodLister(commandAnnotation, fileextAnnotation, os.Getenv(restic.Hostname), mainLogger)
+		_, serviceErr := os.Stat("/var/run/secrets/kubernetes.io")
+		_, kubeconfigErr := os.Stat(kubernetes.Kubeconfig)
 
-		podList, err := podLister.ListPods()
+		if serviceErr == nil || kubeconfigErr == nil {
 
-		if err == nil {
-			for _, pod := range podList {
-				data, stdErr, err := kubernetes.PodExec(pod, mainLogger)
-				if err != nil {
-					mainLogger.Error(fmt.Errorf("error occured during data stream from k8s"), stdErr.String())
-					return err
+			podLister := kubernetes.NewPodLister(commandAnnotation, fileextAnnotation, os.Getenv(restic.Hostname), mainLogger)
+
+			podList, err := podLister.ListPods()
+
+			if err == nil {
+				for _, pod := range podList {
+					data, stdErr, err := kubernetes.PodExec(pod, mainLogger)
+					if err != nil {
+						mainLogger.Error(fmt.Errorf("error occured during data stream from k8s"), stdErr.String())
+						return err
+					}
+					filename := fmt.Sprintf("/%s-%s", os.Getenv(restic.Hostname), pod.ContainerName)
+					err = resticCLI.StdinBackup(data, filename, pod.FileExtension, tags)
+					if err != nil {
+						mainLogger.Error(err, "backup commands failed")
+						return err
+					}
 				}
-				filename := fmt.Sprintf("/%s-%s", os.Getenv(restic.Hostname), pod.ContainerName)
-				err = resticCLI.StdinBackup(data, filename, pod.FileExtension, tags)
-				if err != nil {
-					mainLogger.Error(err, "backup commands failed")
-					return err
-				}
+				mainLogger.Info("all pod commands have finished successfully")
+			} else {
+				mainLogger.Error(err, "could not list pods", "namespace", os.Getenv(restic.Hostname))
 			}
-			mainLogger.Info("all pod commands have finished successfully")
-		} else {
-			mainLogger.Error(err, "could not list pods", "namespace", os.Getenv(restic.Hostname))
 		}
 
-		err = resticCLI.Backup(getBackupDir(), tags)
+		err := resticCLI.Backup(getBackupDir(), tags)
 		if err != nil {
 			mainLogger.Error(err, "backup job failed")
 			return err
