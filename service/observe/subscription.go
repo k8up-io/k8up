@@ -54,7 +54,7 @@ type PodState struct {
 // resource gets assigned during creation.
 type Broker struct {
 	subscribers map[topic][]Subscriber
-	mutex       sync.Mutex
+	mutex       *sync.Mutex
 }
 
 // Subscriber holds a channel that will receive the updates. The id is for
@@ -63,6 +63,8 @@ type Subscriber struct {
 	CH        chan PodState
 	id        int    // ID has to be uniqe within a topic
 	TopicName string // contains the name that this subscriber is registered with
+	mutex     *sync.Mutex
+	closed    bool
 }
 
 // WatchObjects contains everything needed to watch jobs. It can also hold
@@ -82,13 +84,25 @@ type WatchObjects struct {
 
 // update sends an update to a single subscriber
 func (s *Subscriber) update(state PodState) {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+	if s.closed {
+		return
+	}
 	s.CH <- state
+}
+
+func (s *Subscriber) close() {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+	s.closed = true
+	close(s.CH)
 }
 
 func newBroker() *Broker {
 	return &Broker{
-		subscribers: make(map[topic][]Subscriber, 0),
-		mutex:       sync.Mutex{},
+		subscribers: make(map[topic][]Subscriber),
+		mutex:       &sync.Mutex{},
 	}
 }
 
@@ -101,9 +115,10 @@ func (b *Broker) Subscribe(topicName string) (*Subscriber, error) {
 		tmpSlice := make([]Subscriber, 0)
 
 		tmpSub := Subscriber{
-			CH:        make(chan PodState, 0),
+			CH:        make(chan PodState, 1),
 			id:        rand.Int(),
 			TopicName: topicName,
+			mutex:     &sync.Mutex{},
 		}
 
 		tmpSlice = append(tmpSlice, tmpSub)
@@ -148,7 +163,7 @@ func (b *Broker) Unsubscribe(topicName string, subscriber *Subscriber) {
 				deleteIndex = i
 			}
 		}
-		close(subs[deleteIndex].CH)
+		subs[deleteIndex].close()
 		b.subscribers[topic(topicName)] = append(subs[:deleteIndex], subs[deleteIndex+1:]...)
 	}
 }
