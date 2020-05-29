@@ -1,32 +1,13 @@
 package restic
 
-import (
-	"fmt"
-	"os"
-	"strings"
+import "os"
 
-	"git.vshn.net/vshn/wrestic/output"
-)
+// Prune will enforce the retention policy onto the repository
+func (r *Restic) Prune(tags ArrayOpts) error {
+	prunelogger := r.logger.WithName("prune")
 
-// PruneStruct holds the state of the prune command.
-type PruneStruct struct {
-	genericCommand
-	webhookSender  WebhookSender
-	snapshotLister *ListSnapshotsStruct
-}
+	prunelogger.Info("pruning repository")
 
-func newPrune(snapshotLister *ListSnapshotsStruct, webhookSender WebhookSender, commandState *commandState) *PruneStruct {
-	genericCommand := newGenericCommand(commandState)
-	return &PruneStruct{
-		webhookSender:  webhookSender,
-		snapshotLister: snapshotLister,
-		genericCommand: *genericCommand,
-	}
-}
-
-func (p *PruneStruct) Prune(tags []string) {
-
-	// TODO: check for integers
 	args := []string{"forget", "--prune"}
 
 	if last := os.Getenv(keepLastEnv); last != "" {
@@ -53,28 +34,35 @@ func (p *PruneStruct) Prune(tags []string) {
 		args = append(args, keepYearlyArg, yearly)
 	}
 
-	if keepTags := os.Getenv(keepTagsEnv); keepTags != "" {
-		for _, tag := range strings.Split(keepTags, ",") {
-			args = append(args, keepTagsArg, tag)
-		}
+	if keepTags := os.Getenv(keepTagEnv); keepTags != "" {
+		args = append(args, keepTagsArg, keepTags)
 	}
 
-	args = append(args, tags...)
+	opts := CommandOptions{
+		Path: r.resticPath,
+		Args: args,
+		StdOut: &outputWrapper{
+			parser: &logOutParser{
+				log: prunelogger.WithName("restic"),
+			},
+		},
+		StdErr: &outputWrapper{
+			parser: &logErrParser{
+				log: prunelogger.WithName("restic"),
+			},
+		},
+	}
 
-	fmt.Println("Run forget and update the webhook")
-	fmt.Println("forget params: ", strings.Join(args, " "))
-	p.genericCommand.exec(args, commandOptions{print: true})
-}
+	if len(tags) > 0 {
+		opts.Args = append(opts.Args, tags.BuildArgs()...)
+	}
 
-// GetWebhookData prepares and returns the data that gets sent via webhook at the end
-func (p *PruneStruct) GetWebhookData() []output.JsonMarshaller {
-	stats := make([]output.JsonMarshaller, 0)
+	cmd := NewCommand(r.ctx, prunelogger, opts)
+	cmd.Run()
 
-	stats = append(stats, &WebhookStats{
-		Name:       os.Getenv(Hostname),
-		BucketName: getBucket(),
-		Snapshots:  p.snapshotLister.ListSnapshots(false, []string{}),
-	})
+	if cmd.FatalError == nil {
+		r.sendPostWebhook()
+	}
 
-	return stats
+	return cmd.FatalError
 }

@@ -1,26 +1,30 @@
 package restic
 
-import (
-	"errors"
-)
+// Check will check the repository for errors
+func (r *Restic) Check() error {
+	checklogger := r.logger.WithName("check")
 
-// CheckStruct holds the state of the check command.
-type CheckStruct struct {
-	genericCommand
-}
+	checklogger.Info("checking repository")
 
-func newCheck(commandState *commandState) *CheckStruct {
-	genericCommand := newGenericCommand(commandState)
-	return &CheckStruct{
-		genericCommand: *genericCommand,
+	opts := CommandOptions{
+		Path: r.resticPath,
+		Args: []string{
+			"check",
+		},
+		StdOut: &outputWrapper{
+			parser: &logOutParser{
+				log: checklogger.WithName("restic"),
+			},
+		},
+		StdErr: &outputWrapper{
+			parser: &logErrParser{
+				log: checklogger.WithName("restic"),
+			},
+		},
 	}
-}
 
-// Check runs the check command.
-func (c *CheckStruct) Check() {
-	args := []string{"check"}
-	c.genericCommand.exec(args, commandOptions{print: true})
-	if len(c.stdErrOut) > 0 {
-		c.errorMessage = errors.New("There was at least one backup error")
-	}
+	cmd := NewCommand(r.ctx, checklogger, opts)
+	cmd.Run()
+
+	return cmd.FatalError
 }

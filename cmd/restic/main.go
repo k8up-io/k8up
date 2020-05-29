@@ -1,31 +1,32 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"os"
 	"os/signal"
-	"strings"
+	"runtime"
 	"syscall"
-	"time"
 
-	"git.vshn.net/vshn/wrestic/kubernetes"
-
-	"git.vshn.net/vshn/wrestic/cmd/wrestic/args"
-	"git.vshn.net/vshn/wrestic/output"
-	"git.vshn.net/vshn/wrestic/restic"
-	"git.vshn.net/vshn/wrestic/s3"
-	"github.com/prometheus/client_golang/prometheus"
+	"github.com/go-logr/glogr"
+	"github.com/go-logr/logr"
+	"github.com/golang/glog"
+	"github.com/vshn/wrestic/kubernetes"
+	"github.com/vshn/wrestic/restic"
+	"github.com/vshn/wrestic/stats"
 )
 
 const (
-	promURLEnv    = "PROM_URL"
-	webhookURLEnv = "STATS_URL"
 	commandEnv    = "BACKUPCOMMAND_ANNOTATION"
 	fileextEnv    = "FILEEXTENSION_ANNOTATION"
+	promURLEnv    = "PROM_URL"
+	webhookURLEnv = "STATS_URL"
 )
 
 var (
+	Version       = "unreleased"
+	BuildDate     = "now"
 	check         = flag.Bool("check", false, "Set if the container should run a check")
 	prune         = flag.Bool("prune", false, "Set if the container should run a prune")
 	restore       = flag.Bool("restore", false, "Whether or not a restore should be done")
@@ -34,210 +35,172 @@ var (
 	restoreType   = flag.String("restoreType", "", "Type of this restore, folder or S3")
 	restoreFilter = flag.String("restoreFilter", "", "Simple filter to define what should get restored. For example the PVC name")
 	archive       = flag.Bool("archive", false, "")
-	tags          args.ArrayOpts
+	tags          restic.ArrayOpts
 )
 
-func main() {
+func printVersion(log logr.Logger) {
+	log.Info(fmt.Sprintf("Wrestic Version: %s", Version))
+	log.Info(fmt.Sprintf("Operator Build Date: %s", BuildDate))
+	log.Info(fmt.Sprintf("Go Version: %s", runtime.Version()))
+	log.Info(fmt.Sprintf("Go OS/Arch: %s/%s", runtime.GOOS, runtime.GOARCH))
+}
 
+func main() {
+	if err := flag.Set("v", "3"); err != nil {
+		fmt.Printf("error setting flag: %s", err)
+		os.Exit(1)
+	}
+	if err := flag.Set("alsologtostderr", "true"); err != nil {
+		fmt.Printf("error setting flag: %s", err)
+		os.Exit(1)
+	}
 	flag.Var(&tags, "tag", "List of tags to consider for given operation")
 	flag.Parse()
 
-	finishC := make(chan error)
-	signalC := make(chan os.Signal, 1)
-	signal.Notify(signalC, syscall.SIGTERM, syscall.SIGINT)
-	outputManager := output.New(os.Getenv(webhookURLEnv), os.Getenv(promURLEnv), os.Getenv(restic.Hostname))
+	mainLogger := glogr.New().WithName("wrestic")
+	defer glog.Flush()
 
-	var dir string
-	if os.Getenv(restic.BackupDirEnv) == "" {
-		dir = "/data"
-	} else {
-		dir = os.Getenv(restic.BackupDirEnv)
-	}
-	resticCli := restic.New(dir, outputManager)
+	printVersion(mainLogger)
 
-	go run(finishC, outputManager, resticCli)
+	ctx, cancel := context.WithCancel(context.Background())
+	cancelOnTermination(cancel, mainLogger)
 
-	select {
-	case err := <-finishC:
-		outputManager.TriggerAll()
-		if err != nil {
-			fmt.Printf("Last reported error: %v", err)
-			os.Exit(1)
-		}
+	statHandler := stats.NewHandler(os.Getenv(promURLEnv), os.Getenv(restic.Hostname), os.Getenv(webhookURLEnv), mainLogger)
 
-	case sig := <-signalC:
-		fmt.Println("Signal captured, removing locks and exiting...")
-		outputManager.TriggerAll()
-		resticCli.SendSignal(sig)
+	resticCLI := restic.New(ctx, mainLogger, statHandler)
+
+	err := run(resticCLI, mainLogger)
+	if err != nil {
 		os.Exit(1)
 	}
+
 }
 
-func run(finishC chan error, outputManager *output.Output, resticCli *restic.Restic) {
-
-	var commandRun bool
-	var snapshots []restic.Snapshot
-
-	s3BackupClient := s3.New(getS3Repo(), os.Getenv("AWS_ACCESS_KEY_ID"), os.Getenv("AWS_SECRET_ACCESS_KEY"))
-	connErr := s3BackupClient.Connect()
-	if connErr != nil {
-		finishC <- fmt.Errorf("Connection to S3 endpoint not possible: %v", connErr)
-		return
-	}
-	resticCli.InitRepository(s3BackupClient)
-
-	if resticCli.Initrepo.GetError() != nil {
-		finishC <- fmt.Errorf("error contacting the repository: %v", resticCli.Initrepo.GetError())
-		return
+func run(resticCLI *restic.Restic, mainLogger logr.Logger) error {
+	if err := resticCLI.Init(); err != nil {
+		mainLogger.Error(err, "failed to inialise the repository")
+		return err
 	}
 
-	var criticalError error
-
-	resticCli.Unlock(false)
-	if resticCli.UnlockStruct.GetError() != nil {
-		finishC <- fmt.Errorf("could not unlock repository: %v", resticCli.UnlockStruct.GetError())
-		return
+	// This builds up the cache without any other side effect. So it won't block
+	// during any stdin backups or such.
+	if err := resticCLI.Snapshots(nil); err != nil {
+		mainLogger.Error(err, "failed to list snapshots")
+		os.Exit(1)
 	}
-	defer resticCli.Unlock(false)
+
+	if err := resticCLI.Wait(); err != nil {
+		mainLogger.Error(err, "failed to list repository locks")
+		return err
+	}
+
+	commandRun := false
 
 	if *prune {
-		fmt.Println("Removing all locks to clear stale locks")
-		resticCli.Prune(tags.BuildArgs())
-		outputManager.Register(resticCli.PruneStruct)
-		criticalError = resticCli.PruneStruct.GetError()
 		commandRun = true
+		if err := resticCLI.Prune(tags); err != nil {
+			mainLogger.Error(err, "prune job failed")
+			return err
+		}
 	}
+
 	if *check {
-		resticCli.Check()
-		resticCli.ListSnapshots(false, tags.BuildArgs())
-		outputManager.Register(resticCli.CheckStruct)
 		commandRun = true
+		if err := resticCLI.Check(); err != nil {
+			mainLogger.Error(err, "check job failed")
+			return err
+		}
 	}
 
-	if *restore && criticalError == nil {
-		snapshots = resticCli.ListSnapshots(false, tags.BuildArgs())
-		criticalError = resticCli.ListSnapshotsStruct.GetError()
-		resticCli.Restore(*restoreSnap, *restoreType, snapshots, os.Getenv(restic.RestoreDirEnv), *restoreFilter, *verifyRestore, tags)
-		if resticCli.RestoreStruct.GetError() != nil {
-			criticalError = resticCli.RestoreStruct.GetError()
-		}
+	if *restore {
 		commandRun = true
-		outputManager.Register(resticCli.RestoreStruct)
-	}
-	if *archive && criticalError == nil {
-		snapshots = resticCli.ListSnapshots(true, tags.BuildArgs())
-		criticalError = resticCli.ListSnapshotsStruct.GetError()
-		resticCli.Archive(snapshots, *restoreType, os.Getenv(restic.RestoreDirEnv), *restoreFilter, *verifyRestore, tags.BuildArgs())
-		if resticCli.RestoreStruct.GetError() != nil {
-			criticalError = resticCli.RestoreStruct.GetError()
+		if err := resticCLI.Restore(*restoreSnap, restic.RestoreOptions{
+			RestoreType:   restic.RestoreType(*restoreType),
+			RestoreDir:    os.Getenv(restic.RestoreDirEnv),
+			RestoreFilter: *restoreFilter,
+			Verify:        *verifyRestore,
+			S3Destination: restic.S3Bucket{
+				Endpoint:  os.Getenv(restic.RestoreS3EndpointEnv),
+				AccessKey: os.Getenv(restic.RestoreS3AccessKeyIDEnv),
+				SecretKey: os.Getenv(restic.RestoreS3AccessKeyIDEnv),
+			},
+		}, tags); err != nil {
+			mainLogger.Error(err, "restore job failed")
+			return err
 		}
-		commandRun = true
-		outputManager.Register(resticCli.RestoreStruct)
 	}
 
-	// Backup should run without any params but should also not run when
-	// something else is desired. Also it will always try to list pods. If
-	// wrestic is run on non kubernetes hosts it will just do file backups.
+	if *archive {
+		commandRun = true
+		if err := resticCLI.Archive(*restoreFilter, *verifyRestore, tags); err != nil {
+			mainLogger.Error(err, "archive job failed")
+			return err
+		}
+	}
+
 	if !commandRun {
-		go startMetrics(outputManager)
+		commandAnnotation := os.Getenv(commandEnv)
+		if commandAnnotation == "" {
+			commandAnnotation = "k8up.syn.tools/backupcommand"
+		}
+		fileextAnnotation := os.Getenv(fileextEnv)
+		if fileextAnnotation == "" {
+			fileextAnnotation = "k8up.syn.tools/file-extension"
+		}
 
-		// the k8up operator passes the namespace as the hostname. So we can
-		// use that information to determine in what namespace we currently are.
-		namespace := os.Getenv(restic.Hostname)
+		_, serviceErr := os.Stat("/var/run/secrets/kubernetes.io")
+		_, kubeconfigErr := os.Stat(kubernetes.Kubeconfig)
 
-		if namespace != "" {
+		if serviceErr == nil || kubeconfigErr == nil {
 
-			commandAnnotation := os.Getenv(commandEnv)
-			if commandAnnotation == "" {
-				commandAnnotation = "k8up.syn.tools/backupcommand"
-			}
-			fileextAnnotation := os.Getenv(fileextEnv)
-			if fileextAnnotation == "" {
-				fileextAnnotation = "k8up.syn.tools/file-extension"
-			}
-
-			podLister := kubernetes.NewPodLister(commandAnnotation, fileextAnnotation, namespace)
+			podLister := kubernetes.NewPodLister(commandAnnotation, fileextAnnotation, os.Getenv(restic.Hostname), mainLogger)
 
 			podList, err := podLister.ListPods()
 
 			if err == nil {
-
-				// List the snapshots before doing any stdIn backups. This will
-				// ensure that the cache is already pupulated before any stdIn
-				// connections over TCP/IP are opened.
-				resticCli.ListSnapshots(false, tags.BuildArgs())
-
 				for _, pod := range podList {
-					resticCli.StdinBackup(pod.Command, pod.PodName, pod.ContainerName, pod.Namespace, pod.FileExtension, tags.BuildArgs())
-					if resticCli.BackupStruct.GetError() != nil {
-						criticalError = resticCli.BackupStruct.GetError()
+					data, stdErr, err := kubernetes.PodExec(pod, mainLogger)
+					if err != nil {
+						mainLogger.Error(fmt.Errorf("error occured during data stream from k8s"), stdErr.String())
+						return err
+					}
+					filename := fmt.Sprintf("/%s-%s", os.Getenv(restic.Hostname), pod.ContainerName)
+					err = resticCLI.StdinBackup(data, filename, pod.FileExtension, tags)
+					if err != nil {
+						mainLogger.Error(err, "backup commands failed")
+						return err
 					}
 				}
+				mainLogger.Info("all pod commands have finished successfully")
 			} else {
-				newErr := fmt.Errorf("error listing pods: %v", err)
-				fmt.Printf("%v\nSkipping backup commands\n", newErr)
-				criticalError = newErr
+				mainLogger.Error(err, "could not list pods", "namespace", os.Getenv(restic.Hostname))
 			}
-
 		}
 
-		resticCli.Backup(tags.BuildArgs())
-		if resticCli.BackupStruct.GetError() != nil {
-			criticalError = resticCli.BackupStruct.GetError()
+		err := resticCLI.Backup(getBackupDir(), tags)
+		if err != nil {
+			mainLogger.Error(err, "backup job failed")
+			return err
 		}
-		outputManager.Register(resticCli.BackupStruct)
-		stopMetrics(outputManager)
+
 	}
-
-	finishC <- criticalError
+	return nil
 }
 
-func startMetrics(outputManager output.Trigger) {
-	backupStartTimestamp := prometheus.NewGauge(prometheus.GaugeOpts{
-		Namespace: restic.Namespace,
-		Subsystem: restic.Subsystem,
-		Name:      "last_start_backup_timestamp",
-		Help:      "Timestamp when the last backup was started",
-	})
+func cancelOnTermination(cancel context.CancelFunc, mainLogger logr.Logger) {
+	mainLogger.Info("setting up a signal handler")
+	s := make(chan os.Signal, 1)
+	signal.Notify(s, syscall.SIGTERM)
+	go func() {
+		mainLogger.Info("received signal", "signal", <-s)
+		cancel()
+	}()
+}
 
-	backupDuration := prometheus.NewCounter(prometheus.CounterOpts{
-		Namespace: restic.Namespace,
-		Subsystem: restic.Subsystem,
-		Name:      "running_backup_duration",
-		Help:      "How long the current backup is taking",
-	})
-
-	backupStartTimestamp.SetToCurrentTime()
-	outputManager.TriggerProm(backupStartTimestamp)
-
-	tick := time.NewTicker(1 * time.Second)
-
-	for {
-		select {
-		case <-tick.C:
-			backupDuration.Inc()
-			outputManager.TriggerProm(backupDuration)
-			time.Sleep(1 * time.Second)
-		}
+func getBackupDir() string {
+	backupDir := os.Getenv(restic.BackupDirEnv)
+	if backupDir == "" {
+		return "/data"
 	}
-
-}
-
-func stopMetrics(outputManager output.Trigger) {
-	backupEndTimestamp := prometheus.NewGauge(prometheus.GaugeOpts{
-		Namespace: restic.Namespace,
-		Subsystem: restic.Subsystem,
-		Name:      "last_end_backup_timestamp",
-		Help:      "Timestamp when the last backup was finished",
-	})
-
-	backupEndTimestamp.SetToCurrentTime()
-	outputManager.TriggerProm(backupEndTimestamp)
-}
-
-func getS3Repo() string {
-	resticString := os.Getenv("RESTIC_REPOSITORY")
-	resticString = strings.ToLower(resticString)
-
-	return strings.Replace(resticString, "s3:", "", -1)
+	return backupDir
 }

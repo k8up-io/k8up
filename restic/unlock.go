@@ -1,27 +1,34 @@
 package restic
 
-import "fmt"
+// Unlock will remove stale locks from the repository
+func (r *Restic) Unlock(all bool) error {
+	unlocklogger := r.logger.WithName("unlock")
 
-// UnlockStruct holds the state of the unlock command.
-type UnlockStruct struct {
-	genericCommand
-}
+	unlocklogger.Info("unlocking repository", "all", all)
 
-func newUnlock(commandState *commandState) *UnlockStruct {
-	genericCommand := newGenericCommand(commandState)
-	return &UnlockStruct{
-		genericCommand: *genericCommand,
+	opts := CommandOptions{
+		Path: r.resticPath,
+		Args: []string{
+			"unlock",
+		},
+		StdOut: &outputWrapper{
+			parser: &logOutParser{
+				log: unlocklogger.WithName("restic"),
+			},
+		},
+		StdErr: &outputWrapper{
+			parser: &logErrParser{
+				log: unlocklogger.WithName("restic"),
+			},
+		},
 	}
-}
 
-// Unlock removes stale locks. A lock is stale either if the pid isn't found on
-// the current machine or if it's older than 30 min. (According to the restic
-// source code)
-func (u *UnlockStruct) Unlock(all bool) {
-	fmt.Println("Removing locks...")
-	args := []string{"unlock"}
 	if all {
-		args = append(args, "--remove-all")
+		opts.Args = append(opts.Args, "--remove-all")
 	}
-	u.genericCommand.exec(args, commandOptions{print: true})
+
+	cmd := NewCommand(r.ctx, unlocklogger, opts)
+	cmd.Run()
+
+	return cmd.FatalError
 }

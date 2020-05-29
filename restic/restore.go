@@ -8,26 +8,37 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"os/exec"
 	"path"
 	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
 
-	"git.vshn.net/vshn/wrestic/cmd/wrestic/args"
-	"git.vshn.net/vshn/wrestic/output"
-	"git.vshn.net/vshn/wrestic/s3"
+	"github.com/go-logr/logr"
+	"github.com/vshn/wrestic/s3"
 )
 
-// RestoreStruct holds the state of the restore command.
-type RestoreStruct struct {
-	genericCommand
-	restoreType   string
-	restoreDir    string
-	restoreFilter string
-	verifyRestore bool
-	stats         *restoreStats
+const (
+	FolderRestore RestoreType = "folder"
+	S3Restore     RestoreType = "s3"
+)
+
+// RestoreType defines the type for a restore.
+type RestoreType string
+
+// RestoreOptions holds options for a single restore, like type and destination.
+type RestoreOptions struct {
+	RestoreType   RestoreType
+	RestoreDir    string
+	RestoreFilter string
+	Verify        bool
+	S3Destination S3Bucket
+}
+
+type S3Bucket struct {
+	Endpoint  string
+	AccessKey string
+	SecretKey string
 }
 
 type fileNode struct {
@@ -44,151 +55,108 @@ type fileNode struct {
 	StructType string    `json:"struct_type"`
 }
 
-func newRestore(commandState *commandState) *RestoreStruct {
-	genericCommand := newGenericCommand(commandState)
-	return &RestoreStruct{
-		genericCommand: *genericCommand,
-	}
-}
+// Restore triggers a restore of a snapshot
+func (r *Restic) Restore(snapshotID string, options RestoreOptions, tags ArrayOpts) error {
+	restorelogger := r.logger.WithName("restore")
 
-func (r *RestoreStruct) setState(restoreType, restoreDir, restoreFilter string, verifyRestore bool) {
-	r.restoreType = restoreType
-	r.restoreDir = restoreDir
-	r.restoreFilter = restoreFilter
-	r.verifyRestore = verifyRestore
-}
+	restorelogger.Info("restore initialised")
 
-// Archive uploads the last version of each snapshot to S3.
-func (r *RestoreStruct) Archive(snaps []Snapshot, restoreType, restoreDir, restoreFilter string, verifyRestore bool, tags args.ArrayOpts) {
-
-	r.setState(restoreType, restoreDir, restoreFilter, verifyRestore)
-
-	fmt.Println("Archiving latest snapshots for every host")
-
-	for _, v := range snaps {
-		PVCname := r.parsePath(v.Paths)
-		fmt.Printf("Archive running for %v\n", fmt.Sprintf("%v-%v", v.Hostname, PVCname))
-		if err := r.restoreCommand(v.ID, r.restoreType, snaps, tags); err != nil {
-			r.errorMessage = err
-			return
-		}
+	if len(tags) > 0 {
+		restorelogger.Info("loading snapshots", "tags", tags.String)
+	} else {
+		restorelogger.Info("loading all snapshots from repositoy")
 	}
 
+	err := r.Snapshots(tags)
+	if err != nil {
+		return err
+	}
+
+	latestSnap, err := r.getLatestSnapshot(snapshotID, restorelogger)
+	if err != nil {
+		return err
+	}
+
+	switch options.RestoreType {
+	case FolderRestore:
+		return r.folderRestore(options.RestoreDir, latestSnap, options.RestoreFilter, options.Verify, restorelogger)
+	case S3Restore:
+		return r.s3Restore(restorelogger, latestSnap)
+	default:
+		return fmt.Errorf("no valid restore type")
+	}
+
 }
 
-type restoreStats struct {
-	RestoreLocation string   `json:"restore_location,omitempty"`
-	SnapshotID      string   `json:"snapshot_ID,omitempty"`
-	RestoredFiles   []string `json:"restored_files,omitempty"`
-}
-
-type tarStream struct {
-	path       string
-	tarHeader  *tar.Header
-	readerChan chan io.ReadCloser
-	runFunc    func()
-}
-
-// ToJson implements output.JsonMarshaller
-func (r *restoreStats) ToJson() []byte {
-	tmp, _ := json.Marshal(r)
-	return tmp
-}
-
-// Restore takes a snapshotID and a method to create a restore job.
-func (r *RestoreStruct) Restore(snapshotID, method string, snaps []Snapshot, restoreDir, restoreFilter string, verifyRestore bool, tags args.ArrayOpts) {
-
-	r.setState(method, restoreDir, restoreFilter, verifyRestore)
-
-	r.errorMessage = r.restoreCommand(snapshotID, method, snaps, tags)
-}
-
-func (r *RestoreStruct) restoreCommand(snapshotID, method string, snaps []Snapshot, tags args.ArrayOpts) error {
-	fmt.Println("Starting restore...")
+func (r *Restic) getLatestSnapshot(snapshotID string, log logr.Logger) (Snapshot, error) {
 
 	snapshot := Snapshot{}
 
 	if snapshotID == "" {
-		if len(tags) > 0 {
-			fmt.Printf("Restoring latest snapshot with tags: %s\n", tags.String())
-		} else {
-			fmt.Println("No snapshot defined, using latest one.")
-		}
-		snapshot = snaps[len(snaps)-1]
-		fmt.Printf("Snapshot %v is being restored.\n", snapshot.Time)
+		log.Info("no snapshot defined, using latest one")
+		snapshot = r.snapshots[len(r.snapshots)-1]
+		log.Info("found snapshot", "date", snapshot.Time)
 	} else {
-		for i := range snaps {
+		for i := range r.snapshots {
 			// Doing substrings so we can also use short IDs here.
-			if snaps[i].ID[0:len(snapshotID)] == snapshotID {
-				snapshot = snaps[i]
+			if r.snapshots[i].ID[0:len(snapshotID)] == snapshotID {
+				snapshot = r.snapshots[i]
 				break
 			}
 		}
 		if snapshot.ID == "" {
-			message := fmt.Sprintf("No Snapshot found with ID %v", snapshotID)
-			fmt.Println(message)
-			return fmt.Errorf(message)
+			log.Error(fmt.Errorf("no Snapshot found with ID %v", snapshotID), "the snapshot does not exist")
+			return snapshot, fmt.Errorf("no Snapshot found with ID %v", snapshotID)
 		}
 	}
 
-	method = strings.ToLower(method)
-
-	// TODO: implement some enum here: https://blog.learngoprogramming.com/golang-const-type-enums-iota-bc4befd096d3
-	if method == "folder" {
-		return r.folderRestore(snapshot, tags)
-	}
-
-	if method == "s3" {
-		return r.s3Restore(snapshot, tags)
-	}
-
-	return fmt.Errorf("%v is not a valid restore type", r.restoreType)
+	return snapshot, nil
 }
 
-func (r *RestoreStruct) folderRestore(snapshot Snapshot, tags []string) error {
-
+func (r *Restic) folderRestore(restoreDir string, snapshot Snapshot, restoreFilter string, verify bool, log logr.Logger) error {
 	var linkedDir string
 	var trim bool
-	if os.Getenv("TRIM_RESTOREPATH") == "" {
-		trim = true
-	}
 	trim, err := strconv.ParseBool(os.Getenv("TRIM_RESTOREPATH"))
 	if err != nil {
 		trim = true
 	}
 	if trim {
-		linkedDir, err = r.linkRestorePaths(snapshot)
+		linkedDir, err = r.linkRestorePaths(snapshot, restoreDir)
 		if err != nil {
 			return err
 		}
 		defer os.RemoveAll(linkedDir)
 	} else {
-		linkedDir = r.restoreDir
+		linkedDir = restoreDir
 	}
 
 	args := []string{"restore", snapshot.ID, "--target", linkedDir}
 
-	args = append(args, tags...)
-
-	if r.restoreFilter != "" {
-		args = append(args, "--include", r.restoreFilter)
+	if restoreFilter != "" {
+		args = append(args, "--include", restoreFilter)
 	}
 
-	if r.verifyRestore {
+	if verify {
 		args = append(args, "--verify")
 	}
 
-	r.genericCommand.exec(args, commandOptions{print: true})
-	notIgnoredErrors := 0
-	for _, errLine := range r.GetStdErrOut() {
-		if !strings.Contains(errLine, "Lchown") {
-			notIgnoredErrors++
-		}
+	opts := CommandOptions{
+		Path: r.resticPath,
+		Args: args,
+		StdOut: &outputWrapper{
+			parser: &logOutParser{
+				log: log.WithName("restic"),
+			},
+		},
+		StdErr: &outputWrapper{
+			parser: &logErrParser{
+				log: log.WithName("restic"),
+			},
+		},
 	}
-	if notIgnoredErrors > 0 {
-		return fmt.Errorf("There were %v unignored errors, please have a look", notIgnoredErrors)
-	}
-	fmt.Println("Restore successful.")
+
+	cmd := NewCommand(r.ctx, log, opts)
+	cmd.Run()
 
 	return nil
 }
@@ -199,7 +167,7 @@ func (r *RestoreStruct) folderRestore(snapshot Snapshot, tags []string) error {
 // returns that temp path as the string used for the actual restore.This way the
 // root of the backed up PVC will be the root of the restored PVC thus creating
 // a carbon copy of the original and ready to be used again.
-func (r *RestoreStruct) linkRestorePaths(snapshot Snapshot) (string, error) {
+func (r *Restic) linkRestorePaths(snapshot Snapshot, restoreDir string) (string, error) {
 	// wrestic snapshots only every contain exactly one path
 	splitted := strings.Split(snapshot.Paths[0], "/")
 
@@ -210,10 +178,16 @@ func (r *RestoreStruct) linkRestorePaths(snapshot Snapshot) (string, error) {
 	absolute := filepath.Join(restoreRoot, joined)
 	makePath := filepath.Dir(absolute)
 
-	os.MkdirAll(r.restoreDir, os.ModeDir+os.ModePerm)
-	os.MkdirAll(makePath, os.ModeDir+os.ModePerm)
+	err := os.MkdirAll(restoreDir, os.ModeDir+os.ModePerm)
+	if err != nil {
+		return "", err
+	}
+	err = os.MkdirAll(makePath, os.ModeDir+os.ModePerm)
+	if err != nil {
+		return "", err
+	}
 
-	err := os.Symlink(r.restoreDir, absolute)
+	err = os.Symlink(restoreDir, absolute)
 	if err != nil {
 		return "", err
 	}
@@ -221,158 +195,151 @@ func (r *RestoreStruct) linkRestorePaths(snapshot Snapshot) (string, error) {
 	return restoreRoot, nil
 }
 
-func (r *RestoreStruct) s3Restore(snapshot Snapshot, tags []string) error {
-	fmt.Println("S3 chosen as restore destination")
+func (r *Restic) parsePath(paths []string) string {
+	return path.Base(paths[len(paths)-1])
+}
 
-	endpoint := os.Getenv(RestoreS3EndpointEnv)
+func (r *Restic) s3Restore(log logr.Logger, snapshot Snapshot) error {
+
+	log.Info("S3 chosen as restore destination")
+
 	snapDate := snapshot.Time.Format(time.RFC3339)
 	PVCName := r.parsePath(snapshot.Paths)
 	fileName := fmt.Sprintf("backup-%v-%v-%v.tar.gz", snapshot.Hostname, PVCName, snapDate)
-	stats := &restoreStats{
-		RestoreLocation: fmt.Sprintf("%v/%v", endpoint, fileName),
-		SnapshotID:      snapshot.ID,
-	}
 
-	s3Client := s3.New(endpoint, os.Getenv(RestoreS3AccessKeyIDEnv), os.Getenv(RestoreS3SecretAccessKey))
+	s3Client := s3.New(os.Getenv(RestoreS3EndpointEnv), os.Getenv(RestoreS3AccessKeyIDEnv), os.Getenv(RestoreS3SecretAccessKey))
 	err := s3Client.Connect()
 	if err != nil {
 		return err
 	}
 
-	stream := r.compress(r.getTarReader(snapshot), stats)
-	upload := s3.UploadObject{
-		ObjectStream: stream,
-		Name:         fileName,
-	}
-	err = s3Client.Upload(upload)
+	readPipe, writePipe := io.Pipe()
+
+	latestSnap, err := r.getLatestSnapshot(snapshot.ID, log)
 	if err != nil {
 		return err
 	}
-	fmt.Println("Restore successful.")
 
-	r.stats = stats
+	snapRoot, th := r.getSnapshotRoot(latestSnap, log)
 
-	return nil
-}
+	zw := gzip.NewWriter(writePipe)
 
-func (r *RestoreStruct) compress(file tarStream, stats *restoreStats) io.Reader {
-	readPipe, writePipe := io.Pipe()
-	gzpWriter := gzip.NewWriter(writePipe)
+	errorChanel := make(chan error)
 
 	go func() {
-		defer func() {
-			gzpWriter.Close()
-			writePipe.Close()
-		}()
-		stats.RestoredFiles = append(stats.RestoredFiles, file.path)
-
-		go file.runFunc()
-		reader := <-file.readerChan
-		var writer io.Writer
-		if file.tarHeader != nil {
-			tw := tar.NewWriter(gzpWriter)
-			tw.WriteHeader(file.tarHeader)
-			writer = tw
-			defer tw.Close()
-		} else {
-			writer = gzpWriter
-		}
-		_, err := io.Copy(writer, reader)
-		if err != nil {
-			fmt.Printf("\n%v\n", err)
-			r.errorMessage = err
-			return
-		}
-		file.readerChan <- reader
-		fmt.Println("done!")
+		errorChanel <- s3Client.Upload(s3.UploadObject{
+			Name:         fileName,
+			ObjectStream: readPipe,
+		})
 	}()
 
-	return readPipe
-}
+	finalWriter := io.WriteCloser(zw)
 
-// GetWebhookData returns a list of restore stats to send to the webhook.
-func (r *RestoreStruct) GetWebhookData() []output.JsonMarshaller {
-	return []output.JsonMarshaller{
-		r.stats,
+	// If it's an stdin backup we restore we'll only have to write one header
+	// as stdin backups only contain one vritual file.
+	if th != nil {
+		tw := tar.NewWriter(zw)
+		err := tw.WriteHeader(th)
+		if err != nil {
+			return err
+		}
+		finalWriter = tw
+		defer tw.Close()
 	}
-}
 
-func (r *RestoreStruct) parsePath(paths []string) string {
-	return path.Base(paths[len(paths)-1])
-}
-
-func (r *RestoreStruct) getTarReader(snapshot Snapshot) tarStream {
-	args := []string{"dump", snapshot.ID}
-
-	snapshotRoot, header := r.getSnapshotRoot(snapshot)
-
-	// Currently baas and wrestic have one path per snapshot
-	tmpArgs := append(args, snapshotRoot)
-	cmd := exec.Command(getResticBin(), tmpArgs...)
-	cmd.Env = os.Environ()
-
-	readerChan := make(chan io.ReadCloser, 0)
-
-	return tarStream{
-		path:       snapshotRoot,
-		readerChan: readerChan,
-		tarHeader:  header,
-		runFunc: func() {
-
-			stdOut, err := cmd.StdoutPipe()
-			if err != nil {
-				r.errorMessage = err
-				return
-			}
-			var stdErr bytes.Buffer
-			cmd.Stderr = &stdErr
-
-			err = cmd.Start()
-			if err != nil {
-				fmt.Println(err)
-				r.errorMessage = err
-				return
-			}
-
-			readerChan <- stdOut
-			<-readerChan
-
-			err = cmd.Wait()
-			if err != nil {
-				fmt.Printf("Command failed with: '%v'\n", err)
-				fmt.Printf("Output: %v\n", stdErr.String())
-				r.errorMessage = err
-				return
-			}
+	opts := CommandOptions{
+		Path: r.resticPath,
+		Args: []string{
+			"dump",
+			latestSnap.ID,
+			snapRoot,
+		},
+		StdOut: finalWriter,
+		StdErr: &outputWrapper{
+			parser: &logErrParser{
+				log: log.WithName("restic"),
+			},
 		},
 	}
+
+	log.Info("starting restore", "s3 filename", fileName)
+
+	cmd := NewCommand(r.ctx, log, opts)
+	cmd.Run()
+
+	// We need to close the writers in a specific order
+	finalWriter.Close()
+	zw.Close()
+
+	// Send EOF so minio client knows it's finished
+	// or else the chanel will block forever
+	writePipe.Close()
+
+	log.Info("restore finished")
+
+	return <-errorChanel
+
 }
 
-func (r *RestoreStruct) getSnapshotRoot(snapshot Snapshot) (string, *tar.Header) {
-	cmd := newGenericCommand(r.genericCommand.commandState)
-	args := []string{"ls", snapshot.ID, "--json"}
-	cmd.exec(args, commandOptions{print: false})
-	pathJSON := cmd.GetStdOut()[1]
+// getSnapshotRoot will return the correct root to trigger the restore. If the
+// snapshot was done as a stdin backup it will also return a tar header.
+func (r *Restic) getSnapshotRoot(snapshot Snapshot, log logr.Logger) (string, *tar.Header) {
 
-	file := fileNode{}
-	err := json.Unmarshal([]byte(pathJSON), &file)
-	if err != nil {
-		return snapshot.Paths[0], nil
+	buf := bytes.Buffer{}
+
+	opts := CommandOptions{
+		Path: r.resticPath,
+		Args: []string{
+			"ls",
+			snapshot.ID,
+			"--json",
+		},
+		StdOut: &buf,
 	}
 
-	var header *tar.Header
-	if len(cmd.GetStdOut()) == 2 {
-		header = &tar.Header{
-			Name:       file.Path,
-			Size:       file.Size,
-			Mode:       int64(file.Mode),
-			Uid:        file.UID,
-			Gid:        file.GID,
-			ModTime:    file.Mtime,
-			AccessTime: file.Atime,
-			ChangeTime: file.Ctime,
+	cmd := NewCommand(r.ctx, log, opts)
+	cmd.Run()
+
+	// A backup from stdin will always contain exactly one file when executing ls.
+	// This logic will also work if it's not a stdin backup. For the sake of the
+	// dump this is the same case.
+	split := strings.Split(buf.String(), "\n")
+
+	amountOfFiles, lastNode := r.countFileNodes(split)
+
+	if amountOfFiles == 1 {
+		return lastNode.Path, r.getTarHeaderFromFileNode(lastNode)
+	}
+	return snapshot.Paths[len(snapshot.Paths)-1], nil
+}
+
+func (r *Restic) getTarHeaderFromFileNode(file *fileNode) *tar.Header {
+	filePath := strings.Replace(file.Path, "/", "", 1)
+	return &tar.Header{
+		Name:       filePath,
+		Size:       file.Size,
+		Mode:       int64(file.Mode),
+		Uid:        file.UID,
+		Gid:        file.GID,
+		ModTime:    file.Mtime,
+		AccessTime: file.Atime,
+		ChangeTime: file.Ctime,
+	}
+}
+
+func (r *Restic) countFileNodes(rawJSON []string) (int, *fileNode) {
+	count := 0
+	lastNode := &fileNode{}
+	for _, fileJSON := range rawJSON {
+		node := &fileNode{}
+		err := json.Unmarshal([]byte(fileJSON), node)
+		if err != nil {
+			continue
+		}
+		if node.Type == "file" {
+			count++
+			lastNode = node
 		}
 	}
-
-	return file.Path, header
+	return count, lastNode
 }
