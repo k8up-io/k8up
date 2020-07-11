@@ -306,6 +306,7 @@ backend:
 This object is part of <<Backend,back-end>>.
 
 Settings:
+
 * `endpoint`: http(s) endpoint of the S3 instance
 * `bucket`: name of the bucket that should be used
 * `accessKeyIDSecretRef`: Kubernetes secret reference containing the the Access Key ID

@@ -18,8 +18,7 @@ The docs are WIP: https://vshn.github.io/k8up/
 You'll need:
 
 * Minishift or Minikube
-* golang installed :) (everything is tested with 1.11.3)
-* dep installed
+* golang installed :) (everything is tested with 1.13)
 * Your favorite IDE (with a golang plugin)
 * docker
 * make
