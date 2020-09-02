@@ -12,7 +12,7 @@ K8up is currently under heavy development and far from feature complete. But it 
 
 # Documentation
 
-The docs are WIP: https://vshn.github.io/k8up/
+The documentation is published here: https://k8up.io/
 
 # Dev Environment
 You'll need:

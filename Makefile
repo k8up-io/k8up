@@ -2,17 +2,11 @@ CODE_GENERATOR_IMAGE := slok/kube-code-generator:v1.11.2
 DIRECTORY := $(PWD)
 CODE_GENERATOR_PACKAGE := github.com/vshn/k8up
 
-pages   := $(shell find . -type f -name '*.adoc')
-out_dir := ./_archive
-web_dir := ./_public
-
 docker_cmd  ?= docker
 docker_opts ?= --rm --tty --user "$$(id -u)"
 
-antora_cmd  ?= $(docker_cmd) run $(docker_opts) --volume "$${PWD}":/antora vshn/antora:2.3.0
-antora_opts ?= --cache-dir=.cache/antora
-
-vale_cmd ?= $(docker_cmd) run $(docker_opts) --volume "$${PWD}"/docs/modules/ROOT/pages:/pages vshn/vale:2.1.1 --minAlertLevel=error /pages
+vale_cmd           ?= $(docker_cmd) run $(docker_opts) --volume "$${PWD}"/docs/modules/ROOT/pages:/pages vshn/vale:2.1.1 --minAlertLevel=error /pages
+antora_preview_cmd ?= $(docker_cmd) run --rm --publish 2020:2020 --volume "${PWD}":/antora vshn/antora-preview:2.3.3 --style=syn --antora=docs
 
 generate:
 	docker run --rm -it \
@@ -24,33 +18,12 @@ generate:
 	-e GENERATION_TARGETS="deepcopy,client" \
 	$(CODE_GENERATOR_IMAGE)
 
-UNAME := $(shell uname)
-ifeq ($(UNAME), Linux)
-	OS = linux-x64
-	OPEN = xdg-open
-endif
-ifeq ($(UNAME), Darwin)
-	OS = darwin-x64
-	OPEN = open
-endif
+.PHONY: docs-serve
+docs-serve:
+	$(antora_preview_cmd)
 
-# This will clean the Antora Artifacts, nothing else
-.PHONY: clean
-clean:
-	rm -rf $(out_dir) $(web_dir) .cache
-
-.PHONY: open
-open: $(web_dir)/index.html
-	-$(OPEN) $<
-
-.PHONY: html
-html:    $(web_dir)/index.html
-
-$(web_dir)/index.html: playbook.yml $(pages)
-	$(antora_cmd) $(antora_opts) $<
-
-.PHONY: check
-check:
+.PHONY: docs-vale
+docs-vale:
 	$(vale_cmd)
 
 
