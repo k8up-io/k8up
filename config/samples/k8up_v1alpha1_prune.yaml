@@ -1,0 +1,7 @@
+apiVersion: k8up.syn.tools/v1alpha1
+kind: Prune
+metadata:
+  name: prune-sample
+spec:
+  # Add fields here
+  foo: bar

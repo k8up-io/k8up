@@ -1,0 +1,32 @@
+domain: syn.tools
+layout: go.kubebuilder.io/v2
+projectName: k8up
+repo: github.com/vshn/k8up
+resources:
+- group: k8up
+  kind: Schedule
+  version: v1alpha1
+- group: k8up
+  kind: Backup
+  version: v1alpha1
+- group: k8up
+  kind: Restore
+  version: v1alpha1
+- group: k8up
+  kind: Archive
+  version: v1alpha1
+- group: k8up
+  kind: Check
+  version: v1alpha1
+- group: k8up
+  kind: Prune
+  version: v1alpha1
+- group: k8up
+  kind: Snapshots
+  version: v1alpha1
+- group: k8up
+  kind: Snapshot
+  version: v1alpha1
+version: 3-alpha
+plugins:
+  go.sdk.operatorframework.io/v2-alpha: {}

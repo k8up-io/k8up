@@ -26,3 +26,5 @@ gen### Go template
 cmd/*/debug
 cmd/operator/operator
 cmd/restic/restic
+
+bin/

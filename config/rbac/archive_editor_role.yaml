@@ -1,0 +1,24 @@
+# permissions for end users to edit archives.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: archive-editor-role
+rules:
+- apiGroups:
+  - k8up.syn.tools
+  resources:
+  - archives
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - k8up.syn.tools
+  resources:
+  - archives/status
+  verbs:
+  - get

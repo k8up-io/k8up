@@ -1,0 +1,24 @@
+# permissions for end users to edit snapshots.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: snapshot-editor-role
+rules:
+- apiGroups:
+  - k8up.syn.tools
+  resources:
+  - snapshots
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - k8up.syn.tools
+  resources:
+  - snapshots/status
+  verbs:
+  - get
