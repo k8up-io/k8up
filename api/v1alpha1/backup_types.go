@@ -22,17 +22,26 @@ import (
 )
 
 type BackupSpec struct {
-	Template BackupTemplate `json:",inline"`
+	Test           string `json:"test,omitempty"`
+	BackupTemplate `json:",inline,omitempty"`
 }
 
 type BackupTemplate struct {
-	Tags                  *[]string
-	RepoPasswordSecretRef *corev1.SecretKeySelector
-	ResticEnvironment     []string
+	Tags                  *[]string                 `json:"tags,omitempty"`
+	RepoPasswordSecretRef *corev1.SecretKeySelector `json:"repoPasswordSecretRef,omitempty"`
+	// TODO: should be read from a secret
+	ResticEnvironment []Env `json:"resticEnvironment,omitempty"`
+}
+
+type Env struct {
+	Key   string `json:"key,omitempty"`
+	Value string `json:"value,omitempty"`
 }
 
 // BackupStatus defines the observed state of Backup
 type BackupStatus struct {
+	Started  bool `json:"started,omitempty"`
+	Finished bool `json:"finished,omitempty"`
 }
 
 // +kubebuilder:object:root=true

@@ -17,18 +17,29 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"fmt"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/types"
 )
 
 // ScheduleSpec defines the desired state of Schedule
 type ScheduleSpec struct {
-	Cron            *string               `json:"cron,omitempty"`
-	BackupTemplate  *types.NamespacedName `json:"backupTemplate,omitempty"`
-	ArchiveTemplate *types.NamespacedName `json:"archiveTemplate,omitempty"`
-	CheckTemplate   *types.NamespacedName `json:"checkTemplate,omitempty"`
-	PruneTemplate   *types.NamespacedName `json:"pruneTemplate,omitempty"`
-	KeepJobs        *int
+	Cron            *string         `json:"cron,omitempty"`
+	BackupTemplate  *NamespacedName `json:"backupTemplate,omitempty"`
+	ArchiveTemplate *NamespacedName `json:"archiveTemplate,omitempty"`
+	CheckTemplate   *NamespacedName `json:"checkTemplate,omitempty"`
+	PruneTemplate   *NamespacedName `json:"pruneTemplate,omitempty"`
+	KeepJobs        *int            `json:"keepJobs,omitempty"`
+}
+
+type NamespacedName struct {
+	Namespace string `json:"namespace,omitempty"`
+	Name      string `json:"name,omitempty"`
+}
+
+// String returns the general purpose string representation
+func (n NamespacedName) String() string {
+	return fmt.Sprintf("%s%s%s", n.Namespace, "/", n.Name)
 }
 
 // ScheduleStatus defines the observed state of Schedule

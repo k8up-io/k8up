@@ -3,5 +3,13 @@ kind: Backup
 metadata:
   name: backup-sample
 spec:
-  # Add fields here
-  foo: bar
+  test: hello
+  tags:
+    - test1
+    - test2
+    - test3
+  resticEnvironment:
+    - key: test
+      value: test
+    - key: another
+      value: another

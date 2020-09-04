@@ -1,0 +1,148 @@
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  creationTimestamp: null
+  name: manager-role
+rules:
+- apiGroups:
+  - k8up.syn.tools
+  resources:
+  - archives
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - k8up.syn.tools
+  resources:
+  - archives/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - k8up.syn.tools
+  resources:
+  - backups
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - k8up.syn.tools
+  resources:
+  - backups/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - k8up.syn.tools
+  resources:
+  - checks
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - k8up.syn.tools
+  resources:
+  - checks/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - k8up.syn.tools
+  resources:
+  - prunes
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - k8up.syn.tools
+  resources:
+  - prunes/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - k8up.syn.tools
+  resources:
+  - restores
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - k8up.syn.tools
+  resources:
+  - restores/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - k8up.syn.tools
+  resources:
+  - schedules
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - k8up.syn.tools
+  resources:
+  - schedules/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - k8up.syn.tools
+  resources:
+  - snapshots
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - k8up.syn.tools
+  resources:
+  - snapshots/status
+  verbs:
+  - get
+  - patch
+  - update
