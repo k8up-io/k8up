@@ -40,8 +40,9 @@ type Env struct {
 
 // BackupStatus defines the observed state of Backup
 type BackupStatus struct {
-	Started  bool `json:"started,omitempty"`
-	Finished bool `json:"finished,omitempty"`
+	Started       bool   `json:"started,omitempty"`
+	Finished      bool   `json:"finished,omitempty"`
+	BackupJobName string `json:"backupJobName,omitempty"`
 }
 
 // +kubebuilder:object:root=true

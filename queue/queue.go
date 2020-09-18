@@ -2,10 +2,19 @@ package queue
 
 import (
 	"container/heap"
+	"sync"
+
+	"github.com/vshn/k8up/executor"
 )
 
+var (
+	Queue = newPriorityQueue()
+	wg    = sync.WaitGroup{}
+)
+
+//TODO: how to handle the prio
 type QueuedJob struct {
-	//TBD job item
+	Job      executor.Executor
 	priority int
 	index    int
 }
@@ -42,11 +51,15 @@ func (pq *PriorityQueue) Pop() interface{} {
 	return item
 }
 
-func (pq *PriorityQueue) add(q *QueuedJob) {
+func (pq *PriorityQueue) Add(q *QueuedJob) {
+	wg.Add(1)
 	heap.Push(pq, q)
+	wg.Done()
 }
 
-func (pq *PriorityQueue) get() *QueuedJob {
+func (pq *PriorityQueue) Get() *QueuedJob {
+	wg.Add(1)
+	defer wg.Done()
 	return heap.Pop(pq).(*QueuedJob)
 }
 
