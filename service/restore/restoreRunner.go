@@ -44,7 +44,7 @@ func (r *restoreRunner) Start() error {
 
 	go r.watchState(restoreJob)
 
-	_, err := r.K8sCli.Batch().Jobs(r.restore.Namespace).Create(restoreJob)
+	_, err := r.K8sCli.BatchV1().Jobs(r.restore.Namespace).Create(restoreJob)
 	if err != nil {
 		return err
 	}

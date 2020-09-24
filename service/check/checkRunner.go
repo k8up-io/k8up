@@ -41,7 +41,7 @@ func (c *checkRunner) Start() error {
 
 	go c.watchState(checkJob)
 
-	_, err := c.K8sCli.Batch().Jobs(c.check.Namespace).Create(checkJob)
+	_, err := c.K8sCli.BatchV1().Jobs(c.check.Namespace).Create(checkJob)
 	if err != nil {
 		return err
 	}

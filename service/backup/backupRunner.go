@@ -47,7 +47,7 @@ func (b *backupRunner) Start() error {
 
 	backupJob := newBackupJob(volumes, b.backup.Name, b.backup, b.config)
 
-	createdJob, err := b.K8sCli.Batch().Jobs(b.backup.Namespace).Create(backupJob)
+	createdJob, err := b.K8sCli.BatchV1().Jobs(b.backup.Namespace).Create(backupJob)
 	if err != nil {
 		return err
 	}
@@ -98,7 +98,7 @@ func (b *backupRunner) watchState(backupJob *batchv1.Job) {
 func (b *backupRunner) listPVCs(annotation string) []corev1.Volume {
 	b.Logger.Infof("Listing all PVCs with annotation %v in namespace %v", annotation, b.backup.Namespace)
 	volumes := make([]corev1.Volume, 0)
-	claimlist, err := b.K8sCli.Core().PersistentVolumeClaims(b.backup.Namespace).List(metav1.ListOptions{})
+	claimlist, err := b.K8sCli.CoreV1().PersistentVolumeClaims(b.backup.Namespace).List(metav1.ListOptions{})
 	if err != nil {
 		return nil
 	}
@@ -209,13 +209,13 @@ func (b *backupRunner) startPodTemplates() {
 		name := fmt.Sprintf("%v/%v", deployment.GetNamespace(), deployment.GetName())
 
 		b.Logger.Infof("Creating command pod %v\n", name)
-		runningDeployment, err := b.K8sCli.Apps().Deployments(b.backup.GetNamespace()).Create(&deployment)
+		runningDeployment, err := b.K8sCli.AppsV1().Deployments(b.backup.GetNamespace()).Create(&deployment)
 		if err != nil {
 			b.Logger.Errorf("error creating command pod %v: %v\n", name, err)
 			continue
 		}
 
-		watcher, err := b.K8sCli.Apps().Deployments(b.backup.GetNamespace()).Watch(
+		watcher, err := b.K8sCli.AppsV1().Deployments(b.backup.GetNamespace()).Watch(
 			metav1.SingleObject(runningDeployment.ObjectMeta),
 		)
 		if err != nil {
@@ -281,7 +281,7 @@ func (b *backupRunner) stopPodTemplates() {
 	for _, set := range b.runningDeployments {
 		b.Logger.Infof("removing command pod %v/%v", set.GetNamespace(), set.GetName())
 		option := metav1.DeletePropagationForeground
-		err := b.K8sCli.Apps().Deployments(b.backup.GetNamespace()).Delete(set.GetName(), &metav1.DeleteOptions{
+		err := b.K8sCli.AppsV1().Deployments(b.backup.GetNamespace()).Delete(set.GetName(), &metav1.DeleteOptions{
 			PropagationPolicy: &option,
 		})
 		if err != nil {

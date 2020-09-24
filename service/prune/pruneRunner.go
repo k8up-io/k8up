@@ -50,7 +50,7 @@ func (p *pruneRunner) Start() error {
 
 	go p.watchState(pruneJob)
 
-	_, err := p.K8sCli.Batch().Jobs(p.prune.Namespace).Create(pruneJob)
+	_, err := p.K8sCli.BatchV1().Jobs(p.prune.Namespace).Create(pruneJob)
 	if err != nil {
 		return err
 	}

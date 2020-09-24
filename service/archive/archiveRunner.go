@@ -40,7 +40,7 @@ func (a *archiveRunner) Start() error {
 
 	go a.watchState(archiveJob)
 
-	_, err := a.K8sCli.Batch().Jobs(a.archiver.Namespace).Create(archiveJob)
+	_, err := a.K8sCli.BatchV1().Jobs(a.archiver.Namespace).Create(archiveJob)
 	if err != nil {
 		return err
 	}
