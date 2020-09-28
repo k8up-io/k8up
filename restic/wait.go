@@ -1,13 +1,7 @@
 package restic
 
 import (
-	"bytes"
-	"encoding/json"
-	"io"
-	"strings"
 	"time"
-
-	"context"
 
 	"github.com/go-logr/logr"
 )
@@ -22,7 +16,7 @@ type Lock struct {
 	Gid       int       `json:"gid"`
 }
 
-// Wait will block as long as there are exclusive locks in the repository. As
+// Wait will block as long as there are any locks in the repository. As
 // soon as they are all gone the function will return
 func (r *Restic) Wait() error {
 
@@ -34,11 +28,10 @@ func (r *Restic) Wait() error {
 		return err
 	}
 
-	waitLogger.Info("checking for any exclusive locks")
+	waitLogger.Info("checking for any locks")
 
-	foundExclusive := true
-	for foundExclusive {
-		foundExclusive = false
+	foundLocks := true
+	for foundLocks {
 
 		waitLogger.Info("getting a list of active locks")
 
@@ -47,19 +40,20 @@ func (r *Restic) Wait() error {
 			return err
 		}
 
-		for _, lock := range locks {
-			if r.isLockExclusive(waitLogger.WithName("lockExclusive"), lock) {
-				foundExclusive = true
-				waitLogger.Info("found exclusive lock, waiting 10 seconds")
-				break
+		if len(locks) > 0 {
+			foundLocks = true
+			waitLogger.Info("locks found, retry in 35 seconds")
+			err := r.Unlock(false)
+			if err != nil {
+				return err
 			}
-		}
-		if foundExclusive {
-			time.Sleep(10 * time.Second)
+			time.Sleep(35 * time.Second)
+		} else {
+			foundLocks = false
 		}
 	}
 
-	waitLogger.Info("no more exclusive locks found")
+	waitLogger.Info("no more locks found")
 
 	return nil
 }
@@ -96,55 +90,4 @@ type locklist []string
 func (l *locklist) Parse(s string) error {
 	*l = append(*l, s)
 	return nil
-}
-
-func (r *Restic) isLockExclusive(log logr.Logger, lockID string) bool {
-
-	buf := &bytes.Buffer{}
-
-	wrapper := &outputWrapper{
-		parser: &logErrParser{
-			log: log.WithName("restic"),
-		},
-	}
-
-	stdErrBuf := &bytes.Buffer{}
-
-	multiWriter := io.MultiWriter(wrapper, stdErrBuf)
-
-	opts := CommandOptions{
-		Path: r.resticPath,
-		Args: []string{
-			"cat",
-			"lock",
-			lockID,
-		},
-		StdOut: buf,
-		StdErr: multiWriter,
-	}
-
-	ctx, cancel := context.WithTimeout(r.ctx, time.Second*1)
-	defer cancel()
-
-	cmd := NewCommand(ctx, log.WithName("checkLock"), opts)
-	cmd.Run()
-
-	// if there was an error getting the locks we assume exclusive lock.
-	// But ignore errors where the lock isn't found anymore, in that case we return false
-	if strings.Contains(stdErrBuf.String(), "The specified key does not exist") {
-		log.Info("ignoring missing lock")
-		return false
-	} else if cmd.FatalError != nil {
-		return true
-	}
-
-	lock := &Lock{}
-
-	err := json.Unmarshal(buf.Bytes(), lock)
-
-	if err != nil {
-		return false
-	}
-
-	return lock.Exclusive
 }

@@ -89,9 +89,11 @@ func run(resticCLI *restic.Restic, mainLogger logr.Logger) error {
 		os.Exit(1)
 	}
 
-	if err := resticCLI.Wait(); err != nil {
-		mainLogger.Error(err, "failed to list repository locks")
-		return err
+	if *prune || *check {
+		if err := resticCLI.Wait(); err != nil {
+			mainLogger.Error(err, "failed to list repository locks")
+			return err
+		}
 	}
 
 	commandRun := false
