@@ -53,6 +53,7 @@ spec:
               - key
               type: object
             resticEnvironment:
+              description: 'TODO: should be read from a secret'
               items:
                 properties:
                   key:
@@ -69,10 +70,12 @@ spec:
               type: string
           type: object
         status:
-          description: BackupStatus defines the observed state of Backup
+          description: K8upStatus defines the observed state of Backup
           properties:
             finished:
               type: boolean
+            jobName:
+              type: string
             started:
               type: boolean
           type: object

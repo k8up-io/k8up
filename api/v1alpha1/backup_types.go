@@ -17,7 +17,6 @@ limitations under the License.
 package v1alpha1
 
 import (
-	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -27,10 +26,9 @@ type BackupSpec struct {
 }
 
 type BackupTemplate struct {
-	Tags                  *[]string                 `json:"tags,omitempty"`
-	RepoPasswordSecretRef *corev1.SecretKeySelector `json:"repoPasswordSecretRef,omitempty"`
-	// TODO: should be read from a secret
-	ResticEnvironment []Env `json:"resticEnvironment,omitempty"`
+	Tags    *[]string `json:"tags,omitempty"`
+	Backend Backend   `json:"backend,omitempty"`
+	Env     Env       `json:"env,omitempty"`
 }
 
 type Env struct {
@@ -38,11 +36,11 @@ type Env struct {
 	Value string `json:"value,omitempty"`
 }
 
-// BackupStatus defines the observed state of Backup
-type BackupStatus struct {
-	Started       bool   `json:"started,omitempty"`
-	Finished      bool   `json:"finished,omitempty"`
-	BackupJobName string `json:"backupJobName,omitempty"`
+// K8upStatus defines the observed state of a generic K8up job
+type K8upStatus struct {
+	Started  bool   `json:"started,omitempty"`
+	Finished bool   `json:"finished,omitempty"`
+	JobName  string `json:"jobName,omitempty"`
 }
 
 // +kubebuilder:object:root=true
@@ -53,8 +51,8 @@ type Backup struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   BackupSpec   `json:"spec,omitempty"`
-	Status BackupStatus `json:"status,omitempty"`
+	Spec   BackupSpec `json:"spec,omitempty"`
+	Status K8upStatus `json:"status,omitempty"`
 }
 
 // +kubebuilder:object:root=true

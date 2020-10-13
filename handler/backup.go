@@ -28,7 +28,7 @@ func NewBackupHandler(config job.Config, backup *k8upv1alpha1.Backup) *BackupHan
 func (b *BackupHandler) handle() error {
 
 	backupJob := &batchv1.Job{}
-	err := b.Client.Get(b.CTX, types.NamespacedName{Name: b.backup.Status.BackupJobName, Namespace: b.backup.Namespace}, backupJob)
+	err := b.Client.Get(b.CTX, types.NamespacedName{Name: b.backup.Status.JobName, Namespace: b.backup.Namespace}, backupJob)
 	if err != nil && errors.IsNotFound(err) {
 		return b.queueJob(backupJob)
 	} else if err != nil {
@@ -36,6 +36,7 @@ func (b *BackupHandler) handle() error {
 		return err
 	}
 
+	// TODO: replace with observer
 	if b.backup.Status.Started {
 		b.checkJob(backupJob)
 	}
@@ -48,12 +49,9 @@ func (b *BackupHandler) queueJob(backupJob *batchv1.Job) error {
 
 	jobName := fmt.Sprintf("backupjob-%d", time.Now().Unix())
 
-	queue.Queue.Add(&queue.QueuedJob{
-		Job: executor.NewBackupExecutor(b.Config, jobName),
-	})
+	queue.GetExecQueue().Add(b.Config.Repository, executor.NewBackupExecutor(b.Config, jobName))
 
-	b.backup.Status.Started = true
-	b.backup.Status.BackupJobName = jobName
+	b.backup.Status.JobName = jobName
 
 	err := b.Client.Status().Update(b.CTX, b.backup)
 	if err != nil {

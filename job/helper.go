@@ -17,13 +17,13 @@ const (
 )
 
 type Config struct {
-	Client    client.Client
-	Log       logr.Logger
-	CTX       context.Context
-	Obj       metav1.Object
-	Scheme    *runtime.Scheme
-	Name      string
-	Exclusive bool
+	Client     client.Client
+	Log        logr.Logger
+	CTX        context.Context
+	Obj        metav1.Object
+	Scheme     *runtime.Scheme
+	Name       string
+	Repository string
 }
 
 func GetGenericJob(obj metav1.Object, scheme *runtime.Scheme) (*batchv1.Job, error) {

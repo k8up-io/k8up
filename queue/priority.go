@@ -2,24 +2,15 @@ package queue
 
 import (
 	"container/heap"
-	"sync"
-
-	"github.com/vshn/k8up/executor"
 )
 
-var (
-	Queue = newPriorityQueue()
-	wg    = sync.WaitGroup{}
-)
-
-//TODO: how to handle the prio
 type QueuedJob struct {
-	Job      executor.Executor
+	Job      Executor
 	priority int
 	index    int
 }
 
-// A PriorityQueue implements heap.Interface and holds Items.
+// PriorityQueue implements heap.Interface and holds Items.
 type PriorityQueue []*QueuedJob
 
 func (pq PriorityQueue) Len() int { return len(pq) }
@@ -51,22 +42,24 @@ func (pq *PriorityQueue) Pop() interface{} {
 	return item
 }
 
-func (pq *PriorityQueue) Add(q *QueuedJob) {
-	wg.Add(1)
+// Add will add a new job to the queue. It determines if the job is exclusive
+// and set the priority accordingly.
+func (pq *PriorityQueue) add(e Executor) {
+	q := QueuedJob{
+		Job: e,
+	}
+	if e.Exclusive() {
+		q.priority = 1
+	} else {
+		q.priority = 2
+	}
 	heap.Push(pq, q)
-	wg.Done()
 }
 
-func (pq *PriorityQueue) Get() *QueuedJob {
-	wg.Add(1)
-	defer wg.Done()
-	return heap.Pop(pq).(*QueuedJob)
-}
-
-// update modifies the priority and value of an Item in the queue.
-func (pq *PriorityQueue) update(q *QueuedJob, priority int) {
-	q.priority = priority
-	heap.Fix(pq, q.index)
+// Get will get the next job of the queue and also remove the item.
+func (pq *PriorityQueue) get() Executor {
+	getJob := heap.Pop(pq).(*QueuedJob)
+	return getJob.Job
 }
 
 // newPriorityQueue returns a new, empty queue.

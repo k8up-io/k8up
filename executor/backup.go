@@ -3,15 +3,15 @@ package executor
 import "github.com/vshn/k8up/job"
 
 type BackupExecutor struct {
-	job.Config
+	generic
 	name string
 	//TODO: list of PVCs
 }
 
 func NewBackupExecutor(config job.Config, name string) *BackupExecutor {
 	return &BackupExecutor{
-		Config: config,
-		name:   name,
+		generic: generic{config},
+		name:    name,
 	}
 }
 
