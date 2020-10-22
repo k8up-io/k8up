@@ -10,51 +10,8 @@ import (
 
 	"github.com/go-logr/logr"
 	"github.com/vshn/wrestic/kubernetes"
+	"github.com/vshn/wrestic/logging"
 )
-
-type backupEnvelope struct {
-	MessageType string `json:"message_type,omitempty"`
-	backupStatus
-	backupSummary
-	backupError
-}
-
-type backupStatus struct {
-	PercentDone  float64  `json:"percent_done"`
-	TotalFiles   int      `json:"total_files"`
-	FilesDone    int      `json:"files_done"`
-	TotalBytes   int      `json:"total_bytes"`
-	BytesDone    int      `json:"bytes_done"`
-	CurrentFiles []string `json:"current_files"`
-	ErrorCount   int      `json:"error_count"`
-}
-
-type backupSummary struct {
-	MessageType         string  `json:"message_type"`
-	FilesNew            int     `json:"files_new"`
-	FilesChanged        int     `json:"files_changed"`
-	FilesUnmodified     int     `json:"files_unmodified"`
-	DirsNew             int     `json:"dirs_new"`
-	DirsChanged         int     `json:"dirs_changed"`
-	DirsUnmodified      int     `json:"dirs_unmodified"`
-	DataBlobs           int     `json:"data_blobs"`
-	TreeBlobs           int     `json:"tree_blobs"`
-	DataAdded           int64   `json:"data_added"`
-	TotalFilesProcessed int     `json:"total_files_processed"`
-	TotalBytesProcessed int     `json:"total_bytes_processed"`
-	TotalDuration       float64 `json:"total_duration"`
-	SnapshotID          string  `json:"snapshot_id"`
-}
-
-type backupError struct {
-	Error struct {
-		Op   string `json:"Op"`
-		Path string `json:"Path"`
-		Err  int    `json:"Err"`
-	} `json:"error"`
-	During string `json:"during"`
-	Item   string `json:"item"`
-}
 
 // Backup backup to the repository. It will loop through all subfolders of
 // backupdir and trigger a snapshot for each of them.
@@ -116,17 +73,11 @@ func (r *Restic) newParseBackupOutput(log logr.Logger, folder string) io.Writer 
 
 	progressLogger := log.WithName("progress")
 
-	return &outputWrapper{
-		parser: &backupOutputParser{
-			folder:      folder,
-			log:         progressLogger,
-			summaryfunc: r.sendBackupStats,
-		},
-	}
+	return logging.NewBackupOutputParser(progressLogger, folder, r.sendBackupStats)
 
 }
 
-func (r *Restic) sendBackupStats(summary backupSummary, errorCount int, folder string, startTimestamp, endTimestamp int64) {
+func (r *Restic) sendBackupStats(summary logging.BackupSummary, errorCount int, folder string, startTimestamp, endTimestamp int64) {
 
 	metrics := r.parseSummary(summary, errorCount, folder, 1, time.Now().Unix())
 

@@ -161,9 +161,9 @@ func run(resticCLI *restic.Restic, mainLogger logr.Logger) error {
 
 			if err == nil {
 				for _, pod := range podList {
-					data, stdErr, err := kubernetes.PodExec(pod, mainLogger)
+					data, err := kubernetes.PodExec(pod, mainLogger)
 					if err != nil {
-						mainLogger.Error(fmt.Errorf("error occured during data stream from k8s"), stdErr.String())
+						mainLogger.Error(fmt.Errorf("error occured during data stream from k8s"), "pod execution was interrupted")
 						return err
 					}
 					filename := fmt.Sprintf("/%s-%s", os.Getenv(restic.Hostname), pod.ContainerName)

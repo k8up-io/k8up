@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/go-logr/logr"
+	"github.com/vshn/wrestic/logging"
 )
 
 type Lock struct {
@@ -70,14 +71,8 @@ func (r *Restic) getLockList(log logr.Logger) ([]string, error) {
 			"--json",
 			"--no-lock",
 		},
-		StdOut: &outputWrapper{
-			parser: list,
-		},
-		StdErr: &outputWrapper{
-			parser: &logErrParser{
-				log: log.WithName("restic"),
-			},
-		},
+		StdOut: logging.New(list.out),
+		StdErr: logging.NewErrorWriter(log.WithName("restic")),
 	}
 	cmd := NewCommand(r.ctx, log, opts)
 	cmd.Run()
@@ -87,7 +82,7 @@ func (r *Restic) getLockList(log logr.Logger) ([]string, error) {
 
 type locklist []string
 
-func (l *locklist) Parse(s string) error {
+func (l *locklist) out(s string) error {
 	*l = append(*l, s)
 	return nil
 }

@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/go-logr/logr"
+	"github.com/vshn/wrestic/logging"
 	"github.com/vshn/wrestic/s3"
 )
 
@@ -141,18 +142,10 @@ func (r *Restic) folderRestore(restoreDir string, snapshot Snapshot, restoreFilt
 	}
 
 	opts := CommandOptions{
-		Path: r.resticPath,
-		Args: args,
-		StdOut: &outputWrapper{
-			parser: &logOutParser{
-				log: log.WithName("restic"),
-			},
-		},
-		StdErr: &outputWrapper{
-			parser: &logErrParser{
-				log: log.WithName("restic"),
-			},
-		},
+		Path:   r.resticPath,
+		Args:   args,
+		StdOut: logging.NewInfoWriter(log.WithName("restic")),
+		StdErr: logging.NewErrorWriter(log.WithName("restic")),
 	}
 
 	cmd := NewCommand(r.ctx, log, opts)
@@ -255,11 +248,7 @@ func (r *Restic) s3Restore(log logr.Logger, snapshot Snapshot) error {
 			snapRoot,
 		},
 		StdOut: finalWriter,
-		StdErr: &outputWrapper{
-			parser: &logErrParser{
-				log: log.WithName("restic"),
-			},
-		},
+		StdErr: logging.NewErrorWriter(log.WithName("restic")),
 	}
 
 	log.Info("starting restore", "s3 filename", fileName)

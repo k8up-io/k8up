@@ -5,6 +5,8 @@ import (
 	"bytes"
 	"io"
 	"strings"
+
+	"github.com/vshn/wrestic/logging"
 )
 
 // Init initialises a repository, checks if the repositor exists and will
@@ -16,11 +18,7 @@ func (r *Restic) Init() error {
 
 	initErrorCatcher := &initStdErrWrapper{
 		exists: false,
-		Writer: &outputWrapper{
-			parser: &logErrParser{
-				log: resticLogger,
-			},
-		},
+		Writer: logging.NewErrorWriter(resticLogger),
 	}
 
 	opts := CommandOptions{
@@ -28,11 +26,7 @@ func (r *Restic) Init() error {
 		Args: []string{
 			"init",
 		},
-		StdOut: &outputWrapper{
-			parser: &logOutParser{
-				log: resticLogger,
-			},
-		},
+		StdOut: logging.NewInfoWriter(resticLogger),
 		StdErr: initErrorCatcher,
 	}
 	cmd := NewCommand(r.ctx, initLogger, opts)

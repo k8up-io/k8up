@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"encoding/json"
 	"time"
+
+	"github.com/vshn/wrestic/logging"
 )
 
 // Snapshot models a restic a single snapshot from the
@@ -45,11 +47,7 @@ func (r *Restic) listSnapshots(tags ArrayOpts, last bool) error {
 			"--json",
 		},
 		StdOut: buf,
-		StdErr: &outputWrapper{
-			parser: &logErrParser{
-				log: snaplogger.WithName("restic"),
-			},
-		},
+		StdErr: logging.NewErrorWriter(snaplogger.WithName("restic")),
 	}
 
 	if len(tags) > 0 {
