@@ -1,5 +1,7 @@
 package restic
 
+import "github.com/vshn/wrestic/logging"
+
 // Unlock will remove stale locks from the repository
 func (r *Restic) Unlock(all bool) error {
 	unlocklogger := r.logger.WithName("unlock")
@@ -11,16 +13,8 @@ func (r *Restic) Unlock(all bool) error {
 		Args: []string{
 			"unlock",
 		},
-		StdOut: &outputWrapper{
-			parser: &logOutParser{
-				log: unlocklogger.WithName("restic"),
-			},
-		},
-		StdErr: &outputWrapper{
-			parser: &logErrParser{
-				log: unlocklogger.WithName("restic"),
-			},
-		},
+		StdOut: logging.NewErrorWriter(unlocklogger.WithName("restic")),
+		StdErr: logging.NewErrorWriter(unlocklogger.WithName("restic")),
 	}
 
 	if all {

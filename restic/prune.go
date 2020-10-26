@@ -1,6 +1,10 @@
 package restic
 
-import "os"
+import (
+	"os"
+
+	"github.com/vshn/wrestic/logging"
+)
 
 // Prune will enforce the retention policy onto the repository
 func (r *Restic) Prune(tags ArrayOpts) error {
@@ -39,18 +43,10 @@ func (r *Restic) Prune(tags ArrayOpts) error {
 	}
 
 	opts := CommandOptions{
-		Path: r.resticPath,
-		Args: args,
-		StdOut: &outputWrapper{
-			parser: &logOutParser{
-				log: prunelogger.WithName("restic"),
-			},
-		},
-		StdErr: &outputWrapper{
-			parser: &logErrParser{
-				log: prunelogger.WithName("restic"),
-			},
-		},
+		Path:   r.resticPath,
+		Args:   args,
+		StdOut: logging.NewInfoWriter(prunelogger.WithName("restic")),
+		StdErr: logging.NewErrorWriter(prunelogger.WithName("restic")),
 	}
 
 	if len(tags) > 0 {

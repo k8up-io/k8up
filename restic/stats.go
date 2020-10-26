@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/vshn/wrestic/logging"
 )
 
 // RawMetrics contains the raw metrics that can be obtained at the end of a
@@ -132,7 +133,7 @@ func newPromMetrics() *PromMetrics {
 }
 
 // please ensure that there's a current list of snapshots in the restic instance before calling this.
-func (r *Restic) parseSummary(summary backupSummary, errorCount int, folder string, startTimestamp, endTimestamp int64) *RawMetrics {
+func (r *Restic) parseSummary(summary logging.BackupSummary, errorCount int, folder string, startTimestamp, endTimestamp int64) *RawMetrics {
 	return &RawMetrics{
 		NewDirs:               float64(summary.DirsNew),
 		NewFiles:              float64(summary.FilesNew),
