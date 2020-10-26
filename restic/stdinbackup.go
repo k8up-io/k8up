@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/vshn/wrestic/kubernetes"
+	"github.com/vshn/wrestic/logging"
 )
 
 // StdinBackup create a snapshot with the data contained in the given reader.
@@ -14,7 +15,7 @@ func (r *Restic) StdinBackup(data *kubernetes.ExecData, filename, fileExt string
 
 	stdinlogger.Info("starting stdin backup", "filename", filename, "extension", fileExt)
 
-	outputWriter := r.newParseBackupOutput(stdinlogger, filename+fileExt)
+	outputWriter := logging.NewStdinBackupOutputParser(stdinlogger.WithName("progress"), filename+fileExt, r.sendBackupStats)
 
 	opts := CommandOptions{
 		Path: r.resticPath,
