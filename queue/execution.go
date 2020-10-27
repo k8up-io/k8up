@@ -8,7 +8,6 @@ import (
 
 var (
 	execution *ExecutionQueue = newExecutionQueue()
-	mutex                     = sync.Mutex{}
 )
 
 type Executor interface {
@@ -22,30 +21,33 @@ type Executor interface {
 	// Associate the logs with the actual job.
 	Logger() logr.Logger
 	GetName() string
+	GetRepository() string
+	// TODO: ability to mark job as skipped && metric for that
 }
 
 // ExecutionQueue handles the queues for each different repository it finds.
 type ExecutionQueue struct {
-	queues map[string]*PriorityQueue
+	mutex  sync.Mutex
+	queues map[string]*priorityQueue
 }
 
 func newExecutionQueue() *ExecutionQueue {
-	queues := make(map[string]*PriorityQueue)
+	queues := make(map[string]*priorityQueue)
 	return &ExecutionQueue{queues: queues}
 }
 
-func (eq *ExecutionQueue) Add(repository string, exec Executor) {
-	mutex.Lock()
-	defer mutex.Unlock()
-	if _, exists := eq.queues[repository]; !exists {
-		eq.queues[repository] = newPriorityQueue()
+func (eq *ExecutionQueue) Add(exec Executor) {
+	eq.mutex.Lock()
+	defer eq.mutex.Unlock()
+	if _, exists := eq.queues[exec.GetRepository()]; !exists {
+		eq.queues[exec.GetRepository()] = newPriorityQueue()
 	}
-	eq.queues[repository].add(exec)
+	eq.queues[exec.GetRepository()].add(exec)
 }
 
 func (eq *ExecutionQueue) Get(repository string) Executor {
-	mutex.Lock()
-	defer mutex.Unlock()
+	eq.mutex.Lock()
+	defer eq.mutex.Unlock()
 	entry := eq.queues[repository].get()
 	if eq.queues[repository].Len() == 0 {
 		delete(eq.queues, repository)
@@ -53,8 +55,12 @@ func (eq *ExecutionQueue) Get(repository string) Executor {
 	return entry
 }
 
-func (eq *ExecutionQueue) GetRawMap() map[string]*PriorityQueue {
-	return eq.queues
+// IsEmpty checks if the queue for the given repository is empty
+func (eq *ExecutionQueue) IsEmpty(repository string) bool {
+	eq.mutex.Lock()
+	defer eq.mutex.Unlock()
+	repoQueue := eq.queues[repository]
+	return repoQueue == nil || repoQueue.Len() == 0
 }
 
 func GetExecQueue() *ExecutionQueue {
@@ -63,7 +69,9 @@ func GetExecQueue() *ExecutionQueue {
 
 // GetRepositories returns a list of all repositories that are currently
 // handled by the queue.
-func GetRepositories() []string {
+func (eq *ExecutionQueue) GetRepositories() []string {
+	eq.mutex.Lock()
+	defer eq.mutex.Unlock()
 	repositories := make([]string, len(execution.queues))
 	for repository := range execution.queues {
 		repositories = append(repositories, repository)

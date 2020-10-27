@@ -4,12 +4,3 @@ metadata:
   name: backup-sample
 spec:
   test: hello
-  tags:
-    - test1
-    - test2
-    - test3
-  resticEnvironment:
-    - key: test
-      value: test
-    - key: another
-      value: another

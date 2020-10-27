@@ -18,6 +18,7 @@ package controllers
 
 import (
 	"context"
+	"time"
 
 	"github.com/go-logr/logr"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -26,7 +27,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	k8upv1alpha1 "github.com/vshn/k8up/api/v1alpha1"
-	batchv1 "k8s.io/api/batch/v1"
+	"github.com/vshn/k8up/handler"
+	"github.com/vshn/k8up/job"
 )
 
 // BackupReconciler reconciles a Backup object
@@ -49,19 +51,21 @@ func (r *BackupReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	err := r.Get(ctx, req.NamespacedName, backup)
 	if err != nil {
 		if errors.IsNotFound(err) {
-			log.Info("Backup resource not found. Ignoring since object must be deleted")
 			return ctrl.Result{}, nil
 		}
 		log.Error(err, "Failed to get Backup")
 		return ctrl.Result{}, err
 	}
 
-	return ctrl.Result{}, nil
+	config := job.NewConfig(ctx, r.Client, log, backup, r.Scheme)
+
+	backupHandler := handler.NewHandler(config, backup)
+
+	return ctrl.Result{RequeueAfter: time.Second * 30}, backupHandler.Handle()
 }
 
 func (r *BackupReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&k8upv1alpha1.Backup{}).
-		Owns(&batchv1.Job{}).
 		Complete(r)
 }

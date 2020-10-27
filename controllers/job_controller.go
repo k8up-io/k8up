@@ -18,8 +18,10 @@ package controllers
 
 import (
 	"context"
+	"strconv"
 
 	"github.com/go-logr/logr"
+	"github.com/vshn/k8up/job"
 	"github.com/vshn/k8up/observer"
 	batchv1 "k8s.io/api/batch/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -31,7 +33,7 @@ import (
 )
 
 const (
-	jobFinalizerName string = "jobObserver.k8up.syn.tools"
+	jobFinalizerName string = "k8up.syn.tools/jobobserver"
 )
 
 // JobReconciler reconciles a Job object
@@ -48,20 +50,27 @@ func (r *JobReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	ctx := context.Background()
 	log := r.Log.WithValues("job", req.NamespacedName)
 
-	job := &batchv1.Job{}
-
-	//TODO: logic to figure out if the job belongs to k8up
+	jobObj := &batchv1.Job{}
 
 	jobEvent := observer.Create
 
-	err := r.Client.Get(ctx, req.NamespacedName, job)
+	err := r.Client.Get(ctx, req.NamespacedName, jobObj)
 	if err != nil {
+
+		if errors.IsNotFound(err) {
+			return reconcile.Result{}, nil
+		}
+
 		return reconcile.Result{}, err
 	}
 
-	if job.GetDeletionTimestamp() != nil && contains(job.GetFinalizers(), jobFinalizerName) {
+	if _, exists := jobObj.GetLabels()[job.K8uplabel]; !exists {
+		return reconcile.Result{}, nil
+	}
+
+	if jobObj.GetDeletionTimestamp() != nil && contains(jobObj.GetFinalizers(), jobFinalizerName) {
 		jobEvent = observer.Delete
-		err := r.addFinalizer(ctx, log, job)
+		err := r.removeFinalizer(ctx, log, jobObj)
 		if err != nil {
 			if errors.IsNotFound(err) {
 				log.Error(err, "job was not found")
@@ -70,33 +79,36 @@ func (r *JobReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 			return reconcile.Result{}, err
 		}
 	} else {
-		if job.Status.Active > 0 {
+		if jobObj.Status.Active > 0 {
 			jobEvent = observer.Running
+			err := r.addFinalizer(ctx, log, jobObj)
+			if err != nil {
+				return reconcile.Result{}, err
+			}
 		}
 
-		if job.Status.Succeeded > 0 {
+		if jobObj.Status.Succeeded > 0 {
 			jobEvent = observer.Suceeded
 		}
 
-		if job.Status.Failed > 0 {
+		if jobObj.Status.Failed > 0 {
 			jobEvent = observer.Failed
 		}
 
-		err := r.addFinalizer(ctx, log, job)
-		if err != nil {
-			return reconcile.Result{}, err
-		}
+	}
+
+	exclusive, err := strconv.ParseBool(jobObj.GetLabels()[job.K8upExclusive])
+	if err != nil {
+		exclusive = false
 	}
 
 	oj := observer.ObservableJob{
-		Job:       job,
-		Exclusive: false,
+		Job:       jobObj,
+		Exclusive: exclusive,
 		Event:     jobEvent,
 	}
 
 	observer.GetObserver().GetUpdateChannel() <- oj
-
-	log.Info("job detected")
 
 	return ctrl.Result{}, nil
 }

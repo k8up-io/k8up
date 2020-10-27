@@ -31,9 +31,10 @@ type Observer struct {
 }
 
 type ObservableJob struct {
-	Job       *batchv1.Job
-	Event     EventType
-	Exclusive bool
+	Job        *batchv1.Job
+	Event      EventType
+	Exclusive  bool
+	Repository string
 }
 
 // Event describes an event for the observer
@@ -41,13 +42,14 @@ type EventType string
 
 // GetObserver returns the currently active observer
 func GetObserver() *Observer {
-	if observer != nil {
+	if observer == nil {
 		observer = &Observer{
 			events:       make(chan ObservableJob, 10),
 			observedJobs: make(map[string]ObservableJob),
 			log:          ctrl.Log.WithName("observer"),
+			mutex:        sync.Mutex{},
 		}
-		observer.run()
+		go observer.run()
 	}
 
 	return observer
@@ -59,16 +61,21 @@ func (o *Observer) run() {
 		jobName := o.getJobName(event.Job)
 
 		switch event.Event {
-		case Update:
-			o.log.Info("updating job in observer", "jobName", jobName)
-			o.observedJobs[jobName] = event
+		case Suceeded:
+			// only report back succeeded jobs we've already seen. Will prevent
+			// reporting succeeded jobs on operator restart
+			if _, exists := o.observedJobs[jobName]; exists {
+				o.log.Info("job succeeded", "jobName", jobName)
+				o.observedJobs[jobName] = event
+			}
 		case Delete:
 			o.log.Info("deleting job from observer", "jobName", jobName)
 			delete(o.observedJobs, jobName)
-		case Create:
-			o.log.Info("creating job in observer", "jobName", jobName)
+		default:
+			o.log.Info("new update on job observed", "event", event.Event, "jobName", jobName)
 			o.observedJobs[jobName] = event
 		}
+
 	}
 }
 
@@ -77,13 +84,64 @@ func (o *Observer) GetUpdateChannel() chan ObservableJob {
 }
 
 func (o *Observer) getJobName(job *batchv1.Job) string {
-	return fmt.Sprintf("%s/%s", job.Name, job.Namespace)
+	return fmt.Sprintf("%s/%s", job.Namespace, job.Name)
 }
 
-// GetJob will return the requested job if it exists. JobName needs to be a string
+// GetJobByName will return the requested job if it exists. JobName needs to be a string
 // in the form of `jobname/namespace`
-func (o *Observer) GetJob(jobName string) ObservableJob {
+func (o *Observer) GetJobByName(jobName string) ObservableJob {
 	o.mutex.Lock()
 	defer o.mutex.Unlock()
-	return observer.observedJobs[jobName]
+	return o.observedJobs[jobName]
+}
+
+// GetJobsByRepository will return a list of all the jobs currently being observed
+// in a given repository.
+func (o *Observer) GetJobsByRepository(repository string) []ObservableJob {
+	o.mutex.Lock()
+	defer o.mutex.Unlock()
+
+	repoJobs := make([]ObservableJob, 0)
+	for _, job := range o.observedJobs {
+		if job.Repository == repository {
+			repoJobs = append(repoJobs, job)
+		}
+	}
+	return repoJobs
+}
+
+// IsExclusiveJobRunning will return true if there's currently an exclusive job
+// running on the repository.
+func (o *Observer) IsExclusiveJobRunning(repository string) bool {
+	listOfJobs := o.GetJobsByRepository(repository)
+
+	if len(listOfJobs) == 0 {
+		return false
+	}
+
+	for _, job := range listOfJobs {
+		if job.Exclusive && job.Event == Running {
+			return true
+		}
+	}
+
+	return false
+}
+
+// IsAnyJobRunning will return true if there's any job running for the given
+// repository.
+func (o *Observer) IsAnyJobRunning(repository string) bool {
+	listOfJobs := o.GetJobsByRepository(repository)
+
+	if len(listOfJobs) == 0 {
+		return false
+	}
+
+	for _, job := range listOfJobs {
+		if job.Event == Running {
+			return true
+		}
+	}
+
+	return false
 }

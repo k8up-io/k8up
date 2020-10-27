@@ -31,6 +31,7 @@ import (
 
 	k8upv1alpha1 "github.com/vshn/k8up/api/v1alpha1"
 	"github.com/vshn/k8up/controllers"
+	"github.com/vshn/k8up/executor"
 	// +kubebuilder:scaffold:imports
 )
 
@@ -57,6 +58,8 @@ func main() {
 	flag.Parse()
 
 	ctrl.SetLogger(zap.New(zap.UseDevMode(true)))
+
+	executor.GetExecutor()
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:             scheme,

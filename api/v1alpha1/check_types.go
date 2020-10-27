@@ -18,6 +18,7 @@ package v1alpha1
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 )
 
 // CheckSpec defines the desired state of Check
@@ -27,8 +28,7 @@ type CheckSpec struct {
 
 // CheckStatus defines the observed state of Check
 type CheckStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+	K8upStatus `json:",inline"`
 }
 
 // +kubebuilder:object:root=true
@@ -54,4 +54,20 @@ type CheckList struct {
 
 func init() {
 	SchemeBuilder.Register(&Check{}, &CheckList{})
+}
+
+func (c *Check) GetRuntimeObject() runtime.Object {
+	return c
+}
+
+func (c *Check) GetMetaObject() metav1.Object {
+	return c
+}
+
+func (c *Check) GetType() string {
+	return "check"
+}
+
+func (c *Check) GetK8upStatus() *K8upStatus {
+	return &c.Status.K8upStatus
 }
