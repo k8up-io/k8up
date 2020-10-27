@@ -36,11 +36,104 @@ spec:
         spec:
           description: PruneSpec defines the desired state of Prune
           properties:
-            tags:
-              description: 'TODO: all the various prune options'
-              items:
-                type: string
-              type: array
+            backend:
+              properties:
+                azure:
+                  properties:
+                    container:
+                      type: string
+                  type: object
+                b2:
+                  properties:
+                    bucket:
+                      type: string
+                    path:
+                      type: string
+                  type: object
+                gcs:
+                  properties:
+                    bucket:
+                      type: string
+                  type: object
+                local:
+                  properties:
+                    mountPath:
+                      type: string
+                  type: object
+                repoPasswordSecretRef:
+                  description: RepoPasswordSecretRef references a secret key to look
+                    up the restic repository password
+                  properties:
+                    key:
+                      description: The key of the secret to select from.  Must be
+                        a valid secret key.
+                      type: string
+                    name:
+                      description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                        TODO: Add other useful fields. apiVersion, kind, uid?'
+                      type: string
+                    optional:
+                      description: Specify whether the Secret or its key must be defined
+                      type: boolean
+                  required:
+                  - key
+                  type: object
+                rest:
+                  properties:
+                    url:
+                      type: string
+                  type: object
+                s3:
+                  properties:
+                    bucket:
+                      type: string
+                    endpoint:
+                      type: string
+                  type: object
+                swift:
+                  properties:
+                    container:
+                      type: string
+                    path:
+                      type: string
+                  type: object
+              type: object
+            keepJobs:
+              type: integer
+            retention:
+              description: Retention sets how many backups should be kept after a
+                forget and prune
+              properties:
+                hostnames:
+                  description: Hosntames is a filter on what hostnames the policy
+                    should be applied
+                  items:
+                    type: string
+                  type: array
+                keepDaily:
+                  type: integer
+                keepHourly:
+                  type: integer
+                keepLast:
+                  type: integer
+                keepMonthly:
+                  type: integer
+                keepTags:
+                  items:
+                    type: string
+                  type: array
+                keepWeekly:
+                  type: integer
+                keepYearly:
+                  type: integer
+                tags:
+                  description: Tags is a filter on what tags the policy should be
+                    applied DO NOT CONFUSE THIS WITH KeepTags OR YOU'LL have a bad
+                    time
+                  items:
+                    type: string
+                  type: array
+              type: object
           type: object
         status:
           description: PruneStatus defines the observed state of Prune

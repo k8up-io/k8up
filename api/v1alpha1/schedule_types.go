@@ -20,16 +20,53 @@ import (
 	"fmt"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 )
 
 // ScheduleSpec defines the desired state of Schedule
 type ScheduleSpec struct {
-	Cron            *string         `json:"cron,omitempty"`
-	BackupTemplate  *NamespacedName `json:"backupTemplate,omitempty"`
-	ArchiveTemplate *NamespacedName `json:"archiveTemplate,omitempty"`
-	CheckTemplate   *NamespacedName `json:"checkTemplate,omitempty"`
-	PruneTemplate   *NamespacedName `json:"pruneTemplate,omitempty"`
-	KeepJobs        *int            `json:"keepJobs,omitempty"`
+	Restore  *RestoreSchedule `json:"restore,omitempty"`
+	Backup   *BackupSchedule  `json:"backup,omitempty"`
+	Archive  *ArchiveSchedule `json:"archive,omitempty"`
+	Check    *CheckSchedule   `json:"check,omitempty"`
+	Prune    *PruneSchedule   `json:"prune,omitempty"`
+	Backend  *Backend         `json:"backend,omitempty"`
+	KeepJobs int              `json:"keepJobs,omitempty"`
+}
+
+// ScheduleCommon contains fields every schedule needs
+type ScheduleCommon struct {
+	Schedule              string `json:"schedule,omitempty"`
+	ConcurrentRunsAllowed bool   `json:"concurrentRunsAllowed,omitempty"`
+}
+
+// RestoreSchedule manages schedules for the restore service
+type RestoreSchedule struct {
+	RestoreSpec     `json:",inline"`
+	*ScheduleCommon `json:",inline"`
+}
+
+// BackupSchedule manages schedules for the backup service
+type BackupSchedule struct {
+	BackupSpec      `json:",inline"`
+	*ScheduleCommon `json:",inline"`
+}
+
+// ArchiveSchedule manages schedules for the archival service
+type ArchiveSchedule struct {
+	ArchiveSpec     `json:",inline"`
+	*ScheduleCommon `json:",inline"`
+}
+
+// CheckSchedule manages the schedules for the checks
+type CheckSchedule struct {
+	CheckSpec       `json:",inline"`
+	*ScheduleCommon `json:",inline"`
+}
+
+type PruneSchedule struct {
+	PruneSpec       `json:",inline"`
+	*ScheduleCommon `json:",inline"`
 }
 
 type NamespacedName struct {
@@ -69,4 +106,20 @@ type ScheduleList struct {
 
 func init() {
 	SchemeBuilder.Register(&Schedule{}, &ScheduleList{})
+}
+
+func (s *Schedule) GetRuntimeObject() runtime.Object {
+	return s
+}
+
+func (s *Schedule) GetMetaObject() metav1.Object {
+	return s
+}
+
+func (*Schedule) GetType() string {
+	return "schedule"
+}
+
+func (s *Schedule) GetK8upStatus() *K8upStatus {
+	return nil
 }

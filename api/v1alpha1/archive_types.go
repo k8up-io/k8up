@@ -18,11 +18,12 @@ package v1alpha1
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 )
 
 // ArchiveSpec defines the desired state of Archive
 type ArchiveSpec struct {
-	Foo string `json:"foo,omitempty"`
+	*RestoreSpec `json:",inline"`
 }
 
 // ArchiveStatus defines the observed state of Archive
@@ -52,4 +53,14 @@ type ArchiveList struct {
 
 func init() {
 	SchemeBuilder.Register(&Archive{}, &ArchiveList{})
+}
+
+func (a ArchiveSpec) CreateObject(name, namespace string) runtime.Object {
+	return &Archive{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+		},
+		Spec: a,
+	}
 }

@@ -22,8 +22,25 @@ import (
 
 // PruneSpec defines the desired state of Prune
 type PruneSpec struct {
-	// TODO: all the various prune options
-	Tags *[]string `json:"tags,omitempty"`
+	// Retention sets how many backups should be kept after a forget and prune
+	Retention RetentionPolicy `json:"retention,omitempty"`
+	Backend   *Backend        `json:"backend,omitempty"`
+	KeepJobs  int             `json:"keepJobs,omitempty"`
+}
+
+type RetentionPolicy struct {
+	KeepLast    int      `json:"keepLast,omitempty"`
+	KeepHourly  int      `json:"keepHourly,omitempty"`
+	KeepDaily   int      `json:"keepDaily,omitempty"`
+	KeepWeekly  int      `json:"keepWeekly,omitempty"`
+	KeepMonthly int      `json:"keepMonthly,omitempty"`
+	KeepYearly  int      `json:"keepYearly,omitempty"`
+	KeepTags    []string `json:"keepTags,omitempty"`
+	// Tags is a filter on what tags the policy should be applied
+	// DO NOT CONFUSE THIS WITH KeepTags OR YOU'LL have a bad time
+	Tags []string `json:"tags,omitempty"`
+	// Hosntames is a filter on what hostnames the policy should be applied
+	Hostnames []string `json:"hostnames,omitempty"`
 }
 
 // PruneStatus defines the observed state of Prune

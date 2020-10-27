@@ -36,41 +36,570 @@ spec:
         spec:
           description: ScheduleSpec defines the desired state of Schedule
           properties:
-            archiveTemplate:
+            archive:
+              description: ArchiveSchedule manages schedules for the archival service
               properties:
-                name:
+                backend:
+                  description: Backend contains the backend information
+                  properties:
+                    azure:
+                      properties:
+                        container:
+                          type: string
+                      type: object
+                    b2:
+                      properties:
+                        bucket:
+                          type: string
+                        path:
+                          type: string
+                      type: object
+                    gcs:
+                      properties:
+                        bucket:
+                          type: string
+                      type: object
+                    local:
+                      properties:
+                        mountPath:
+                          type: string
+                      type: object
+                    repoPasswordSecretRef:
+                      description: RepoPasswordSecretRef references a secret key to
+                        look up the restic repository password
+                      properties:
+                        key:
+                          description: The key of the secret to select from.  Must
+                            be a valid secret key.
+                          type: string
+                        name:
+                          description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                            TODO: Add other useful fields. apiVersion, kind, uid?'
+                          type: string
+                        optional:
+                          description: Specify whether the Secret or its key must
+                            be defined
+                          type: boolean
+                      required:
+                      - key
+                      type: object
+                    rest:
+                      properties:
+                        url:
+                          type: string
+                      type: object
+                    s3:
+                      properties:
+                        bucket:
+                          type: string
+                        endpoint:
+                          type: string
+                      type: object
+                    swift:
+                      properties:
+                        container:
+                          type: string
+                        path:
+                          type: string
+                      type: object
+                  type: object
+                concurrentRunsAllowed:
+                  type: boolean
+                keepJobs:
+                  type: integer
+                restoreFilter:
                   type: string
-                namespace:
+                restoreMethod:
+                  description: RestoreMethod contains how and where the restore should
+                    happen all the settings are mutual exclusive.
+                  properties:
+                    folder:
+                      properties:
+                        claimName:
+                          description: 'ClaimName is the name of a PersistentVolumeClaim
+                            in the same namespace as the pod using this volume. More
+                            info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#persistentvolumeclaims'
+                          type: string
+                        readOnly:
+                          description: Will force the ReadOnly setting in VolumeMounts.
+                            Default false.
+                          type: boolean
+                      required:
+                      - claimName
+                      type: object
+                    s3:
+                      properties:
+                        bucket:
+                          type: string
+                        endpoint:
+                          type: string
+                      type: object
+                  type: object
+                schedule:
+                  type: string
+                snapshot:
+                  type: string
+                tags:
+                  description: Tags is a list of arbitrary tags that get added to
+                    the backup via Restic's tagging system
+                  items:
+                    type: string
+                  type: array
+              type: object
+            backend:
+              properties:
+                azure:
+                  properties:
+                    container:
+                      type: string
+                  type: object
+                b2:
+                  properties:
+                    bucket:
+                      type: string
+                    path:
+                      type: string
+                  type: object
+                gcs:
+                  properties:
+                    bucket:
+                      type: string
+                  type: object
+                local:
+                  properties:
+                    mountPath:
+                      type: string
+                  type: object
+                repoPasswordSecretRef:
+                  description: RepoPasswordSecretRef references a secret key to look
+                    up the restic repository password
+                  properties:
+                    key:
+                      description: The key of the secret to select from.  Must be
+                        a valid secret key.
+                      type: string
+                    name:
+                      description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                        TODO: Add other useful fields. apiVersion, kind, uid?'
+                      type: string
+                    optional:
+                      description: Specify whether the Secret or its key must be defined
+                      type: boolean
+                  required:
+                  - key
+                  type: object
+                rest:
+                  properties:
+                    url:
+                      type: string
+                  type: object
+                s3:
+                  properties:
+                    bucket:
+                      type: string
+                    endpoint:
+                      type: string
+                  type: object
+                swift:
+                  properties:
+                    container:
+                      type: string
+                    path:
+                      type: string
+                  type: object
+              type: object
+            backup:
+              description: BackupSchedule manages schedules for the backup service
+              properties:
+                backend:
+                  description: Backend contains the restic repo where the job should
+                    backup to.
+                  properties:
+                    azure:
+                      properties:
+                        container:
+                          type: string
+                      type: object
+                    b2:
+                      properties:
+                        bucket:
+                          type: string
+                        path:
+                          type: string
+                      type: object
+                    gcs:
+                      properties:
+                        bucket:
+                          type: string
+                      type: object
+                    local:
+                      properties:
+                        mountPath:
+                          type: string
+                      type: object
+                    repoPasswordSecretRef:
+                      description: RepoPasswordSecretRef references a secret key to
+                        look up the restic repository password
+                      properties:
+                        key:
+                          description: The key of the secret to select from.  Must
+                            be a valid secret key.
+                          type: string
+                        name:
+                          description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                            TODO: Add other useful fields. apiVersion, kind, uid?'
+                          type: string
+                        optional:
+                          description: Specify whether the Secret or its key must
+                            be defined
+                          type: boolean
+                      required:
+                      - key
+                      type: object
+                    rest:
+                      properties:
+                        url:
+                          type: string
+                      type: object
+                    s3:
+                      properties:
+                        bucket:
+                          type: string
+                        endpoint:
+                          type: string
+                      type: object
+                    swift:
+                      properties:
+                        container:
+                          type: string
+                        path:
+                          type: string
+                      type: object
+                  type: object
+                concurrentRunsAllowed:
+                  type: boolean
+                keepJobs:
+                  description: KeepJobs amount of jobs to keep for later analysis
+                  type: integer
+                promURL:
+                  description: PromURL sets a prometheus push URL where the backup
+                    container send metrics to
+                  type: string
+                schedule:
+                  type: string
+                statsURL:
+                  description: StatsURL sets an arbitrary URL where the wrestic container
+                    posts metrics and information about the snapshots to. This is
+                    in addition to the prometheus pushgateway.
+                  type: string
+                tags:
+                  description: Tags is a list of arbitrary tags that get added to
+                    the backup via Restic's tagging system
+                  items:
+                    type: string
+                  type: array
+              type: object
+            check:
+              description: CheckSchedule manages the schedules for the checks
+              properties:
+                backend:
+                  properties:
+                    azure:
+                      properties:
+                        container:
+                          type: string
+                      type: object
+                    b2:
+                      properties:
+                        bucket:
+                          type: string
+                        path:
+                          type: string
+                      type: object
+                    gcs:
+                      properties:
+                        bucket:
+                          type: string
+                      type: object
+                    local:
+                      properties:
+                        mountPath:
+                          type: string
+                      type: object
+                    repoPasswordSecretRef:
+                      description: RepoPasswordSecretRef references a secret key to
+                        look up the restic repository password
+                      properties:
+                        key:
+                          description: The key of the secret to select from.  Must
+                            be a valid secret key.
+                          type: string
+                        name:
+                          description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                            TODO: Add other useful fields. apiVersion, kind, uid?'
+                          type: string
+                        optional:
+                          description: Specify whether the Secret or its key must
+                            be defined
+                          type: boolean
+                      required:
+                      - key
+                      type: object
+                    rest:
+                      properties:
+                        url:
+                          type: string
+                      type: object
+                    s3:
+                      properties:
+                        bucket:
+                          type: string
+                        endpoint:
+                          type: string
+                      type: object
+                    swift:
+                      properties:
+                        container:
+                          type: string
+                        path:
+                          type: string
+                      type: object
+                  type: object
+                concurrentRunsAllowed:
+                  type: boolean
+                keepJobs:
+                  type: integer
+                promURL:
+                  type: string
+                schedule:
                   type: string
               type: object
-            backupTemplate:
-              properties:
-                name:
-                  type: string
-                namespace:
-                  type: string
-              type: object
-            checkTemplate:
-              properties:
-                name:
-                  type: string
-                namespace:
-                  type: string
-              type: object
-            cron:
-              type: string
             keepJobs:
               type: integer
-            pruneTemplate:
+            prune:
               properties:
-                name:
+                backend:
+                  properties:
+                    azure:
+                      properties:
+                        container:
+                          type: string
+                      type: object
+                    b2:
+                      properties:
+                        bucket:
+                          type: string
+                        path:
+                          type: string
+                      type: object
+                    gcs:
+                      properties:
+                        bucket:
+                          type: string
+                      type: object
+                    local:
+                      properties:
+                        mountPath:
+                          type: string
+                      type: object
+                    repoPasswordSecretRef:
+                      description: RepoPasswordSecretRef references a secret key to
+                        look up the restic repository password
+                      properties:
+                        key:
+                          description: The key of the secret to select from.  Must
+                            be a valid secret key.
+                          type: string
+                        name:
+                          description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                            TODO: Add other useful fields. apiVersion, kind, uid?'
+                          type: string
+                        optional:
+                          description: Specify whether the Secret or its key must
+                            be defined
+                          type: boolean
+                      required:
+                      - key
+                      type: object
+                    rest:
+                      properties:
+                        url:
+                          type: string
+                      type: object
+                    s3:
+                      properties:
+                        bucket:
+                          type: string
+                        endpoint:
+                          type: string
+                      type: object
+                    swift:
+                      properties:
+                        container:
+                          type: string
+                        path:
+                          type: string
+                      type: object
+                  type: object
+                concurrentRunsAllowed:
+                  type: boolean
+                keepJobs:
+                  type: integer
+                retention:
+                  description: Retention sets how many backups should be kept after
+                    a forget and prune
+                  properties:
+                    hostnames:
+                      description: Hosntames is a filter on what hostnames the policy
+                        should be applied
+                      items:
+                        type: string
+                      type: array
+                    keepDaily:
+                      type: integer
+                    keepHourly:
+                      type: integer
+                    keepLast:
+                      type: integer
+                    keepMonthly:
+                      type: integer
+                    keepTags:
+                      items:
+                        type: string
+                      type: array
+                    keepWeekly:
+                      type: integer
+                    keepYearly:
+                      type: integer
+                    tags:
+                      description: Tags is a filter on what tags the policy should
+                        be applied DO NOT CONFUSE THIS WITH KeepTags OR YOU'LL have
+                        a bad time
+                      items:
+                        type: string
+                      type: array
+                  type: object
+                schedule:
                   type: string
-                namespace:
+              type: object
+            restore:
+              description: RestoreSchedule manages schedules for the restore service
+              properties:
+                backend:
+                  description: Backend contains the backend information
+                  properties:
+                    azure:
+                      properties:
+                        container:
+                          type: string
+                      type: object
+                    b2:
+                      properties:
+                        bucket:
+                          type: string
+                        path:
+                          type: string
+                      type: object
+                    gcs:
+                      properties:
+                        bucket:
+                          type: string
+                      type: object
+                    local:
+                      properties:
+                        mountPath:
+                          type: string
+                      type: object
+                    repoPasswordSecretRef:
+                      description: RepoPasswordSecretRef references a secret key to
+                        look up the restic repository password
+                      properties:
+                        key:
+                          description: The key of the secret to select from.  Must
+                            be a valid secret key.
+                          type: string
+                        name:
+                          description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                            TODO: Add other useful fields. apiVersion, kind, uid?'
+                          type: string
+                        optional:
+                          description: Specify whether the Secret or its key must
+                            be defined
+                          type: boolean
+                      required:
+                      - key
+                      type: object
+                    rest:
+                      properties:
+                        url:
+                          type: string
+                      type: object
+                    s3:
+                      properties:
+                        bucket:
+                          type: string
+                        endpoint:
+                          type: string
+                      type: object
+                    swift:
+                      properties:
+                        container:
+                          type: string
+                        path:
+                          type: string
+                      type: object
+                  type: object
+                concurrentRunsAllowed:
+                  type: boolean
+                keepJobs:
+                  type: integer
+                restoreFilter:
                   type: string
+                restoreMethod:
+                  description: RestoreMethod contains how and where the restore should
+                    happen all the settings are mutual exclusive.
+                  properties:
+                    folder:
+                      properties:
+                        claimName:
+                          description: 'ClaimName is the name of a PersistentVolumeClaim
+                            in the same namespace as the pod using this volume. More
+                            info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#persistentvolumeclaims'
+                          type: string
+                        readOnly:
+                          description: Will force the ReadOnly setting in VolumeMounts.
+                            Default false.
+                          type: boolean
+                      required:
+                      - claimName
+                      type: object
+                    s3:
+                      properties:
+                        bucket:
+                          type: string
+                        endpoint:
+                          type: string
+                      type: object
+                  type: object
+                schedule:
+                  type: string
+                snapshot:
+                  type: string
+                tags:
+                  description: Tags is a list of arbitrary tags that get added to
+                    the backup via Restic's tagging system
+                  items:
+                    type: string
+                  type: array
               type: object
           type: object
         status:
           description: ScheduleStatus defines the observed state of Schedule
+          properties:
+            cronID:
+              items:
+                type: integer
+              type: array
           type: object
       type: object
   version: v1alpha1

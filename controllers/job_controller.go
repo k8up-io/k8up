@@ -18,22 +18,16 @@ package controllers
 
 import (
 	"context"
-	"strconv"
 
 	"github.com/go-logr/logr"
+	"github.com/vshn/k8up/handler"
 	"github.com/vshn/k8up/job"
-	"github.com/vshn/k8up/observer"
 	batchv1 "k8s.io/api/batch/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-)
-
-const (
-	jobFinalizerName string = "k8up.syn.tools/jobobserver"
 )
 
 // JobReconciler reconciles a Job object
@@ -52,8 +46,6 @@ func (r *JobReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 	jobObj := &batchv1.Job{}
 
-	jobEvent := observer.Create
-
 	err := r.Client.Get(ctx, req.NamespacedName, jobObj)
 	if err != nil {
 
@@ -64,88 +56,13 @@ func (r *JobReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		return reconcile.Result{}, err
 	}
 
-	if _, exists := jobObj.GetLabels()[job.K8uplabel]; !exists {
-		return reconcile.Result{}, nil
-	}
+	config := job.NewConfig(ctx, r.Client, log, nil, r.Scheme)
 
-	if jobObj.GetDeletionTimestamp() != nil && contains(jobObj.GetFinalizers(), jobFinalizerName) {
-		jobEvent = observer.Delete
-		err := r.removeFinalizer(ctx, log, jobObj)
-		if err != nil {
-			if errors.IsNotFound(err) {
-				log.Error(err, "job was not found")
-				return reconcile.Result{}, nil
-			}
-			return reconcile.Result{}, err
-		}
-	} else {
-		if jobObj.Status.Active > 0 {
-			jobEvent = observer.Running
-			err := r.addFinalizer(ctx, log, jobObj)
-			if err != nil {
-				return reconcile.Result{}, err
-			}
-		}
-
-		if jobObj.Status.Succeeded > 0 {
-			jobEvent = observer.Suceeded
-		}
-
-		if jobObj.Status.Failed > 0 {
-			jobEvent = observer.Failed
-		}
-
-	}
-
-	exclusive, err := strconv.ParseBool(jobObj.GetLabels()[job.K8upExclusive])
-	if err != nil {
-		exclusive = false
-	}
-
-	oj := observer.ObservableJob{
-		Job:       jobObj,
-		Exclusive: exclusive,
-		Event:     jobEvent,
-	}
-
-	observer.GetObserver().GetUpdateChannel() <- oj
-
-	return ctrl.Result{}, nil
+	return ctrl.Result{}, handler.NewJobHandler(config, jobObj).Handle()
 }
 
 func (r *JobReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&batchv1.Job{}).
 		Complete(r)
-}
-
-func (r *JobReconciler) addFinalizer(ctx context.Context, reqLogger logr.Logger, j *batchv1.Job) error {
-	reqLogger.Info("adding Finalizer for the job")
-	controllerutil.AddFinalizer(j, jobFinalizerName)
-
-	// Update CR
-	err := r.Client.Update(ctx, j)
-	if err != nil {
-		reqLogger.Error(err, "failed to update job with finalizer")
-		return err
-	}
-	return nil
-}
-
-func (r *JobReconciler) removeFinalizer(ctx context.Context, reqLogger logr.Logger, j *batchv1.Job) error {
-	controllerutil.RemoveFinalizer(j, jobFinalizerName)
-	err := r.Client.Update(ctx, j)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func contains(list []string, s string) bool {
-	for _, v := range list {
-		if v == s {
-			return true
-		}
-	}
-	return false
 }

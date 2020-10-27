@@ -19,6 +19,14 @@ rules:
   - update
   - watch
 - apiGroups:
+  - batch
+  resources:
+  - jobs/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
   - ""
   resources:
   - pods
@@ -141,26 +149,6 @@ rules:
   - k8up.syn.tools
   resources:
   - schedules/status
-  verbs:
-  - get
-  - patch
-  - update
-- apiGroups:
-  - k8up.syn.tools
-  resources:
-  - snapshots
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - k8up.syn.tools
-  resources:
-  - snapshots/status
   verbs:
   - get
   - patch

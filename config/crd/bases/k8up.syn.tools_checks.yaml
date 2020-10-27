@@ -36,11 +36,84 @@ spec:
         spec:
           description: CheckSpec defines the desired state of Check
           properties:
-            foo:
+            backend:
+              properties:
+                azure:
+                  properties:
+                    container:
+                      type: string
+                  type: object
+                b2:
+                  properties:
+                    bucket:
+                      type: string
+                    path:
+                      type: string
+                  type: object
+                gcs:
+                  properties:
+                    bucket:
+                      type: string
+                  type: object
+                local:
+                  properties:
+                    mountPath:
+                      type: string
+                  type: object
+                repoPasswordSecretRef:
+                  description: RepoPasswordSecretRef references a secret key to look
+                    up the restic repository password
+                  properties:
+                    key:
+                      description: The key of the secret to select from.  Must be
+                        a valid secret key.
+                      type: string
+                    name:
+                      description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                        TODO: Add other useful fields. apiVersion, kind, uid?'
+                      type: string
+                    optional:
+                      description: Specify whether the Secret or its key must be defined
+                      type: boolean
+                  required:
+                  - key
+                  type: object
+                rest:
+                  properties:
+                    url:
+                      type: string
+                  type: object
+                s3:
+                  properties:
+                    bucket:
+                      type: string
+                    endpoint:
+                      type: string
+                  type: object
+                swift:
+                  properties:
+                    container:
+                      type: string
+                    path:
+                      type: string
+                  type: object
+              type: object
+            keepJobs:
+              type: integer
+            promURL:
               type: string
           type: object
         status:
           description: CheckStatus defines the observed state of Check
+          properties:
+            exclusive:
+              type: boolean
+            finished:
+              type: boolean
+            jobName:
+              type: string
+            started:
+              type: boolean
           type: object
       type: object
   version: v1alpha1

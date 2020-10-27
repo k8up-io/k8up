@@ -23,7 +23,9 @@ import (
 
 // CheckSpec defines the desired state of Check
 type CheckSpec struct {
-	Foo string `json:"foo,omitempty"`
+	PromURL  string   `json:"promURL,omitempty"`
+	Backend  *Backend `json:"backend,omitempty"`
+	KeepJobs int      `json:"keepJobs,omitempty"`
 }
 
 // CheckStatus defines the observed state of Check
@@ -70,4 +72,14 @@ func (c *Check) GetType() string {
 
 func (c *Check) GetK8upStatus() *K8upStatus {
 	return &c.Status.K8upStatus
+}
+
+func (c CheckSpec) CreateObject(name, namespace string) runtime.Object {
+	return &Check{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+		},
+		Spec: c,
+	}
 }

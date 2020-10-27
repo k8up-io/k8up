@@ -121,14 +121,6 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "Prune")
 		os.Exit(1)
 	}
-	if err = (&controllers.SnapshotReconciler{
-		Client: mgr.GetClient(),
-		Log:    ctrl.Log.WithName("controllers").WithName("Snapshot"),
-		Scheme: mgr.GetScheme(),
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "Snapshot")
-		os.Exit(1)
-	}
 	if err = (&controllers.JobReconciler{
 		Client: mgr.GetClient(),
 		Log:    ctrl.Log.WithName("controllers").WithName("Job"),

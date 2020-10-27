@@ -35,43 +35,93 @@ spec:
           type: object
         spec:
           properties:
-            repoPasswordSecretRef:
-              description: SecretKeySelector selects a key of a Secret.
+            backend:
+              description: Backend contains the restic repo where the job should backup
+                to.
               properties:
-                key:
-                  description: The key of the secret to select from.  Must be a valid
-                    secret key.
-                  type: string
-                name:
-                  description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                    TODO: Add other useful fields. apiVersion, kind, uid?'
-                  type: string
-                optional:
-                  description: Specify whether the Secret or its key must be defined
-                  type: boolean
-              required:
-              - key
+                azure:
+                  properties:
+                    container:
+                      type: string
+                  type: object
+                b2:
+                  properties:
+                    bucket:
+                      type: string
+                    path:
+                      type: string
+                  type: object
+                gcs:
+                  properties:
+                    bucket:
+                      type: string
+                  type: object
+                local:
+                  properties:
+                    mountPath:
+                      type: string
+                  type: object
+                repoPasswordSecretRef:
+                  description: RepoPasswordSecretRef references a secret key to look
+                    up the restic repository password
+                  properties:
+                    key:
+                      description: The key of the secret to select from.  Must be
+                        a valid secret key.
+                      type: string
+                    name:
+                      description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                        TODO: Add other useful fields. apiVersion, kind, uid?'
+                      type: string
+                    optional:
+                      description: Specify whether the Secret or its key must be defined
+                      type: boolean
+                  required:
+                  - key
+                  type: object
+                rest:
+                  properties:
+                    url:
+                      type: string
+                  type: object
+                s3:
+                  properties:
+                    bucket:
+                      type: string
+                    endpoint:
+                      type: string
+                  type: object
+                swift:
+                  properties:
+                    container:
+                      type: string
+                    path:
+                      type: string
+                  type: object
               type: object
-            resticEnvironment:
-              description: 'TODO: should be read from a secret'
-              items:
-                properties:
-                  key:
-                    type: string
-                  value:
-                    type: string
-                type: object
-              type: array
+            keepJobs:
+              description: KeepJobs amount of jobs to keep for later analysis
+              type: integer
+            promURL:
+              description: PromURL sets a prometheus push URL where the backup container
+                send metrics to
+              type: string
+            statsURL:
+              description: StatsURL sets an arbitrary URL where the wrestic container
+                posts metrics and information about the snapshots to. This is in addition
+                to the prometheus pushgateway.
+              type: string
             tags:
+              description: Tags is a list of arbitrary tags that get added to the
+                backup via Restic's tagging system
               items:
                 type: string
               type: array
-            test:
-              type: string
           type: object
         status:
-          description: K8upStatus defines the observed state of Backup
           properties:
+            exclusive:
+              type: boolean
             finished:
               type: boolean
             jobName:

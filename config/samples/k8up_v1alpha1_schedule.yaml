@@ -3,5 +3,7 @@ kind: Schedule
 metadata:
   name: schedule-sample
 spec:
-  # Add fields here
-  foo: bar
+  backup:
+    schedule: '* * * * *'
+  archive:
+    schedule: '* * * * *'

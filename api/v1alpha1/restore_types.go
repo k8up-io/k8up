@@ -17,25 +17,37 @@ limitations under the License.
 package v1alpha1
 
 import (
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 )
-
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
 // RestoreSpec defines the desired state of Restore
 type RestoreSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+	// Backend contains the backend information
+	Backend       *Backend       `json:"backend,omitempty"`
+	RestoreMethod *RestoreMethod `json:"restoreMethod,omitempty"`
+	RestoreFilter string         `json:"restoreFilter,omitempty"`
+	Snapshot      string         `json:"snapshot,omitempty"`
+	KeepJobs      int            `json:"keepJobs,omitempty"`
+	// Tags is a list of arbitrary tags that get added to the backup via Restic's tagging system
+	Tags []string `json:"tags,omitempty"`
+}
 
-	// Foo is an example field of Restore. Edit Restore_types.go to remove/update
-	Foo string `json:"foo,omitempty"`
+// RestoreMethod contains how and where the restore should happen
+// all the settings are mutual exclusive.
+type RestoreMethod struct {
+	S3     *S3Spec        `json:"s3,omitempty"`
+	Folder *FolderRestore `json:"folder,omitempty"`
+}
+
+type FolderRestore struct {
+	*corev1.PersistentVolumeClaimVolumeSource `json:",inline"`
 }
 
 // RestoreStatus defines the observed state of Restore
 type RestoreStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+	K8upStatus `json:",inline"`
 }
 
 // +kubebuilder:object:root=true
@@ -61,4 +73,14 @@ type RestoreList struct {
 
 func init() {
 	SchemeBuilder.Register(&Restore{}, &RestoreList{})
+}
+
+func (r RestoreSpec) CreateObject(name, namespace string) runtime.Object {
+	return &Restore{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+		},
+		Spec: r,
+	}
 }

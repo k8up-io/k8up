@@ -22,8 +22,20 @@ import (
 )
 
 type BackupSpec struct {
-	Test           string `json:"test,omitempty"`
-	BackupTemplate `json:",inline,omitempty"`
+	// Backend contains the restic repo where the job should backup to.
+	Backend *Backend `json:"backend,omitempty"`
+	// KeepJobs amount of jobs to keep for later analysis
+	KeepJobs int `json:"keepJobs,omitempty"`
+
+	// PromURL sets a prometheus push URL where the backup container send metrics to
+	// +optional
+	PromURL string `json:"promURL,omitempty"`
+	// StatsURL sets an arbitrary URL where the wrestic container posts metrics and
+	// information about the snapshots to. This is in addition to the prometheus
+	// pushgateway.
+	StatsURL string `json:"statsURL,omitempty"`
+	// Tags is a list of arbitrary tags that get added to the backup via Restic's tagging system
+	Tags []string `json:"tags,omitempty"`
 }
 
 type BackupTemplate struct {
@@ -88,4 +100,14 @@ func (*Backup) GetType() string {
 
 func (b *Backup) GetK8upStatus() *K8upStatus {
 	return &b.Status.K8upStatus
+}
+
+func (b BackupSpec) CreateObject(name, namespace string) runtime.Object {
+	return &Backup{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+		},
+		Spec: b,
+	}
 }

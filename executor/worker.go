@@ -30,13 +30,13 @@ func GetExecutor() *QueueWorker {
 
 func (qe *QueueWorker) executeQueue() {
 	for {
+
+		time.Sleep(1 * time.Second)
+
 		repositories := queue.GetExecQueue().GetRepositories()
 		for _, repository := range repositories {
 			qe.loopRepositoryJobs(repository)
 		}
-
-		time.Sleep(1 * time.Second)
-
 	}
 }
 
