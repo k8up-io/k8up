@@ -140,6 +140,15 @@ spec:
           type: object
         status:
           description: ArchiveStatus defines the observed state of Archive
+          properties:
+            exclusive:
+              type: boolean
+            finished:
+              type: boolean
+            jobName:
+              type: string
+            started:
+              type: boolean
           type: object
       type: object
   version: v1alpha1

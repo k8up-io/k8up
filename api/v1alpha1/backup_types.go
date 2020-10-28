@@ -55,10 +55,9 @@ type BackupStatus struct {
 
 // K8upStatus defines the observed state of a generic K8up job
 type K8upStatus struct {
-	Started   bool   `json:"started,omitempty"`
-	Finished  bool   `json:"finished,omitempty"`
-	JobName   string `json:"jobName,omitempty"`
-	Exclusive bool   `json:"exclusive,omitempty"`
+	Started   bool `json:"started,omitempty"`
+	Finished  bool `json:"finished,omitempty"`
+	Exclusive bool `json:"exclusive,omitempty"`
 }
 
 // +kubebuilder:object:root=true

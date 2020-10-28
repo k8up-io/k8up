@@ -3,6 +3,7 @@
 package scheduler
 
 import (
+	"errors"
 	"fmt"
 	"sync"
 	"time"
@@ -11,6 +12,7 @@ import (
 	"github.com/vshn/k8up/job"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
 const (
@@ -117,7 +119,18 @@ func (s *Scheduler) createObject(jobType Type, namespace string, obj ObjectCreat
 
 	rtObj := obj.CreateObject(name, namespace)
 
-	err := config.Client.Create(config.CTX, rtObj)
+	jobObject, ok := rtObj.(job.Object)
+	if !ok {
+		config.Log.Error(errors.New("cannot cast object"), "object is not a valid objectMeta")
+		return
+	}
+
+	err := controllerutil.SetOwnerReference(config.Obj.GetMetaObject(), jobObject.GetMetaObject(), config.Scheme)
+	if err != nil {
+		config.Log.Error(err, "cannot set owner on object", "name", jobObject.GetMetaObject().GetName())
+	}
+
+	err = config.Client.Create(config.CTX, rtObj)
 	if err != nil {
 		config.Log.Error(err, "could not trigger k8up job", "name", namespace+"/"+name)
 	}

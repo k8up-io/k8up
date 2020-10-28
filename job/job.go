@@ -25,7 +25,6 @@ type Config struct {
 	CTX        context.Context
 	Obj        Object
 	Scheme     *runtime.Scheme
-	Name       string
 	Repository string
 }
 
@@ -49,7 +48,7 @@ func NewConfig(ctx context.Context, client client.Client, log logr.Logger, obj O
 func GetGenericJob(obj Object, config Config) (*batchv1.Job, error) {
 	job := &batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      config.Name,
+			Name:      obj.GetMetaObject().GetName(),
 			Namespace: obj.GetMetaObject().GetNamespace(),
 			Labels: map[string]string{
 				K8uplabel: "true",
@@ -61,7 +60,7 @@ func GetGenericJob(obj Object, config Config) (*batchv1.Job, error) {
 					RestartPolicy: corev1.RestartPolicyOnFailure,
 					Containers: []corev1.Container{
 						{
-							Name:  config.Name,
+							Name:  obj.GetMetaObject().GetName(),
 							Image: defaultImage,
 							Command: []string{
 								"sleep",

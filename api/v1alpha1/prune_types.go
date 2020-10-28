@@ -18,6 +18,7 @@ package v1alpha1
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 )
 
 // PruneSpec defines the desired state of Prune
@@ -70,4 +71,14 @@ type PruneList struct {
 
 func init() {
 	SchemeBuilder.Register(&Prune{}, &PruneList{})
+}
+
+func (p PruneSpec) CreateObject(name, namespace string) runtime.Object {
+	return &Prune{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+		},
+		Spec: p,
+	}
 }

@@ -20,7 +20,7 @@ type Executor interface {
 	// Logger returns the logger in the job's context so we can
 	// Associate the logs with the actual job.
 	Logger() logr.Logger
-	GetName() string
+	// GetName() string
 	GetRepository() string
 	// TODO: ability to mark job as skipped && metric for that
 }

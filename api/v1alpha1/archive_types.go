@@ -28,6 +28,7 @@ type ArchiveSpec struct {
 
 // ArchiveStatus defines the observed state of Archive
 type ArchiveStatus struct {
+	K8upStatus `json:",inline"`
 }
 
 // +kubebuilder:object:root=true
@@ -63,4 +64,20 @@ func (a ArchiveSpec) CreateObject(name, namespace string) runtime.Object {
 		},
 		Spec: a,
 	}
+}
+
+func (a *Archive) GetRuntimeObject() runtime.Object {
+	return a
+}
+
+func (a *Archive) GetMetaObject() metav1.Object {
+	return a
+}
+
+func (*Archive) GetType() string {
+	return "archive"
+}
+
+func (a *Archive) GetK8upStatus() *K8upStatus {
+	return &a.Status.K8upStatus
 }

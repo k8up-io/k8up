@@ -18,9 +18,9 @@ func (*generic) Exclusive() bool {
 	return false
 }
 
-func (g *generic) GetName() string {
-	return g.Name
-}
+// func (g *generic) GetName() string {
+// 	return g.Name
+// }
 
 func (g *generic) GetRepository() string {
 	return g.Repository

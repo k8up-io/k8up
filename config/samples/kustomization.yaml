@@ -8,4 +8,5 @@ resources:
 - k8up_v1alpha1_prune.yaml
 - k8up_v1alpha1_snapshots.yaml
 - k8up_v1alpha1_snapshot.yaml
+- k8up_v1alpha1_prebackuppods.yaml
 # +kubebuilder:scaffold:manifestskustomizesamples
