@@ -1,7 +1,6 @@
 package executor
 
 import (
-	"fmt"
 	"path"
 	"strconv"
 
@@ -14,6 +13,7 @@ import (
 	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -131,9 +131,9 @@ func (b *BackupExecutor) startBackup(job *batchv1.Job) {
 		return
 	}
 
-	name := fmt.Sprintf("%s/%s", b.Obj.GetMetaObject().GetNamespace(), b.Obj.GetMetaObject().GetName())
+	name := types.NamespacedName{Namespace: b.Obj.GetMetaObject().GetNamespace(), Name: b.Obj.GetMetaObject().GetName()}
 
-	observer.GetObserver().RegisterCallback(name, preBackup.Stop)
+	observer.GetObserver().RegisterCallback(name.String(), preBackup.Stop)
 
 	volumes := b.listPVCs(constants.BackupAnnotationDefault)
 
