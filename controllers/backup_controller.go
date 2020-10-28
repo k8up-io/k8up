@@ -59,7 +59,7 @@ func (r *BackupReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 	config := job.NewConfig(ctx, r.Client, log, backup, r.Scheme)
 
-	backupHandler := handler.NewHandler(config, backup)
+	backupHandler := handler.NewHandler(config)
 
 	return ctrl.Result{RequeueAfter: time.Second * 30}, backupHandler.Handle()
 }

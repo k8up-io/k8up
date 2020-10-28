@@ -11,21 +11,19 @@ import (
 
 type Handler struct {
 	job.Config
-	object job.Object
 }
 
-func NewHandler(config job.Config, obj job.Object) *Handler {
+func NewHandler(config job.Config) *Handler {
 	return &Handler{
 		Config: config,
-		object: obj,
 	}
 }
 
 func (h *Handler) Handle() error {
 	jobObj := &batchv1.Job{}
 	err := h.Client.Get(h.CTX, types.NamespacedName{
-		Name:      h.object.GetMetaObject().GetName(),
-		Namespace: h.object.GetMetaObject().GetNamespace()}, jobObj)
+		Name:      h.Obj.GetMetaObject().GetName(),
+		Namespace: h.Obj.GetMetaObject().GetNamespace()}, jobObj)
 	if err != nil && errors.IsNotFound(err) {
 		return h.queueJob(jobObj)
 	} else if err != nil {
@@ -39,7 +37,7 @@ func (h *Handler) Handle() error {
 func (h *Handler) queueJob(job *batchv1.Job) error {
 	h.Log.Info("adding job to the queue")
 
-	queue.GetExecQueue().Add(executor.NewExecutor(h.object, h.Config))
+	queue.GetExecQueue().Add(executor.NewExecutor(h.Config))
 
 	return nil
 }

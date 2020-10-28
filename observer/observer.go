@@ -35,6 +35,7 @@ type ObservableJob struct {
 	Event      EventType
 	Exclusive  bool
 	Repository string
+	callback   func()
 }
 
 // Event describes an event for the observer
@@ -60,21 +61,43 @@ func (o *Observer) run() {
 
 		jobName := o.getJobName(event.Job)
 
+		o.mutex.Lock()
+
+		existingJob, exists := o.observedJobs[jobName]
+
+		// we need to add the callbacks to the new event so they won't get lost
+		if exists {
+			event.callback = existingJob.callback
+		}
+
+		o.log.Info("new event on observed job", "event", event.Event, "jobName", jobName)
+
 		switch event.Event {
+		case Failed:
+			if event.callback != nil {
+				event.callback()
+			}
 		case Suceeded:
 			// only report back succeeded jobs we've already seen. Will prevent
 			// reporting succeeded jobs on operator restart
-			if _, exists := o.observedJobs[jobName]; exists {
+			if exists {
 				o.log.Info("job succeeded", "jobName", jobName)
 				o.observedJobs[jobName] = event
+				if event.callback != nil {
+					event.callback()
+				}
 			}
 		case Delete:
 			o.log.Info("deleting job from observer", "jobName", jobName)
 			delete(o.observedJobs, jobName)
+			if event.callback != nil {
+				event.callback()
+			}
 		default:
-			o.log.Info("new update on job observed", "event", event.Event, "jobName", jobName)
 			o.observedJobs[jobName] = event
 		}
+
+		o.mutex.Unlock()
 
 	}
 }
@@ -144,4 +167,15 @@ func (o *Observer) IsAnyJobRunning(repository string) bool {
 	}
 
 	return false
+}
+
+func (o *Observer) RegisterCallback(name string, callback func()) {
+	o.mutex.Lock()
+	defer o.mutex.Unlock()
+	if event, exists := o.observedJobs[name]; !exists {
+		o.observedJobs[name] = ObservableJob{callback: callback}
+	} else {
+		event.callback = callback
+		o.observedJobs[name] = event
+	}
 }

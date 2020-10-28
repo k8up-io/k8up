@@ -26,8 +26,8 @@ func (g *generic) GetRepository() string {
 	return g.Repository
 }
 
-func NewExecutor(obj job.Object, config job.Config) queue.Executor {
-	switch obj.GetType() {
+func NewExecutor(config job.Config) queue.Executor {
+	switch config.Obj.GetType() {
 	case "backup":
 		return NewBackupExecutor(config)
 	case "check":
