@@ -28,3 +28,5 @@ cmd/operator/operator
 cmd/restic/restic
 
 bin/
+
+__debug_bin
