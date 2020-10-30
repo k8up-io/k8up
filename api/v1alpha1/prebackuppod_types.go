@@ -21,7 +21,9 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// PreBackupPodSpec defines the desired state of PreBackupPod
+// PreBackupPodSpec define pods that will be launched during the backup. After the backup
+// has finished (successfully or not), they should be removed again automatically
+// by the operator.
 type PreBackupPodSpec struct {
 	// BackupCommand will be added to the backupcommand annotation on the pod.
 	BackupCommand string `json:"backupCommand,omitempty"`

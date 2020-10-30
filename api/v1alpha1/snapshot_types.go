@@ -20,7 +20,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// SnapshotSpec defines the desired state of Snapshot
+// SnapshotSpec contains all information needed about a restic snapshot so it
+// can be restored.
 type SnapshotSpec struct {
 	ID    *string      `json:"id,omitempty"`
 	Date  *metav1.Time `json:"date,omitempty"`

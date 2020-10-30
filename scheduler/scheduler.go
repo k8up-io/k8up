@@ -27,29 +27,37 @@ var (
 	scheduler *Scheduler
 )
 
+// ObjectCreator defines an interface that each schedulable job must implement.
+// The simplest implementation is that the concrete object just returns itself.
 type ObjectCreator interface {
 	CreateObject(name, namespace string) runtime.Object
 }
 
+// Type defines what schedule type this is.
 type Type string
 
+// Job contains all necessary information to create a schedule.
 type Job struct {
 	Type     Type
 	Schedule string
 	Object   ObjectCreator
 }
 
+// JobList contains a slice of jobs and job.Config to actually apply the
+// the job objects.
 type JobList struct {
 	Jobs   []Job
 	Config job.Config
 }
 
+// Scheduler handles all the schedules.
 type Scheduler struct {
 	cron                *cron.Cron
 	registeredSchedules map[string][]int
 	mutex               sync.Mutex
 }
 
+// GetScheduler returns the scheduler singleton instance.
 func GetScheduler() *Scheduler {
 	if scheduler == nil {
 		scheduler = &Scheduler{
@@ -63,7 +71,7 @@ func GetScheduler() *Scheduler {
 	return scheduler
 }
 
-// AddSchedule will add the given schedule to the running cron. It returns the
+// AddSchedules will add the given schedule to the running cron. It returns the
 // id of the job. That can be used to remove it later.
 func (s *Scheduler) AddSchedules(jobs JobList) error {
 
@@ -104,6 +112,7 @@ func (s *Scheduler) AddSchedules(jobs JobList) error {
 	return nil
 }
 
+// RemoveSchedules will remove the schedules with the fiven name.
 func (s *Scheduler) RemoveSchedules(name string) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()

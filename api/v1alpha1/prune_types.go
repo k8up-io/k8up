@@ -21,7 +21,8 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
-// PruneSpec defines the desired state of Prune
+// PruneSpec needs to contain the repository information as well as the desired
+// retention policies.
 type PruneSpec struct {
 	// Retention sets how many backups should be kept after a forget and prune
 	Retention RetentionPolicy `json:"retention,omitempty"`

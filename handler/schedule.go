@@ -13,11 +13,14 @@ const (
 	scheduleFinalizerName = "k8up.syn.tools/schedule"
 )
 
+// ScheduleHandler handles the reconciles for the schedules. Schedules are a special
+// type of k8up objects as they will only trigger jobs indirectly.
 type ScheduleHandler struct {
 	schedule *k8upv1alpha1.Schedule
 	job.Config
 }
 
+// NewScheduleHandler will return a new ScheduleHanlder.
 func NewScheduleHandler(config job.Config, schedule *k8upv1alpha1.Schedule) *ScheduleHandler {
 	return &ScheduleHandler{
 		schedule: schedule,
@@ -25,7 +28,8 @@ func NewScheduleHandler(config job.Config, schedule *k8upv1alpha1.Schedule) *Sch
 	}
 }
 
-// Handle handles the schedule management.
+// Handle handles the schedule management. It's responsible for adding and removing the
+// jobs from the internal cron library.
 func (s *ScheduleHandler) Handle() error {
 
 	namespacedName := types.NamespacedName{Name: s.schedule.GetName(), Namespace: s.schedule.GetNamespace()}

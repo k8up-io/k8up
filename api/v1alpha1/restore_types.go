@@ -22,7 +22,8 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
-// RestoreSpec defines the desired state of Restore
+// RestoreSpec can either contain an S3 restore point or a local one. For the local
+// one you need to define an existing PVC.
 type RestoreSpec struct {
 	// Backend contains the backend information
 	Backend       *Backend       `json:"backend,omitempty"`

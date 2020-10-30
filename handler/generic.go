@@ -4,37 +4,30 @@ import (
 	"github.com/vshn/k8up/executor"
 	"github.com/vshn/k8up/job"
 	"github.com/vshn/k8up/queue"
-	batchv1 "k8s.io/api/batch/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/types"
 )
 
+// Handler is the generic job handler for most of the k8up jobs.
 type Handler struct {
 	job.Config
 }
 
+// NewHandler will return a new generic handler.
 func NewHandler(config job.Config) *Handler {
 	return &Handler{
 		Config: config,
 	}
 }
 
+// Handle checks if that job is started and will add it to the queue, if not.
 func (h *Handler) Handle() error {
-	jobObj := &batchv1.Job{}
-	err := h.Client.Get(h.CTX, types.NamespacedName{
-		Name:      h.Obj.GetMetaObject().GetName(),
-		Namespace: h.Obj.GetMetaObject().GetNamespace()}, jobObj)
-	if err != nil && errors.IsNotFound(err) {
-		return h.queueJob(jobObj)
-	} else if err != nil {
-		h.Log.Error(err, "Failed to get Job")
-		return err
+	if !h.Obj.GetK8upStatus().Started {
+		return h.queueJob()
 	}
 
 	return nil
 }
 
-func (h *Handler) queueJob(job *batchv1.Job) error {
+func (h *Handler) queueJob() error {
 	h.Log.Info("adding job to the queue")
 
 	queue.GetExecQueue().Add(executor.NewExecutor(h.Config))

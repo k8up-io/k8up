@@ -4,6 +4,7 @@ import (
 	"container/heap"
 )
 
+// QueuedJob is the priority queue's internal object.
 type QueuedJob struct {
 	Job      Executor
 	priority int

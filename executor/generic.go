@@ -1,3 +1,7 @@
+// executor contains the logic that is needed to apply the actual k8s job objects to a cluster.
+// each job type should implement its own executor that handles its own job creation.
+// There are various methods that provide default env vars and batch.job scaffolding.
+
 package executor
 
 import (
@@ -20,42 +24,61 @@ type generic struct {
 }
 
 // EnvVarEntry holds one entry for the EnvVarConverter
-type EnvVarEntry struct {
-	StringEnv    string
-	EnvVarSource *corev1.EnvVarSource
+type envVarEntry struct {
+	stringEnv    *string
+	envVarSource *corev1.EnvVarSource
 }
 
-// EnvVarConverter can convert the given map to a []corev1.EnvVar
+// EnvVarConverter can convert the given map to a []corev1.EnvVar. It also provides
+// a function to merge another EnvVarConverter instance into itself.
+// The merge will overwrite all zero-valued or nor declared entries.
 type EnvVarConverter struct {
-	Vars map[string]EnvVarEntry
+	Vars map[string]envVarEntry
 }
 
+// NewEnvVarConverter returns a new
 func NewEnvVarConverter() EnvVarConverter {
 	return EnvVarConverter{
-		Vars: make(map[string]EnvVarEntry),
+		Vars: make(map[string]envVarEntry),
 	}
 }
 
-func (e *EnvVarConverter) SetEntry(key string, value EnvVarEntry) {
+// SetString adds a string key and value pair to the environment.
+func (e *EnvVarConverter) SetString(key, value string) {
+	e.setEntry(key, envVarEntry{stringEnv: &value})
+}
+
+// SetEnvVarSource add an EnvVarSource to the environment with the given key.
+func (e *EnvVarConverter) SetEnvVarSource(key string, value *corev1.EnvVarSource) {
+	e.setEntry(key, envVarEntry{envVarSource: value})
+}
+
+func (e *EnvVarConverter) setEntry(key string, value envVarEntry) {
 	e.Vars[key] = value
 }
 
+// Convert returns a ready-to-use []corev1.EnvVar where all the key value
+// pairs have been added according to their type. If string and envVarSource
+// are set the string will have precedence.
 func (e *EnvVarConverter) Convert() []corev1.EnvVar {
 	vars := make([]corev1.EnvVar, 0)
 	for key, value := range e.Vars {
 		envVar := corev1.EnvVar{
 			Name: key,
 		}
-		if value.EnvVarSource != nil {
-			envVar.ValueFrom = value.EnvVarSource
-		} else {
-			envVar.Value = value.StringEnv
+		if value.envVarSource != nil {
+			envVar.ValueFrom = value.envVarSource
+		} else if value.stringEnv != nil {
+			envVar.Value = *value.stringEnv
 		}
 		vars = append(vars, envVar)
 	}
 	return vars
 }
 
+// Merge will merge the source into the instance. If there's no entry in the instance
+// that exists in the source, the source entry will be added. If there's a zero-valued
+// entry, it will also be overwritten.
 func (e *EnvVarConverter) Merge(source EnvVarConverter) error {
 	return mergo.Merge(&e.Vars, source.Vars)
 }
@@ -85,6 +108,7 @@ func (g *generic) GetRepository() string {
 	return g.Repository
 }
 
+// NewExecutor will return the right Executor for the given job object.
 func NewExecutor(config job.Config) queue.Executor {
 	switch config.Obj.GetType() {
 	case "backup":
@@ -99,13 +123,13 @@ func NewExecutor(config job.Config) queue.Executor {
 func DefaultEnv(namespace string) EnvVarConverter {
 	defaults := NewEnvVarConverter()
 
-	defaults.SetEntry("STATS_URL", EnvVarEntry{StringEnv: constants.GetGlobalStatsURL()})
-	defaults.SetEntry(constants.ResticPasswordEnvName, EnvVarEntry{StringEnv: constants.GetGlobalRepoPassword()})
-	defaults.SetEntry(constants.ResticRepositoryEnvName, EnvVarEntry{StringEnv: fmt.Sprintf("s3:%s/%s", constants.GetGlobalS3Endpoint(), constants.GetGlobalS3Bucket())})
-	defaults.SetEntry(constants.ResticPasswordEnvName, EnvVarEntry{StringEnv: constants.GetGlobalRepoPassword()})
-	defaults.SetEntry(constants.AwsAccessKeyIDEnvName, EnvVarEntry{StringEnv: constants.GetGlobalAccessKey()})
-	defaults.SetEntry(constants.AwsSecretAccessKeyEnvName, EnvVarEntry{StringEnv: constants.GetGlobalSecretAccessKey()})
-	defaults.SetEntry("HOSTNAME", EnvVarEntry{StringEnv: namespace})
+	defaults.SetString("STATS_URL", constants.GetGlobalStatsURL())
+	defaults.SetString(constants.ResticPasswordEnvName, constants.GetGlobalRepoPassword())
+	defaults.SetString(constants.ResticRepositoryEnvName, fmt.Sprintf("s3:%s/%s", constants.GetGlobalS3Endpoint(), constants.GetGlobalS3Bucket()))
+	defaults.SetString(constants.ResticPasswordEnvName, constants.GetGlobalRepoPassword())
+	defaults.SetString(constants.AwsAccessKeyIDEnvName, constants.GetGlobalAccessKey())
+	defaults.SetString(constants.AwsSecretAccessKeyEnvName, constants.GetGlobalSecretAccessKey())
+	defaults.SetString("HOSTNAME", namespace)
 
 	return defaults
 }

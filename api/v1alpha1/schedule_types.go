@@ -23,7 +23,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
-// ScheduleSpec defines the desired state of Schedule
+// ScheduleSpec defines the schedules for the various job types.
 type ScheduleSpec struct {
 	Restore  *RestoreSchedule `json:"restore,omitempty"`
 	Backup   *BackupSchedule  `json:"backup,omitempty"`

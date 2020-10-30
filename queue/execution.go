@@ -1,3 +1,7 @@
+// queue contains a priority queue for each observed repository. If an exclusive
+// executor gets add it will have the highest prio and thus handled before all
+// non exclusive executors.
+
 package queue
 
 import (
@@ -10,6 +14,7 @@ var (
 	execution *ExecutionQueue = newExecutionQueue()
 )
 
+// Executor defines an interface for the execution queue.
 type Executor interface {
 	// Triggers the actual job
 	Execute() error
@@ -36,6 +41,7 @@ func newExecutionQueue() *ExecutionQueue {
 	return &ExecutionQueue{queues: queues}
 }
 
+// Add adds an Executor to the queue.
 func (eq *ExecutionQueue) Add(exec Executor) {
 	eq.mutex.Lock()
 	defer eq.mutex.Unlock()
@@ -45,6 +51,8 @@ func (eq *ExecutionQueue) Add(exec Executor) {
 	eq.queues[exec.GetRepository()].add(exec)
 }
 
+// Get returns and removes and executor from the given repository. If the
+// queue for the repository is empty it will be removed completely.
 func (eq *ExecutionQueue) Get(repository string) Executor {
 	eq.mutex.Lock()
 	defer eq.mutex.Unlock()
@@ -55,7 +63,7 @@ func (eq *ExecutionQueue) Get(repository string) Executor {
 	return entry
 }
 
-// IsEmpty checks if the queue for the given repository is empty
+// IsEmpty checks if the queue for the given repository is empty.
 func (eq *ExecutionQueue) IsEmpty(repository string) bool {
 	eq.mutex.Lock()
 	defer eq.mutex.Unlock()
@@ -63,6 +71,7 @@ func (eq *ExecutionQueue) IsEmpty(repository string) bool {
 	return repoQueue == nil || repoQueue.Len() == 0
 }
 
+// GetExecQueue will return the queue singleton.
 func GetExecQueue() *ExecutionQueue {
 	return execution
 }

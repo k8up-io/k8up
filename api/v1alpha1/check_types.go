@@ -21,7 +21,8 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
-// CheckSpec defines the desired state of Check
+// CheckSpec defines the desired state of Check. It needs to contain the repository
+// information.
 type CheckSpec struct {
 	PromURL  string   `json:"promURL,omitempty"`
 	Backend  *Backend `json:"backend,omitempty"`

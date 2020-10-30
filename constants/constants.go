@@ -1,3 +1,7 @@
+// Constants provides constant values, either derived from the environmen variables
+// or directly hardcoded. This should be replaced by templating CRDs in the future for more
+// flexibility.
+
 package constants
 
 import (

@@ -21,6 +21,7 @@ var (
 	observer *Observer
 )
 
+// Observer handles the internal state of the observed batchv1.job objects.
 type Observer struct {
 	// events is used to send updates to the observer
 	events chan ObservableJob
@@ -30,6 +31,7 @@ type Observer struct {
 	log          logr.Logger
 }
 
+// ObservableJob defines a batchv1.job that is being observed by the Observer.
 type ObservableJob struct {
 	Job        *batchv1.Job
 	Event      EventType
@@ -38,7 +40,7 @@ type ObservableJob struct {
 	callback   func()
 }
 
-// Event describes an event for the observer
+// EventType describes an event for the observer
 type EventType string
 
 // GetObserver returns the currently active observer
@@ -102,6 +104,8 @@ func (o *Observer) run() {
 	}
 }
 
+// GetUpdateChannel returns a chan ObservableJob. This channel allows for adding
+// or updating jobs that are observed.
 func (o *Observer) GetUpdateChannel() chan ObservableJob {
 	return o.events
 }
@@ -169,6 +173,8 @@ func (o *Observer) IsAnyJobRunning(repository string) bool {
 	return false
 }
 
+// RegisterCallback will register a function to the given observed job.
+// The callback will be executed if the job is, successful, failed or deleted.
 func (o *Observer) RegisterCallback(name string, callback func()) {
 	o.mutex.Lock()
 	defer o.mutex.Unlock()

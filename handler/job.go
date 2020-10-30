@@ -17,11 +17,14 @@ const (
 	jobFinalizerName string = "k8up.syn.tools/jobobserver"
 )
 
+// JobHandler handles the reconciles for the batchv1.job objects that are
+// observed by the operator.
 type JobHandler struct {
 	job *batchv1.Job
 	job.Config
 }
 
+// NewJobHandler returns a new JobHandler.
 func NewJobHandler(config job.Config, job *batchv1.Job) *JobHandler {
 	return &JobHandler{
 		job:    job,
@@ -29,6 +32,8 @@ func NewJobHandler(config job.Config, job *batchv1.Job) *JobHandler {
 	}
 }
 
+// Handle extracts some information from the batchv1.job that make observations
+// easier.
 func (j *JobHandler) Handle() error {
 
 	jobEvent := observer.Create

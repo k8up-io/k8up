@@ -19,6 +19,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+// BackupExecutor creates a batch.job object on the cluster. It merges all the
+// information provided by defaults and the CRDs to ensure the backup has all information to run.
 type BackupExecutor struct {
 	generic
 	backup *k8upv1alpha1.Backup
@@ -30,12 +32,16 @@ type serviceAccount struct {
 	account     *corev1.ServiceAccount
 }
 
+// NewBackupExecutor returns a new BackupExecutor.
 func NewBackupExecutor(config job.Config) *BackupExecutor {
 	return &BackupExecutor{
 		generic: generic{config},
 	}
 }
 
+// Execute triggers the actual batch.job creation on the cluster. It will also register
+// a callback function on the observer so the prebackup pods can be removed after the backup
+// has finished.
 func (b *BackupExecutor) Execute() error {
 
 	backupObject, ok := b.Obj.(*k8upv1alpha1.Backup)
@@ -188,6 +194,8 @@ func (b *BackupExecutor) cleanupOldBackups(name types.NamespacedName) {
 	}
 	jobs := make(jobObjectList, 0)
 	for _, backup := range backupList.Items {
+		// Avoid exportloopref
+		backup := backup
 		jobs = append(jobs, &backup)
 	}
 	var keepJobs *int = nil
@@ -289,16 +297,16 @@ func (b *BackupExecutor) setupEnvVars() []corev1.EnvVar {
 	if b.backup != nil {
 		if b.backup.Spec.Backend != nil {
 			for key, value := range b.backup.Spec.Backend.GetCredentialEnv() {
-				vars.SetEntry(key, EnvVarEntry{EnvVarSource: value})
+				vars.SetEnvVarSource(key, value)
 			}
-			vars.SetEntry(constants.ResticRepositoryEnvName, EnvVarEntry{StringEnv: b.backup.Spec.Backend.String()})
+			vars.SetString(constants.ResticRepositoryEnvName, b.backup.Spec.Backend.String())
 		}
 	}
 
-	vars.SetEntry("STATS_URL", EnvVarEntry{StringEnv: constants.GetGlobalStatsURL()})
-	vars.SetEntry("PROM_URL", EnvVarEntry{StringEnv: constants.GetPromURL()})
-	vars.SetEntry("BACKUPCOMMAND_ANNOTATION", EnvVarEntry{StringEnv: constants.GetBackupCommandAnnotation()})
-	vars.SetEntry("FILEEXTENSION_ANNOTATION", EnvVarEntry{StringEnv: constants.GetFileExtensionAnnotation()})
+	vars.SetString("STATS_URL", constants.GetGlobalStatsURL())
+	vars.SetString("PROM_URL", constants.GetPromURL())
+	vars.SetString("BACKUPCOMMAND_ANNOTATION", constants.GetBackupCommandAnnotation())
+	vars.SetString("FILEEXTENSION_ANNOTATION", constants.GetFileExtensionAnnotation())
 
 	err := vars.Merge(DefaultEnv(b.Obj.GetMetaObject().GetNamespace()))
 	if err != nil {

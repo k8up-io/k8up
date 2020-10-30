@@ -14,12 +14,15 @@ var (
 	worker *QueueWorker
 )
 
+// QueueWorker is the object responsible for iterating the job queue and triggering
+// the execution of the jobs.
 type QueueWorker struct {
 	// trigger is used to trigger an execution loop. So we don't need to poll
 	// the whole time.
 	trigger chan bool
 }
 
+// GetExecutor will return the singleton instance for the executor.
 func GetExecutor() *QueueWorker {
 	if worker == nil {
 		worker = &QueueWorker{trigger: make(chan bool)}

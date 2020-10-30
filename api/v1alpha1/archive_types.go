@@ -21,12 +21,12 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
-// ArchiveSpec defines the desired state of Archive
+// ArchiveSpec defines the desired state of Archive.
 type ArchiveSpec struct {
 	*RestoreSpec `json:",inline"`
 }
 
-// ArchiveStatus defines the observed state of Archive
+// ArchiveStatus defines the observed state of Archive.
 type ArchiveStatus struct {
 	K8upStatus `json:",inline"`
 }

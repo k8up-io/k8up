@@ -21,6 +21,9 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
+// BackupSpec defines a single backup. It must contain all inforomation to connect to
+// the backup repository when applied. If used with defaults or schedules the operator will
+// ensure that the defaults are applied before creating the object on the API.
 type BackupSpec struct {
 	// Backend contains the restic repo where the job should backup to.
 	Backend *Backend `json:"backend,omitempty"`
@@ -53,7 +56,8 @@ type BackupStatus struct {
 	K8upStatus `json:",inline"`
 }
 
-// K8upStatus defines the observed state of a generic K8up job
+// K8upStatus defines the observed state of a generic K8up job. It is used for the
+// operator to determine what to do.
 type K8upStatus struct {
 	Started   bool `json:"started,omitempty"`
 	Finished  bool `json:"finished,omitempty"`

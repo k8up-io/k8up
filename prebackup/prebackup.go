@@ -21,16 +21,20 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
+// PreBackup defines a preBackup.
 type PreBackup struct {
 	job.Config
 }
 
+// NewPrebackup returns a new PreBackup. Although it is not a direct job that is being
+// triggered, it takes the same config type as the other job types.
 func NewPrebackup(config job.Config) *PreBackup {
 	return &PreBackup{
 		Config: config,
 	}
 }
 
+// Start will start the defined pods as deployments.
 func (p *PreBackup) Start() error {
 
 	templates, err := p.getPodTemplates()
@@ -109,6 +113,9 @@ func (p *PreBackup) startAndWaitForReady(deployments []appsv1.Deployment) error 
 
 	for _, deployment := range deployments {
 		p.Log.Info("starting pre backup pod", "namespace", deployment.GetNamespace(), "name", deployment.GetName())
+
+		// Avoid exportloopref
+		deployment := deployment
 
 		err := p.Client.Create(p.CTX, &deployment)
 		if err != nil {
@@ -210,6 +217,7 @@ func (p *PreBackup) getLastDeploymentCondition(deployment *appsv1.Deployment) *a
 	return nil
 }
 
+// Stop will remove the deployments.
 func (p *PreBackup) Stop() {
 
 	templates, err := p.getPodTemplates()
@@ -223,6 +231,8 @@ func (p *PreBackup) Stop() {
 	option := metav1.DeletePropagationForeground
 
 	for _, deployment := range deployments {
+		// Avoid exportloopref
+		deployment := deployment
 		p.Log.Info("removing prebackup pod", "name", deployment.GetName(), "namespace", namespace)
 		err := p.Client.Delete(p.CTX, &deployment, &client.DeleteOptions{
 			PropagationPolicy: &option,
