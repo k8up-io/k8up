@@ -6,9 +6,9 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.3.0
   creationTimestamp: null
-  name: snapshots.k8up.syn.tools
+  name: snapshots.backup.appuio.ch
 spec:
-  group: k8up.syn.tools
+  group: backup.appuio.ch
   names:
     kind: Snapshot
     listKind: SnapshotList
@@ -34,7 +34,8 @@ spec:
         metadata:
           type: object
         spec:
-          description: SnapshotSpec defines the desired state of Snapshot
+          description: SnapshotSpec contains all information needed about a restic
+            snapshot so it can be restored.
           properties:
             date:
               format: date-time

@@ -1,4 +1,4 @@
-apiVersion: k8up.syn.tools/v1alpha1
+apiVersion: backup.appuio.ch/v1alpha1
 kind: PreBackupPods
 metadata:
   name: prebackuppods-sample

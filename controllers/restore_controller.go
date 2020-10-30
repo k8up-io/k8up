@@ -34,8 +34,8 @@ type RestoreReconciler struct {
 	Scheme *runtime.Scheme
 }
 
-// +kubebuilder:rbac:groups=k8up.syn.tools,resources=restores,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=k8up.syn.tools,resources=restores/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=backup.appuio.ch,resources=restores,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=backup.appuio.ch,resources=restores/status,verbs=get;update;patch
 
 func (r *RestoreReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	_ = context.Background()

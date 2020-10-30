@@ -34,8 +34,8 @@ type PruneReconciler struct {
 	Scheme *runtime.Scheme
 }
 
-// +kubebuilder:rbac:groups=k8up.syn.tools,resources=prunes,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=k8up.syn.tools,resources=prunes/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=backup.appuio.ch,resources=prunes,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=backup.appuio.ch,resources=prunes/status,verbs=get;update;patch
 
 func (r *PruneReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	_ = context.Background()

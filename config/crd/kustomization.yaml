@@ -2,14 +2,14 @@
 # since it depends on service name and namespace that are out of this kustomize package.
 # It should be run by config/default
 resources:
-- bases/k8up.syn.tools_schedules.yaml
-- bases/k8up.syn.tools_backups.yaml
-- bases/k8up.syn.tools_restores.yaml
-- bases/k8up.syn.tools_archives.yaml
-- bases/k8up.syn.tools_checks.yaml
-- bases/k8up.syn.tools_prunes.yaml
-- bases/k8up.syn.tools_snapshots.yaml
-- bases/k8up.syn.tools_prebackuppods.yaml
+- bases/backup.appuio.ch_schedules.yaml
+- bases/backup.appuio.ch_backups.yaml
+- bases/backup.appuio.ch_restores.yaml
+- bases/backup.appuio.ch_archives.yaml
+- bases/backup.appuio.ch_checks.yaml
+- bases/backup.appuio.ch_prunes.yaml
+- bases/backup.appuio.ch_snapshots.yaml
+- bases/backup.appuio.ch_prebackuppods.yaml
 # +kubebuilder:scaffold:crdkustomizeresource
 
 patchesStrategicMerge:

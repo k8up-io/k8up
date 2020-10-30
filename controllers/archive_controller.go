@@ -34,8 +34,8 @@ type ArchiveReconciler struct {
 	Scheme *runtime.Scheme
 }
 
-// +kubebuilder:rbac:groups=k8up.syn.tools,resources=archives,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=k8up.syn.tools,resources=archives/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=backup.appuio.ch,resources=archives,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=backup.appuio.ch,resources=archives/status,verbs=get;update;patch
 
 func (r *ArchiveReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	_ = context.Background()

@@ -7,6 +7,126 @@ metadata:
   name: manager-role
 rules:
 - apiGroups:
+  - backup.appuio.ch
+  resources:
+  - archives
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - backup.appuio.ch
+  resources:
+  - archives/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - backup.appuio.ch
+  resources:
+  - backups
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - backup.appuio.ch
+  resources:
+  - backups/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - backup.appuio.ch
+  resources:
+  - checks
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - backup.appuio.ch
+  resources:
+  - checks/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - backup.appuio.ch
+  resources:
+  - prunes
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - backup.appuio.ch
+  resources:
+  - prunes/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - backup.appuio.ch
+  resources:
+  - restores
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - backup.appuio.ch
+  resources:
+  - restores/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - backup.appuio.ch
+  resources:
+  - schedules
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - backup.appuio.ch
+  resources:
+  - schedules/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
   - batch
   resources:
   - jobs
@@ -33,123 +153,3 @@ rules:
   verbs:
   - get
   - list
-- apiGroups:
-  - k8up.syn.tools
-  resources:
-  - archives
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - k8up.syn.tools
-  resources:
-  - archives/status
-  verbs:
-  - get
-  - patch
-  - update
-- apiGroups:
-  - k8up.syn.tools
-  resources:
-  - backups
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - k8up.syn.tools
-  resources:
-  - backups/status
-  verbs:
-  - get
-  - patch
-  - update
-- apiGroups:
-  - k8up.syn.tools
-  resources:
-  - checks
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - k8up.syn.tools
-  resources:
-  - checks/status
-  verbs:
-  - get
-  - patch
-  - update
-- apiGroups:
-  - k8up.syn.tools
-  resources:
-  - prunes
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - k8up.syn.tools
-  resources:
-  - prunes/status
-  verbs:
-  - get
-  - patch
-  - update
-- apiGroups:
-  - k8up.syn.tools
-  resources:
-  - restores
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - k8up.syn.tools
-  resources:
-  - restores/status
-  verbs:
-  - get
-  - patch
-  - update
-- apiGroups:
-  - k8up.syn.tools
-  resources:
-  - schedules
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - k8up.syn.tools
-  resources:
-  - schedules/status
-  verbs:
-  - get
-  - patch
-  - update

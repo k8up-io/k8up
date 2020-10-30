@@ -38,8 +38,8 @@ type CheckReconciler struct {
 	Scheme *runtime.Scheme
 }
 
-// +kubebuilder:rbac:groups=k8up.syn.tools,resources=checks,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=k8up.syn.tools,resources=checks/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=backup.appuio.ch,resources=checks,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=backup.appuio.ch,resources=checks/status,verbs=get;update;patch
 
 func (r *CheckReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	ctx := context.Background()

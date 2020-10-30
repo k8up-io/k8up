@@ -6,9 +6,9 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.3.0
   creationTimestamp: null
-  name: prebackuppods.k8up.syn.tools
+  name: prebackuppods.backup.appuio.ch
 spec:
-  group: k8up.syn.tools
+  group: backup.appuio.ch
   names:
     kind: PreBackupPod
     listKind: PreBackupPodList
@@ -34,7 +34,9 @@ spec:
         metadata:
           type: object
         spec:
-          description: PreBackupPodSpec defines the desired state of PreBackupPod
+          description: PreBackupPodSpec define pods that will be launched during the
+            backup. After the backup has finished (successfully or not), they should
+            be removed again automatically by the operator.
           properties:
             backupCommand:
               description: BackupCommand will be added to the backupcommand annotation
