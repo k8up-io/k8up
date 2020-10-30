@@ -25,7 +25,7 @@ type BackupSpec struct {
 	// Backend contains the restic repo where the job should backup to.
 	Backend *Backend `json:"backend,omitempty"`
 	// KeepJobs amount of jobs to keep for later analysis
-	KeepJobs int `json:"keepJobs,omitempty"`
+	KeepJobs *int `json:"keepJobs,omitempty"`
 
 	// PromURL sets a prometheus push URL where the backup container send metrics to
 	// +optional

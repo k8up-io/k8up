@@ -29,7 +29,7 @@ type RestoreSpec struct {
 	RestoreMethod *RestoreMethod `json:"restoreMethod,omitempty"`
 	RestoreFilter string         `json:"restoreFilter,omitempty"`
 	Snapshot      string         `json:"snapshot,omitempty"`
-	KeepJobs      int            `json:"keepJobs,omitempty"`
+	KeepJobs      *int           `json:"keepJobs,omitempty"`
 	// Tags is a list of arbitrary tags that get added to the backup via Restic's tagging system
 	Tags []string `json:"tags,omitempty"`
 }

@@ -5,5 +5,5 @@ metadata:
 spec:
   backup:
     schedule: '* * * * *'
-  archive:
-    schedule: '* * * * *'
+  # archive:
+  #   schedule: '* * * * *'

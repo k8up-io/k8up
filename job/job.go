@@ -5,6 +5,7 @@ import (
 
 	"github.com/go-logr/logr"
 	k8upv1alpha1 "github.com/vshn/k8up/api/v1alpha1"
+	"github.com/vshn/k8up/constants"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -14,7 +15,6 @@ import (
 )
 
 const (
-	defaultImage  = "busybox"
 	K8uplabel     = "k8upjob"
 	K8upExclusive = "k8upjob/exclusive"
 )
@@ -61,11 +61,7 @@ func GetGenericJob(obj Object, config Config) (*batchv1.Job, error) {
 					Containers: []corev1.Container{
 						{
 							Name:  obj.GetMetaObject().GetName(),
-							Image: defaultImage,
-							Command: []string{
-								"sleep",
-								"30",
-							},
+							Image: constants.GetBackupImage(),
 						},
 					},
 				},

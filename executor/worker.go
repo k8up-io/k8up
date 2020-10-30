@@ -60,6 +60,12 @@ func (qe *QueueWorker) loopRepositoryJobs(repository string) {
 					job.Logger().Error(err, "cannot create job", "repository", repository)
 				}
 			}
+
+			// Skip the rest for this repository if we just started an exclusive
+			// job.
+			if job.Exclusive() {
+				return
+			}
 		}
 	}
 }

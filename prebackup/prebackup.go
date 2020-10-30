@@ -64,8 +64,8 @@ func (p *PreBackup) generateDeployments(templates *k8upv1alpha1.PreBackupPodList
 	for _, template := range templates.Items {
 
 		template.Spec.Pod.PodTemplateSpec.ObjectMeta.Annotations = map[string]string{
-			constants.BackupCommandAnnotationDefault: template.Spec.BackupCommand,
-			constants.FileExtensionAnnotationDefault: template.Spec.FileExtension,
+			constants.GetBackupCommandAnnotation(): template.Spec.BackupCommand,
+			constants.GetFileExtensionAnnotation(): template.Spec.FileExtension,
 		}
 
 		podLabels := map[string]string{

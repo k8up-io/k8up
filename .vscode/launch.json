@@ -10,7 +10,14 @@
       "request": "launch",
       "mode": "auto",
       "program": "${workspaceFolder}/main.go",
-      "env": {},
+      "env": {
+        "BACKUP_IMAGE": "vshn/wrestic:v0.2.0",
+        "BACKUP_GLOBALS3ENDPOINT": "http://192.168.5.195:9000",
+        "BACKUP_GLOBALS3BUCKET": "baas",
+        "BACKUP_GLOBALSECRETACCESSKEY": "ip3cdrkXcHmH4S7if7erKPNoxDn27V0vrg6CHHem",
+        "BACKUP_GLOBALACCESSKEYID": "8U0UDNYPNUDTUS1LIAF3",
+        "BACKUP_GLOBALREPOPASSWORD": "password",
+      },
       "args": []
     }
   ]

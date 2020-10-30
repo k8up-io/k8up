@@ -26,7 +26,7 @@ type PruneSpec struct {
 	// Retention sets how many backups should be kept after a forget and prune
 	Retention RetentionPolicy `json:"retention,omitempty"`
 	Backend   *Backend        `json:"backend,omitempty"`
-	KeepJobs  int             `json:"keepJobs,omitempty"`
+	KeepJobs  *int            `json:"keepJobs,omitempty"`
 }
 
 type RetentionPolicy struct {

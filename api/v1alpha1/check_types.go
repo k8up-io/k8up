@@ -25,7 +25,7 @@ import (
 type CheckSpec struct {
 	PromURL  string   `json:"promURL,omitempty"`
 	Backend  *Backend `json:"backend,omitempty"`
-	KeepJobs int      `json:"keepJobs,omitempty"`
+	KeepJobs *int     `json:"keepJobs,omitempty"`
 }
 
 // CheckStatus defines the observed state of Check
