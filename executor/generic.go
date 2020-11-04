@@ -117,6 +117,8 @@ func NewExecutor(config job.Config) queue.Executor {
 		return NewCheckExecutor(config)
 	case "archive":
 		return NewArchiveExecutor(config)
+	case "prune":
+		return NewPruneExecutor(config)
 	}
 	return nil
 }
@@ -137,7 +139,6 @@ func DefaultEnv(namespace string) EnvVarConverter {
 }
 
 func cleanOldObjects(jobObjects jobObjectList, maxObjects int, config job.Config) error {
-
 	numToDelete := len(jobObjects) - maxObjects
 
 	if numToDelete <= 0 {
