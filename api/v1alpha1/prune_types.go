@@ -30,6 +30,16 @@ type PruneSpec struct {
 	KeepJobs  *int            `json:"keepJobs,omitempty"`
 }
 
+func (p PruneSpec) CreateObject(name, namespace string) runtime.Object {
+	return &Prune{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+		},
+		Spec: p,
+	}
+}
+
 type RetentionPolicy struct {
 	KeepLast    int      `json:"keepLast,omitempty"`
 	KeepHourly  int      `json:"keepHourly,omitempty"`
@@ -47,6 +57,7 @@ type RetentionPolicy struct {
 
 // PruneStatus defines the observed state of Prune
 type PruneStatus struct {
+	K8upStatus `json:",inline"`
 }
 
 // +kubebuilder:object:root=true
@@ -61,6 +72,22 @@ type Prune struct {
 	Status PruneStatus `json:"status,omitempty"`
 }
 
+func (b *Prune) GetRuntimeObject() runtime.Object {
+	return b
+}
+
+func (b *Prune) GetMetaObject() metav1.Object {
+	return b
+}
+
+func (*Prune) GetType() string {
+	return "prune"
+}
+
+func (b *Prune) GetK8upStatus() *K8upStatus {
+	return &b.Status.K8upStatus
+}
+
 // +kubebuilder:object:root=true
 
 // PruneList contains a list of Prune
@@ -72,14 +99,4 @@ type PruneList struct {
 
 func init() {
 	SchemeBuilder.Register(&Prune{}, &PruneList{})
-}
-
-func (p PruneSpec) CreateObject(name, namespace string) runtime.Object {
-	return &Prune{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: namespace,
-		},
-		Spec: p,
-	}
 }
