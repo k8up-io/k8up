@@ -135,7 +135,6 @@ func DefaultEnv(namespace string) EnvVarConverter {
 }
 
 func cleanOldObjects(jobObjects jobObjectList, maxObjects int, config job.Config) error {
-
 	numToDelete := len(jobObjects) - maxObjects
 
 	if numToDelete <= 0 {
