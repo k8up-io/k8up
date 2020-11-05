@@ -115,6 +115,8 @@ func NewExecutor(config job.Config) queue.Executor {
 		return NewBackupExecutor(config)
 	case "check":
 		return NewCheckExecutor(config)
+	case "prune":
+		return NewPruneExecutor(config)
 	}
 	return nil
 }
