@@ -81,7 +81,7 @@ func GetExecQueue() *ExecutionQueue {
 func (eq *ExecutionQueue) GetRepositories() []string {
 	eq.mutex.Lock()
 	defer eq.mutex.Unlock()
-	repositories := make([]string, len(execution.queues))
+	repositories := make([]string, 0, len(execution.queues))
 	for repository := range execution.queues {
 		repositories = append(repositories, repository)
 	}
