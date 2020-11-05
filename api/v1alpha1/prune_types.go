@@ -72,20 +72,20 @@ type Prune struct {
 	Status PruneStatus `json:"status,omitempty"`
 }
 
-func (b *Prune) GetRuntimeObject() runtime.Object {
-	return b
+func (p *Prune) GetRuntimeObject() runtime.Object {
+	return p
 }
 
-func (b *Prune) GetMetaObject() metav1.Object {
-	return b
+func (p *Prune) GetMetaObject() metav1.Object {
+	return p
 }
 
-func (*Prune) GetType() string {
+func (p *Prune) GetType() string {
 	return "prune"
 }
 
-func (b *Prune) GetK8upStatus() *K8upStatus {
-	return &b.Status.K8upStatus
+func (p *Prune) GetK8upStatus() *K8upStatus {
+	return &p.Status.K8upStatus
 }
 
 // +kubebuilder:object:root=true

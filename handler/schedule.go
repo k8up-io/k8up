@@ -98,6 +98,13 @@ func (s *ScheduleHandler) createJobList() scheduler.JobList {
 			Object:   s.schedule.Spec.Restore.RestoreSpec,
 		})
 	}
+	if s.schedule.Spec.Prune != nil {
+		jobList.Jobs = append(jobList.Jobs, scheduler.Job{
+			Type:     scheduler.PruneType,
+			Schedule: s.schedule.Spec.Prune.Schedule,
+			Object:   s.schedule.Spec.Prune.PruneSpec,
+		})
+	}
 
 	return jobList
 }

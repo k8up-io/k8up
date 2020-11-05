@@ -48,7 +48,6 @@ func (r *ScheduleReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	schedule := &k8upv1alpha1.Schedule{}
 	err := r.Client.Get(ctx, req.NamespacedName, schedule)
 	if err != nil {
-
 		if errors.IsNotFound(err) {
 			return reconcile.Result{}, nil
 		}

@@ -75,9 +75,12 @@ func (p *PruneExecutor) startPrune(job *batchv1.Job) {
 			return
 		}
 	}
-	p.Obj.GetK8upStatus().Started = true
 
-	err = p.Client.Status().Update(p.CTX, p.Obj.GetRuntimeObject().DeepCopyObject())
+	original := p.Obj
+	new := p.Obj.GetRuntimeObject().DeepCopyObject().(*k8upv1alpha1.Prune)
+	new.GetK8upStatus().Started = true
+
+	err = p.Client.Status().Patch(p.CTX, new, client.MergeFrom(original.GetRuntimeObject()))
 	if err != nil {
 		p.Log.Error(err, "could not update prune status")
 	}
