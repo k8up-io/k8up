@@ -29,7 +29,7 @@ func NewPruneExecutor(config job.Config) *PruneExecutor {
 	}
 }
 
-// Execute creates the actualy batch.job on the k8s api.
+// Execute creates the actual batch.job on the k8s api.
 func (p *PruneExecutor) Execute() error {
 	pruneObject, ok := p.Obj.(*k8upv1alpha1.Prune)
 	if !ok {
