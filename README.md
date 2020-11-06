@@ -79,7 +79,7 @@ Example VSCode run configuration:
 }
 ```
 
-Best is if you have [minio](https://min.io/download) installed somewhere to be able to setup the needed env values.
+Best is if you have [minio](https://min.io/download) installed somewhere to be able to setup the needed env values. It needs to be reachable from within your dev cluster.
 
 ## Example configurations
 
