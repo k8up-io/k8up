@@ -115,6 +115,8 @@ func NewExecutor(config job.Config) queue.Executor {
 		return NewBackupExecutor(config)
 	case "check":
 		return NewCheckExecutor(config)
+	case "archive":
+		return NewArchiveExecutor(config)
 	}
 	return nil
 }
@@ -165,4 +167,13 @@ func getKeepJobs(keepJobs *int) int {
 		return constants.GetGlobalKeepJobs()
 	}
 	return *keepJobs
+}
+
+// BuildTagArgs will prepend "--tag " to every element in the given []string
+func BuildTagArgs(tagList []string) []string {
+	var args []string
+	for i := range tagList {
+		args = append(args, "--tag", tagList[i])
+	}
+	return args
 }
