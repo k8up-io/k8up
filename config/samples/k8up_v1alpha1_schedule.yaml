@@ -1,0 +1,9 @@
+apiVersion: backup.appuio.ch/v1alpha1
+kind: Schedule
+metadata:
+  name: schedule-sample
+spec:
+  backup:
+    schedule: '* * * * *'
+  # archive:
+  #   schedule: '* * * * *'

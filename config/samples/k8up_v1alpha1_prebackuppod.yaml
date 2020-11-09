@@ -1,0 +1,7 @@
+apiVersion: backup.appuio.ch/v1alpha1
+kind: PreBackupPod
+metadata:
+  name: prebackuppod-sample
+spec:
+  # Add fields here
+  foo: bar

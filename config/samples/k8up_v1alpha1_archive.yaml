@@ -1,0 +1,7 @@
+apiVersion: backup.appuio.ch/v1alpha1
+kind: Archive
+metadata:
+  name: archive-sample
+spec:
+  # Add fields here
+  foo: bar

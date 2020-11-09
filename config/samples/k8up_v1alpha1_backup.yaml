@@ -1,0 +1,6 @@
+apiVersion: backup.appuio.ch/v1alpha1
+kind: Backup
+metadata:
+  name: backup-sample
+spec:
+  test: hello
