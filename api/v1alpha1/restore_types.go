@@ -35,6 +35,16 @@ type RestoreSpec struct {
 	Tags []string `json:"tags,omitempty"`
 }
 
+func (r RestoreSpec) CreateObject(name, namespace string) runtime.Object {
+	return &Restore{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+		},
+		Spec: r,
+	}
+}
+
 // RestoreMethod contains how and where the restore should happen
 // all the settings are mutual exclusive.
 type RestoreMethod struct {
@@ -63,6 +73,22 @@ type Restore struct {
 	Status RestoreStatus `json:"status,omitempty"`
 }
 
+func (r *Restore) GetRuntimeObject() runtime.Object {
+	return r
+}
+
+func (r *Restore) GetMetaObject() metav1.Object {
+	return r
+}
+
+func (r *Restore) GetType() string {
+	return "restore"
+}
+
+func (r *Restore) GetK8upStatus() *K8upStatus {
+	return &r.Status.K8upStatus
+}
+
 // +kubebuilder:object:root=true
 
 // RestoreList contains a list of Restore
@@ -74,14 +100,4 @@ type RestoreList struct {
 
 func init() {
 	SchemeBuilder.Register(&Restore{}, &RestoreList{})
-}
-
-func (r RestoreSpec) CreateObject(name, namespace string) runtime.Object {
-	return &Restore{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: namespace,
-		},
-		Spec: r,
-	}
 }
