@@ -2,6 +2,9 @@
 ### Example user template template
 ### Example user template
 
+# VSCode configs
+.vscode/
+
 # IntelliJ project files
 .idea
 *.iml
