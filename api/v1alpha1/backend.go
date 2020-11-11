@@ -125,6 +125,24 @@ func (s *S3Spec) EnvVars(vars map[string]*corev1.EnvVarSource) map[string]*corev
 	return vars
 }
 
+func (s *S3Spec) RestoreEnvVars() map[string]*corev1.EnvVarSource {
+	vars := make(map[string]*corev1.EnvVarSource)
+
+	if s.AccessKeyIDSecretRef != nil {
+		vars[constants.RestoreS3AccessKeyIDEnvName] = &corev1.EnvVarSource{
+			SecretKeyRef: s.AccessKeyIDSecretRef,
+		}
+	}
+
+	if s.SecretAccessKeySecretRef != nil {
+		vars[constants.RestoreS3SecretAccessKeyEnvName] = &corev1.EnvVarSource{
+			SecretKeyRef: s.SecretAccessKeySecretRef,
+		}
+	}
+
+	return vars
+}
+
 type GCSSpec struct {
 	Bucket               string                    `json:"bucket,omitempty"`
 	ProjectIDSecretRef   *corev1.SecretKeySelector `json:"projectIDSecretRef,omitempty"`

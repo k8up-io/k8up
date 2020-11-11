@@ -2,8 +2,10 @@ package executor
 
 import (
 	stderrors "errors"
+	"fmt"
 
 	k8upv1alpha1 "github.com/vshn/k8up/api/v1alpha1"
+	"github.com/vshn/k8up/constants"
 	"github.com/vshn/k8up/job"
 	"github.com/vshn/k8up/observer"
 	batchv1 "k8s.io/api/batch/v1"
@@ -12,6 +14,8 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
+
+const archivePath = "/archive"
 
 // ArchiveExecutor will execute the batch.job for archive.
 type ArchiveExecutor struct {
@@ -98,10 +102,17 @@ func (a *ArchiveExecutor) setupEnvVars(archive *k8upv1alpha1.Archive) []corev1.E
 
 	if archive.Spec.RestoreSpec != nil && archive.Spec.RestoreSpec.RestoreMethod != nil {
 		if archive.Spec.RestoreSpec.RestoreMethod.S3 != nil {
-			rVars := archive.Spec.RestoreSpec.RestoreMethod.S3.EnvVars(archive.Spec.RestoreSpec.Backend.GetCredentialEnv())
-			for key, value := range rVars {
+			for key, value := range archive.Spec.RestoreSpec.RestoreMethod.S3.RestoreEnvVars() {
 				vars.SetEnvVarSource(key, value)
 			}
+			ev := fmt.Sprintf("%v/%v", getS3EndpointValue(archive), getS3BucketValue(archive))
+			vars.SetString(constants.RestoreS3EndpointEnvName, ev)
+		}
+	}
+
+	if archive.Spec.RestoreSpec != nil && archive.Spec.RestoreSpec.RestoreMethod != nil {
+		if archive.Spec.RestoreSpec.RestoreMethod.Folder != nil {
+			vars.SetString("RESTORE_DIR", archivePath)
 		}
 	}
 
@@ -133,4 +144,24 @@ func (a *ArchiveExecutor) cleanupOldArchives(name types.NamespacedName, archive 
 	if err != nil {
 		a.Log.Error(err, "could not delete old archives", "namespace", name.Namespace)
 	}
+}
+
+func getS3EndpointValue(archive *k8upv1alpha1.Archive) string {
+	v := archive.Spec.RestoreSpec.RestoreMethod.S3.Endpoint
+
+	if v == "" {
+		v = constants.GetGlobalRestoreS3Endpoint()
+	}
+
+	return v
+}
+
+func getS3BucketValue(archive *k8upv1alpha1.Archive) string {
+	v := archive.Spec.RestoreSpec.RestoreMethod.S3.Bucket
+
+	if v == "" {
+		v = constants.GetGlobalRestoreS3Bucket()
+	}
+
+	return v
 }
