@@ -125,19 +125,43 @@ func (s *S3Spec) EnvVars(vars map[string]*corev1.EnvVarSource) map[string]*corev
 	return vars
 }
 
-func (s *S3Spec) RestoreEnvVars() map[string]*corev1.EnvVarSource {
-	vars := make(map[string]*corev1.EnvVarSource)
-
+func (s *S3Spec) RestoreEnvVars() map[string]*corev1.EnvVar {
+	vars := make(map[string]*corev1.EnvVar)
 	if s.AccessKeyIDSecretRef != nil {
-		vars[constants.RestoreS3AccessKeyIDEnvName] = &corev1.EnvVarSource{
-			SecretKeyRef: s.AccessKeyIDSecretRef,
+		vars[constants.RestoreS3AccessKeyIDEnvName] = &corev1.EnvVar{
+			ValueFrom: &corev1.EnvVarSource{
+				SecretKeyRef: s.AccessKeyIDSecretRef,
+			},
+		}
+	} else {
+		vars[constants.RestoreS3AccessKeyIDEnvName] = &corev1.EnvVar{
+			Value: constants.GetGlobalRestoreS3AccessKey(),
 		}
 	}
 
 	if s.SecretAccessKeySecretRef != nil {
-		vars[constants.RestoreS3SecretAccessKeyEnvName] = &corev1.EnvVarSource{
-			SecretKeyRef: s.SecretAccessKeySecretRef,
+		vars[constants.RestoreS3SecretAccessKeyEnvName] = &corev1.EnvVar{
+			ValueFrom: &corev1.EnvVarSource{
+				SecretKeyRef: s.SecretAccessKeySecretRef,
+			},
 		}
+	} else {
+		vars[constants.RestoreS3SecretAccessKeyEnvName] = &corev1.EnvVar{
+			Value: constants.GetGlobalRestoreS3SecretAccessKey(),
+		}
+	}
+
+	bucket := s.Bucket
+	endpoint := s.Endpoint
+	if bucket == "" {
+		bucket = constants.GetGlobalRestoreS3Bucket()
+	}
+	if endpoint == "" {
+		endpoint = constants.GetGlobalRestoreS3Endpoint()
+	}
+
+	vars[constants.RestoreS3EndpointEnvName] = &corev1.EnvVar{
+		Value: fmt.Sprintf("%v/%v", endpoint, bucket),
 	}
 
 	return vars

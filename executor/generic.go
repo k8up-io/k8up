@@ -119,6 +119,8 @@ func NewExecutor(config job.Config) queue.Executor {
 		return NewArchiveExecutor(config)
 	case "prune":
 		return NewPruneExecutor(config)
+	case "restore":
+		return NewRestoreExecutor(config)
 	}
 	return nil
 }
