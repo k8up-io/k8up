@@ -2,7 +2,6 @@ package executor
 
 import (
 	stderrors "errors"
-	"fmt"
 
 	k8upv1alpha1 "github.com/vshn/k8up/api/v1alpha1"
 	"github.com/vshn/k8up/constants"
@@ -101,12 +100,13 @@ func (a *ArchiveExecutor) setupEnvVars(archive *k8upv1alpha1.Archive) []corev1.E
 	vars := NewEnvVarConverter()
 
 	if archive.Spec.RestoreSpec != nil && archive.Spec.RestoreSpec.RestoreMethod != nil {
-		if archive.Spec.RestoreSpec.RestoreMethod.S3 != nil {
-			for key, value := range archive.Spec.RestoreSpec.RestoreMethod.S3.RestoreEnvVars() {
-				vars.SetEnvVarSource(key, value)
+		for key, value := range archive.Spec.RestoreMethod.S3.RestoreEnvVars() {
+			// FIXME(mw): ugly, due to EnvVarConverter()
+			if value.Value != "" {
+				vars.SetString(key, value.Value)
+			} else {
+				vars.SetEnvVarSource(key, value.ValueFrom)
 			}
-			ev := fmt.Sprintf("%v/%v", getS3EndpointValue(archive), getS3BucketValue(archive))
-			vars.SetString(constants.RestoreS3EndpointEnvName, ev)
 		}
 	}
 
