@@ -3,5 +3,6 @@ kind: Prune
 metadata:
   name: prune-sample
 spec:
-  # Add fields here
-  foo: bar
+  retention:
+    keepLast: 5
+    keepDaily: 14
