@@ -8,11 +8,14 @@ import (
 	"sync"
 	"time"
 
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/robfig/cron/v3"
 	"github.com/vshn/k8up/job"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+	"sigs.k8s.io/controller-runtime/pkg/metrics"
 )
 
 const (
@@ -25,6 +28,13 @@ const (
 
 var (
 	scheduler *Scheduler
+
+	scheduleCount = promauto.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "k8up_schedules_gauge",
+		Help: "How many schedules this k8up manages",
+	}, []string{
+		"namespace",
+	})
 )
 
 // ObjectCreator defines an interface that each schedulable job must implement.
@@ -55,6 +65,11 @@ type Scheduler struct {
 	cron                *cron.Cron
 	registeredSchedules map[string][]int
 	mutex               sync.Mutex
+}
+
+func init() {
+	// Register custom metrics with the global prometheus registry
+	metrics.Registry.MustRegister(scheduleCount)
 }
 
 // GetScheduler returns the scheduler singleton instance.
@@ -109,17 +124,20 @@ func (s *Scheduler) AddSchedules(jobs JobList) error {
 
 	s.registeredSchedules[namespacedName.String()] = jobIDs
 
+	s.incRegisteredSchedules(namespacedName.Namespace)
 	return nil
 }
 
-// RemoveSchedules will remove the schedules with the fiven name.
-func (s *Scheduler) RemoveSchedules(name string) {
+// RemoveSchedules will remove the schedules with the given types.NamespacedName.
+func (s *Scheduler) RemoveSchedules(namespacedName types.NamespacedName) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
-	for _, id := range s.registeredSchedules[name] {
+	for _, id := range s.registeredSchedules[namespacedName.String()] {
 		s.cron.Remove(cron.EntryID(id))
 	}
-	delete(s.registeredSchedules, name)
+	delete(s.registeredSchedules, namespacedName.String())
+
+	s.decRegisteredSchedules(namespacedName.Namespace)
 }
 
 func (s *Scheduler) createObject(jobType Type, namespace string, obj ObjectCreator, config job.Config) {
@@ -144,4 +162,12 @@ func (s *Scheduler) createObject(jobType Type, namespace string, obj ObjectCreat
 		config.Log.Error(err, "could not trigger k8up job", "name", namespace+"/"+name)
 	}
 
+}
+
+func (s *Scheduler) incRegisteredSchedules(namespace string) {
+	scheduleCount.WithLabelValues(namespace).Inc()
+}
+
+func (s *Scheduler) decRegisteredSchedules(namespace string) {
+	scheduleCount.WithLabelValues(namespace).Dec()
 }
