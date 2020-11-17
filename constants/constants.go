@@ -22,28 +22,28 @@ const (
 // TODO: this will be replaced with a CRD in the future.
 
 var (
-	mountPath                = getEnvVar("BACKUP_DATAPATH", "/data")
-	backupAnnotation         = getEnvVar("BACKUP_ANNOTATION", "k8up.syn.tools/backup")
-	backupCommandAnnotation  = getEnvVar("BACKUP_BACKUPCOMMANDANNOTATION", "k8up.syn.tools/backupcommand")
-	fileExtensionAnnotation  = getEnvVar("BACKUP_FILEEXTENSIONANNOTATION", "k8up.syn.tools/file-extension")
-	serviceAccount           = getEnvVar("BACKUP_PODEXECACCOUNTNAME", "pod-executor")
-	backupCheckSchedule      = getEnvVar("BACKUP_CHECKSCHEDULE", "0 0 * * 0")
-	globalAccessKey          = getEnvVar("BACKUP_GLOBALACCESSKEYID", "")
-	globalKeepJobs           = getEnvVar("BACKUP_GLOBALKEEPJOBS", "6")
-	globalRepoPassword       = getEnvVar("BACKUP_GLOBALREPOPASSWORD", "")
-	globalRestoreAccessKey   = getEnvVar("BACKUP_GLOBALRESTORES3ACCESKEYID", "")
-	globalRestoreS3Bucket    = getEnvVar("BACKUP_GLOBALRESTORES3BUCKET", "")
-	globalRestoreS3Endpoitn  = getEnvVar("BACKUP_GLOBALRESTORES3ENDPOINT", "")
-	globalRestoreS3AccessKey = getEnvVar("BACKUP_GLOBALRESTORES3SECRETACCESSKEY", "")
-	globalS3Bucket           = getEnvVar("BACKUP_GLOBALS3BUCKET", "")
-	globalS3Endpoint         = getEnvVar("BACKUP_GLOBALS3ENDPOINT", "")
-	globalSecretAccessKey    = getEnvVar("BACKUP_GLOBALSECRETACCESSKEY", "")
-	globalStatsURL           = getEnvVar("BACKUP_GLOBALSTATSURL", "")
-	backupImage              = getEnvVar("BACKUP_IMAGE", "172.30.1.1:5000/myproject/restic")
-	podExecRoleName          = getEnvVar("BACKUP_PODEXECROLENAME", "pod-executor")
-	podFilter                = getEnvVar("BACKUP_PODFILTER", "backupPod=true")
-	promURL                  = getEnvVar("BACKUP_PROMURL", "")
-	restartPolicy            = getEnvVar("BACKUP_RESTARTPOLICY", "OnFailure")
+	mountPath                      = getEnvVar("BACKUP_DATAPATH", "/data")
+	backupAnnotation               = getEnvVar("BACKUP_ANNOTATION", "k8up.syn.tools/backup")
+	backupCommandAnnotation        = getEnvVar("BACKUP_BACKUPCOMMANDANNOTATION", "k8up.syn.tools/backupcommand")
+	fileExtensionAnnotation        = getEnvVar("BACKUP_FILEEXTENSIONANNOTATION", "k8up.syn.tools/file-extension")
+	serviceAccount                 = getEnvVar("BACKUP_PODEXECACCOUNTNAME", "pod-executor")
+	backupCheckSchedule            = getEnvVar("BACKUP_CHECKSCHEDULE", "0 0 * * 0")
+	globalAccessKey                = getEnvVar("BACKUP_GLOBALACCESSKEYID", "")
+	globalKeepJobs                 = getEnvVar("BACKUP_GLOBALKEEPJOBS", "6")
+	globalRepoPassword             = getEnvVar("BACKUP_GLOBALREPOPASSWORD", "")
+	globalRestoreS3AccessKey       = getEnvVar("BACKUP_GLOBALRESTORES3ACCESKEYID", "")
+	globalRestoreS3Bucket          = getEnvVar("BACKUP_GLOBALRESTORES3BUCKET", "")
+	globalRestoreS3Endpoint        = getEnvVar("BACKUP_GLOBALRESTORES3ENDPOINT", "")
+	globalRestoreS3SecretAccessKey = getEnvVar("BACKUP_GLOBALRESTORES3SECRETACCESSKEY", "")
+	globalS3Bucket                 = getEnvVar("BACKUP_GLOBALS3BUCKET", "")
+	globalS3Endpoint               = getEnvVar("BACKUP_GLOBALS3ENDPOINT", "")
+	globalSecretAccessKey          = getEnvVar("BACKUP_GLOBALSECRETACCESSKEY", "")
+	globalStatsURL                 = getEnvVar("BACKUP_GLOBALSTATSURL", "")
+	backupImage                    = getEnvVar("BACKUP_IMAGE", "172.30.1.1:5000/myproject/restic")
+	podExecRoleName                = getEnvVar("BACKUP_PODEXECROLENAME", "pod-executor")
+	podFilter                      = getEnvVar("BACKUP_PODFILTER", "backupPod=true")
+	promURL                        = getEnvVar("BACKUP_PROMURL", "")
+	restartPolicy                  = getEnvVar("BACKUP_RESTARTPOLICY", "OnFailure")
 )
 
 func GetRestartPolicy() string {
@@ -82,20 +82,20 @@ func GetGlobalS3Bucket() string {
 	return globalS3Bucket
 }
 
-func GetGlobalRestoreS3AccessKey() string {
-	return globalRestoreS3AccessKey
+func GetGlobalRestoreS3SecretAccessKey() string {
+	return globalRestoreS3SecretAccessKey
 }
 
 func GetGlobalRestoreS3Endpoint() string {
-	return globalRestoreS3Endpoitn
+	return globalRestoreS3Endpoint
 }
 
 func GetGlobalRestoreS3Bucket() string {
 	return globalRestoreS3Bucket
 }
 
-func GetGlobalRestoreAccessKey() string {
-	return globalRestoreAccessKey
+func GetGlobalRestoreS3AccessKey() string {
+	return globalRestoreS3AccessKey
 }
 
 func GetGlobalRepoPassword() string {
