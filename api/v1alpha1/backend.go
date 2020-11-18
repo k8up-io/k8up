@@ -23,8 +23,10 @@ type Backend struct {
 func (b *Backend) GetCredentialEnv() map[string]*corev1.EnvVarSource {
 	vars := make(map[string]*corev1.EnvVarSource)
 
-	vars[constants.ResticPasswordEnvName] = &corev1.EnvVarSource{
-		SecretKeyRef: b.RepoPasswordSecretRef,
+	if b.RepoPasswordSecretRef != nil {
+		vars[constants.ResticPasswordEnvName] = &corev1.EnvVarSource{
+			SecretKeyRef: b.RepoPasswordSecretRef,
+		}
 	}
 
 	if b.Azure != nil {

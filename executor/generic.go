@@ -130,7 +130,6 @@ func DefaultEnv(namespace string) EnvVarConverter {
 	defaults := NewEnvVarConverter()
 
 	defaults.SetString("STATS_URL", constants.GetGlobalStatsURL())
-	defaults.SetString(constants.ResticPasswordEnvName, constants.GetGlobalRepoPassword())
 	defaults.SetString(constants.ResticRepositoryEnvName, fmt.Sprintf("s3:%s/%s", constants.GetGlobalS3Endpoint(), constants.GetGlobalS3Bucket()))
 	defaults.SetString(constants.ResticPasswordEnvName, constants.GetGlobalRepoPassword())
 	defaults.SetString(constants.AwsAccessKeyIDEnvName, constants.GetGlobalAccessKey())
