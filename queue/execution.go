@@ -8,10 +8,23 @@ import (
 	"sync"
 
 	"github.com/go-logr/logr"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
+	"sigs.k8s.io/controller-runtime/pkg/metrics"
 )
 
 var (
 	execution *ExecutionQueue = newExecutionQueue()
+
+	promLabels = []string{
+		"namespace",
+		"jobType",
+	}
+
+	queueCount = promauto.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "k8up_jobs_queued_gauge",
+		Help: "How many jobs are currently queued up",
+	}, promLabels)
 )
 
 // Executor defines an interface for the execution queue.
@@ -25,6 +38,10 @@ type Executor interface {
 	// Logger returns the logger in the job's context so we can
 	// Associate the logs with the actual job.
 	Logger() logr.Logger
+	// GetType() string
+	GetType() string
+	// GetNamespace() string
+	GetNamespace() string
 	// GetName() string
 	GetRepository() string
 	// TODO: ability to mark job as skipped && metric for that
@@ -36,6 +53,11 @@ type ExecutionQueue struct {
 	queues map[string]*priorityQueue
 }
 
+func init() {
+	// Register custom metrics with the global prometheus registry
+	metrics.Registry.MustRegister(queueCount)
+}
+
 func newExecutionQueue() *ExecutionQueue {
 	queues := make(map[string]*priorityQueue)
 	return &ExecutionQueue{queues: queues}
@@ -45,10 +67,12 @@ func newExecutionQueue() *ExecutionQueue {
 func (eq *ExecutionQueue) Add(exec Executor) {
 	eq.mutex.Lock()
 	defer eq.mutex.Unlock()
-	if _, exists := eq.queues[exec.GetRepository()]; !exists {
-		eq.queues[exec.GetRepository()] = newPriorityQueue()
+	repository := exec.GetRepository()
+	if _, exists := eq.queues[repository]; !exists {
+		eq.queues[repository] = newPriorityQueue()
 	}
-	eq.queues[exec.GetRepository()].add(exec)
+	eq.queues[repository].add(exec)
+	eq.incQueueCount(exec.GetNamespace(), exec.GetType())
 }
 
 // Get returns and removes and executor from the given repository. If the
@@ -59,6 +83,7 @@ func (eq *ExecutionQueue) Get(repository string) Executor {
 	entry := eq.queues[repository].get()
 	if eq.queues[repository].Len() == 0 {
 		delete(eq.queues, repository)
+		eq.decQueueCount(entry.GetNamespace(), entry.GetType())
 	}
 	return entry
 }
@@ -86,4 +111,12 @@ func (eq *ExecutionQueue) GetRepositories() []string {
 		repositories = append(repositories, repository)
 	}
 	return repositories
+}
+
+func (eq *ExecutionQueue) incQueueCount(namespace, jobType string) {
+	queueCount.WithLabelValues(namespace, jobType).Inc()
+}
+
+func (eq *ExecutionQueue) decQueueCount(namespace, jobType string) {
+	queueCount.WithLabelValues(namespace, jobType).Dec()
 }
