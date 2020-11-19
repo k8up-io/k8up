@@ -7,8 +7,11 @@ import (
 	"sync"
 
 	"github.com/go-logr/logr"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 	batchv1 "k8s.io/api/batch/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/metrics"
 )
 
 var (
@@ -19,6 +22,25 @@ var (
 	Suceeded EventType = "suceeded"
 	Running  EventType = "running"
 	observer *Observer
+
+	promLabels = []string{
+		"namespace",
+	}
+
+	metricsFailureCounter = promauto.NewCounterVec(prometheus.CounterOpts{
+		Name: "k8up_jobs_failed_counter",
+		Help: "The total number of backups that failed",
+	}, promLabels)
+
+	metricsSuccessCounter = promauto.NewCounterVec(prometheus.CounterOpts{
+		Name: "k8up_jobs_successful_counter",
+		Help: "The total number of backups that went through cleanly",
+	}, promLabels)
+
+	metricsTotalCounter = promauto.NewCounterVec(prometheus.CounterOpts{
+		Name: "k8up_jobs_total",
+		Help: "The total amount of all jobs run",
+	}, promLabels)
 )
 
 // Observer handles the internal state of the observed batchv1.job objects.
@@ -42,6 +64,11 @@ type ObservableJob struct {
 
 // EventType describes an event for the observer
 type EventType string
+
+func init() {
+	// Register custom metrics with the global prometheus registry
+	metrics.Registry.MustRegister(metricsFailureCounter, metricsSuccessCounter, metricsTotalCounter)
+}
 
 // GetObserver returns the currently active observer
 func GetObserver() *Observer {
@@ -79,12 +106,14 @@ func (o *Observer) run() {
 			if event.callback != nil {
 				event.callback()
 			}
+			incFailure(event.Job.Namespace)
 		case Suceeded:
 			// only report back succeeded jobs we've already seen. Will prevent
 			// reporting succeeded jobs on operator restart
 			if exists {
 				o.log.Info("job succeeded", "jobName", jobName)
 				o.observedJobs[jobName] = event
+				incSuccess(event.Job.Namespace)
 				if event.callback != nil {
 					event.callback()
 				}
@@ -184,4 +213,14 @@ func (o *Observer) RegisterCallback(name string, callback func()) {
 		event.callback = callback
 		o.observedJobs[name] = event
 	}
+}
+
+func incFailure(namespace string) {
+	metricsFailureCounter.WithLabelValues(namespace).Inc()
+	metricsTotalCounter.WithLabelValues(namespace).Inc()
+}
+
+func incSuccess(namespace string) {
+	metricsSuccessCounter.WithLabelValues(namespace).Inc()
+	metricsTotalCounter.WithLabelValues(namespace).Inc()
 }
