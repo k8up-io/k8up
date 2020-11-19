@@ -41,17 +41,18 @@ type Object interface {
 	GetMetaObject() metav1.Object
 	GetRuntimeObject() runtime.Object
 	GetK8upStatus() *k8upv1alpha1.K8upStatus
-	GetType() string
+	GetType() k8upv1alpha1.Type
 }
 
 // NewConfig returns a new configuration.
-func NewConfig(ctx context.Context, client client.Client, log logr.Logger, obj Object, scheme *runtime.Scheme) Config {
+func NewConfig(ctx context.Context, client client.Client, log logr.Logger, obj Object, scheme *runtime.Scheme, repository string) Config {
 	return Config{
-		Client: client,
-		Log:    log,
-		CTX:    ctx,
-		Obj:    obj,
-		Scheme: scheme,
+		Client:     client,
+		Log:        log,
+		CTX:        ctx,
+		Obj:        obj,
+		Scheme:     scheme,
+		Repository: repository,
 	}
 }
 

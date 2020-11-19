@@ -80,8 +80,8 @@ func (p *Prune) GetMetaObject() metav1.Object {
 	return p
 }
 
-func (p *Prune) GetType() string {
-	return "prune"
+func (p *Prune) GetType() Type {
+	return PruneType
 }
 
 func (p *Prune) GetK8upStatus() *K8upStatus {

@@ -296,6 +296,6 @@ func jobMatcher(restoreType string, additionalArgs []string, env Elements, volum
 }
 
 func newConfig() *job.Config {
-	cfg := job.NewConfig(context.TODO(), nil, nil, &k8upv1alpha1.Restore{}, scheme)
+	cfg := job.NewConfig(context.TODO(), nil, nil, &k8upv1alpha1.Restore{}, scheme, "")
 	return &cfg
 }

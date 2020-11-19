@@ -76,9 +76,10 @@ func (j *JobHandler) Handle() error {
 	}
 
 	oj := observer.ObservableJob{
-		Job:       j.job,
-		Exclusive: exclusive,
-		Event:     jobEvent,
+		Job:        j.job,
+		Exclusive:  exclusive,
+		Event:      jobEvent,
+		Repository: j.Repository,
 	}
 
 	observer.GetObserver().GetUpdateChannel() <- oj

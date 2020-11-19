@@ -27,6 +27,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	k8upv1alpha1 "github.com/vshn/k8up/api/v1alpha1"
+	"github.com/vshn/k8up/constants"
 	"github.com/vshn/k8up/handler"
 	"github.com/vshn/k8up/job"
 )
@@ -55,7 +56,11 @@ func (r *ArchiveReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		return ctrl.Result{}, err
 	}
 
-	config := job.NewConfig(ctx, r.Client, log, archive, r.Scheme)
+	repository := constants.GetGlobalRepository()
+	if archive.Spec.Backend != nil {
+		repository = archive.Spec.Backend.String()
+	}
+	config := job.NewConfig(ctx, r.Client, log, archive, r.Scheme, repository)
 
 	archiveHandler := handler.NewHandler(config)
 	return ctrl.Result{RequeueAfter: time.Second * 30}, archiveHandler.Handle()

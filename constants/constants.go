@@ -5,6 +5,7 @@
 package constants
 
 import (
+	"fmt"
 	"os"
 	"strconv"
 )
@@ -80,6 +81,10 @@ func GetGlobalS3Endpoint() string {
 
 func GetGlobalS3Bucket() string {
 	return globalS3Bucket
+}
+
+func GetGlobalRepository() string {
+	return fmt.Sprintf("s3:%s/%s", GetGlobalS3Endpoint(), GetGlobalS3Bucket())
 }
 
 func GetGlobalRestoreS3SecretAccessKey() string {

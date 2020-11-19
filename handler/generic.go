@@ -30,7 +30,9 @@ func (h *Handler) Handle() error {
 func (h *Handler) queueJob() error {
 	h.Log.Info("adding job to the queue")
 
-	queue.GetExecQueue().Add(executor.NewExecutor(h.Config))
+	e := executor.NewExecutor(h.Config)
+
+	queue.GetExecQueue().Add(e)
 
 	return nil
 }

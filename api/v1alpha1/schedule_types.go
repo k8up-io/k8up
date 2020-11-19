@@ -116,8 +116,8 @@ func (s *Schedule) GetMetaObject() metav1.Object {
 	return s
 }
 
-func (*Schedule) GetType() string {
-	return "schedule"
+func (*Schedule) GetType() Type {
+	return ScheduleType
 }
 
 func (s *Schedule) GetK8upStatus() *K8upStatus {

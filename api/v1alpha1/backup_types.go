@@ -97,8 +97,8 @@ func (b *Backup) GetMetaObject() metav1.Object {
 	return b
 }
 
-func (*Backup) GetType() string {
-	return "backup"
+func (*Backup) GetType() Type {
+	return BackupType
 }
 
 func (b *Backup) GetK8upStatus() *K8upStatus {
