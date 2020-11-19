@@ -40,7 +40,7 @@ func (r *JobReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		return reconcile.Result{}, err
 	}
 
-	config := job.NewConfig(ctx, r.Client, log, nil, r.Scheme)
+	config := job.NewConfig(ctx, r.Client, log, nil, r.Scheme, "")
 
 	return ctrl.Result{}, handler.NewJobHandler(config, jobObj).Handle()
 }

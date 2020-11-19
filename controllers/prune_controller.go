@@ -11,6 +11,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	k8upv1alpha1 "github.com/vshn/k8up/api/v1alpha1"
+	"github.com/vshn/k8up/cfg"
 	"github.com/vshn/k8up/handler"
 	"github.com/vshn/k8up/job"
 )
@@ -42,7 +43,11 @@ func (r *PruneReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		return ctrl.Result{}, nil
 	}
 
-	config := job.NewConfig(ctx, r.Client, log, prune, r.Scheme)
+	repository := cfg.GetGlobalRepository()
+	if prune.Spec.Backend != nil {
+		repository = prune.Spec.Backend.String()
+	}
+	config := job.NewConfig(ctx, r.Client, log, prune, r.Scheme, repository)
 
 	pruneHandler := handler.NewHandler(config)
 

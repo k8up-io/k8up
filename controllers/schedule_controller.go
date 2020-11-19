@@ -11,6 +11,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	k8upv1alpha1 "github.com/vshn/k8up/api/v1alpha1"
+	"github.com/vshn/k8up/cfg"
 	"github.com/vshn/k8up/handler"
 	"github.com/vshn/k8up/job"
 )
@@ -39,7 +40,11 @@ func (r *ScheduleReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		return reconcile.Result{}, err
 	}
 
-	config := job.NewConfig(ctx, r.Client, log, schedule, r.Scheme)
+	repository := cfg.GetGlobalRepository()
+	if schedule.Spec.Backend != nil {
+		repository = schedule.Spec.Backend.String()
+	}
+	config := job.NewConfig(ctx, r.Client, log, schedule, r.Scheme, repository)
 
 	return ctrl.Result{}, handler.NewScheduleHandler(config, schedule).Handle()
 }

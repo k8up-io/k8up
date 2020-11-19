@@ -47,13 +47,14 @@ type Object interface {
 }
 
 // NewConfig returns a new configuration.
-func NewConfig(ctx context.Context, client client.Client, log logr.Logger, obj Object, scheme *runtime.Scheme) Config {
+func NewConfig(ctx context.Context, client client.Client, log logr.Logger, obj Object, scheme *runtime.Scheme, repository string) Config {
 	return Config{
-		Client: client,
-		Log:    log,
-		CTX:    ctx,
-		Obj:    obj,
-		Scheme: scheme,
+		Client:     client,
+		Log:        log,
+		CTX:        ctx,
+		Obj:        obj,
+		Scheme:     scheme,
+		Repository: repository,
 	}
 }
 

@@ -59,19 +59,22 @@ func (qe *QueueWorker) loopRepositoryJobs(repository string) {
 				!observer.GetObserver().IsConcurrentJobsLimitReached(jobType, jobLimit)
 		}
 
-		if shouldRun {
-			err := job.Execute()
-			if err != nil {
-				if !errors.IsAlreadyExists(err) {
-					job.Logger().Error(err, "cannot create job", "repository", repository)
-				}
-			}
+		if !shouldRun {
+			job.Logger().Info("skipping job due to exclusivity", "exclusive", job.Exclusive(), "repository", job.GetRepository())
+			continue
+		}
 
-			// Skip the rest for this repository if we just started an exclusive
-			// job.
-			if job.Exclusive() {
-				return
+		err := job.Execute()
+		if err != nil {
+			if !errors.IsAlreadyExists(err) {
+				job.Logger().Error(err, "cannot create job", "repository", repository)
 			}
+		}
+
+		// Skip the rest for this repository if we just started an exclusive
+		// job.
+		if job.Exclusive() {
+			return
 		}
 	}
 }
