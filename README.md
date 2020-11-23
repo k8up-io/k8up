@@ -1,4 +1,10 @@
-![Build status](https://api.travis-ci.com/vshn/k8up.svg?branch=rewrite)
+[![Build](https://img.shields.io/github/workflow/status/vshn/k8up/Build)][build]
+![Go version](https://img.shields.io/github/go-mod/go-version/vshn/k8up)
+![Kubernetes version](https://img.shields.io/badge/k8s-v1.18-blue)
+[![Version](https://img.shields.io/github/v/release/vshn/k8up)][releases]
+[![GitHub downloads](https://img.shields.io/github/downloads/vshn/k8up/total)][releases]
+[![Docker image](https://img.shields.io/docker/pulls/vshn/k8up)][dockerhub]
+[![License](https://img.shields.io/github/license/vshn/k8up)][license]
 
 <img src="https://raw.githubusercontent.com/vshn/k8up/master/docs/images/logo.png" width="150">
 
@@ -84,3 +90,8 @@ Best is if you have [minio](https://min.io/download) installed somewhere to be a
 ## Example configurations
 
 There are a number of example configurations in [`config/samples`](config/samples). Apply them using `kubectl apply -f config/samples/somesample.yaml`
+
+[build]: https://github.com/vshn/k8up/actions?query=workflow%3ABuild
+[releases]: https://github.com/vshn/k8up/releases
+[license]: https://github.com/vshn/k8up/blob/master/LICENSE
+[dockerhub]: https://hub.docker.com/r/vshn/k8up
