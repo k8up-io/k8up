@@ -1,6 +1,6 @@
 module github.com/vshn/k8up
 
-go 1.13
+go 1.15
 
 require (
 	github.com/go-logr/logr v0.1.0
@@ -12,5 +12,5 @@ require (
 	k8s.io/apimachinery v0.18.6
 	k8s.io/client-go v0.18.6
 	k8s.io/utils v0.0.0-20200603063816-c1c6865ac451
-	sigs.k8s.io/controller-runtime v0.6.2
+	sigs.k8s.io/controller-runtime v0.6.4
 )
