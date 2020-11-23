@@ -1,0 +1,37 @@
+name: Release
+
+on:
+  push:
+    tags:
+    - "*"
+
+jobs:
+  dist:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+    - name: Determine Go version from go.mod
+      run: echo "GO_VERSION=$(grep "go 1." go.mod | cut -d " " -f 2)" >> $GITHUB_ENV
+    - uses: actions/setup-go@v2
+      with:
+        go-version: ${{ env.GO_VERSION }}
+    - uses: actions/cache@v2
+      with:
+        path: ~/go/pkg/mod
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-
+    - name: Login to Docker hub
+      run: docker login -u "${{ secrets.DOCKER_USERNAME }}" -p "${{ secrets.DOCKER_PASSWORD }}"
+    - name: Login to quay.io
+      run: docker login -u "${{ secrets.QUAY_IO_USERNAME }}" -p "${{ secrets.QUAY_IO_PASSWORD }}" quay.io
+    - name: Generate artifacts
+      run: make crd
+    - name: Publish releases
+      uses: goreleaser/goreleaser-action@v2
+      with:
+        args: release
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

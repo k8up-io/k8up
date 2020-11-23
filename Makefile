@@ -12,9 +12,11 @@ endif
 BUNDLE_METADATA_OPTS ?= $(BUNDLE_CHANNELS) $(BUNDLE_DEFAULT_CHANNEL)
 
 # Image URL to use all building/pushing image targets
-IMG ?= controller:latest
+IMG ?= quay.io/vshn/k8up:latest
 # Produce CRDs that work back to Kubernetes 1.11 (no version conversion)
 CRD_OPTIONS ?= "crd:trivialVersions=true"
+
+CRD_FILE ?= k8up-crd.yaml
 
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
 ifeq (,$(shell go env GOBIN))
@@ -23,15 +25,18 @@ else
 GOBIN=$(shell go env GOBIN)
 endif
 
-all: manager
+all: build
 
 # Run tests
 test: generate fmt vet manifests
 	go test ./... -coverprofile cover.out
 
 # Build manager binary
-manager: generate fmt vet
-	go build -o bin/manager main.go
+build: generate fmt vet
+	go build -o k8up main.go
+
+dist: generate fmt vet
+	goreleaser release --snapshot --rm-dist --skip-sign
 
 # Run against the configured Kubernetes cluster in ~/.kube/config
 run: generate fmt vet manifests
@@ -54,6 +59,10 @@ deploy: manifests kustomize
 manifests: controller-gen
 	$(CONTROLLER_GEN) $(CRD_OPTIONS) rbac:roleName=manager-role webhook paths="./..." output:crd:artifacts:config=config/crd/bases
 
+# Generate CRD to file
+crd: manifests kustomize
+	$(KUSTOMIZE) build config/crd > $(CRD_FILE)
+
 # Run go fmt against code
 fmt:
 	go fmt ./...
@@ -62,12 +71,16 @@ fmt:
 vet:
 	go vet ./...
 
+lint: fmt vet
+	@echo 'Check for uncommitted changes ...'
+	git diff --exit-code
+
 # Generate code
 generate: controller-gen
 	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./..."
 
 # Build the docker image
-docker-build: test
+docker-build: test build
 	docker build . -t ${IMG}
 
 # Push the docker image

@@ -1,0 +1,39 @@
+# This is an example goreleaser.yaml file with some sane defaults.
+# Make sure to check the documentation at http://goreleaser.com
+
+builds:
+- env:
+  - CGO_ENABLED=0 # this is needed otherwise the Docker image build is faulty
+  goarch:
+  - amd64
+  goos:
+  - linux
+
+checksum:
+  name_template: 'checksums.txt'
+
+snapshot:
+  name_template: "{{ .Tag }}-snapshot"
+
+dockers:
+- image_templates:
+  - "docker.io/vshn/k8up:latest"
+  - "docker.io/vshn/k8up:v{{ .Version }}"
+  - "quay.io/vshn/k8up:latest"
+  - "quay.io/vshn/k8up:v{{ .Version }}"
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+    - '^Docs:'
+    - '^Test:'
+    - '^Refactor:'
+    - '^Merge pull request'
+
+release:
+  github:
+    owner: vshn
+    name: k8up
+  extra_files:
+  - glob: ./k8up-crd.yaml
