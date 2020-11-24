@@ -1,20 +1,9 @@
-FROM golang:1.13-alpine as build
+FROM docker.io/library/alpine:3.12 as runtime
 
-ENV CGO_ENABLED=0
+ENTRYPOINT ["k8up"]
 
-WORKDIR /go/src/github.com/vshn/k8up
-COPY . .
-RUN go test -v ./...
-RUN go install -v ./...
+RUN \
+    apk add --no-cache curl bash tzdata
 
-# runtime image
-FROM docker.io/alpine:3
-WORKDIR /app
-
-RUN apk --no-cache add tzdata
-
-COPY --from=build /go/bin/operator /app/
-
-USER 1001
-
-ENTRYPOINT [ "./operator" ]
+COPY k8up /usr/bin/
+USER 1001:0

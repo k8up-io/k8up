@@ -318,6 +318,13 @@ spec:
           type: object
         status:
           description: PruneStatus defines the observed state of Prune
+          properties:
+            exclusive:
+              type: boolean
+            finished:
+              type: boolean
+            started:
+              type: boolean
           type: object
       type: object
   version: v1alpha1
