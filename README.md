@@ -28,10 +28,12 @@ You'll need:
 
 - A running kubernetes cluster (minishift, minikube, k3s, ... you name it)
 - [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/) and [kustomize](https://kubernetes-sigs.github.io/kustomize/installation/)
-- golang installed :) (everything is tested with 1.13)
-- Your favorite IDE (with a golang plugin)
+- Go development environment
+- Your favorite IDE (with a Go plugin)
 - docker
 - make
+
+These are the most common make targets: `build`, `test`, `docker-build`.
 
 ## Generate kubernetes code
 
@@ -50,7 +52,7 @@ Therefore settle to the second approach for now.
 
 ## Run the operator
 
-You can run the operator/manager in three different ways:
+You can run the operator in three different ways:
 
 1. as a docker image (see [quickstart](https://sdk.operatorframework.io/docs/building-operators/golang/quickstart/))
 2. using `make run`
