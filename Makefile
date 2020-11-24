@@ -11,8 +11,11 @@ BUNDLE_DEFAULT_CHANNEL := --default-channel=$(DEFAULT_CHANNEL)
 endif
 BUNDLE_METADATA_OPTS ?= $(BUNDLE_CHANNELS) $(BUNDLE_DEFAULT_CHANNEL)
 
+IMG_TAG ?= latest
+
 # Image URL to use all building/pushing image targets
-IMG ?= quay.io/vshn/k8up:latest
+DOCKER_IMG ?= docker.io/vshn/k8up:$(IMG_TAG)
+QUAY_IMG ?= quay.io/vshn/k8up:$(IMG_TAG)
 # Produce CRDs that work back to Kubernetes 1.11 (no version conversion)
 CRD_OPTIONS ?= "crd:trivialVersions=true"
 
@@ -80,12 +83,13 @@ generate: controller-gen
 	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./..."
 
 # Build the docker image
-docker-build: test build
-	docker build . -t ${IMG}
+docker-build: build
+	docker build . -t $(DOCKER_IMG) -t $(QUAY_IMG)
 
 # Push the docker image
 docker-push:
-	docker push ${IMG}
+	docker push $(DOCKER_IMG)
+	docker push $(QUAY_IMG)
 
 # find or download controller-gen
 # download controller-gen if necessary

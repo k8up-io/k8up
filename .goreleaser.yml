@@ -19,8 +19,10 @@ dockers:
 - image_templates:
   - "docker.io/vshn/k8up:latest"
   - "docker.io/vshn/k8up:v{{ .Version }}"
+  - "docker.io/vshn/k8up:v{{ .Major }}"
   - "quay.io/vshn/k8up:latest"
   - "quay.io/vshn/k8up:v{{ .Version }}"
+  - "quay.io/vshn/k8up:v{{ .Major }}"
 
 changelog:
   sort: asc
