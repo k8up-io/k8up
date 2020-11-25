@@ -108,11 +108,11 @@ func (g *generic) GetRepository() string {
 	return g.Repository
 }
 
-func (g *generic) GetNamespace() string {
+func (g *generic) GetJobNamespace() string {
 	return g.Obj.GetMetaObject().GetNamespace()
 }
 
-func (g *generic) GetType() string {
+func (g *generic) GetJobType() string {
 	return g.Obj.GetType()
 }
 

@@ -38,10 +38,10 @@ type Executor interface {
 	// Logger returns the logger in the job's context so we can
 	// Associate the logs with the actual job.
 	Logger() logr.Logger
-	// GetType() returns the type of the CDR that the job will execute
-	GetType() string
-	// GetNamespace() returns the namespace of the CDR that the job will execute
-	GetNamespace() string
+	// GetJobType() returns the type of the CDR that the job will execute
+	GetJobType() string
+	// GetJobNamespace() returns the namespace of the CDR that the job will execute
+	GetJobNamespace() string
 	// GetName() string
 	GetRepository() string
 	// TODO: ability to mark job as skipped && metric for that
@@ -72,7 +72,7 @@ func (eq *ExecutionQueue) Add(exec Executor) {
 		eq.queues[repository] = newPriorityQueue()
 	}
 	eq.queues[repository].add(exec)
-	eq.incQueueGauge(exec.GetNamespace(), exec.GetType())
+	eq.incQueueGauge(exec.GetJobNamespace(), exec.GetJobType())
 }
 
 // Get returns and removes and executor from the given repository. If the
@@ -83,7 +83,7 @@ func (eq *ExecutionQueue) Get(repository string) Executor {
 	entry := eq.queues[repository].get()
 	if eq.queues[repository].Len() == 0 {
 		delete(eq.queues, repository)
-		eq.decQueueGauge(entry.GetNamespace(), entry.GetType())
+		eq.decQueueGauge(entry.GetJobNamespace(), entry.GetJobType())
 	}
 	return entry
 }
