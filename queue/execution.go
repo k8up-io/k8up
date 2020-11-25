@@ -21,7 +21,7 @@ var (
 		"jobType",
 	}
 
-	queueCount = promauto.NewGaugeVec(prometheus.GaugeOpts{
+	queueGauge = promauto.NewGaugeVec(prometheus.GaugeOpts{
 		Name: "k8up_jobs_queued_gauge",
 		Help: "How many jobs are currently queued up",
 	}, promLabels)
@@ -55,7 +55,7 @@ type ExecutionQueue struct {
 
 func init() {
 	// Register custom metrics with the global prometheus registry
-	metrics.Registry.MustRegister(queueCount)
+	metrics.Registry.MustRegister(queueGauge)
 }
 
 func newExecutionQueue() *ExecutionQueue {
@@ -72,7 +72,7 @@ func (eq *ExecutionQueue) Add(exec Executor) {
 		eq.queues[repository] = newPriorityQueue()
 	}
 	eq.queues[repository].add(exec)
-	eq.incQueueCount(exec.GetNamespace(), exec.GetType())
+	eq.incQueueGauge(exec.GetNamespace(), exec.GetType())
 }
 
 // Get returns and removes and executor from the given repository. If the
@@ -83,7 +83,7 @@ func (eq *ExecutionQueue) Get(repository string) Executor {
 	entry := eq.queues[repository].get()
 	if eq.queues[repository].Len() == 0 {
 		delete(eq.queues, repository)
-		eq.decQueueCount(entry.GetNamespace(), entry.GetType())
+		eq.decQueueGauge(entry.GetNamespace(), entry.GetType())
 	}
 	return entry
 }
@@ -113,10 +113,10 @@ func (eq *ExecutionQueue) GetRepositories() []string {
 	return repositories
 }
 
-func (eq *ExecutionQueue) incQueueCount(namespace, jobType string) {
-	queueCount.WithLabelValues(namespace, jobType).Inc()
+func (eq *ExecutionQueue) incQueueGauge(namespace, jobType string) {
+	queueGauge.WithLabelValues(namespace, jobType).Inc()
 }
 
-func (eq *ExecutionQueue) decQueueCount(namespace, jobType string) {
-	queueCount.WithLabelValues(namespace, jobType).Dec()
+func (eq *ExecutionQueue) decQueueGauge(namespace, jobType string) {
+	queueGauge.WithLabelValues(namespace, jobType).Dec()
 }
