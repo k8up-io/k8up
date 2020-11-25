@@ -34,5 +34,6 @@ bin/
 dist/
 k8up-crd.yaml
 k8up
+testbin/
 
 __debug_bin
