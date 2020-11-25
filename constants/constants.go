@@ -38,7 +38,7 @@ var (
 	globalS3Endpoint               = getEnvVar("BACKUP_GLOBALS3ENDPOINT", "")
 	globalSecretAccessKey          = getEnvVar("BACKUP_GLOBALSECRETACCESSKEY", "")
 	globalStatsURL                 = getEnvVar("BACKUP_GLOBALSTATSURL", "")
-	metricBind                     = getEnvVar("BACKUP_METRICBIND", ":8080")
+	metricBindAddr                 = getEnvVar("BACKUP_METRIC_BINDADDRESS", ":8080")
 	backupImage                    = getEnvVar("BACKUP_IMAGE", "172.30.1.1:5000/myproject/restic")
 	podExecRoleName                = getEnvVar("BACKUP_PODEXECROLENAME", "pod-executor")
 	podFilter                      = getEnvVar("BACKUP_PODFILTER", "backupPod=true")
@@ -138,8 +138,8 @@ func GetBackupAnnotation() string {
 	return backupAnnotation
 }
 
-func GetMetricBind() string {
-	return metricBind
+func GetMetricBindAddress() string {
+	return metricBindAddr
 }
 
 func getEnvVar(name, defaultValue string) string {
