@@ -38,9 +38,9 @@ type Executor interface {
 	// Logger returns the logger in the job's context so we can
 	// Associate the logs with the actual job.
 	Logger() logr.Logger
-	// GetType() string
+	// GetType() returns the type of the CDR that the job will execute
 	GetType() string
-	// GetNamespace() string
+	// GetNamespace() returns the namespace of the CDR that the job will execute
 	GetNamespace() string
 	// GetName() string
 	GetRepository() string
