@@ -52,11 +52,12 @@ Therefore settle to the second approach for now.
 
 ## Run the operator
 
-You can run the operator in three different ways:
+You can run the operator in different ways:
 
 1. as a docker image (see [quickstart](https://sdk.operatorframework.io/docs/building-operators/golang/quickstart/))
-2. using `make run`
-3. using a configuration of your favorite IDE (see below for VSCode example)
+2. using `make run` (provide your own kubeconfig)
+3. using `make run_kind` (uses KIND to install a cluster in docker and provides its own kubeconfig in `testbin/`)
+4. using a configuration of your favorite IDE (see below for VSCode example)
 
 Example VSCode run configuration:
 
