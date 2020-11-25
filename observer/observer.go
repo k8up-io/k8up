@@ -106,14 +106,14 @@ func (o *Observer) run() {
 			if event.callback != nil {
 				event.callback()
 			}
-			incFailure(event.Job.Namespace)
+			incFailureCounters(event.Job.Namespace)
 		case Suceeded:
 			// only report back succeeded jobs we've already seen. Will prevent
 			// reporting succeeded jobs on operator restart
 			if exists {
 				o.log.Info("job succeeded", "jobName", jobName)
 				o.observedJobs[jobName] = event
-				incSuccess(event.Job.Namespace)
+				incSuccessCounters(event.Job.Namespace)
 				if event.callback != nil {
 					event.callback()
 				}
@@ -215,12 +215,12 @@ func (o *Observer) RegisterCallback(name string, callback func()) {
 	}
 }
 
-func incFailure(namespace string) {
+func incFailureCounters(namespace string) {
 	metricsFailureCounter.WithLabelValues(namespace).Inc()
 	metricsTotalCounter.WithLabelValues(namespace).Inc()
 }
 
-func incSuccess(namespace string) {
+func incSuccessCounters(namespace string) {
 	metricsSuccessCounter.WithLabelValues(namespace).Inc()
 	metricsTotalCounter.WithLabelValues(namespace).Inc()
 }
