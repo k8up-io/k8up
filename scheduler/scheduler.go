@@ -29,7 +29,7 @@ const (
 var (
 	scheduler *Scheduler
 
-	scheduleCount = promauto.NewGaugeVec(prometheus.GaugeOpts{
+	scheduleGauge = promauto.NewGaugeVec(prometheus.GaugeOpts{
 		Name: "k8up_schedules_gauge",
 		Help: "How many schedules this k8up manages",
 	}, []string{
@@ -69,7 +69,7 @@ type Scheduler struct {
 
 func init() {
 	// Register custom metrics with the global prometheus registry
-	metrics.Registry.MustRegister(scheduleCount)
+	metrics.Registry.MustRegister(scheduleGauge)
 }
 
 // GetScheduler returns the scheduler singleton instance.
@@ -124,7 +124,7 @@ func (s *Scheduler) AddSchedules(jobs JobList) error {
 
 	s.registeredSchedules[namespacedName.String()] = jobIDs
 
-	s.incRegisteredSchedules(namespacedName.Namespace)
+	s.incRegisteredSchedulesGauge(namespacedName.Namespace)
 	return nil
 }
 
@@ -137,7 +137,7 @@ func (s *Scheduler) RemoveSchedules(namespacedName types.NamespacedName) {
 	}
 	delete(s.registeredSchedules, namespacedName.String())
 
-	s.decRegisteredSchedules(namespacedName.Namespace)
+	s.decRegisteredSchedulesGauge(namespacedName.Namespace)
 }
 
 func (s *Scheduler) createObject(jobType Type, namespace string, obj ObjectCreator, config job.Config) {
@@ -164,10 +164,10 @@ func (s *Scheduler) createObject(jobType Type, namespace string, obj ObjectCreat
 
 }
 
-func (s *Scheduler) incRegisteredSchedules(namespace string) {
-	scheduleCount.WithLabelValues(namespace).Inc()
+func (s *Scheduler) incRegisteredSchedulesGauge(namespace string) {
+	scheduleGauge.WithLabelValues(namespace).Inc()
 }
 
-func (s *Scheduler) decRegisteredSchedules(namespace string) {
-	scheduleCount.WithLabelValues(namespace).Dec()
+func (s *Scheduler) decRegisteredSchedulesGauge(namespace string) {
+	scheduleGauge.WithLabelValues(namespace).Dec()
 }
