@@ -16,16 +16,21 @@ IMG_TAG ?= latest
 # Image URL to use all building/pushing image targets
 DOCKER_IMG ?= docker.io/vshn/k8up:$(IMG_TAG)
 QUAY_IMG ?= quay.io/vshn/k8up:$(IMG_TAG)
+
+CRD_SPEC_VERSION ?= v1
 # Produce CRDs that work back to Kubernetes 1.11 (no version conversion)
-CRD_OPTIONS ?= "crd:trivialVersions=true"
+CRD_OPTIONS ?= crd:trivialVersions=true rbac:roleName=manager-role webhook paths="./..."
 
 CRD_FILE ?= k8up-crd.yaml
+CRD_FILE_LEGACY ?= k8up-crd-legacy.yaml
+CRD_ROOT_DIR ?= config/crd/apiextensions.k8s.io
 
 TESTBIN_DIR ?= ./testbin/bin
 KIND_BIN ?= $(TESTBIN_DIR)/kind
 KIND_VERSION ?= 0.9.0
 KIND_KUBECONFIG ?= ./testbin/kind-kubeconfig
-KIND_CLUSTER ?= k8up
+KIND_NODE_VERSION ?= v1.18.8
+KIND_CLUSTER ?= k8up-$(KIND_NODE_VERSION)
 
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
 ifeq (,$(shell go env GOBIN))
@@ -49,7 +54,10 @@ ENVTEST_ASSETS_DIR=$(shell pwd)/testbin
 $(TESTBIN_DIR):
 	mkdir -p $(TESTBIN_DIR)
 
-integration_test: export ENVTEST_K8S_VERSION = 1.19.0
+# Run integration tests with envtest
+# See https://storage.googleapis.com/kubebuilder-tools/ for list of supported K8s versions
+# No, there's no 1.18 support, so we're going for 1.19
+integration_test: export ENVTEST_K8S_VERSION = 1.19.2
 integration_test: generate fmt vet manifests $(TESTBIN_DIR)
 	test -f ${ENVTEST_ASSETS_DIR}/setup-envtest.sh || curl -sSLo ${ENVTEST_ASSETS_DIR}/setup-envtest.sh https://raw.githubusercontent.com/kubernetes-sigs/controller-runtime/master/hack/setup-envtest.sh
 	source ${ENVTEST_ASSETS_DIR}/setup-envtest.sh; fetch_envtest_tools $(ENVTEST_ASSETS_DIR); setup_envtest_env $(ENVTEST_ASSETS_DIR); go test -tags=integration -v ./... -coverprofile cover.out
@@ -67,11 +75,11 @@ run: generate fmt vet manifests
 
 # Install CRDs into a cluster
 install: manifests kustomize
-	$(KUSTOMIZE) build config/crd | kubectl apply -f -
+	$(KUSTOMIZE) build $(CRD_ROOT_DIR)/v1 | kubectl apply -f -
 
 # Uninstall CRDs from a cluster
 uninstall: manifests kustomize
-	$(KUSTOMIZE) build config/crd | kubectl delete -f -
+	$(KUSTOMIZE) build $(CRD_ROOT_DIR)/v1 | kubectl delete -f -
 
 # Deploy controller in the configured Kubernetes cluster in ~/.kube/config
 deploy: manifests kustomize
@@ -80,12 +88,15 @@ deploy: manifests kustomize
 
 # Generate manifests e.g. CRD, RBAC etc.
 manifests: controller-gen
-	$(CONTROLLER_GEN) $(CRD_OPTIONS) rbac:roleName=manager-role webhook paths="./..." output:crd:artifacts:config=config/crd/bases
-	@go run hack/patch-crd-compatibility.go config/crd/bases/backup.appuio.ch_prebackuppods.yaml
+	$(CONTROLLER_GEN) $(CRD_OPTIONS) output:crd:artifacts:config=$(CRD_ROOT_DIR)/v1beta1 crd:crdVersions=v1beta1
+	@go run hack/patch-crd-compatibility.go $(CRD_ROOT_DIR)/v1beta1/backup.appuio.ch_prebackuppods.yaml
+	$(CONTROLLER_GEN) $(CRD_OPTIONS) output:crd:artifacts:config=$(CRD_ROOT_DIR)/v1      crd:crdVersions=v1
+	@rm config/backup.*.yaml
 
 # Generate CRD to file
 crd: manifests kustomize
-	$(KUSTOMIZE) build config/crd > $(CRD_FILE)
+	$(KUSTOMIZE) build $(CRD_ROOT_DIR)/v1 > $(CRD_FILE)
+	$(KUSTOMIZE) build $(CRD_ROOT_DIR)/v1beta1 > $(CRD_FILE_LEGACY)
 
 # Run go fmt against code
 fmt:
@@ -121,7 +132,7 @@ ifeq (, $(shell which controller-gen))
 	CONTROLLER_GEN_TMP_DIR=$$(mktemp -d) ;\
 	cd $$CONTROLLER_GEN_TMP_DIR ;\
 	go mod init tmp ;\
-	go get sigs.k8s.io/controller-tools/cmd/controller-gen@v0.3.0 ;\
+	go get sigs.k8s.io/controller-tools/cmd/controller-gen@v0.4.1 ;\
 	rm -rf $$CONTROLLER_GEN_TMP_DIR ;\
 	}
 CONTROLLER_GEN=$(GOBIN)/controller-gen
@@ -157,10 +168,14 @@ bundle: manifests
 bundle-build:
 	docker build -f bundle.Dockerfile -t $(BUNDLE_IMG) .
 
+e2e_test: export KUBECONFIG = $(KIND_KUBECONFIG)
+e2e_test: setup_e2e_test build
+	@echo "TODO: Add actual e2e tests!"
+
 setup_e2e_test: export KUBECONFIG = $(KIND_KUBECONFIG)
 setup_e2e_test: $(KIND_BIN) manifests
 	@kubectl config use-context kind-$(KIND_CLUSTER)
-	@kubectl apply -k config/crd
+	@kubectl apply --validate=false -k $(CRD_ROOT_DIR)/$(CRD_SPEC_VERSION)
 
 run_kind: export KUBECONFIG = $(KIND_KUBECONFIG)
 run_kind: setup_e2e_test
@@ -169,9 +184,9 @@ run_kind: setup_e2e_test
 $(KIND_BIN): export KUBECONFIG = $(KIND_KUBECONFIG)
 $(KIND_BIN): $(TESTBIN_DIR)
 	curl -Lo $(KIND_BIN) "https://kind.sigs.k8s.io/dl/v$(KIND_VERSION)/kind-$$(uname)-amd64"
-	chmod +x $(KIND_BIN)
-	$(KIND_BIN) create cluster --name $(KIND_CLUSTER)
-	kubectl cluster-info
+	@chmod +x $(KIND_BIN)
+	$(KIND_BIN) create cluster --name $(KIND_CLUSTER) --image kindest/node:$(KIND_NODE_VERSION)
+	@kubectl cluster-info
 
 clean: export KUBECONFIG = $(KIND_KUBECONFIG)
 clean:

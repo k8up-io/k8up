@@ -38,4 +38,4 @@ release:
     owner: vshn
     name: k8up
   extra_files:
-  - glob: ./k8up-crd.yaml
+  - glob: ./k8up-crd*.yaml

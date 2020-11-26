@@ -45,7 +45,7 @@ make manifests
 
 ## Install CRDs
 
-CRDs can be either installed on the cluster by running `make install` or using `kubectl apply -k config/crd`.
+CRDs can be either installed on the cluster by running `make install` or using `kubectl apply -k config/crd/apiextension.k8s.io/v1`.
 
 Currently there's an issue using [`make install`](https://github.com/kubernetes-sigs/kubebuilder/issues/1544) related to how the CRDs are specified.
 Therefore settle to the second approach for now.
