@@ -20,7 +20,7 @@ type ScheduleHandler struct {
 	job.Config
 }
 
-// NewScheduleHandler will return a new ScheduleHanlder.
+// NewScheduleHandler will return a new ScheduleHandler.
 func NewScheduleHandler(config job.Config, schedule *k8upv1alpha1.Schedule) *ScheduleHandler {
 	return &ScheduleHandler{
 		schedule: schedule,
@@ -40,7 +40,7 @@ func (s *ScheduleHandler) Handle() error {
 			return fmt.Errorf("error while removing the finalizer: %w", err)
 		}
 
-		scheduler.GetScheduler().RemoveSchedules(namespacedName.String())
+		scheduler.GetScheduler().RemoveSchedules(namespacedName)
 
 		return nil
 	}

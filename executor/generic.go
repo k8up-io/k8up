@@ -108,6 +108,14 @@ func (g *generic) GetRepository() string {
 	return g.Repository
 }
 
+func (g *generic) GetJobNamespace() string {
+	return g.Obj.GetMetaObject().GetNamespace()
+}
+
+func (g *generic) GetJobType() string {
+	return g.Obj.GetType()
+}
+
 // NewExecutor will return the right Executor for the given job object.
 func NewExecutor(config job.Config) queue.Executor {
 	switch config.Obj.GetType() {

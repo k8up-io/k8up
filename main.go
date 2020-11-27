@@ -14,6 +14,7 @@ import (
 	batchv1 "k8s.io/api/batch/v1"
 
 	k8upv1alpha1 "github.com/vshn/k8up/api/v1alpha1"
+	"github.com/vshn/k8up/constants"
 	"github.com/vshn/k8up/controllers"
 	"github.com/vshn/k8up/executor"
 	// +kubebuilder:scaffold:imports
@@ -33,9 +34,7 @@ func init() {
 }
 
 func main() {
-	var metricsAddr string
 	var enableLeaderElection bool
-	flag.StringVar(&metricsAddr, "metrics-addr", ":8080", "The address the metric endpoint binds to.")
 	flag.BoolVar(&enableLeaderElection, "enable-leader-election", false,
 		"Enable leader election for controller manager. "+
 			"Enabling this will ensure there is only one active controller manager.")
@@ -47,7 +46,7 @@ func main() {
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:             scheme,
-		MetricsBindAddress: metricsAddr,
+		MetricsBindAddress: constants.GetMetricBindAddress(),
 		Port:               9443,
 		LeaderElection:     enableLeaderElection,
 		LeaderElectionID:   "d2ab61da.syn.tools",
