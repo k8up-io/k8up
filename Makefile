@@ -18,8 +18,6 @@ DOCKER_IMG ?= docker.io/vshn/k8up:$(IMG_TAG)
 QUAY_IMG ?= quay.io/vshn/k8up:$(IMG_TAG)
 
 CRD_SPEC_VERSION ?= v1
-# Produce CRDs that work back to Kubernetes 1.11 (no version conversion)
-CRD_OPTIONS ?= crd:trivialVersions=true rbac:roleName=manager-role webhook paths="./..."
 
 CRD_FILE ?= k8up-crd.yaml
 CRD_FILE_LEGACY ?= k8up-crd-legacy.yaml
@@ -87,11 +85,9 @@ deploy: manifests kustomize
 	$(KUSTOMIZE) build config/default | kubectl apply -f -
 
 # Generate manifests e.g. CRD, RBAC etc.
-manifests: controller-gen
-	$(CONTROLLER_GEN) $(CRD_OPTIONS) output:crd:artifacts:config=$(CRD_ROOT_DIR)/v1beta1 crd:crdVersions=v1beta1
-	@go run hack/patch-crd-compatibility.go $(CRD_ROOT_DIR)/v1beta1/backup.appuio.ch_prebackuppods.yaml
-	$(CONTROLLER_GEN) $(CRD_OPTIONS) output:crd:artifacts:config=$(CRD_ROOT_DIR)/v1      crd:crdVersions=v1
-	@rm config/backup.*.yaml
+manifests:
+	@CRD_ROOT_DIR="$(CRD_ROOT_DIR)" go generate -tags=generate hack/generate-crd.go
+	@rm -r hack/config
 
 # Generate CRD to file
 crd: manifests kustomize
@@ -111,8 +107,8 @@ lint: fmt vet
 	git diff --exit-code
 
 # Generate code
-generate: controller-gen
-	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./..."
+generate: vet
+	go run sigs.k8s.io/controller-tools/cmd/controller-gen object:headerFile="hack/boilerplate.go.txt" paths="./..."
 
 # Build the docker image
 docker-build: build
@@ -122,23 +118,6 @@ docker-build: build
 docker-push:
 	docker push $(DOCKER_IMG)
 	docker push $(QUAY_IMG)
-
-# find or download controller-gen
-# download controller-gen if necessary
-controller-gen:
-ifeq (, $(shell which controller-gen))
-	@{ \
-	set -e ;\
-	CONTROLLER_GEN_TMP_DIR=$$(mktemp -d) ;\
-	cd $$CONTROLLER_GEN_TMP_DIR ;\
-	go mod init tmp ;\
-	go get sigs.k8s.io/controller-tools/cmd/controller-gen@v0.4.1 ;\
-	rm -rf $$CONTROLLER_GEN_TMP_DIR ;\
-	}
-CONTROLLER_GEN=$(GOBIN)/controller-gen
-else
-CONTROLLER_GEN=$(shell which controller-gen)
-endif
 
 kustomize:
 ifeq (, $(shell which kustomize))
