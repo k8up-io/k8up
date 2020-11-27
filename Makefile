@@ -154,7 +154,7 @@ e2e_test: setup_e2e_test build
 setup_e2e_test: export KUBECONFIG = $(KIND_KUBECONFIG)
 setup_e2e_test: $(KIND_BIN) manifests
 	@kubectl config use-context kind-$(KIND_CLUSTER)
-	@kubectl apply --validate=false -k $(CRD_ROOT_DIR)/$(CRD_SPEC_VERSION)
+	@kubectl apply -k $(CRD_ROOT_DIR)/$(CRD_SPEC_VERSION)
 
 run_kind: export KUBECONFIG = $(KIND_KUBECONFIG)
 run_kind: setup_e2e_test
@@ -166,6 +166,7 @@ $(KIND_BIN): $(TESTBIN_DIR)
 	@chmod +x $(KIND_BIN)
 	$(KIND_BIN) create cluster --name $(KIND_CLUSTER) --image kindest/node:$(KIND_NODE_VERSION)
 	@kubectl cluster-info
+	@kubectl version
 
 clean: export KUBECONFIG = $(KIND_KUBECONFIG)
 clean:

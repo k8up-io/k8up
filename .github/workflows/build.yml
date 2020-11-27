@@ -46,6 +46,9 @@ jobs:
     - uses: actions/setup-go@v2
       with:
         go-version: ${{ env.GO_VERSION }}
+    - uses: azure/setup-kubectl@v1
+      with:
+        version: ${{ matrix.kind-node-version }}
     - uses: actions/cache@v2
       with:
         path: ~/go/pkg/mod
