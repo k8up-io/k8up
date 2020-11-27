@@ -40,6 +40,8 @@ endif
 # Set Shell to bash, otherwise some targets fail with dash/zsh etc.
 SHELL := /bin/bash
 
+KUSTOMIZE ?= go run sigs.k8s.io/kustomize/kustomize/v3
+
 all: build
 
 # Run tests
@@ -72,15 +74,15 @@ run: generate fmt vet manifests
 	go run ./main.go
 
 # Install CRDs into a cluster
-install: manifests kustomize
+install: manifests
 	$(KUSTOMIZE) build $(CRD_ROOT_DIR)/v1 | kubectl apply -f -
 
 # Uninstall CRDs from a cluster
-uninstall: manifests kustomize
+uninstall: manifests
 	$(KUSTOMIZE) build $(CRD_ROOT_DIR)/v1 | kubectl delete -f -
 
 # Deploy controller in the configured Kubernetes cluster in ~/.kube/config
-deploy: manifests kustomize
+deploy: manifests
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
 	$(KUSTOMIZE) build config/default | kubectl apply -f -
 
@@ -90,7 +92,7 @@ manifests:
 	@rm -r hack/config
 
 # Generate CRD to file
-crd: manifests kustomize
+crd: manifests
 	$(KUSTOMIZE) build $(CRD_ROOT_DIR)/v1 > $(CRD_FILE)
 	$(KUSTOMIZE) build $(CRD_ROOT_DIR)/v1beta1 > $(CRD_FILE_LEGACY)
 
@@ -119,21 +121,6 @@ docker-push:
 	docker push $(DOCKER_IMG)
 	docker push $(QUAY_IMG)
 
-kustomize:
-ifeq (, $(shell which kustomize))
-	@{ \
-	set -e ;\
-	KUSTOMIZE_GEN_TMP_DIR=$$(mktemp -d) ;\
-	cd $$KUSTOMIZE_GEN_TMP_DIR ;\
-	go mod init tmp ;\
-	go get sigs.k8s.io/kustomize/kustomize/v3@v3.5.4 ;\
-	rm -rf $$KUSTOMIZE_GEN_TMP_DIR ;\
-	}
-KUSTOMIZE=$(GOBIN)/kustomize
-else
-KUSTOMIZE=$(shell which kustomize)
-endif
-
 # Generate bundle manifests and metadata, then validate generated files.
 .PHONY: bundle
 bundle: manifests
@@ -154,7 +141,7 @@ e2e_test: setup_e2e_test build
 setup_e2e_test: export KUBECONFIG = $(KIND_KUBECONFIG)
 setup_e2e_test: $(KIND_BIN) manifests
 	@kubectl config use-context kind-$(KIND_CLUSTER)
-	@kubectl apply -k $(CRD_ROOT_DIR)/$(CRD_SPEC_VERSION)
+	@$(KUSTOMIZE) build $(CRD_ROOT_DIR)/$(CRD_SPEC_VERSION) | kubectl apply -f -
 
 run_kind: export KUBECONFIG = $(KIND_KUBECONFIG)
 run_kind: setup_e2e_test
