@@ -22,8 +22,8 @@ var patchFiles = []string{"v1beta1/backup.appuio.ch_prebackuppods.yaml"}
 // So we have to patch the CRD in post-generation.
 // See https://github.com/kubernetes/kubernetes/issues/91395
 func main() {
-	workdir, _ :=  os.Getwd()
-	log.Println("Running post-generate in "+ workdir)
+	workdir, _ := os.Getwd()
+	log.Println("Running post-generate in " + workdir)
 	for _, file := range patchFiles {
 		fileName := os.Getenv("CRD_ROOT_DIR") + "/" + file
 		log.Println(fmt.Sprintf("Reading file %s", fileName))

@@ -29,6 +29,7 @@ KIND_VERSION ?= 0.9.0
 KIND_KUBECONFIG ?= ./testbin/kind-kubeconfig
 KIND_NODE_VERSION ?= v1.18.8
 KIND_CLUSTER ?= k8up-$(KIND_NODE_VERSION)
+KIND_KUBECTL_ARGS ?= --validate=true
 
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
 ifeq (,$(shell go env GOBIN))
@@ -137,7 +138,7 @@ e2e_test: setup_e2e_test build
 setup_e2e_test: export KUBECONFIG = $(KIND_KUBECONFIG)
 setup_e2e_test: $(KIND_BIN) generate
 	@kubectl config use-context kind-$(KIND_CLUSTER)
-	@$(KUSTOMIZE) build $(CRD_ROOT_DIR)/$(CRD_SPEC_VERSION) | kubectl apply -f -
+	@$(KUSTOMIZE) build $(CRD_ROOT_DIR)/$(CRD_SPEC_VERSION) | kubectl apply $(KIND_KUBECTL_ARGS) -f -
 
 run_kind: export KUBECONFIG = $(KIND_KUBECONFIG)
 run_kind: setup_e2e_test
@@ -148,8 +149,8 @@ $(KIND_BIN): $(TESTBIN_DIR)
 	curl -Lo $(KIND_BIN) "https://kind.sigs.k8s.io/dl/v$(KIND_VERSION)/kind-$$(uname)-amd64"
 	@chmod +x $(KIND_BIN)
 	$(KIND_BIN) create cluster --name $(KIND_CLUSTER) --image kindest/node:$(KIND_NODE_VERSION)
-	@kubectl cluster-info
 	@kubectl version
+	@kubectl cluster-info
 
 clean: export KUBECONFIG = $(KIND_KUBECONFIG)
 clean:
