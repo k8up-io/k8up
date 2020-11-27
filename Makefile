@@ -45,7 +45,7 @@ KUSTOMIZE ?= go run sigs.k8s.io/kustomize/kustomize/v3
 all: build
 
 # Run tests
-test: generate fmt vet manifests
+test: generate fmt vet
 	go test ./... -coverprofile cover.out
 
 # Run tests (see https://sdk.operatorframework.io/docs/building-operators/golang/references/envtest-setup)
@@ -58,7 +58,7 @@ $(TESTBIN_DIR):
 # See https://storage.googleapis.com/kubebuilder-tools/ for list of supported K8s versions
 # No, there's no 1.18 support, so we're going for 1.19
 integration_test: export ENVTEST_K8S_VERSION = 1.19.2
-integration_test: generate fmt vet manifests $(TESTBIN_DIR)
+integration_test: generate fmt vet $(TESTBIN_DIR)
 	test -f ${ENVTEST_ASSETS_DIR}/setup-envtest.sh || curl -sSLo ${ENVTEST_ASSETS_DIR}/setup-envtest.sh https://raw.githubusercontent.com/kubernetes-sigs/controller-runtime/master/hack/setup-envtest.sh
 	source ${ENVTEST_ASSETS_DIR}/setup-envtest.sh; fetch_envtest_tools $(ENVTEST_ASSETS_DIR); setup_envtest_env $(ENVTEST_ASSETS_DIR); go test -tags=integration -v ./... -coverprofile cover.out
 
@@ -70,29 +70,29 @@ dist: generate fmt vet
 	goreleaser release --snapshot --rm-dist --skip-sign
 
 # Run against the configured Kubernetes cluster in ~/.kube/config
-run: generate fmt vet manifests
+run: generate fmt vet
 	go run ./main.go
 
 # Install CRDs into a cluster
-install: manifests
+install: generate
 	$(KUSTOMIZE) build $(CRD_ROOT_DIR)/v1 | kubectl apply -f -
 
 # Uninstall CRDs from a cluster
-uninstall: manifests
+uninstall: generate
 	$(KUSTOMIZE) build $(CRD_ROOT_DIR)/v1 | kubectl delete -f -
 
 # Deploy controller in the configured Kubernetes cluster in ~/.kube/config
-deploy: manifests
+deploy: generate
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
 	$(KUSTOMIZE) build config/default | kubectl apply -f -
 
 # Generate manifests e.g. CRD, RBAC etc.
-manifests:
-	@CRD_ROOT_DIR="$(CRD_ROOT_DIR)" go generate -tags=generate hack/generate-crd.go
-	@rm -r hack/config
+generate:
+	@CRD_ROOT_DIR="$(CRD_ROOT_DIR)" go generate -tags=generate generate.go
+	@rm config/*.yaml
 
 # Generate CRD to file
-crd: manifests
+crd: generate
 	$(KUSTOMIZE) build $(CRD_ROOT_DIR)/v1 > $(CRD_FILE)
 	$(KUSTOMIZE) build $(CRD_ROOT_DIR)/v1beta1 > $(CRD_FILE_LEGACY)
 
@@ -108,10 +108,6 @@ lint: fmt vet
 	@echo 'Check for uncommitted changes ...'
 	git diff --exit-code
 
-# Generate code
-generate: vet
-	go run sigs.k8s.io/controller-tools/cmd/controller-gen object:headerFile="hack/boilerplate.go.txt" paths="./..."
-
 # Build the docker image
 docker-build: build
 	docker build . -t $(DOCKER_IMG) -t $(QUAY_IMG)
@@ -123,7 +119,7 @@ docker-push:
 
 # Generate bundle manifests and metadata, then validate generated files.
 .PHONY: bundle
-bundle: manifests
+bundle: generate
 	operator-sdk generate kustomize manifests -q
 	cd config/manager && $(KUSTOMIZE) edit set image controller=$(IMG)
 	$(KUSTOMIZE) build config/manifests | operator-sdk generate bundle -q --overwrite --version $(VERSION) $(BUNDLE_METADATA_OPTS)
@@ -139,7 +135,7 @@ e2e_test: setup_e2e_test build
 	@echo "TODO: Add actual e2e tests!"
 
 setup_e2e_test: export KUBECONFIG = $(KIND_KUBECONFIG)
-setup_e2e_test: $(KIND_BIN) manifests
+setup_e2e_test: $(KIND_BIN) generate
 	@kubectl config use-context kind-$(KIND_CLUSTER)
 	@$(KUSTOMIZE) build $(CRD_ROOT_DIR)/$(CRD_SPEC_VERSION) | kubectl apply -f -
 

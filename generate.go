@@ -2,9 +2,11 @@
 
 package main
 
-//go:generate go run sigs.k8s.io/controller-tools/cmd/controller-gen crd:trivialVersions=true rbac:roleName=manager-role webhook paths="./../..." output:crd:artifacts:config=../${CRD_ROOT_DIR}/v1beta1 crd:crdVersions=v1beta1
-//go:generate go run sigs.k8s.io/controller-tools/cmd/controller-gen crd:trivialVersions=true rbac:roleName=manager-role webhook paths="./../..." output:crd:artifacts:config=../${CRD_ROOT_DIR}/v1      crd:crdVersions=v1
-//go:generate go run generate-crd.go
+//go:generate go run sigs.k8s.io/controller-tools/cmd/controller-gen object:headerFile="hack/boilerplate.go.txt" paths="./..."
+//go:generate go run sigs.k8s.io/controller-tools/cmd/controller-gen crd:trivialVersions=true rbac:roleName=manager-role webhook paths="./..." output:crd:artifacts:config=${CRD_ROOT_DIR}/v1beta1 crd:crdVersions=v1beta1
+//go:generate go run sigs.k8s.io/controller-tools/cmd/controller-gen crd:trivialVersions=true rbac:roleName=manager-role webhook paths="./..." output:crd:artifacts:config=${CRD_ROOT_DIR}/v1      crd:crdVersions=v1
+/// Run this file itself
+//go:generate go run generate.go
 
 import (
 	"bufio"
@@ -23,7 +25,7 @@ func main() {
 	workdir, _ :=  os.Getwd()
 	log.Println("Running post-generate in "+ workdir)
 	for _, file := range patchFiles {
-		fileName := "../" + os.Getenv("CRD_ROOT_DIR") + "/" + file
+		fileName := os.Getenv("CRD_ROOT_DIR") + "/" + file
 		log.Println(fmt.Sprintf("Reading file %s", fileName))
 		lines, err := readLines(fileName)
 		if err != nil {

@@ -33,14 +33,14 @@ You'll need:
 - docker
 - make
 
-These are the most common make targets: `build`, `test`, `docker-build`.
+These are the most common make targets: `build`, `test`, `docker-build`, `run`.
 
 ## Generate kubernetes code
 
 If you make changes to the CRD structs you'll need to run code generation. This can be done with make:
 
 ```
-make manifests
+make generate
 ```
 
 ## Install CRDs
