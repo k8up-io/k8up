@@ -46,7 +46,7 @@ KUSTOMIZE ?= go run sigs.k8s.io/kustomize/kustomize/v3
 all: build
 
 # Run tests
-test: generate fmt vet
+test: fmt vet
 	go test ./... -coverprofile cover.out
 
 # Run tests (see https://sdk.operatorframework.io/docs/building-operators/golang/references/envtest-setup)
@@ -71,7 +71,7 @@ dist: generate fmt vet
 	goreleaser release --snapshot --rm-dist --skip-sign
 
 # Run against the configured Kubernetes cluster in ~/.kube/config
-run: generate fmt vet
+run: fmt vet
 	go run ./main.go
 
 # Install CRDs into a cluster
@@ -136,7 +136,7 @@ e2e_test: setup_e2e_test build
 	@echo "TODO: Add actual e2e tests!"
 
 setup_e2e_test: export KUBECONFIG = $(KIND_KUBECONFIG)
-setup_e2e_test: $(KIND_BIN) generate
+setup_e2e_test: $(KIND_BIN)
 	@kubectl config use-context kind-$(KIND_CLUSTER)
 	@$(KUSTOMIZE) build $(CRD_ROOT_DIR)/$(CRD_SPEC_VERSION) | kubectl apply $(KIND_KUBECTL_ARGS) -f -
 
