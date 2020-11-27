@@ -85,7 +85,17 @@ func (b *Backend) String() string {
 	}
 
 	if b.S3 != nil {
-		return fmt.Sprintf("s3:%v/%v", b.S3.Endpoint, b.S3.Bucket)
+		endpoint := constants.GetGlobalS3Endpoint()
+		if b.S3.Endpoint != "" {
+			endpoint = b.S3.Endpoint
+		}
+
+		bucket := constants.GetGlobalS3Bucket()
+		if b.S3.Bucket != "" {
+			bucket = b.S3.Bucket
+		}
+
+		return fmt.Sprintf("s3:%v/%v", endpoint, bucket)
 	}
 
 	if b.Swift != nil {
