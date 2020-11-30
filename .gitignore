@@ -2,6 +2,9 @@
 ### Example user template template
 ### Example user template
 
+# VSCode configs
+.vscode/
+
 # IntelliJ project files
 .idea
 *.iml
@@ -26,3 +29,11 @@ gen### Go template
 cmd/*/debug
 cmd/operator/operator
 cmd/restic/restic
+
+bin/
+dist/
+k8up-crd*.yaml
+k8up
+testbin/
+
+__debug_bin

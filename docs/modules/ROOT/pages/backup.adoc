@@ -23,7 +23,7 @@ TIP: You can always check the state and configuration of your backup by using `k
 
 Every time a job starts, it creates a separate pod in your namespace. You can see them using `kubectl pods`. You can then use the usual `kubectl logs <POD NAME>` command to troubleshoot a failed backup job.
 
-Additionally the operator exposes a `:8080/metrics` endpoint for prometheus scraping. This will give you additional metrics that can be used to find failed jobs. See the [Prometheus examples](https://github.com/vshn/k8up/tree/master/manifest/examples/prometheus) in our Github repository.
+Additionally the operator exposes a `:8080/metrics` endpoint for prometheus scraping. This will give you additional metrics that can be used to find failed jobs. See the [Prometheus examples](https://github.com/vshn/k8up/blob/v0.1.10/manifest/examples/prometheus) in our Github repository.
 
 == Application-Aware Backups
 

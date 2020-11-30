@@ -1,0 +1,73 @@
+name: Build
+
+on:
+  push:
+    branches:
+    - master
+    - development
+    tags-ignore:
+    - "*"
+  pull_request:
+    branches:
+    - master
+    - development
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Determine Go version from go.mod
+      run: echo "GO_VERSION=$(grep "go 1." go.mod | cut -d " " -f 2)" >> $GITHUB_ENV
+    - uses: actions/setup-go@v2
+      with:
+        go-version: ${{ env.GO_VERSION }}
+    - uses: actions/cache@v2
+      with:
+        path: ~/go/pkg/mod
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-
+    - name: Run tests
+      run: make test
+  e2e-test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+        - kind-node-version: v1.18.8
+          crd-spec-version: v1
+        - kind-node-version: v1.13.12 # we cannot go lower than that because of Kind, see https://github.com/kubernetes-sigs/kind/issues/1853
+          crd-spec-version: v1beta1
+    steps:
+    - uses: actions/checkout@v2
+    - name: Determine Go version from go.mod
+      run: echo "GO_VERSION=$(grep "go 1." go.mod | cut -d " " -f 2)" >> $GITHUB_ENV
+    - uses: actions/setup-go@v2
+      with:
+        go-version: ${{ env.GO_VERSION }}
+    - uses: actions/cache@v2
+      with:
+        path: ~/go/pkg/mod
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-
+    - name: Run e2e tests
+      run: make crd e2e_test -e CRD_SPEC_VERSION=${{ matrix.crd-spec-version }} -e KIND_NODE_VERSION=${{ matrix.kind-node-version }} -e KIND_KUBECTL_ARGS=--validate=false
+  image:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Determine Go version from go.mod
+      run: echo "GO_VERSION=$(grep "go 1." go.mod | cut -d " " -f 2)" >> $GITHUB_ENV
+    - uses: actions/setup-go@v2
+      with:
+        go-version: ${{ env.GO_VERSION }}
+    - uses: actions/cache@v2
+      with:
+        path: ~/go/pkg/mod
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-
+    - name: Build image
+      run: make docker-build

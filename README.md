@@ -1,4 +1,10 @@
-![Build status](https://api.travis-ci.com/vshn/k8up.svg?branch=master)
+[![Build](https://img.shields.io/github/workflow/status/vshn/k8up/Build)][build]
+![Go version](https://img.shields.io/github/go-mod/go-version/vshn/k8up)
+![Kubernetes version](https://img.shields.io/badge/k8s-v1.18-blue)
+[![Version](https://img.shields.io/github/v/release/vshn/k8up)][releases]
+[![GitHub downloads](https://img.shields.io/github/downloads/vshn/k8up/total)][releases]
+[![Docker image](https://img.shields.io/docker/pulls/vshn/k8up)][dockerhub]
+[![License](https://img.shields.io/github/license/vshn/k8up)][license]
 
 <img src="https://raw.githubusercontent.com/vshn/k8up/master/docs/images/logo.png" width="150">
 
@@ -14,58 +20,96 @@ K8up is currently under heavy development and far from feature complete. But it 
 
 The documentation is published here: https://k8up.io/
 
-# Dev Environment
+# Contributing
+
+K8up is an operator written using the [Operator SDK](https://sdk.operatorframework.io/docs).
+
 You'll need:
 
-* Minishift or Minikube
-* golang installed :) (everything is tested with 1.13)
-* Your favorite IDE (with a golang plugin)
-* docker
-* make
+- A running kubernetes cluster (minishift, minikube, k3s, ... you name it)
+- [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/) and [kustomize](https://kubernetes-sigs.github.io/kustomize/installation/)
+- Go development environment
+- Your favorite IDE (with a Go plugin)
+- docker
+- make
+
+These are the most common make targets: `build`, `test`, `docker-build`, `run`.
 
 ## Generate kubernetes code
+
 If you make changes to the CRD structs you'll need to run code generation. This can be done with make:
 
 ```
-cd /project/root
 make generate
 ```
 
-This creates the client folder and deepcopy functions for the structs. This needs to be run on a local docker instance so it can mount the code to the container.
+## Install CRDs
 
-## Run the operator in dev mode
+CRDs can be either installed on the cluster by running `make install` or using `kubectl apply -k config/crd/apiextension.k8s.io/v1`.
+
+Currently there's an issue using [`make install`](https://github.com/kubernetes-sigs/kubebuilder/issues/1544) related to how the CRDs are specified.
+Therefore settle to the second approach for now.
+
+## Run the operator
+
+You can run the operator in different ways:
+
+1. as a docker image (see [quickstart](https://sdk.operatorframework.io/docs/building-operators/golang/quickstart/))
+2. using `make run` (provide your own kubeconfig)
+3. using `make run_kind` (uses KIND to install a cluster in docker and provides its own kubeconfig in `testbin/`)
+4. using a configuration of your favorite IDE (see below for VSCode example)
+
+Example VSCode run configuration:
 
 ```
-cd /to/go/project
-minishift start
-oc login -u system:admin # default developer account doesn't have the rights to create a crd
-#The operator has the be run at least once before to create the CRD
-go run cmd/operator/*.go -development
-#Add a demo backupworker (adjust the variables to your liking first)
-kubectl apply -f manifest-examples/k8up.yaml
-#Add a demo PVC if necessary
-kubectl apply -f manifest-examples/pvc.yaml
+{
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Launch",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "${workspaceFolder}/main.go",
+      "env": {
+        "BACKUP_IMAGE": "vshn/wrestic:v0.2.0",
+        "BACKUP_GLOBALS3ENDPOINT": "http://somewhere.example.org",
+        "BACKUP_GLOBALS3BUCKET": "somebucket",
+        "BACKUP_GLOBALSECRETACCESSKEY": "replacewithaccesskey",
+        "BACKUP_GLOBALACCESSKEYID": "replacewithkeyid",
+        "BACKUP_GLOBALREPOPASSWORD": "somepassword"
+      },
+      "args": []
+    }
+  ]
+}
 ```
 
-## Build and push the Restic container
-The container has to exist on the registry in order for the operator to find the correct one.
+Best is if you have [minio](https://min.io/download) installed somewhere to be able to setup the needed env values. It needs to be reachable from within your dev cluster.
 
+## Run E2E tests
+
+K8up supports both OpenShift 3.11 clusters and newer Kubernetes clusters 1.16+. 
+However, to support OpenShift 3.11 a legacy CRD definition with `apiextensions.k8s.io/v1beta1` is needed, while K8s 1.22+ only supports `apiextensions.k8s.io/v1`.
+
+To run e2e tests for newer K8s versions run
 ```
-minishift start
-oc login -u developer
-docker build -t $(minishift openshift registry)/myproject/k8up:0.0.1 .
-docker save $(minishift openshift registry)/myproject/k8up:0.0.1 > tmp.tar
-eval $(minishift docker-env)
-docker load -i tmp.tar
-rm tmp.tar
-docker login -u developer -p $(oc whoami -t) $(minishift openshift registry)
-docker push $(minishift openshift registry)/myproject/k8up:0.0.1
+make e2e_test
 ```
 
-# Docker tags
+To test compatibility of k8up with OpenShift 3.11, we can run end-to-end tests as following:
+```
+make e2e_test -e CRD_SPEC_VERSION=v1beta1 -e KIND_NODE_VERSION=v1.13.12
+``` 
 
-(AMD64/x86 arch only)
+## Example configurations
 
-* latest: master branch
-* dev: dev branch (useful for pre-releases)
-* versioned: tagged git releases
+There are a number of example configurations in [`config/samples`](config/samples). Apply them using `kubectl apply -f config/samples/somesample.yaml`
+
+[build]: https://github.com/vshn/k8up/actions?query=workflow%3ABuild
+[releases]: https://github.com/vshn/k8up/releases
+[license]: https://github.com/vshn/k8up/blob/master/LICENSE
+[dockerhub]: https://hub.docker.com/r/vshn/k8up

@@ -1,0 +1,155 @@
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  creationTimestamp: null
+  name: manager-role
+rules:
+- apiGroups:
+  - backup.appuio.ch
+  resources:
+  - archives
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - backup.appuio.ch
+  resources:
+  - archives/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - backup.appuio.ch
+  resources:
+  - backups
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - backup.appuio.ch
+  resources:
+  - backups/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - backup.appuio.ch
+  resources:
+  - checks
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - backup.appuio.ch
+  resources:
+  - checks/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - backup.appuio.ch
+  resources:
+  - prunes
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - backup.appuio.ch
+  resources:
+  - prunes/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - backup.appuio.ch
+  resources:
+  - restores
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - backup.appuio.ch
+  resources:
+  - restores/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - backup.appuio.ch
+  resources:
+  - schedules
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - backup.appuio.ch
+  resources:
+  - schedules/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - batch
+  resources:
+  - jobs
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - batch
+  resources:
+  - jobs/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  verbs:
+  - get
+  - list
