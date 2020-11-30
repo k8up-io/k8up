@@ -33,19 +33,19 @@ You'll need:
 - docker
 - make
 
-These are the most common make targets: `build`, `test`, `docker-build`.
+These are the most common make targets: `build`, `test`, `docker-build`, `run`.
 
 ## Generate kubernetes code
 
 If you make changes to the CRD structs you'll need to run code generation. This can be done with make:
 
 ```
-make manifests
+make generate
 ```
 
 ## Install CRDs
 
-CRDs can be either installed on the cluster by running `make install` or using `kubectl apply -k config/crd`.
+CRDs can be either installed on the cluster by running `make install` or using `kubectl apply -k config/crd/apiextension.k8s.io/v1`.
 
 Currently there's an issue using [`make install`](https://github.com/kubernetes-sigs/kubebuilder/issues/1544) related to how the CRDs are specified.
 Therefore settle to the second approach for now.
@@ -89,6 +89,21 @@ Example VSCode run configuration:
 ```
 
 Best is if you have [minio](https://min.io/download) installed somewhere to be able to setup the needed env values. It needs to be reachable from within your dev cluster.
+
+## Run E2E tests
+
+K8up supports both OpenShift 3.11 clusters and newer Kubernetes clusters 1.16+. 
+However, to support OpenShift 3.11 a legacy CRD definition with `apiextensions.k8s.io/v1beta1` is needed, while K8s 1.22+ only supports `apiextensions.k8s.io/v1`.
+
+To run e2e tests for newer K8s versions run
+```
+make e2e_test
+```
+
+To test compatibility of k8up with OpenShift 3.11, we can run end-to-end tests as following:
+```
+make e2e_test -e CRD_SPEC_VERSION=v1beta1 -e KIND_NODE_VERSION=v1.13.12
+``` 
 
 ## Example configurations
 

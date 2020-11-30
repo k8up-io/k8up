@@ -13,7 +13,7 @@ namePrefix: k8up-
 #  someName: someValue
 
 bases:
-- ../crd
+- ../crd/apiextensions.k8s.io/v1
 - ../rbac
 - ../manager
 # [WEBHOOK] To enable webhook, uncomment all the sections with [WEBHOOK] prefix including the one in

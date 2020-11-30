@@ -2,14 +2,14 @@
 # since it depends on service name and namespace that are out of this kustomize package.
 # It should be run by config/default
 resources:
-- bases/backup.appuio.ch_schedules.yaml
-- bases/backup.appuio.ch_backups.yaml
-- bases/backup.appuio.ch_restores.yaml
-- bases/backup.appuio.ch_archives.yaml
-- bases/backup.appuio.ch_checks.yaml
-- bases/backup.appuio.ch_prunes.yaml
-- bases/backup.appuio.ch_snapshots.yaml
-- bases/backup.appuio.ch_prebackuppods.yaml
+- backup.appuio.ch_schedules.yaml
+- backup.appuio.ch_backups.yaml
+- backup.appuio.ch_restores.yaml
+- backup.appuio.ch_archives.yaml
+- backup.appuio.ch_checks.yaml
+- backup.appuio.ch_prunes.yaml
+- backup.appuio.ch_snapshots.yaml
+- backup.appuio.ch_prebackuppods.yaml
 # +kubebuilder:scaffold:crdkustomizeresource
 
 patchesStrategicMerge:
