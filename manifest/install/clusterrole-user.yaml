@@ -1,0 +1,33 @@
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: k8up-user-edit
+  labels:
+    # Add these permissions to the "admin" and "edit" default roles.
+    rbac.authorization.k8s.io/aggregate-to-admin: "true"
+    rbac.authorization.k8s.io/aggregate-to-edit: "true"
+rules:
+  - apiGroups:
+      - backup.appuio.ch
+    resources:
+      - "*"
+    verbs:
+      - "*"
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: k8up-user-view
+  labels:
+    # Add these permissions to the "view" default role.
+    rbac.authorization.k8s.io/aggregate-to-view: "true"
+rules:
+  - apiGroups:
+      - backup.appuio.ch
+    resources:
+      - "*"
+    verbs:
+      - get
+      - list
+      - watch

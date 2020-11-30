@@ -1,0 +1,18 @@
+= Install K8up
+
+The most convenient way to install K8up is using https://helm.sh/[helm].
+Start by adding the `appuio` repository:
+
+[source,bash]
+----
+helm repo add appuio https://charts.appuio.ch
+helm repo update
+----
+
+Then install K8up itself:
+
+[source,bash]
+----
+kubectl create namespace k8up-operator
+helm install k8up appuio/k8up --namespace k8up-operator
+----

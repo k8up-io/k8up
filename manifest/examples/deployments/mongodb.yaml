@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: '2018-07-31T11:10:46Z'
+  generation: 4
+  annotations:
+    k8up.syn.tools/backupcommand: mongodump --archive -uroot -pexample
+  labels:
+    app: mongodb
+  name: mongodb
+  namespace: myproject
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 2
+  selector:
+    matchLabels:
+      app: mongodb
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: mongodb
+    spec:
+      containers:
+        - env:
+            - name: MONGO_INITDB_ROOT_USERNAME
+              value: root
+            - name: MONGO_INITDB_ROOT_PASSWORD
+              value: example
+          image: mongo
+          imagePullPolicy: Always
+          name: mongodb
+          ports:
+            - containerPort: 3306
+              protocol: TCP
+          resources: {}
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+            - mountPath: /data/db
+              name: mongodb
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+      volumes:
+        - name: mongodb
+          persistentVolumeClaim:
+            claimName: mongodb

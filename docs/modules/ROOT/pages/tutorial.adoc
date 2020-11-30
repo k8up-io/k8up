@@ -1,0 +1,84 @@
+= Getting Started Tutorial
+
+This tutorial provides a quick introduction to K8up, how it works and how to use it.
+
+== Overview
+
+. Install K8up
+. Install services (for local development)
+. Configure a PVC (for local development)
+. Configure credentials
+. Create backups
+. Restore backups
+. Local development
+
+== Local Development
+
+This section provides information about the minimum requirements for testing K8up on Minikube.
+
+Before starting please make sure Minikube is installed and started, and that `helm` is installed and properly initialized in your Minikube.
+
+=== Install K8up
+
+See xref:install.adoc[].
+
+=== Install MinIO
+
+https://min.io/[MinIO] is a distributed object storage service for high performance, high scale data infrastructures. It's a drop in replacement for AWS S3 in your own environment. We're going to install it using Helm to simulate a remote S3 bucket where our backups are going to be stored:
+
+[source,bash]
+----
+kubectl create namespace minio
+helm repo add minio https://helm.min.io/
+# reduces required resources for minio to make it deployable on a local cluster - adjust accordingly for your setup
+helm install minio --namespace minio --set replicas=1,resources.requests.memory=250M minio/minio
+----
+
+After a few minutes you should be able to see your MinIO installation on the browser using `minikube service minio-service`. The default Minio installation uses the access key `minio` and secret key `minio123`.
+
+=== Create a PersistentVolumeClaim Resource
+
+This will be the resource backed up by K8up:
+
+[source,yaml]
+----
+include::example$pvc.yaml[]
+----
+
+Save the YAML above in a file named `pvc.yml` and use the `kubectl apply -f pvc.yml` command to deploy this configuration to your cluster.
+
+=== Create Backup Credentials
+
+Create the secret credentials for the backup repository:
+
+[source,yaml]
+----
+include::example$credentials.yaml[]
+----
+
+Save the YAML above in a file named `secrets.yml` and use the `kubectl apply -f secrets.yml` command to deploy this configuration to your cluster.
+
+The default MinIO installation uses the access key `minio` and secret key `minio123`. They're in plain text inside the `backup-credentials` Secret definition and will be encoded as Base64 when the Secret is created on your cluster.
+
+WARNING: Please store the password of the `backup-repo` Secret somewhere safe. This is the encryption password for Restic. Without it you will lose access to the backup permanently.
+
+=== Set Up a Backup Schedule
+
+See xref:backup.adoc[].
+
+== Summary
+
+The following movie shows the sequence of steps explained in this tutorial.
+
+++++
+<asciinema-player src="_attachments/casts/backup.cast" idle-time-limit="1" poster="npt:0:40" speed="1.0" font-size="medium" theme="tango"></asciinema-player>
+++++
+
+== What's Next?
+
+For advanced configuration of the operator please see xref:advanced-config.adoc[].
+
+++++
+<link rel="stylesheet" href="_attachments/lib/asciinema/asciinema-player.css">
+<script src="_attachments/lib/asciinema/asciinema-player.js"></script>
+++++
