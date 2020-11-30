@@ -15,7 +15,7 @@ The operator has two ways for configuration:
 * `BACKUP_GLOBALACCESSKEYID` set the S3 access key id to be used globaly
 * `BACKUP_GLOBALKEEPJOBS` set the count of jobs to keep globally
 * `BACKUP_GLOBALREPOPASSWORD` set the restic repository password to be used globaly
-* `BACKUP_GLOBALRESTORES3ACCESKEYID` set the global resotre S3 accessKeyID for restores
+* `BACKUP_GLOBALRESTORES3ACCESKEYID` set the global restore S3 accessKeyID for restores
 * `BACKUP_GLOBALRESTORES3BUCKET` set the global restore S3 bucket for restores
 * `BACKUP_GLOBALRESTORES3ENDPOINT` set the global restore S3 endpoint for the restores (needs the scheme [http/https]
 * `BACKUP_GLOBALRESTORES3SECRETACCESSKEY` set the global restore S3 SecretAccessKey for restores

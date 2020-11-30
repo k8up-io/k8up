@@ -30,7 +30,7 @@ var (
 	globalAccessKey                = getEnvVar("BACKUP_GLOBALACCESSKEYID", "")
 	globalKeepJobs                 = getEnvVar("BACKUP_GLOBALKEEPJOBS", "6")
 	globalRepoPassword             = getEnvVar("BACKUP_GLOBALREPOPASSWORD", "")
-	globalRestoreS3AccessKey       = getEnvVar("BACKUP_GLOBALRESTORES3ACCESKEYID", "")
+	globalRestoreS3AccessKey       = getEnvVar("BACKUP_GLOBALRESTORES3ACCESSKEYID", "")
 	globalRestoreS3Bucket          = getEnvVar("BACKUP_GLOBALRESTORES3BUCKET", "")
 	globalRestoreS3Endpoint        = getEnvVar("BACKUP_GLOBALRESTORES3ENDPOINT", "")
 	globalRestoreS3SecretAccessKey = getEnvVar("BACKUP_GLOBALRESTORES3SECRETACCESSKEY", "")
