@@ -31,6 +31,9 @@ KIND_NODE_VERSION ?= v1.18.8
 KIND_CLUSTER ?= k8up-$(KIND_NODE_VERSION)
 KIND_KUBECTL_ARGS ?= --validate=true
 
+vale_cmd           ?= docker run $(docker_opts) --volume "$${PWD}"/docs/modules/ROOT/pages:/pages docker.io/vshn/vale:2.1.1 --minAlertLevel=error /pages
+antora_preview_cmd ?= docker run --rm --publish 35729:35729 --publish 2020:2020 --volume "${PWD}":/preview/antora docker.io/vshn/antora-preview:2.3.4 --style=syn --antora=docs
+
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
 ifeq (,$(shell go env GOBIN))
 GOBIN=$(shell go env GOPATH)/bin
@@ -130,6 +133,13 @@ bundle: generate
 .PHONY: bundle-build
 bundle-build:
 	docker build -f bundle.Dockerfile -t $(BUNDLE_IMG) .
+
+docs-serve:
+	$(antora_preview_cmd)
+
+.PHONY: docs-vale
+docs-vale:
+	$(vale_cmd)
 
 e2e_test: export KUBECONFIG = $(KIND_KUBECONFIG)
 e2e_test: setup_e2e_test build
