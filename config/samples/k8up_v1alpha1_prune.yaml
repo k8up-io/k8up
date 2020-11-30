@@ -1,8 +1,22 @@
 apiVersion: backup.appuio.ch/v1alpha1
 kind: Prune
 metadata:
-  name: prune-sample
+  name: prune-test
 spec:
   retention:
     keepLast: 5
     keepDaily: 14
+  backend:
+    s3:
+      endpoint: http://10.144.1.224:9000
+      bucket: k8up
+      accessKeyIDSecretRef:
+        name: backup-credentials
+        key: username
+      secretAccessKeySecretRef:
+        name: backup-credentials
+        key: password
+      repoPasswordSecretRef:
+        name: backup-repo
+        key: password
+  promURL: http://10.144.1.224:9000

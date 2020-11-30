@@ -109,11 +109,11 @@ See <<object-specifications.adoc#PreBackup-pods,PreBackup pods>> for detailed ob
 
 == Manual Installation
 
-All required definitions for the installation are located at `manifest/install/`:
+All required definitions for the installation are located at `config/samples/`:
 
 [source,bash]
 ----
-kubectl apply -f manifest/install/
+kubectl apply -k config/samples/
 ----
 
 Please be aware that these manifests are intended for dev and as examples. They're not the official way to install the operator in production. For this we provide a helm chart at https://github.com/appuio/charts. You may need to adjust the namespaces in the manifests. There are various other examples under `manifest/examples/`.

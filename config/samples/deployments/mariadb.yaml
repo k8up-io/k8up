@@ -1,9 +1,6 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  creationTimestamp: '2018-07-31T11:10:46Z'
-  generation: 4
-
   labels:
     app: mariadb
   name: mariadb
@@ -22,7 +19,6 @@ spec:
     type: RollingUpdate
   template:
     metadata:
-      creationTimestamp: null
       labels:
         app: mariadb
       annotations:

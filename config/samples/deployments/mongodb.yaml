@@ -1,8 +1,6 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  creationTimestamp: '2018-07-31T11:10:46Z'
-  generation: 4
   annotations:
     k8up.syn.tools/backupcommand: mongodump --archive -uroot -pexample
   labels:
@@ -10,7 +8,6 @@ metadata:
   name: mongodb
   namespace: myproject
 spec:
-  progressDeadlineSeconds: 600
   replicas: 1
   revisionHistoryLimit: 2
   selector:
@@ -23,7 +20,6 @@ spec:
     type: RollingUpdate
   template:
     metadata:
-      creationTimestamp: null
       labels:
         app: mongodb
     spec:

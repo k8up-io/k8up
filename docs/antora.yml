@@ -1,6 +1,6 @@
 name: docs
 title: K8up Documentation
-version: 0.1.9
+version: 0.1.10
 start_page: ROOT:index.adoc
 nav:
 - modules/ROOT/nav.adoc

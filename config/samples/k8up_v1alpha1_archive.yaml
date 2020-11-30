@@ -1,7 +1,28 @@
 apiVersion: backup.appuio.ch/v1alpha1
 kind: Archive
 metadata:
-  name: archive-sample
+  name: archive-test
 spec:
-  # Add fields here
-  foo: bar
+  repoPasswordSecretRef:
+    name: backup-repo
+    key: password
+  restoreMethod:
+    s3:
+      endpoint: http://10.144.1.224:9000
+      bucket: restoremini
+      accessKeyIDSecretRef:
+        name: backup-credentials
+        key: username
+      secretAccessKeySecretRef:
+        name: backup-credentials
+        key: password
+  backend:
+    s3:
+      endpoint: http://10.144.1.224:9000
+      bucket: k8up
+      accessKeyIDSecretRef:
+        name: backup-credentials
+        key: username
+      secretAccessKeySecretRef:
+        name: backup-credentials
+        key: password
