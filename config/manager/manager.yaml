@@ -8,10 +8,8 @@ metadata:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: controller-manager
+  name: operator
   namespace: system
-  labels:
-    control-plane: controller-manager
 spec:
   selector:
     matchLabels:
@@ -23,17 +21,14 @@ spec:
         control-plane: controller-manager
     spec:
       containers:
-      - command:
-        - /manager
+      - name: k8up
+        image: quay.io/vshn/k8up:latest
         args:
-        - --enable-leader-election
-        image: controller:latest
-        name: manager
+        - --enable-leader-election=true
         resources:
           limits:
-            cpu: 100m
-            memory: 30Mi
+            cpu: 300m
+            memory: 100Mi
           requests:
             cpu: 100m
             memory: 20Mi
-      terminationGracePeriodSeconds: 10
