@@ -21,6 +21,11 @@ import (
 )
 
 var (
+	// These will be populated by Goreleaser
+	version string
+	commit  string
+	date    string
+
 	scheme   = runtime.NewScheme()
 	setupLog = ctrl.Log.WithName("setup")
 )
@@ -52,7 +57,7 @@ func main() {
 		LeaderElectionID:   "d2ab61da.syn.tools",
 	})
 	if err != nil {
-		setupLog.Error(err, "unable to start manager")
+		setupLog.Error(err, "unable to start K8up operator")
 		os.Exit(1)
 	}
 
@@ -114,9 +119,9 @@ func main() {
 	}
 	// +kubebuilder:scaffold:builder
 
-	setupLog.Info("starting manager")
+	setupLog.WithValues("version", version, "date", date, "commit", commit).Info("Starting K8up operator")
 	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {
-		setupLog.Error(err, "problem running manager")
+		setupLog.Error(err, "problem running K8up")
 		os.Exit(1)
 	}
 }
