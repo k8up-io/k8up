@@ -2,9 +2,9 @@ package executor
 
 import (
 	stderrors "errors"
+	"github.com/vshn/k8up/cfg"
 
 	k8upv1alpha1 "github.com/vshn/k8up/api/v1alpha1"
-	"github.com/vshn/k8up/constants"
 	"github.com/vshn/k8up/job"
 	corev1 "k8s.io/api/core/v1"
 )
@@ -59,11 +59,11 @@ func (c *CheckExecutor) setupEnvVars() []corev1.EnvVar {
 			for key, value := range c.check.Spec.Backend.GetCredentialEnv() {
 				vars.SetEnvVarSource(key, value)
 			}
-			vars.SetString(constants.ResticRepositoryEnvName, c.check.Spec.Backend.String())
+			vars.SetString(cfg.ResticRepositoryEnvName, c.check.Spec.Backend.String())
 		}
 	}
 
-	vars.SetString("PROM_URL", constants.GetPromURL())
+	vars.SetString("PROM_URL", cfg.Config.PromURL)
 
 	err := vars.Merge(DefaultEnv(c.Obj.GetMetaObject().GetNamespace()))
 	if err != nil {

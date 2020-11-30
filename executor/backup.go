@@ -2,11 +2,11 @@ package executor
 
 import (
 	stderrors "errors"
+	"github.com/vshn/k8up/cfg"
 	"path"
 	"strconv"
 
 	k8upv1alpha1 "github.com/vshn/k8up/api/v1alpha1"
-	"github.com/vshn/k8up/constants"
 	"github.com/vshn/k8up/job"
 	"github.com/vshn/k8up/observer"
 	"github.com/vshn/k8up/prebackup"
@@ -126,7 +126,7 @@ func (b *BackupExecutor) getVolumeMounts(claims []corev1.Volume) []corev1.Volume
 	for i, volume := range claims {
 		mounts[i] = corev1.VolumeMount{
 			Name:      volume.Name,
-			MountPath: path.Join(constants.GetMountPath(), volume.Name),
+			MountPath: path.Join(cfg.Config.MountPath, volume.Name),
 			ReadOnly:  true,
 		}
 	}
@@ -155,11 +155,11 @@ func (b *BackupExecutor) startBackup(job *batchv1.Job) {
 
 	b.setBackupCallback(name, preBackup)
 
-	volumes := b.listPVCs(constants.GetBackupAnnotation())
+	volumes := b.listPVCs(cfg.Config.BackupAnnotation)
 
 	job.Spec.Template.Spec.Containers[0].Env = b.setupEnvVars()
 	job.Spec.Template.Spec.Volumes = volumes
-	job.Spec.Template.Spec.ServiceAccountName = constants.GetServiceAccount()
+	job.Spec.Template.Spec.ServiceAccountName = cfg.Config.ServiceAccount
 	job.Spec.Template.Spec.Containers[0].VolumeMounts = b.getVolumeMounts(volumes)
 	err = b.Client.Create(b.CTX, job)
 	if err != nil {
@@ -239,7 +239,7 @@ func (b *BackupExecutor) createServiceAccountAndBinding() error {
 func newServiceAccountDefinition(namespace string) serviceAccount {
 	role := rbacv1.Role{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      constants.GetPodExecRoleName(),
+			Name:      cfg.Config.PodExecRoleName,
 			Namespace: namespace,
 		},
 		Rules: []rbacv1.PolicyRule{
@@ -260,26 +260,26 @@ func newServiceAccountDefinition(namespace string) serviceAccount {
 
 	roleBinding := rbacv1.RoleBinding{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      constants.GetPodExecRoleName() + "-namespaced",
+			Name:      cfg.Config.PodExecRoleName + "-namespaced",
 			Namespace: namespace,
 		},
 		Subjects: []rbacv1.Subject{
 			{
 				Kind:      "ServiceAccount",
 				Namespace: namespace,
-				Name:      constants.GetServiceAccount(),
+				Name:      cfg.Config.ServiceAccount,
 			},
 		},
 		RoleRef: rbacv1.RoleRef{
 			Kind:     "Role",
-			Name:     constants.GetServiceAccount(),
+			Name:     cfg.Config.ServiceAccount,
 			APIGroup: "rbac.authorization.k8s.io",
 		},
 	}
 
 	account := corev1.ServiceAccount{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      constants.GetServiceAccount(),
+			Name:      cfg.Config.ServiceAccount,
 			Namespace: namespace,
 		},
 	}
@@ -299,14 +299,14 @@ func (b *BackupExecutor) setupEnvVars() []corev1.EnvVar {
 			for key, value := range b.backup.Spec.Backend.GetCredentialEnv() {
 				vars.SetEnvVarSource(key, value)
 			}
-			vars.SetString(constants.ResticRepositoryEnvName, b.backup.Spec.Backend.String())
+			vars.SetString(cfg.ResticRepositoryEnvName, b.backup.Spec.Backend.String())
 		}
 	}
 
-	vars.SetString("STATS_URL", constants.GetGlobalStatsURL())
-	vars.SetString("PROM_URL", constants.GetPromURL())
-	vars.SetString("BACKUPCOMMAND_ANNOTATION", constants.GetBackupCommandAnnotation())
-	vars.SetString("FILEEXTENSION_ANNOTATION", constants.GetFileExtensionAnnotation())
+	vars.SetString("STATS_URL", cfg.Config.GlobalStatsURL)
+	vars.SetString("PROM_URL", cfg.Config.PromURL)
+	vars.SetString("BACKUPCOMMAND_ANNOTATION", cfg.Config.BackupCommandAnnotation)
+	vars.SetString("FILEEXTENSION_ANNOTATION", cfg.Config.FileExtensionAnnotation)
 
 	err := vars.Merge(DefaultEnv(b.Obj.GetMetaObject().GetNamespace()))
 	if err != nil {

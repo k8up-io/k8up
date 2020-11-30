@@ -1,5 +1,15 @@
 package cfg
 
+const (
+	RestoreS3EndpointEnvName        = "RESTORE_S3ENDPOINT"
+	RestoreS3AccessKeyIDEnvName     = "RESTORE_ACCESSKEYID"
+	RestoreS3SecretAccessKeyEnvName = "RESTORE_SECRETACCESSKEY"
+	ResticRepositoryEnvName         = "RESTIC_REPOSITORY"
+	ResticPasswordEnvName           = "RESTIC_PASSWORD"
+	AwsAccessKeyIDEnvName           = "AWS_ACCESS_KEY_ID"
+	AwsSecretAccessKeyEnvName       = "AWS_SECRET_ACCESS_KEY"
+)
+
 // Configuration holds a strongly-typed tree of the configuration
 type Configuration struct {
 	MountPath                      string `koanf:"datapath"`
@@ -27,6 +37,10 @@ type Configuration struct {
 	RestartPolicy                  string `koanf:"restartpolicy"`
 }
 
+var (
+	Config = NewDefaultConfig()
+)
+
 // NewDefaultConfig retrieves the config with sane defaults
 func NewDefaultConfig() *Configuration {
 	return &Configuration{
@@ -41,9 +55,6 @@ func NewDefaultConfig() *Configuration {
 		PodExecRoleName:         "pod-executor",
 		RestartPolicy:           "OnFailure",
 		MetricsBindAddress:      ":8080",
+		PodFilter:               "backupPod=true",
 	}
 }
-
-var (
-	Config = NewDefaultConfig()
-)

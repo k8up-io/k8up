@@ -2,9 +2,9 @@ package executor
 
 import (
 	stderrors "errors"
+	"github.com/vshn/k8up/cfg"
 
 	k8upv1alpha1 "github.com/vshn/k8up/api/v1alpha1"
-	"github.com/vshn/k8up/constants"
 	"github.com/vshn/k8up/job"
 	"github.com/vshn/k8up/observer"
 	batchv1 "k8s.io/api/batch/v1"
@@ -150,7 +150,7 @@ func getS3EndpointValue(archive *k8upv1alpha1.Archive) string {
 	v := archive.Spec.RestoreSpec.RestoreMethod.S3.Endpoint
 
 	if v == "" {
-		v = constants.GetGlobalRestoreS3Endpoint()
+		v = cfg.Config.GlobalRestoreS3Endpoint
 	}
 
 	return v
@@ -160,7 +160,7 @@ func getS3BucketValue(archive *k8upv1alpha1.Archive) string {
 	v := archive.Spec.RestoreSpec.RestoreMethod.S3.Bucket
 
 	if v == "" {
-		v = constants.GetGlobalRestoreS3Bucket()
+		v = cfg.Config.GlobalRestoreS3Bucket
 	}
 
 	return v

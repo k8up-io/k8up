@@ -23,10 +23,12 @@ import (
 // These tests use Ginkgo (BDD-style Go testing framework). Refer to
 // http://onsi.github.io/ginkgo/ to learn more about Ginkgo.
 
-var cfg *rest.Config
-var k8sClient client.Client
-var testEnv *envtest.Environment
-var scheme *runtime.Scheme = runtime.NewScheme()
+var (
+	restCfg   *rest.Config
+	k8sClient client.Client
+	testEnv   *envtest.Environment
+	scheme    = runtime.NewScheme()
+)
 
 var _ = BeforeSuite(func(done Done) {
 	err := k8upv1alpha1.AddToScheme(scheme)

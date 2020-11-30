@@ -2,8 +2,8 @@ package v1alpha1
 
 import (
 	"fmt"
+	"github.com/vshn/k8up/cfg"
 
-	"github.com/vshn/k8up/constants"
 	corev1 "k8s.io/api/core/v1"
 )
 
@@ -24,7 +24,7 @@ func (b *Backend) GetCredentialEnv() map[string]*corev1.EnvVarSource {
 	vars := make(map[string]*corev1.EnvVarSource)
 
 	if b.RepoPasswordSecretRef != nil {
-		vars[constants.ResticPasswordEnvName] = &corev1.EnvVarSource{
+		vars[cfg.ResticPasswordEnvName] = &corev1.EnvVarSource{
 			SecretKeyRef: b.RepoPasswordSecretRef,
 		}
 	}
@@ -85,12 +85,12 @@ func (b *Backend) String() string {
 	}
 
 	if b.S3 != nil {
-		endpoint := constants.GetGlobalS3Endpoint()
+		endpoint := cfg.Config.GlobalS3Endpoint
 		if b.S3.Endpoint != "" {
 			endpoint = b.S3.Endpoint
 		}
 
-		bucket := constants.GetGlobalS3Bucket()
+		bucket := cfg.Config.GlobalS3Bucket
 		if b.S3.Bucket != "" {
 			bucket = b.S3.Bucket
 		}
@@ -140,39 +140,39 @@ func (s *S3Spec) EnvVars(vars map[string]*corev1.EnvVarSource) map[string]*corev
 func (s *S3Spec) RestoreEnvVars() map[string]*corev1.EnvVar {
 	vars := make(map[string]*corev1.EnvVar)
 	if s.AccessKeyIDSecretRef != nil {
-		vars[constants.RestoreS3AccessKeyIDEnvName] = &corev1.EnvVar{
+		vars[cfg.RestoreS3AccessKeyIDEnvName] = &corev1.EnvVar{
 			ValueFrom: &corev1.EnvVarSource{
 				SecretKeyRef: s.AccessKeyIDSecretRef,
 			},
 		}
 	} else {
-		vars[constants.RestoreS3AccessKeyIDEnvName] = &corev1.EnvVar{
-			Value: constants.GetGlobalRestoreS3AccessKey(),
+		vars[cfg.RestoreS3AccessKeyIDEnvName] = &corev1.EnvVar{
+			Value: cfg.Config.GlobalRestoreS3AccessKey,
 		}
 	}
 
 	if s.SecretAccessKeySecretRef != nil {
-		vars[constants.RestoreS3SecretAccessKeyEnvName] = &corev1.EnvVar{
+		vars[cfg.RestoreS3SecretAccessKeyEnvName] = &corev1.EnvVar{
 			ValueFrom: &corev1.EnvVarSource{
 				SecretKeyRef: s.SecretAccessKeySecretRef,
 			},
 		}
 	} else {
-		vars[constants.RestoreS3SecretAccessKeyEnvName] = &corev1.EnvVar{
-			Value: constants.GetGlobalRestoreS3SecretAccessKey(),
+		vars[cfg.RestoreS3SecretAccessKeyEnvName] = &corev1.EnvVar{
+			Value: cfg.Config.GlobalRestoreS3SecretAccessKey,
 		}
 	}
 
 	bucket := s.Bucket
 	endpoint := s.Endpoint
 	if bucket == "" {
-		bucket = constants.GetGlobalRestoreS3Bucket()
+		bucket = cfg.Config.GlobalRestoreS3Bucket
 	}
 	if endpoint == "" {
-		endpoint = constants.GetGlobalRestoreS3Endpoint()
+		endpoint = cfg.Config.GlobalRestoreS3Endpoint
 	}
 
-	vars[constants.RestoreS3EndpointEnvName] = &corev1.EnvVar{
+	vars[cfg.RestoreS3EndpointEnvName] = &corev1.EnvVar{
 		Value: fmt.Sprintf("%v/%v", endpoint, bucket),
 	}
 

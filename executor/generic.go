@@ -6,11 +6,11 @@ package executor
 
 import (
 	"fmt"
+	"github.com/vshn/k8up/cfg"
 	"sort"
 
 	"github.com/go-logr/logr"
 	"github.com/imdario/mergo"
-	"github.com/vshn/k8up/constants"
 	"github.com/vshn/k8up/job"
 	"github.com/vshn/k8up/queue"
 	corev1 "k8s.io/api/core/v1"
@@ -137,11 +137,11 @@ func NewExecutor(config job.Config) queue.Executor {
 func DefaultEnv(namespace string) EnvVarConverter {
 	defaults := NewEnvVarConverter()
 
-	defaults.SetString("STATS_URL", constants.GetGlobalStatsURL())
-	defaults.SetString(constants.ResticRepositoryEnvName, fmt.Sprintf("s3:%s/%s", constants.GetGlobalS3Endpoint(), constants.GetGlobalS3Bucket()))
-	defaults.SetString(constants.ResticPasswordEnvName, constants.GetGlobalRepoPassword())
-	defaults.SetString(constants.AwsAccessKeyIDEnvName, constants.GetGlobalAccessKey())
-	defaults.SetString(constants.AwsSecretAccessKeyEnvName, constants.GetGlobalSecretAccessKey())
+	defaults.SetString("STATS_URL", cfg.Config.GlobalStatsURL)
+	defaults.SetString(cfg.ResticRepositoryEnvName, fmt.Sprintf("s3:%s/%s", cfg.Config.GlobalS3Endpoint, cfg.Config.GlobalS3Bucket))
+	defaults.SetString(cfg.ResticPasswordEnvName, cfg.Config.GlobalRepoPassword)
+	defaults.SetString(cfg.AwsAccessKeyIDEnvName, cfg.Config.GlobalAccessKey)
+	defaults.SetString(cfg.AwsSecretAccessKeyEnvName, cfg.Config.GlobalSecretAccessKey)
 	defaults.SetString("HOSTNAME", namespace)
 
 	return defaults
@@ -174,7 +174,7 @@ func cleanOldObjects(jobObjects jobObjectList, maxObjects int, config job.Config
 
 func getKeepJobs(keepJobs *int) int {
 	if keepJobs == nil {
-		return constants.GetGlobalKeepJobs()
+		return cfg.Config.GlobalKeepJobs
 	}
 	return *keepJobs
 }

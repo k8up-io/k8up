@@ -2,11 +2,11 @@ package executor
 
 import (
 	"errors"
+	"github.com/vshn/k8up/cfg"
 	"strconv"
 	"strings"
 
 	k8upv1alpha1 "github.com/vshn/k8up/api/v1alpha1"
-	"github.com/vshn/k8up/constants"
 	"github.com/vshn/k8up/job"
 	"github.com/vshn/k8up/observer"
 	batchv1 "k8s.io/api/batch/v1"
@@ -149,10 +149,10 @@ func (p *PruneExecutor) setupEnvVars(prune *k8upv1alpha1.Prune) []corev1.EnvVar 
 		for key, value := range prune.Spec.Backend.GetCredentialEnv() {
 			vars.SetEnvVarSource(key, value)
 		}
-		vars.SetString(constants.ResticRepositoryEnvName, prune.Spec.Backend.String())
+		vars.SetString(cfg.ResticRepositoryEnvName, prune.Spec.Backend.String())
 	}
 
-	vars.SetString("PROM_URL", constants.GetPromURL())
+	vars.SetString("PROM_URL", cfg.Config.PromURL)
 
 	err := vars.Merge(DefaultEnv(p.Obj.GetMetaObject().GetNamespace()))
 	if err != nil {
