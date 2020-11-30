@@ -1,0 +1,15 @@
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: myclaim
+  annotations:
+    k8up.syn.tools/backup: 'true'
+  namespace: myproject
+spec:
+  accessModes:
+    - ReadWriteMany
+  # volumeMode: Filesystem
+  resources:
+    requests:
+      storage: 1Gi
+  # storageClassName: slow

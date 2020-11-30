@@ -1,7 +1,0 @@
-apiVersion: backup.appuio.ch/v1alpha1
-kind: Snapshots
-metadata:
-  name: snapshots-sample
-spec:
-  # Add fields here
-  foo: bar

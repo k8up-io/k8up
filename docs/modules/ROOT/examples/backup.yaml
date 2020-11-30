@@ -1,0 +1,32 @@
+apiVersion: backup.appuio.ch/v1alpha1
+kind: Schedule
+metadata:
+  name: schedule-test
+spec:
+  backend:
+    s3:
+      endpoint: http://minio-service:9000
+      bucket: backups
+      accessKeyIDSecretRef:
+        name: backup-credentials
+        key: username
+      secretAccessKeySecretRef:
+        name: backup-credentials
+        key: password
+    repoPasswordSecretRef:
+      name: backup-repo
+      key: password
+  backup:
+    schedule: '*/5 * * * *'
+    keepJobs: 4
+    # optional
+    #promURL: https://prometheus-io-instance:8443
+  check:
+    schedule: '0 1 * * 1'
+    # optional
+    #promURL: https://prometheus-io-instance:8443
+  prune:
+    schedule: '0 1 * * 0'
+    retention:
+      keepLast: 5
+      keepDaily: 14

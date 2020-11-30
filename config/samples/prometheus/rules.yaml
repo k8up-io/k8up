@@ -1,0 +1,32 @@
+groups:
+- name: K8up
+  rules:
+  - alert: baas_last_errors
+    expr: baas_backup_restic_last_errors > 0
+    for: 1m
+    labels:
+      severity: critical
+    annotations:
+      summary: Amount of errors of last restic backup
+      description: This alert is fired when error number is > 0
+  - alert: K8upBackupFailed
+    expr: rate(k8up_jobs_failed_counter[1d]) > 0
+    for: 1m
+    labels:
+      severity: critical
+    annotations:
+      summary: "Job in {{ $labels.namespace }} of type {{ $labels.jobType }} failed"
+  - alert: K8upBackupNotRunning
+    expr: sum(rate(k8up_jobs_total[25h])) == 0 and on(namespace) k8up_schedules_gauge > 0
+    for: 1m
+    labels:
+      severity: critical
+    annotations:
+      summary: "No K8up jobs were run in {{ $labels.namespace }} within the last 24 hours. Check the operator, there might be a deadlock"
+  - alert: K8upJobStuck
+    expr: k8up_jobs_queued_gauge{jobType="backup"} > 0 and on(namespace) k8up_schedules_gauge > 0
+    for: 24h
+    labels:
+      severity: critical
+    annotations:
+      summary: "K8up jobs are stuck in {{ $labels.namespace }} for the last 24 hours."

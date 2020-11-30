@@ -1,0 +1,14 @@
+= Archive your Backups
+
+For long-term storage of your backups you may want to use cheaper storage,
+even if this is slower to restore, because you don't need to restore that
+data frequently.
+
+The custom `Archive` object defines the restore method and back-end required to archive backups of your namespace:
+
+[source,yaml]
+----
+include::example$archive.yaml[]
+----
+
+Save the YAML above in a file named `archive.yml` and use the `kubectl apply -f archive.yml` command to deploy this configuration to your cluster.
