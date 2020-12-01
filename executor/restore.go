@@ -2,6 +2,7 @@ package executor
 
 import (
 	"errors"
+	"github.com/vshn/k8up/cfg"
 	"strconv"
 
 	batchv1 "k8s.io/api/batch/v1"
@@ -11,7 +12,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	k8upv1alpha1 "github.com/vshn/k8up/api/v1alpha1"
-	"github.com/vshn/k8up/constants"
 	"github.com/vshn/k8up/job"
 	"github.com/vshn/k8up/observer"
 )
@@ -193,7 +193,7 @@ func (r *RestoreExecutor) setupEnvVars(restore *k8upv1alpha1.Restore) []corev1.E
 		for key, value := range restore.Spec.Backend.GetCredentialEnv() {
 			vars.SetEnvVarSource(key, value)
 		}
-		vars.SetString(constants.ResticRepositoryEnvName, restore.Spec.Backend.String())
+		vars.SetString(cfg.ResticRepositoryEnvName, restore.Spec.Backend.String())
 	}
 
 	err := vars.Merge(DefaultEnv(r.Obj.GetMetaObject().GetNamespace()))

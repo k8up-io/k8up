@@ -14,7 +14,7 @@ import (
 )
 
 var (
-	execution *ExecutionQueue = newExecutionQueue()
+	execution = newExecutionQueue()
 
 	promLabels = []string{
 		"namespace",

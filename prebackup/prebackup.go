@@ -2,11 +2,11 @@ package prebackup
 
 import (
 	"fmt"
+	"github.com/vshn/k8up/cfg"
 	"os"
 	"path/filepath"
 
 	k8upv1alpha1 "github.com/vshn/k8up/api/v1alpha1"
-	"github.com/vshn/k8up/constants"
 	"github.com/vshn/k8up/job"
 	appsv1 "k8s.io/api/apps/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -68,8 +68,8 @@ func (p *PreBackup) generateDeployments(templates *k8upv1alpha1.PreBackupPodList
 	for _, template := range templates.Items {
 
 		template.Spec.Pod.PodTemplateSpec.ObjectMeta.Annotations = map[string]string{
-			constants.GetBackupCommandAnnotation(): template.Spec.BackupCommand,
-			constants.GetFileExtensionAnnotation(): template.Spec.FileExtension,
+			cfg.Config.BackupCommandAnnotation: template.Spec.BackupCommand,
+			cfg.Config.FileExtensionAnnotation: template.Spec.FileExtension,
 		}
 
 		podLabels := map[string]string{

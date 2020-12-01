@@ -5,6 +5,7 @@ go 1.15
 require (
 	github.com/go-logr/logr v0.1.0
 	github.com/imdario/mergo v0.3.9
+	github.com/knadh/koanf v0.14.0
 	github.com/onsi/ginkgo v1.14.2
 	github.com/onsi/gomega v1.10.1
 	github.com/prometheus/client_golang v1.8.0
