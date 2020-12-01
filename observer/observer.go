@@ -9,6 +9,7 @@ import (
 	"github.com/go-logr/logr"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
+	"github.com/vshn/k8up/cfg"
 	batchv1 "k8s.io/api/batch/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/metrics"
@@ -56,6 +57,7 @@ type Observer struct {
 // ObservableJob defines a batchv1.job that is being observed by the Observer.
 type ObservableJob struct {
 	Job        *batchv1.Job
+	JobType    string
 	Event      EventType
 	Exclusive  bool
 	Repository string
@@ -200,6 +202,58 @@ func (o *Observer) IsAnyJobRunning(repository string) bool {
 	}
 
 	return false
+}
+
+// IsLimitConcurrentJobsReached checks if the limit of concurrent jobs by type (backup, check, etc)
+// has been reached
+func (o *Observer) IsLimitConcurrentJobsReached(jobType, repository string) bool {
+	listOfJobs := o.GetJobsByRepository(repository)
+	fmt.Println("type: ", jobType)
+	switch jobType {
+	case "backup":
+		l := cfg.Config.GlobalConcurrentArchiveJobsLimit
+		return filterByJobType(l, jobType, listOfJobs)
+	case "check":
+		l := cfg.Config.GlobalConcurrentCheckJobsLimit
+		return filterByJobType(l, jobType, listOfJobs)
+	case "archive":
+		l := cfg.Config.GlobalConcurrentArchiveJobsLimit
+		return filterByJobType(l, jobType, listOfJobs)
+	case "prune":
+		l := cfg.Config.GlobalConcurrentPruneJobsLimit
+		return filterByJobType(l, jobType, listOfJobs)
+	case "restore":
+		l := cfg.Config.GlobalConcurrentRestoreJobsLimit
+		return filterByJobType(l, jobType, listOfJobs)
+	default:
+		// In case of type "" -> Job
+		return false
+	}
+}
+
+func filterByJobType(limit int, jobType string, listOfJobs []ObservableJob) bool {
+	if limit > 0 {
+		if len(listOfJobs) == 0 {
+			return false
+		}
+
+		result := filter(listOfJobs, func(val ObservableJob) bool {
+			return val.JobType == jobType
+		})
+
+		return len(result) > limit
+	}
+	return false
+}
+
+func filter(arr []ObservableJob, cond func(ObservableJob) bool) []ObservableJob {
+	result := []ObservableJob{}
+	for i := range arr {
+		if cond(arr[i]) {
+			result = append(result, arr[i])
+		}
+	}
+	return result
 }
 
 // RegisterCallback will register a function to the given observed job.

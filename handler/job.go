@@ -75,8 +75,14 @@ func (j *JobHandler) Handle() error {
 		exclusive = false
 	}
 
+	jobType := ""
+	if j.Config.Obj != nil {
+		jobType = j.Config.Obj.GetType()
+	}
+
 	oj := observer.ObservableJob{
 		Job:       j.job,
+		JobType:   jobType,
 		Exclusive: exclusive,
 		Event:     jobEvent,
 	}
