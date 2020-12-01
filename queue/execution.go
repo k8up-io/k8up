@@ -10,6 +10,7 @@ import (
 	"github.com/go-logr/logr"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
+	"github.com/vshn/k8up/cfg"
 	"sigs.k8s.io/controller-runtime/pkg/metrics"
 )
 
@@ -39,9 +40,11 @@ type Executor interface {
 	// Associate the logs with the actual job.
 	Logger() logr.Logger
 	// GetJobType() returns the type of the CDR that the job will execute
-	GetJobType() string
+	GetJobType() cfg.JobType
 	// GetJobNamespace() returns the namespace of the CDR that the job will execute
 	GetJobNamespace() string
+	// GetConcurrencyLimit
+	GetConcurrencyLimit() int
 	// GetName() string
 	GetRepository() string
 	// TODO: ability to mark job as skipped && metric for that
@@ -72,7 +75,7 @@ func (eq *ExecutionQueue) Add(exec Executor) {
 		eq.queues[repository] = newPriorityQueue()
 	}
 	eq.queues[repository].add(exec)
-	eq.incQueueGauge(exec.GetJobNamespace(), exec.GetJobType())
+	eq.incQueueGauge(exec.GetJobNamespace(), string(exec.GetJobType()))
 }
 
 // Get returns and removes and executor from the given repository. If the
@@ -83,7 +86,7 @@ func (eq *ExecutionQueue) Get(repository string) Executor {
 	entry := eq.queues[repository].get()
 	if eq.queues[repository].Len() == 0 {
 		delete(eq.queues, repository)
-		eq.decQueueGauge(entry.GetJobNamespace(), entry.GetJobType())
+		eq.decQueueGauge(entry.GetJobNamespace(), string(entry.GetJobType()))
 	}
 	return entry
 }

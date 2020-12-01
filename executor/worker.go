@@ -47,6 +47,7 @@ func (qe *QueueWorker) loopRepositoryJobs(repository string) {
 	for !queue.GetExecQueue().IsEmpty(repository) {
 		job := queue.GetExecQueue().Get(repository)
 		jobType := job.GetJobType()
+		jobLimit := job.GetConcurrencyLimit()
 
 		var shouldRun bool
 		if job.Exclusive() {
@@ -55,7 +56,7 @@ func (qe *QueueWorker) loopRepositoryJobs(repository string) {
 			shouldRun = !observer.GetObserver().IsAnyJobRunning(repository)
 		} else {
 			shouldRun = !observer.GetObserver().IsExclusiveJobRunning(repository) &&
-				!observer.GetObserver().IsLimitConcurrentJobsReached(jobType, repository)
+				!observer.GetObserver().IsLimitConcurrentJobsReached(jobType, jobLimit, repository)
 		}
 
 		if shouldRun {

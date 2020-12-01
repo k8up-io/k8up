@@ -2,6 +2,7 @@ package executor
 
 import (
 	stderrors "errors"
+
 	"github.com/vshn/k8up/cfg"
 
 	k8upv1alpha1 "github.com/vshn/k8up/api/v1alpha1"
@@ -26,6 +27,11 @@ func NewArchiveExecutor(config job.Config) *ArchiveExecutor {
 	return &ArchiveExecutor{
 		generic: generic{config},
 	}
+}
+
+// GetConcurrencyLimit returns the concurrent jobs limit
+func (a *ArchiveExecutor) GetConcurrencyLimit() int {
+	return cfg.Config.GlobalConcurrentArchiveJobsLimit
 }
 
 // Execute creates the actual batch.job on the k8s api.

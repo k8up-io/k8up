@@ -2,8 +2,9 @@ package executor
 
 import (
 	"errors"
-	"github.com/vshn/k8up/cfg"
 	"strconv"
+
+	"github.com/vshn/k8up/cfg"
 
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -22,12 +23,19 @@ type RestoreExecutor struct {
 	generic
 }
 
+// NewRestoreExecutor will return a new executor for Restore jobs.
 func NewRestoreExecutor(config job.Config) *RestoreExecutor {
 	return &RestoreExecutor{
 		generic: generic{config},
 	}
 }
 
+// GetConcurrencyLimit returns the concurrent jobs limit
+func (r *RestoreExecutor) GetConcurrencyLimit() int {
+	return cfg.Config.GlobalConcurrentRestoreJobsLimit
+}
+
+// Execute creates the actual batch.job on the k8s api.
 func (r *RestoreExecutor) Execute() error {
 	restore, ok := r.Obj.(*k8upv1alpha1.Restore)
 	if !ok {
@@ -43,6 +51,7 @@ func (r *RestoreExecutor) Execute() error {
 	return nil
 }
 
+// Exclusive should return true for jobs that can't run while other jobs run.
 func (r *RestoreExecutor) Exclusive() bool {
 	return true
 }

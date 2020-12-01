@@ -1,6 +1,7 @@
 package v1alpha1
 
 import (
+	"github.com/vshn/k8up/cfg"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
@@ -51,8 +52,8 @@ func (c *Check) GetMetaObject() metav1.Object {
 	return c
 }
 
-func (c *Check) GetType() string {
-	return "check"
+func (c *Check) GetType() cfg.JobType {
+	return cfg.Check
 }
 
 func (c *Check) GetK8upStatus() *K8upStatus {

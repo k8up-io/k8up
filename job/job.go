@@ -4,6 +4,7 @@ package job
 
 import (
 	"context"
+
 	"github.com/vshn/k8up/cfg"
 
 	"github.com/go-logr/logr"
@@ -41,7 +42,7 @@ type Object interface {
 	GetMetaObject() metav1.Object
 	GetRuntimeObject() runtime.Object
 	GetK8upStatus() *k8upv1alpha1.K8upStatus
-	GetType() string
+	GetType() cfg.JobType
 }
 
 // NewConfig returns a new configuration.

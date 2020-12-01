@@ -57,7 +57,7 @@ type Observer struct {
 // ObservableJob defines a batchv1.job that is being observed by the Observer.
 type ObservableJob struct {
 	Job        *batchv1.Job
-	JobType    string
+	JobType    cfg.JobType
 	Event      EventType
 	Exclusive  bool
 	Repository string
@@ -206,32 +206,8 @@ func (o *Observer) IsAnyJobRunning(repository string) bool {
 
 // IsLimitConcurrentJobsReached checks if the limit of concurrent jobs by type (backup, check, etc)
 // has been reached
-func (o *Observer) IsLimitConcurrentJobsReached(jobType, repository string) bool {
+func (o *Observer) IsLimitConcurrentJobsReached(jobType cfg.JobType, limit int, repository string) bool {
 	listOfJobs := o.GetJobsByRepository(repository)
-	fmt.Println("type: ", jobType)
-	switch jobType {
-	case "backup":
-		l := cfg.Config.GlobalConcurrentArchiveJobsLimit
-		return filterByJobType(l, jobType, listOfJobs)
-	case "check":
-		l := cfg.Config.GlobalConcurrentCheckJobsLimit
-		return filterByJobType(l, jobType, listOfJobs)
-	case "archive":
-		l := cfg.Config.GlobalConcurrentArchiveJobsLimit
-		return filterByJobType(l, jobType, listOfJobs)
-	case "prune":
-		l := cfg.Config.GlobalConcurrentPruneJobsLimit
-		return filterByJobType(l, jobType, listOfJobs)
-	case "restore":
-		l := cfg.Config.GlobalConcurrentRestoreJobsLimit
-		return filterByJobType(l, jobType, listOfJobs)
-	default:
-		// In case of type "" -> Job
-		return false
-	}
-}
-
-func filterByJobType(limit int, jobType string, listOfJobs []ObservableJob) bool {
 	if limit > 0 {
 		if len(listOfJobs) == 0 {
 			return false

@@ -1,6 +1,7 @@
 package v1alpha1
 
 import (
+	"github.com/vshn/k8up/cfg"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
@@ -64,8 +65,8 @@ func (p *Prune) GetMetaObject() metav1.Object {
 	return p
 }
 
-func (p *Prune) GetType() string {
-	return "prune"
+func (p *Prune) GetType() cfg.JobType {
+	return cfg.Prune
 }
 
 func (p *Prune) GetK8upStatus() *K8upStatus {

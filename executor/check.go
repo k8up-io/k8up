@@ -2,6 +2,7 @@ package executor
 
 import (
 	stderrors "errors"
+
 	"github.com/vshn/k8up/cfg"
 
 	k8upv1alpha1 "github.com/vshn/k8up/api/v1alpha1"
@@ -20,6 +21,11 @@ func NewCheckExecutor(config job.Config) *CheckExecutor {
 	return &CheckExecutor{
 		generic: generic{config},
 	}
+}
+
+// GetConcurrencyLimit returns the concurrent jobs limit
+func (c *CheckExecutor) GetConcurrencyLimit() int {
+	return cfg.Config.GlobalConcurrentCheckJobsLimit
 }
 
 // Execute creates the actual batch.job on the k8s api.

@@ -3,6 +3,7 @@ package v1alpha1
 import (
 	"fmt"
 
+	"github.com/vshn/k8up/cfg"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
@@ -100,8 +101,8 @@ func (s *Schedule) GetMetaObject() metav1.Object {
 	return s
 }
 
-func (*Schedule) GetType() string {
-	return "schedule"
+func (*Schedule) GetType() cfg.JobType {
+	return cfg.Schedule
 }
 
 func (s *Schedule) GetK8upStatus() *K8upStatus {

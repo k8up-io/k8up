@@ -2,9 +2,10 @@ package executor
 
 import (
 	"errors"
-	"github.com/vshn/k8up/cfg"
 	"strconv"
 	"strings"
+
+	"github.com/vshn/k8up/cfg"
 
 	k8upv1alpha1 "github.com/vshn/k8up/api/v1alpha1"
 	"github.com/vshn/k8up/job"
@@ -26,6 +27,11 @@ func NewPruneExecutor(config job.Config) *PruneExecutor {
 	return &PruneExecutor{
 		generic: generic{config},
 	}
+}
+
+// GetConcurrencyLimit returns the concurrent jobs limit
+func (p *PruneExecutor) GetConcurrencyLimit() int {
+	return cfg.Config.GlobalConcurrentPruneJobsLimit
 }
 
 // Execute creates the actual batch.job on the k8s api.
