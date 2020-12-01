@@ -15,13 +15,16 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/metrics"
 )
 
-var (
+const (
 	Update   EventType = "update"
 	Delete   EventType = "delete"
 	Create   EventType = "create"
 	Failed   EventType = "failed"
 	Suceeded EventType = "suceeded"
 	Running  EventType = "running"
+)
+
+var (
 	observer *Observer
 
 	promLabels = []string{
