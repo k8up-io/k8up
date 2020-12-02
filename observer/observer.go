@@ -9,7 +9,7 @@ import (
 	"github.com/go-logr/logr"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
-	"github.com/vshn/k8up/cfg"
+	"github.com/vshn/k8up/api/v1alpha1"
 	batchv1 "k8s.io/api/batch/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/metrics"
@@ -60,7 +60,7 @@ type Observer struct {
 // ObservableJob defines a batchv1.job that is being observed by the Observer.
 type ObservableJob struct {
 	Job        *batchv1.Job
-	JobType    cfg.JobType
+	JobType    v1alpha1.JobType
 	Event      EventType
 	Exclusive  bool
 	Repository string
@@ -207,32 +207,30 @@ func (o *Observer) IsAnyJobRunning(repository string) bool {
 	return false
 }
 
-// IsLimitConcurrentJobsReached checks if the limit of concurrent jobs by type (backup, check, etc)
+// IsConcurrentJobsLimitReached checks if the limit of concurrent jobs by type (backup, check, etc)
 // has been reached
-func (o *Observer) IsLimitConcurrentJobsReached(jobType cfg.JobType, limit int, repository string) bool {
-	listOfJobs := o.GetJobsByRepository(repository)
-	if limit > 0 {
-		if len(listOfJobs) == 0 {
-			return false
+func (o *Observer) IsConcurrentJobsLimitReached(jobType v1alpha1.JobType, limit int) bool {
+	if limit <= 0 {
+		return false
+	}
+
+	o.mutex.Lock()
+	listOfJobs := o.observedJobs
+	o.mutex.Unlock()
+
+	if len(listOfJobs) == 0 {
+		return false
+	}
+	count := 0
+	for _, job := range listOfJobs {
+		if job.JobType == jobType {
+			count++
+			if count >= limit {
+				return true
+			}
 		}
-
-		result := filter(listOfJobs, func(val ObservableJob) bool {
-			return val.JobType == jobType
-		})
-
-		return len(result) > limit
 	}
 	return false
-}
-
-func filter(arr []ObservableJob, cond func(ObservableJob) bool) []ObservableJob {
-	result := []ObservableJob{}
-	for i := range arr {
-		if cond(arr[i]) {
-			result = append(result, arr[i])
-		}
-	}
-	return result
 }
 
 // RegisterCallback will register a function to the given observed job.

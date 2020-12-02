@@ -1,8 +1,5 @@
 package cfg
 
-// JobType is the type the jobs can have
-type JobType string
-
 const (
 	RestoreS3EndpointEnvName        = "RESTORE_S3ENDPOINT"
 	RestoreS3AccessKeyIDEnvName     = "RESTORE_ACCESSKEYID"
@@ -11,14 +8,6 @@ const (
 	ResticPasswordEnvName           = "RESTIC_PASSWORD"
 	AwsAccessKeyIDEnvName           = "AWS_ACCESS_KEY_ID"
 	AwsSecretAccessKeyEnvName       = "AWS_SECRET_ACCESS_KEY"
-
-	Archive  JobType = "archive"
-	Backup   JobType = "backup"
-	Check    JobType = "check"
-	Prune    JobType = "prune"
-	Restore  JobType = "restore"
-	Schedule JobType = "schedule"
-	Job      JobType = ""
 )
 
 // Configuration holds a strongly-typed tree of the configuration
@@ -60,22 +49,17 @@ var (
 // NewDefaultConfig retrieves the config with sane defaults
 func NewDefaultConfig() *Configuration {
 	return &Configuration{
-		MountPath:                        "/data",
-		BackupAnnotation:                 "k8up.syn.tools/backup",
-		BackupCommandAnnotation:          "k8up.syn.tools/backupcommand",
-		FileExtensionAnnotation:          "k8up.syn.tools/file-extension",
-		ServiceAccount:                   "pod-executor",
-		BackupCheckSchedule:              "0 0 * * 0",
-		GlobalKeepJobs:                   6,
-		BackupImage:                      "172.30.1.1:5000/myproject/restic",
-		PodExecRoleName:                  "pod-executor",
-		RestartPolicy:                    "OnFailure",
-		MetricsBindAddress:               ":8080",
-		PodFilter:                        "backupPod=true",
-		GlobalConcurrentArchiveJobsLimit: 0,
-		GlobalConcurrentBackupJobsLimit:  0,
-		GlobalConcurrentCheckJobsLimit:   0,
-		GlobalConcurrentPruneJobsLimit:   0,
-		GlobalConcurrentRestoreJobsLimit: 0,
+		MountPath:               "/data",
+		BackupAnnotation:        "k8up.syn.tools/backup",
+		BackupCommandAnnotation: "k8up.syn.tools/backupcommand",
+		FileExtensionAnnotation: "k8up.syn.tools/file-extension",
+		ServiceAccount:          "pod-executor",
+		BackupCheckSchedule:     "0 0 * * 0",
+		GlobalKeepJobs:          6,
+		BackupImage:             "172.30.1.1:5000/myproject/restic",
+		PodExecRoleName:         "pod-executor",
+		RestartPolicy:           "OnFailure",
+		MetricsBindAddress:      ":8080",
+		PodFilter:               "backupPod=true",
 	}
 }
