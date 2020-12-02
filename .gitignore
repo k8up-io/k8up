@@ -35,5 +35,6 @@ dist/
 k8up-crd*.yaml
 k8up
 testbin/
-
+node_modules/
+e2e/debug
 __debug_bin

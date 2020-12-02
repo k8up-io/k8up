@@ -13,9 +13,7 @@ BUNDLE_METADATA_OPTS ?= $(BUNDLE_CHANNELS) $(BUNDLE_DEFAULT_CHANNEL)
 
 IMG_TAG ?= latest
 
-# Image URL to use all building/pushing image targets
-DOCKER_IMG ?= docker.io/vshn/k8up:$(IMG_TAG)
-QUAY_IMG ?= quay.io/vshn/k8up:$(IMG_TAG)
+BIN_FILENAME ?= k8up
 
 CRD_SPEC_VERSION ?= v1
 
@@ -30,8 +28,16 @@ KIND_KUBECONFIG ?= ./testbin/kind-kubeconfig
 KIND_NODE_VERSION ?= v1.18.8
 KIND_CLUSTER ?= k8up-$(KIND_NODE_VERSION)
 KIND_KUBECTL_ARGS ?= --validate=true
+KIND_REGISTRY_NAME ?= kind-registry
+KIND_REGISTRY_PORT ?= 5000
+
+# Image URL to use all building/pushing image targets
+DOCKER_IMG ?= docker.io/vshn/k8up:$(IMG_TAG)
+QUAY_IMG ?= quay.io/vshn/k8up:$(IMG_TAG)
+E2E_IMG ?= localhost:$(KIND_REGISTRY_PORT)/vshn/k8up:e2e
 
 antora_preview_cmd ?= docker run --rm --publish 35729:35729 --publish 2020:2020 --volume "${PWD}":/preview/antora docker.io/vshn/antora-preview:2.3.4 --style=syn --antora=docs
+build_cmd ?= CGO_ENABLED=0 go build -o $(BIN_FILENAME) main.go
 
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
 ifeq (,$(shell go env GOBIN))
@@ -67,7 +73,7 @@ integration_test: generate fmt vet $(TESTBIN_DIR)
 
 # Build manager binary
 build: generate fmt vet
-	go build -o k8up main.go
+	$(build_cmd)
 
 dist: generate fmt vet
 	goreleaser release --snapshot --rm-dist --skip-sign
@@ -111,9 +117,13 @@ lint: fmt vet
 	@echo 'Check for uncommitted changes ...'
 	git diff --exit-code
 
+# Build the binary without running generators
+$(BIN_FILENAME):
+	$(build_cmd)
+
 # Build the docker image
-docker-build: build
-	docker build . -t $(DOCKER_IMG) -t $(QUAY_IMG)
+docker-build: $(BIN_FILENAME)
+	docker build . -t $(DOCKER_IMG) -t $(QUAY_IMG) -t $(E2E_IMG)
 
 # Push the docker image
 docker-push:
@@ -128,17 +138,15 @@ bundle: generate
 	$(KUSTOMIZE) build config/manifests | operator-sdk generate bundle -q --overwrite --version $(VERSION) $(BUNDLE_METADATA_OPTS)
 	operator-sdk bundle validate ./bundle
 
-# Build the bundle image.
-.PHONY: bundle-build
-bundle-build:
-	docker build -f bundle.Dockerfile -t $(BUNDLE_IMG) .
-
 docs-serve:
 	$(antora_preview_cmd)
 
-e2e_test: export KUBECONFIG = $(KIND_KUBECONFIG)
-e2e_test: setup_e2e_test build
-	@echo "TODO: Add actual e2e tests!"
+install_bats:
+	$(MAKE) -C e2e install_bats
+
+e2e_test: docker-build
+	docker push $(E2E_IMG)
+	$(MAKE) -C e2e run_bats -e KUBECONFIG=../$(KIND_KUBECONFIG)
 
 setup_e2e_test: export KUBECONFIG = $(KIND_KUBECONFIG)
 setup_e2e_test: $(KIND_BIN)
@@ -153,11 +161,17 @@ $(KIND_BIN): export KUBECONFIG = $(KIND_KUBECONFIG)
 $(KIND_BIN): $(TESTBIN_DIR)
 	curl -Lo $(KIND_BIN) "https://kind.sigs.k8s.io/dl/v$(KIND_VERSION)/kind-$$(uname)-amd64"
 	@chmod +x $(KIND_BIN)
-	$(KIND_BIN) create cluster --name $(KIND_CLUSTER) --image kindest/node:$(KIND_NODE_VERSION)
+	docker run -d --restart=always -p "$(KIND_REGISTRY_PORT):5000" --name "$(KIND_REGISTRY_NAME)" docker.io/library/registry:2
+	$(KIND_BIN) create cluster --name $(KIND_CLUSTER) --image kindest/node:$(KIND_NODE_VERSION) --config=e2e/kind-config.yaml
+	@docker network connect "kind" "$(KIND_REGISTRY_NAME)" || true
 	@kubectl version
 	@kubectl cluster-info
 
 clean: export KUBECONFIG = $(KIND_KUBECONFIG)
 clean:
 	$(KIND_BIN) delete cluster --name $(KIND_CLUSTER) || true
-	rm -r testbin/ dist/ bin/ cover.out k8up || true
+	docker stop "$(KIND_REGISTRY_NAME)" || true
+	docker rm "$(KIND_REGISTRY_NAME)" || true
+	docker rmi "$(E2E_IMG)" || true
+	rm -r testbin/ dist/ bin/ cover.out $(BIN_FILENAME) || true
+	$(MAKE) -C e2e clean
