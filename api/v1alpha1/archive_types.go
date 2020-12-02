@@ -58,8 +58,8 @@ func (a *Archive) GetMetaObject() metav1.Object {
 	return a
 }
 
-func (*Archive) GetType() string {
-	return "archive"
+func (*Archive) GetType() JobType {
+	return ArchiveType
 }
 
 func (a *Archive) GetK8upStatus() *K8upStatus {

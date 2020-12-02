@@ -6,8 +6,10 @@ package executor
 
 import (
 	"fmt"
-	"github.com/vshn/k8up/cfg"
 	"sort"
+
+	"github.com/vshn/k8up/api/v1alpha1"
+	"github.com/vshn/k8up/cfg"
 
 	"github.com/go-logr/logr"
 	"github.com/imdario/mergo"
@@ -112,22 +114,22 @@ func (g *generic) GetJobNamespace() string {
 	return g.Obj.GetMetaObject().GetNamespace()
 }
 
-func (g *generic) GetJobType() string {
+func (g *generic) GetJobType() v1alpha1.JobType {
 	return g.Obj.GetType()
 }
 
 // NewExecutor will return the right Executor for the given job object.
 func NewExecutor(config job.Config) queue.Executor {
 	switch config.Obj.GetType() {
-	case "backup":
+	case v1alpha1.BackupType:
 		return NewBackupExecutor(config)
-	case "check":
+	case v1alpha1.CheckType:
 		return NewCheckExecutor(config)
-	case "archive":
+	case v1alpha1.ArchiveType:
 		return NewArchiveExecutor(config)
-	case "prune":
+	case v1alpha1.PruneType:
 		return NewPruneExecutor(config)
-	case "restore":
+	case v1alpha1.RestoreType:
 		return NewRestoreExecutor(config)
 	}
 	return nil

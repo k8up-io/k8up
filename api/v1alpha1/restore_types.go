@@ -65,8 +65,8 @@ func (r *Restore) GetMetaObject() metav1.Object {
 	return r
 }
 
-func (r *Restore) GetType() string {
-	return "restore"
+func (r *Restore) GetType() JobType {
+	return RestoreType
 }
 
 func (r *Restore) GetK8upStatus() *K8upStatus {

@@ -2,9 +2,10 @@ package executor
 
 import (
 	stderrors "errors"
-	"github.com/vshn/k8up/cfg"
 	"path"
 	"strconv"
+
+	"github.com/vshn/k8up/cfg"
 
 	k8upv1alpha1 "github.com/vshn/k8up/api/v1alpha1"
 	"github.com/vshn/k8up/job"
@@ -37,6 +38,11 @@ func NewBackupExecutor(config job.Config) *BackupExecutor {
 	return &BackupExecutor{
 		generic: generic{config},
 	}
+}
+
+// GetConcurrencyLimit returns the concurrent jobs limit
+func (b *BackupExecutor) GetConcurrencyLimit() int {
+	return cfg.Config.GlobalConcurrentBackupJobsLimit
 }
 
 // Execute triggers the actual batch.job creation on the cluster. It will also register

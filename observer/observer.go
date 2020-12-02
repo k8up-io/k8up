@@ -9,18 +9,22 @@ import (
 	"github.com/go-logr/logr"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
+	"github.com/vshn/k8up/api/v1alpha1"
 	batchv1 "k8s.io/api/batch/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/metrics"
 )
 
-var (
+const (
 	Update   EventType = "update"
 	Delete   EventType = "delete"
 	Create   EventType = "create"
 	Failed   EventType = "failed"
 	Suceeded EventType = "suceeded"
 	Running  EventType = "running"
+)
+
+var (
 	observer *Observer
 
 	promLabels = []string{
@@ -56,6 +60,7 @@ type Observer struct {
 // ObservableJob defines a batchv1.job that is being observed by the Observer.
 type ObservableJob struct {
 	Job        *batchv1.Job
+	JobType    v1alpha1.JobType
 	Event      EventType
 	Exclusive  bool
 	Repository string
@@ -199,6 +204,32 @@ func (o *Observer) IsAnyJobRunning(repository string) bool {
 		}
 	}
 
+	return false
+}
+
+// IsConcurrentJobsLimitReached checks if the limit of concurrent jobs by type (backup, check, etc)
+// has been reached
+func (o *Observer) IsConcurrentJobsLimitReached(jobType v1alpha1.JobType, limit int) bool {
+	if limit <= 0 {
+		return false
+	}
+
+	o.mutex.Lock()
+	listOfJobs := o.observedJobs
+	o.mutex.Unlock()
+
+	if len(listOfJobs) == 0 {
+		return false
+	}
+	count := 0
+	for _, job := range listOfJobs {
+		if job.JobType == jobType {
+			count++
+			if count >= limit {
+				return true
+			}
+		}
+	}
 	return false
 }
 

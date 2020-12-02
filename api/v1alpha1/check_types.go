@@ -51,8 +51,8 @@ func (c *Check) GetMetaObject() metav1.Object {
 	return c
 }
 
-func (c *Check) GetType() string {
-	return "check"
+func (c *Check) GetType() JobType {
+	return CheckType
 }
 
 func (c *Check) GetK8upStatus() *K8upStatus {

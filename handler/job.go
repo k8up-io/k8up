@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/vshn/k8up/api/v1alpha1"
 	"github.com/vshn/k8up/job"
 	"github.com/vshn/k8up/observer"
 	batchv1 "k8s.io/api/batch/v1"
@@ -75,8 +76,14 @@ func (j *JobHandler) Handle() error {
 		exclusive = false
 	}
 
+	jobType := v1alpha1.ScheduleType
+	if j.Config.Obj != nil {
+		jobType = j.Config.Obj.GetType()
+	}
+
 	oj := observer.ObservableJob{
 		Job:       j.job,
+		JobType:   jobType,
 		Exclusive: exclusive,
 		Event:     jobEvent,
 	}
