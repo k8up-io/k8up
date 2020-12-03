@@ -51,11 +51,6 @@ func (r *RestoreExecutor) Execute() error {
 	return nil
 }
 
-// Exclusive should return true for jobs that can't run while other jobs run.
-func (r *RestoreExecutor) Exclusive() bool {
-	return true
-}
-
 func (r *RestoreExecutor) startRestore(restore *k8upv1alpha1.Restore) {
 	name := types.NamespacedName{Namespace: r.Obj.GetMetaObject().GetNamespace(), Name: r.Obj.GetMetaObject().GetName()}
 	r.setRestoreCallback(name, restore)
