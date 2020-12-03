@@ -92,8 +92,14 @@ Best is if you have [minio](https://min.io/download) installed somewhere to be a
 
 ## Run E2E tests
 
-K8up supports both OpenShift 3.11 clusters and newer Kubernetes clusters 1.16+. 
+K8up supports both OpenShift 3.11 clusters and newer Kubernetes clusters 1.16+.
 However, to support OpenShift 3.11 a legacy CRD definition with `apiextensions.k8s.io/v1beta1` is needed, while K8s 1.22+ only supports `apiextensions.k8s.io/v1`.
+You need `node` and `npm` to run the tests, as it runs with [DETIK][detik].
+
+First, setup a local e2e environment
+```
+make install_bats setup_e2e_test
+```
 
 To run e2e tests for newer K8s versions run
 ```
@@ -103,7 +109,12 @@ make e2e_test
 To test compatibility of k8up with OpenShift 3.11, we can run end-to-end tests as following:
 ```
 make e2e_test -e CRD_SPEC_VERSION=v1beta1 -e KIND_NODE_VERSION=v1.13.12
-``` 
+```
+
+To remove the local KIND cluster and other resources, run
+```
+make clean
+```
 
 ## Example configurations
 
@@ -113,3 +124,4 @@ There are a number of example configurations in [`config/samples`](config/sample
 [releases]: https://github.com/vshn/k8up/releases
 [license]: https://github.com/vshn/k8up/blob/master/LICENSE
 [dockerhub]: https://hub.docker.com/r/vshn/k8up
+[detik]: https://github.com/bats-core/bats-detik

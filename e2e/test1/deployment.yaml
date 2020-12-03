@@ -1,0 +1,12 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: operator
+  namespace: system
+spec:
+  template:
+    spec:
+      containers:
+      - name: k8up
+        image: localhost:5000/vshn/k8up:e2e
