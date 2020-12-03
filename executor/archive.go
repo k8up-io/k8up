@@ -56,11 +56,6 @@ func (a *ArchiveExecutor) Execute() error {
 	return nil
 }
 
-// Exclusive should return true for jobs that can't run while other jobs run.
-func (*ArchiveExecutor) Exclusive() bool {
-	return true
-}
-
 func (a *ArchiveExecutor) startArchive(job *batchv1.Job, archive *k8upv1alpha1.Archive) {
 	name := types.NamespacedName{Namespace: a.Obj.GetMetaObject().GetNamespace(), Name: a.Obj.GetMetaObject().GetName()}
 	a.setArchiveCallback(name, archive)

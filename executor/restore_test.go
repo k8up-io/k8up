@@ -276,7 +276,7 @@ func jobMatcher(restoreType string, additionalArgs []string, env Elements, volum
 		"ObjectMeta": MatchFields(IgnoreExtras, Fields{
 			"Labels": MatchAllKeys(Keys{
 				"k8upjob":           Equal("true"),
-				"k8upjob/exclusive": Equal("true"),
+				"k8upjob/exclusive": Equal("false"),
 			}),
 		}),
 		"Spec": MatchFields(IgnoreExtras, Fields{
