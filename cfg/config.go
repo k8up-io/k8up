@@ -1,5 +1,7 @@
 package cfg
 
+import "fmt"
+
 const (
 	RestoreS3EndpointEnvName        = "RESTORE_S3ENDPOINT"
 	RestoreS3AccessKeyIDEnvName     = "RESTORE_ACCESSKEYID"
@@ -62,4 +64,9 @@ func NewDefaultConfig() *Configuration {
 		MetricsBindAddress:      ":8080",
 		PodFilter:               "backupPod=true",
 	}
+}
+
+// GetGlobalRepository is a shortcut for building an S3 string "s3:<endpoint>/<bucket>"
+func GetGlobalRepository() string {
+	return fmt.Sprintf("s3:%s/%s", Config.GlobalS3Endpoint, Config.GlobalS3Bucket)
 }
