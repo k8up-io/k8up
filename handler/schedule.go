@@ -8,7 +8,9 @@ import (
 	"github.com/vshn/k8up/job"
 	"github.com/vshn/k8up/scheduler"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
 const (
@@ -20,6 +22,7 @@ const (
 type ScheduleHandler struct {
 	schedule *k8upv1alpha1.Schedule
 	job.Config
+	requireSpecUpdate bool
 }
 
 // NewScheduleHandler will return a new ScheduleHandler.
@@ -37,14 +40,10 @@ func (s *ScheduleHandler) Handle() error {
 	namespacedName := types.NamespacedName{Name: s.schedule.GetName(), Namespace: s.schedule.GetNamespace()}
 
 	if s.schedule.GetDeletionTimestamp() != nil {
-		err := removeFinalizer(s.CTX, s.schedule, scheduleFinalizerName, s.Client)
-		if err != nil {
-			return fmt.Errorf("error while removing the finalizer: %w", err)
-		}
-
+		controllerutil.RemoveFinalizer(s.schedule, scheduleFinalizerName)
 		scheduler.GetScheduler().RemoveSchedules(namespacedName)
 
-		return nil
+		return s.updateSchedule()
 	}
 
 	var err error
@@ -56,16 +55,16 @@ func (s *ScheduleHandler) Handle() error {
 		return fmt.Errorf("cannot add to cron: %w", err)
 	}
 
-	if !contains(s.schedule.GetFinalizers(), scheduleFinalizerName) {
-		err = addFinalizer(s.CTX, s.schedule, scheduleFinalizerName, s.Client)
-		if err != nil {
-			return fmt.Errorf("error while adding finalizer: %w", err)
-		}
+	if !controllerutil.ContainsFinalizer(s.schedule, scheduleFinalizerName) {
+		controllerutil.AddFinalizer(s.schedule, scheduleFinalizerName)
+		s.requireSpecUpdate = true
 	}
 
+	if s.requireSpecUpdate {
+		return s.updateSchedule()
+	}
 	return nil
 }
-
 func (s *ScheduleHandler) createJobList() scheduler.JobList {
 	jobList := scheduler.JobList{
 		Config: s.Config,
@@ -124,4 +123,11 @@ func (s *ScheduleHandler) mergeResourcesWithDefaults(resources corev1.ResourceRe
 		s.Log.Info("could not merge specific resources with schedule defaults", "err", err.Error())
 	}
 	return resources
+}
+
+func (s *ScheduleHandler) updateSchedule() error {
+	if err := s.Client.Update(s.CTX, s.schedule); err != nil && !errors.IsNotFound(err) {
+		return fmt.Errorf("error updating resource %s/%s: %w", s.schedule.Namespace, s.schedule.Name, err)
+	}
+	return nil
 }
