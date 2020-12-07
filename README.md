@@ -34,6 +34,7 @@ You'll need:
 - make
 
 These are the most common make targets: `build`, `test`, `docker-build`, `run`.
+Run `make help` to get an overview over the relevant targets and their intentions.
 
 ## Generate kubernetes code
 
