@@ -1,7 +1,6 @@
 package main
 
 import (
-	"flag"
 	"os"
 	"strings"
 
@@ -47,12 +46,6 @@ func main() {
 
 	ctrl.SetLogger(zap.New(zap.UseDevMode(true)))
 
-	var enableLeaderElection bool
-	flag.BoolVar(&enableLeaderElection, "enable-leader-election", false,
-		"Enable leader election for controller manager. "+
-			"Enabling this will ensure there is only one active controller manager.")
-	flag.Parse()
-
 	loadEnvironmentVariables()
 
 	executor.GetExecutor()
@@ -61,7 +54,7 @@ func main() {
 		Scheme:             scheme,
 		MetricsBindAddress: cfg.Config.MetricsBindAddress,
 		Port:               9443,
-		LeaderElection:     enableLeaderElection,
+		LeaderElection:     cfg.Config.EnableLeaderElection,
 		LeaderElectionID:   "d2ab61da.syn.tools",
 	})
 	if err != nil {
