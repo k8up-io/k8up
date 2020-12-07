@@ -4,7 +4,17 @@ kind: Schedule
 metadata:
   name: schedule-test
 spec:
+  resourceRequirementsTemplate:
+    requests:
+      memory: "64Mi"
+      cpu: "250m"
+    limits:
+      memory: "128Mi"
+      cpu: "500m"
   backend:
+    repoPasswordSecretRef:
+      name: backup-repo
+      key: password
     s3:
       endpoint: http://10.144.1.224:9000
       bucket: k8up
@@ -13,9 +23,6 @@ spec:
         key: username
       secretAccessKeySecretRef:
         name: backup-credentials
-        key: password
-      repoPasswordSecretRef:
-        name: backup-repo
         key: password
   archive:
     schedule: '0 * * * *'
@@ -33,7 +40,18 @@ spec:
     schedule: '* * * * *'
     keepJobs: 4
     promURL: http://10.144.1.224:9000
+    resources:
+      requests:
+        memory: "64Mi"
+        cpu: "250m"
+      limits:
+        memory: "256Mi"
+        cpu: "1000m"
   check:
+    resources:
+      requests:
+        memory: "64Mi"
+        cpu: "250m"
     schedule: '*/5 * * * *'
     promURL: http://10.144.1.224:9000
   prune:

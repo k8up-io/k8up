@@ -1,6 +1,7 @@
 package v1alpha1
 
 import (
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
@@ -11,6 +12,8 @@ type CheckSpec struct {
 	PromURL  string   `json:"promURL,omitempty"`
 	Backend  *Backend `json:"backend,omitempty"`
 	KeepJobs *int     `json:"keepJobs,omitempty"`
+	// Resources describes the compute resource requirements (cpu, memory, etc.)
+	Resources corev1.ResourceRequirements `json:"resources,omitempty"`
 }
 
 // CheckStatus defines the observed state of Check
@@ -57,6 +60,10 @@ func (c *Check) GetType() JobType {
 
 func (c *Check) GetK8upStatus() *K8upStatus {
 	return &c.Status.K8upStatus
+}
+
+func (c *Check) GetResources() corev1.ResourceRequirements {
+	return c.Spec.Resources
 }
 
 func (c CheckSpec) CreateObject(name, namespace string) runtime.Object {

@@ -44,6 +44,7 @@ type Object interface {
 	GetRuntimeObject() runtime.Object
 	GetK8upStatus() *k8upv1alpha1.K8upStatus
 	GetType() v1alpha1.JobType
+	GetResources() corev1.ResourceRequirements
 }
 
 // NewConfig returns a new configuration.
@@ -74,8 +75,9 @@ func GetGenericJob(obj Object, config Config) (*batchv1.Job, error) {
 					RestartPolicy: corev1.RestartPolicyOnFailure,
 					Containers: []corev1.Container{
 						{
-							Name:  obj.GetMetaObject().GetName(),
-							Image: cfg.Config.BackupImage,
+							Name:      obj.GetMetaObject().GetName(),
+							Image:     cfg.Config.BackupImage,
+							Resources: config.Obj.GetResources(),
 						},
 					},
 				},

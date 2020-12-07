@@ -17,6 +17,8 @@ type RestoreSpec struct {
 	KeepJobs      *int           `json:"keepJobs,omitempty"`
 	// Tags is a list of arbitrary tags that get added to the backup via Restic's tagging system
 	Tags []string `json:"tags,omitempty"`
+	// Resources describes the compute resource requirements (cpu, memory, etc.)
+	Resources corev1.ResourceRequirements `json:"resources,omitempty"`
 }
 
 func (r RestoreSpec) CreateObject(name, namespace string) runtime.Object {
@@ -71,6 +73,10 @@ func (r *Restore) GetType() JobType {
 
 func (r *Restore) GetK8upStatus() *K8upStatus {
 	return &r.Status.K8upStatus
+}
+
+func (r *Restore) GetResources() corev1.ResourceRequirements {
+	return r.Spec.Resources
 }
 
 // +kubebuilder:object:root=true

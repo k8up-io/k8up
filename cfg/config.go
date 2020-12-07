@@ -1,6 +1,10 @@
 package cfg
 
-import "fmt"
+import (
+	"fmt"
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
+)
 
 const (
 	RestoreS3EndpointEnvName        = "RESTORE_S3ENDPOINT"
@@ -36,6 +40,10 @@ type Configuration struct {
 	GlobalConcurrentCheckJobsLimit   int    `koanf:"globalconcurrentcheckjobslimit"`
 	GlobalConcurrentPruneJobsLimit   int    `koanf:"globalconcurrentprunejobslimit"`
 	GlobalConcurrentRestoreJobsLimit int    `koanf:"globalconcurrentrestorejobslimit"`
+	GlobalCPUResourceRequest         string `koanf:"globalcpu-request"`
+	GlobalCPUResourceLimit           string `koanf:"globalcpu-limit"`
+	GlobalMemoryResourceRequest      string `koanf:"globalmemory-request"`
+	GlobalMemoryResourceLimit        string `koanf:"globalmemory-limit"`
 	BackupImage                      string `koanf:"image"`
 	MetricsBindAddress               string `koanf:"metrics-bindaddress"`
 	PodExecRoleName                  string `koanf:"podexecrolename"`
@@ -64,6 +72,50 @@ func NewDefaultConfig() *Configuration {
 		MetricsBindAddress:      ":8080",
 		PodFilter:               "backupPod=true",
 	}
+}
+
+func (c Configuration) ValidateSyntax() error {
+	if _, err := resource.ParseQuantity(c.GlobalMemoryResourceRequest); err != nil && c.GlobalMemoryResourceRequest != "" {
+		return fmt.Errorf("cannot parse global memory request: %v", err)
+	}
+	if _, err := resource.ParseQuantity(c.GlobalMemoryResourceLimit); err != nil && c.GlobalMemoryResourceLimit != "" {
+		return fmt.Errorf("cannot parse global memory limit: %v", err)
+	}
+	if _, err := resource.ParseQuantity(c.GlobalCPUResourceRequest); err != nil && c.GlobalCPUResourceRequest != "" {
+		return fmt.Errorf("cannot parse global CPU request: %v", err)
+	}
+	if _, err := resource.ParseQuantity(c.GlobalCPUResourceLimit); err != nil && c.GlobalCPUResourceLimit != "" {
+		return fmt.Errorf("cannot parse global CPU limit: %v", err)
+	}
+	return nil
+}
+
+func (c Configuration) GetGlobalDefaultResources() (res corev1.ResourceRequirements) {
+	if r, err := resource.ParseQuantity(c.GlobalMemoryResourceRequest); err == nil && c.GlobalMemoryResourceRequest != "" {
+		if res.Requests == nil {
+			res.Requests = make(corev1.ResourceList)
+		}
+		res.Requests[corev1.ResourceMemory] = r
+	}
+	if r, err := resource.ParseQuantity(c.GlobalCPUResourceRequest); err == nil && c.GlobalCPUResourceRequest != "" {
+		if res.Requests == nil {
+			res.Requests = make(corev1.ResourceList)
+		}
+		res.Requests[corev1.ResourceCPU] = r
+	}
+	if r, err := resource.ParseQuantity(c.GlobalMemoryResourceLimit); err == nil && c.GlobalMemoryResourceLimit != "" {
+		if res.Limits == nil {
+			res.Requests = make(corev1.ResourceList)
+		}
+		res.Requests[corev1.ResourceCPU] = r
+	}
+	if r, err := resource.ParseQuantity(c.GlobalCPUResourceLimit); err == nil && c.GlobalCPUResourceLimit != "" {
+		if res.Limits == nil {
+			res.Limits = make(corev1.ResourceList)
+		}
+		res.Limits[corev1.ResourceCPU] = r
+	}
+	return res
 }
 
 // GetGlobalRepository is a shortcut for building an S3 string "s3:<endpoint>/<bucket>"

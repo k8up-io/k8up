@@ -1,8 +1,7 @@
 package v1alpha1
 
 import (
-	"fmt"
-
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
@@ -16,6 +15,8 @@ type ScheduleSpec struct {
 	Prune    *PruneSchedule   `json:"prune,omitempty"`
 	Backend  *Backend         `json:"backend,omitempty"`
 	KeepJobs *int             `json:"keepJobs,omitempty"`
+	// ResourceRequirementsTemplate describes the compute resource requirements (cpu, memory, etc.)
+	ResourceRequirementsTemplate corev1.ResourceRequirements `json:"resourceRequirementsTemplate,omitempty"`
 }
 
 // ScheduleCommon contains fields every schedule needs
@@ -51,16 +52,6 @@ type CheckSchedule struct {
 type PruneSchedule struct {
 	PruneSpec       `json:",inline"`
 	*ScheduleCommon `json:",inline"`
-}
-
-type NamespacedName struct {
-	Namespace string `json:"namespace,omitempty"`
-	Name      string `json:"name,omitempty"`
-}
-
-// String returns the general purpose string representation
-func (n NamespacedName) String() string {
-	return fmt.Sprintf("%s%s%s", n.Namespace, "/", n.Name)
 }
 
 // ScheduleStatus defines the observed state of Schedule
@@ -106,4 +97,8 @@ func (*Schedule) GetType() JobType {
 
 func (s *Schedule) GetK8upStatus() *K8upStatus {
 	return nil
+}
+
+func (s *Schedule) GetResources() corev1.ResourceRequirements {
+	return s.Spec.ResourceRequirementsTemplate
 }
