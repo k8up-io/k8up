@@ -269,7 +269,7 @@ spec:
               description: Retention sets how many backups should be kept after a forget and prune
               properties:
                 hostnames:
-                  description: Hosntames is a filter on what hostnames the policy should be applied
+                  description: Hostnames is a filter on what hostnames the policy should be applied
                   items:
                     type: string
                   type: array
