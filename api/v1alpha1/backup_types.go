@@ -1,6 +1,7 @@
 package v1alpha1
 
 import (
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
@@ -23,6 +24,9 @@ type BackupSpec struct {
 	StatsURL string `json:"statsURL,omitempty"`
 	// Tags is a list of arbitrary tags that get added to the backup via Restic's tagging system
 	Tags []string `json:"tags,omitempty"`
+
+	// Resources describes the compute resource requirements (cpu, memory, etc.)
+	Resources corev1.ResourceRequirements `json:"resources,omitempty"`
 }
 
 type BackupTemplate struct {
@@ -87,6 +91,10 @@ func (*Backup) GetType() JobType {
 
 func (b *Backup) GetK8upStatus() *K8upStatus {
 	return &b.Status.K8upStatus
+}
+
+func (b *Backup) GetResources() corev1.ResourceRequirements {
+	return b.Spec.Resources
 }
 
 func (b BackupSpec) CreateObject(name, namespace string) runtime.Object {

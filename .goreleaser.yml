@@ -28,9 +28,9 @@ changelog:
   sort: asc
   filters:
     exclude:
-    - '^Docs:'
-    - '^Test:'
-    - '^Refactor:'
+    - '^(D|d)oc(s|umentation):'
+    - '^(T|t)ests?:'
+    - '^(R|r)efactor:'
     - '^Merge pull request'
 
 release:

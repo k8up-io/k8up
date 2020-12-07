@@ -1,6 +1,7 @@
 package v1alpha1
 
 import (
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
@@ -12,6 +13,8 @@ type PruneSpec struct {
 	Retention RetentionPolicy `json:"retention,omitempty"`
 	Backend   *Backend        `json:"backend,omitempty"`
 	KeepJobs  *int            `json:"keepJobs,omitempty"`
+	// Resources describes the compute resource requirements (cpu, memory, etc.)
+	Resources corev1.ResourceRequirements `json:"resources,omitempty"`
 }
 
 func (p PruneSpec) CreateObject(name, namespace string) runtime.Object {
@@ -70,6 +73,10 @@ func (p *Prune) GetType() JobType {
 
 func (p *Prune) GetK8upStatus() *K8upStatus {
 	return &p.Status.K8upStatus
+}
+
+func (p *Prune) GetResources() corev1.ResourceRequirements {
+	return p.Spec.Resources
 }
 
 // +kubebuilder:object:root=true

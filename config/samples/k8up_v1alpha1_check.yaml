@@ -3,6 +3,10 @@ kind: Check
 metadata:
   name: check-test
 spec:
+  resources:
+    requests:
+        memory: "64Mi"
+        cpu: "250m"
   backend:
     s3:
       endpoint: http://10.144.1.224:9000

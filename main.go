@@ -44,6 +44,9 @@ func init() {
 }
 
 func main() {
+
+	ctrl.SetLogger(zap.New(zap.UseDevMode(true)))
+
 	var enableLeaderElection bool
 	flag.BoolVar(&enableLeaderElection, "enable-leader-election", false,
 		"Enable leader election for controller manager. "+
@@ -51,8 +54,6 @@ func main() {
 	flag.Parse()
 
 	loadEnvironmentVariables()
-
-	ctrl.SetLogger(zap.New(zap.UseDevMode(true)))
 
 	executor.GetExecutor()
 
@@ -147,5 +148,9 @@ func loadEnvironmentVariables() {
 
 	if err := koanfInstance.UnmarshalWithConf("", &cfg.Config, koanf.UnmarshalConf{Tag: "koanf", FlatPaths: true}); err != nil {
 		setupLog.Error(err, "could not merge defaults with settings from environment variables")
+	}
+	if err := cfg.Config.ValidateSyntax(); err != nil {
+		setupLog.Error(err, "settings invalid")
+		os.Exit(2)
 	}
 }

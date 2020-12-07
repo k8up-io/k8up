@@ -2,10 +2,12 @@ package handler
 
 import (
 	"fmt"
-
+	"github.com/imdario/mergo"
 	k8upv1alpha1 "github.com/vshn/k8up/api/v1alpha1"
+	"github.com/vshn/k8up/cfg"
 	"github.com/vshn/k8up/job"
 	"github.com/vshn/k8up/scheduler"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 )
 
@@ -71,6 +73,7 @@ func (s *ScheduleHandler) createJobList() scheduler.JobList {
 	}
 
 	if s.schedule.Spec.Archive != nil {
+		s.schedule.Spec.Archive.ArchiveSpec.Resources = s.mergeResourcesWithDefaults(s.schedule.Spec.Archive.Resources)
 		jobList.Jobs = append(jobList.Jobs, scheduler.Job{
 			Type:     scheduler.ArchiveType,
 			Schedule: s.schedule.Spec.Archive.Schedule,
@@ -78,6 +81,7 @@ func (s *ScheduleHandler) createJobList() scheduler.JobList {
 		})
 	}
 	if s.schedule.Spec.Backup != nil {
+		s.schedule.Spec.Backup.BackupSpec.Resources = s.mergeResourcesWithDefaults(s.schedule.Spec.Backup.Resources)
 		jobList.Jobs = append(jobList.Jobs, scheduler.Job{
 			Type:     scheduler.BackupType,
 			Schedule: s.schedule.Spec.Backup.Schedule,
@@ -85,6 +89,7 @@ func (s *ScheduleHandler) createJobList() scheduler.JobList {
 		})
 	}
 	if s.schedule.Spec.Check != nil {
+		s.schedule.Spec.Check.CheckSpec.Resources = s.mergeResourcesWithDefaults(s.schedule.Spec.Archive.Resources)
 		jobList.Jobs = append(jobList.Jobs, scheduler.Job{
 			Type:     scheduler.CheckType,
 			Schedule: s.schedule.Spec.Check.Schedule,
@@ -92,6 +97,7 @@ func (s *ScheduleHandler) createJobList() scheduler.JobList {
 		})
 	}
 	if s.schedule.Spec.Restore != nil {
+		s.schedule.Spec.Restore.RestoreSpec.Resources = s.mergeResourcesWithDefaults(s.schedule.Spec.Restore.Resources)
 		jobList.Jobs = append(jobList.Jobs, scheduler.Job{
 			Type:     scheduler.RestoreType,
 			Schedule: s.schedule.Spec.Restore.Schedule,
@@ -99,6 +105,7 @@ func (s *ScheduleHandler) createJobList() scheduler.JobList {
 		})
 	}
 	if s.schedule.Spec.Prune != nil {
+		s.schedule.Spec.Prune.PruneSpec.Resources = s.mergeResourcesWithDefaults(s.schedule.Spec.Prune.Resources)
 		jobList.Jobs = append(jobList.Jobs, scheduler.Job{
 			Type:     scheduler.PruneType,
 			Schedule: s.schedule.Spec.Prune.Schedule,
@@ -107,4 +114,14 @@ func (s *ScheduleHandler) createJobList() scheduler.JobList {
 	}
 
 	return jobList
+}
+
+func (s *ScheduleHandler) mergeResourcesWithDefaults(resources corev1.ResourceRequirements) corev1.ResourceRequirements {
+	if err := mergo.Merge(&s.schedule.Spec.ResourceRequirementsTemplate, cfg.Config.GetGlobalDefaultResources()); err != nil {
+		s.Log.Info("could not merge specific resources with global defaults", "err", err.Error())
+	}
+	if err := mergo.Merge(&resources, s.schedule.Spec.ResourceRequirementsTemplate); err != nil {
+		s.Log.Info("could not merge specific resources with schedule defaults", "err", err.Error())
+	}
+	return resources
 }

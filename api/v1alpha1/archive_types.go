@@ -1,6 +1,7 @@
 package v1alpha1
 
 import (
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
@@ -64,4 +65,8 @@ func (*Archive) GetType() JobType {
 
 func (a *Archive) GetK8upStatus() *K8upStatus {
 	return &a.Status.K8upStatus
+}
+
+func (a *Archive) GetResources() corev1.ResourceRequirements {
+	return a.Spec.Resources
 }
