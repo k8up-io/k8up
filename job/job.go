@@ -42,7 +42,7 @@ type Config struct {
 type Object interface {
 	GetMetaObject() metav1.Object
 	GetRuntimeObject() runtime.Object
-	GetK8upStatus() *k8upv1alpha1.K8upStatus
+	GetStatus() *k8upv1alpha1.Status
 	GetType() v1alpha1.JobType
 	GetResources() corev1.ResourceRequirements
 }

@@ -42,7 +42,7 @@ func (r *RestoreExecutor) Execute() error {
 		return errors.New("object is not a prune")
 	}
 
-	if restore.GetK8upStatus().Started {
+	if restore.GetStatus().Started {
 		return nil
 	}
 
@@ -76,7 +76,7 @@ func (r *RestoreExecutor) startRestore(restore *k8upv1alpha1.Restore) {
 func (r *RestoreExecutor) setJobStatusStarted() error {
 	original := r.Obj
 	new := r.Obj.GetRuntimeObject().DeepCopyObject().(*k8upv1alpha1.Restore)
-	new.GetK8upStatus().Started = true
+	new.GetStatus().Started = true
 
 	return r.Client.Status().Patch(r.CTX, new, client.MergeFrom(original.GetRuntimeObject()))
 }

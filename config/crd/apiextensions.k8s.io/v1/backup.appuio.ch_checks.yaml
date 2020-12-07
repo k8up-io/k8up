@@ -269,7 +269,7 @@ spec:
                 type: object
             type: object
           status:
-            description: CheckStatus defines the observed state of Check
+            description: Status defines the observed state of a generic K8up job. It is used for the operator to determine what to do.
             properties:
               exclusive:
                 type: boolean

@@ -59,7 +59,7 @@ func (b *BackupExecutor) Execute() error {
 		b.backup = backupObject
 	}
 
-	if b.Obj.GetK8upStatus().Started {
+	if b.Obj.GetStatus().Started {
 		return nil
 	}
 
@@ -174,7 +174,7 @@ func (b *BackupExecutor) startBackup(job *batchv1.Job) {
 			return
 		}
 	}
-	b.Obj.GetK8upStatus().Started = true
+	b.Obj.GetStatus().Started = true
 
 	err = b.Client.Status().Update(b.CTX, b.Obj.GetRuntimeObject().DeepCopyObject())
 	if err != nil {

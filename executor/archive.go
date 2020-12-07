@@ -41,7 +41,7 @@ func (a *ArchiveExecutor) Execute() error {
 		return stderrors.New("object is not a archive")
 	}
 
-	if a.Obj.GetK8upStatus().Started {
+	if a.Obj.GetStatus().Started {
 		return nil
 	}
 
@@ -71,7 +71,7 @@ func (a *ArchiveExecutor) startArchive(job *batchv1.Job, archive *k8upv1alpha1.A
 		}
 	}
 
-	a.Obj.GetK8upStatus().Started = true
+	a.Obj.GetStatus().Started = true
 
 	err = a.Client.Status().Update(a.CTX, a.Obj.GetRuntimeObject().DeepCopyObject())
 	if err != nil {

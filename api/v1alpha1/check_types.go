@@ -16,11 +16,6 @@ type CheckSpec struct {
 	Resources corev1.ResourceRequirements `json:"resources,omitempty"`
 }
 
-// CheckStatus defines the observed state of Check
-type CheckStatus struct {
-	K8upStatus `json:",inline"`
-}
-
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 
@@ -29,8 +24,8 @@ type Check struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   CheckSpec   `json:"spec,omitempty"`
-	Status CheckStatus `json:"status,omitempty"`
+	Spec   CheckSpec `json:"spec,omitempty"`
+	Status Status    `json:"status,omitempty"`
 }
 
 // +kubebuilder:object:root=true
@@ -58,8 +53,8 @@ func (c *Check) GetType() JobType {
 	return CheckType
 }
 
-func (c *Check) GetK8upStatus() *K8upStatus {
-	return &c.Status.K8upStatus
+func (c *Check) GetStatus() *Status {
+	return &c.Status
 }
 
 func (c *Check) GetResources() corev1.ResourceRequirements {

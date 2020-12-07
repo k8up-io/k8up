@@ -329,7 +329,7 @@ spec:
               type: array
           type: object
         status:
-          description: RestoreStatus defines the observed state of Restore
+          description: Status defines the observed state of a generic K8up job. It is used for the operator to determine what to do.
           properties:
             exclusive:
               type: boolean

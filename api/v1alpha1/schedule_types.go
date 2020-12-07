@@ -95,7 +95,7 @@ func (*Schedule) GetType() JobType {
 	return ScheduleType
 }
 
-func (s *Schedule) GetK8upStatus() *K8upStatus {
+func (s *Schedule) GetStatus() *Status {
 	return nil
 }
 
