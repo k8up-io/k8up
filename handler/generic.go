@@ -20,7 +20,7 @@ func NewHandler(config job.Config) *Handler {
 
 // Handle checks if that job is started and will add it to the queue, if not.
 func (h *Handler) Handle() error {
-	if !h.Obj.GetK8upStatus().Started {
+	if !h.Obj.GetStatus().Started {
 		return h.queueJob()
 	}
 

@@ -42,11 +42,6 @@ type FolderRestore struct {
 	*corev1.PersistentVolumeClaimVolumeSource `json:",inline"`
 }
 
-// RestoreStatus defines the observed state of Restore
-type RestoreStatus struct {
-	K8upStatus `json:",inline"`
-}
-
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 
@@ -55,8 +50,8 @@ type Restore struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   RestoreSpec   `json:"spec,omitempty"`
-	Status RestoreStatus `json:"status,omitempty"`
+	Spec   RestoreSpec `json:"spec,omitempty"`
+	Status Status      `json:"status,omitempty"`
 }
 
 func (r *Restore) GetRuntimeObject() runtime.Object {
@@ -71,8 +66,8 @@ func (r *Restore) GetType() JobType {
 	return RestoreType
 }
 
-func (r *Restore) GetK8upStatus() *K8upStatus {
-	return &r.Status.K8upStatus
+func (r *Restore) GetStatus() *Status {
+	return &r.Status
 }
 
 func (r *Restore) GetResources() corev1.ResourceRequirements {

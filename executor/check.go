@@ -37,7 +37,7 @@ func (c *CheckExecutor) Execute() error {
 
 	c.check = checkObject
 
-	if c.Obj.GetK8upStatus().Started {
+	if c.Obj.GetStatus().Started {
 		return nil
 	}
 

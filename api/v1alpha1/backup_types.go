@@ -40,18 +40,6 @@ type Env struct {
 	Value string `json:"value,omitempty"`
 }
 
-type BackupStatus struct {
-	K8upStatus `json:",inline"`
-}
-
-// K8upStatus defines the observed state of a generic K8up job. It is used for the
-// operator to determine what to do.
-type K8upStatus struct {
-	Started   bool `json:"started,omitempty"`
-	Finished  bool `json:"finished,omitempty"`
-	Exclusive bool `json:"exclusive,omitempty"`
-}
-
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 
@@ -60,8 +48,8 @@ type Backup struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   BackupSpec   `json:"spec,omitempty"`
-	Status BackupStatus `json:"status,omitempty"`
+	Spec   BackupSpec `json:"spec,omitempty"`
+	Status Status     `json:"status,omitempty"`
 }
 
 // +kubebuilder:object:root=true
@@ -89,8 +77,8 @@ func (*Backup) GetType() JobType {
 	return BackupType
 }
 
-func (b *Backup) GetK8upStatus() *K8upStatus {
-	return &b.Status.K8upStatus
+func (b *Backup) GetStatus() *Status {
+	return &b.Status
 }
 
 func (b *Backup) GetResources() corev1.ResourceRequirements {

@@ -297,7 +297,7 @@ spec:
               type: object
           type: object
         status:
-          description: PruneStatus defines the observed state of Prune
+          description: Status defines the observed state of a generic K8up job. It is used for the operator to determine what to do.
           properties:
             exclusive:
               type: boolean

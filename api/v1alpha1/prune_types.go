@@ -42,11 +42,6 @@ type RetentionPolicy struct {
 	Hostnames []string `json:"hostnames,omitempty"`
 }
 
-// PruneStatus defines the observed state of Prune
-type PruneStatus struct {
-	K8upStatus `json:",inline"`
-}
-
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 
@@ -55,8 +50,8 @@ type Prune struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   PruneSpec   `json:"spec,omitempty"`
-	Status PruneStatus `json:"status,omitempty"`
+	Spec   PruneSpec `json:"spec,omitempty"`
+	Status Status    `json:"status,omitempty"`
 }
 
 func (p *Prune) GetRuntimeObject() runtime.Object {
@@ -71,8 +66,8 @@ func (p *Prune) GetType() JobType {
 	return PruneType
 }
 
-func (p *Prune) GetK8upStatus() *K8upStatus {
-	return &p.Status.K8upStatus
+func (p *Prune) GetStatus() *Status {
+	return &p.Status
 }
 
 func (p *Prune) GetResources() corev1.ResourceRequirements {

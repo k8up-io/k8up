@@ -11,11 +11,6 @@ type ArchiveSpec struct {
 	*RestoreSpec `json:",inline"`
 }
 
-// ArchiveStatus defines the observed state of Archive.
-type ArchiveStatus struct {
-	K8upStatus `json:",inline"`
-}
-
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 
@@ -24,8 +19,8 @@ type Archive struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   ArchiveSpec   `json:"spec,omitempty"`
-	Status ArchiveStatus `json:"status,omitempty"`
+	Spec   ArchiveSpec `json:"spec,omitempty"`
+	Status Status      `json:"status,omitempty"`
 }
 
 // +kubebuilder:object:root=true
@@ -63,8 +58,8 @@ func (*Archive) GetType() JobType {
 	return ArchiveType
 }
 
-func (a *Archive) GetK8upStatus() *K8upStatus {
-	return &a.Status.K8upStatus
+func (a *Archive) GetStatus() *Status {
+	return &a.Status
 }
 
 func (a *Archive) GetResources() corev1.ResourceRequirements {
