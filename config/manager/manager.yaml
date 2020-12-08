@@ -23,8 +23,6 @@ spec:
       containers:
       - name: k8up
         image: quay.io/vshn/k8up:latest
-        args:
-        - --enable-leader-election=true
         resources:
           limits:
             cpu: 300m

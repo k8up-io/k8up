@@ -50,6 +50,9 @@ type Configuration struct {
 	PodFilter                        string `koanf:"podfilter"`
 	PromURL                          string `koanf:"promurl"`
 	RestartPolicy                    string `koanf:"restartpolicy"`
+
+	// Enabling this will ensure there is only one active controller manager.
+	EnableLeaderElection bool `koanf:"enable-leader-election"`
 }
 
 var (
@@ -71,6 +74,7 @@ func NewDefaultConfig() *Configuration {
 		RestartPolicy:           "OnFailure",
 		MetricsBindAddress:      ":8080",
 		PodFilter:               "backupPod=true",
+		EnableLeaderElection:    true,
 	}
 }
 
