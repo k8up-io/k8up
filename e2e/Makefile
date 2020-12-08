@@ -7,7 +7,7 @@ install_bats:
 
 run_bats: export KUBECONFIG = $(KIND_KUBECONFIG)
 run_bats:
-	@mkdir debug || true
+	@mkdir -p debug || true
 	@node_modules/.bin/bats .
 
 clean:

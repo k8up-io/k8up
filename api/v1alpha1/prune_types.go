@@ -38,7 +38,7 @@ type RetentionPolicy struct {
 	// Tags is a filter on what tags the policy should be applied
 	// DO NOT CONFUSE THIS WITH KeepTags OR YOU'LL have a bad time
 	Tags []string `json:"tags,omitempty"`
-	// Hosntames is a filter on what hostnames the policy should be applied
+	// Hostnames is a filter on what hostnames the policy should be applied
 	Hostnames []string `json:"hostnames,omitempty"`
 }
 
