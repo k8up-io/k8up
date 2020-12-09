@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"crypto/sha1"
+	"encoding/hex"
 	"fmt"
 	"github.com/imdario/mergo"
 	k8upv1alpha1 "github.com/vshn/k8up/api/v1alpha1"
@@ -10,11 +12,16 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
+	"math/big"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
 const (
 	scheduleFinalizerName = "k8up.syn.tools/schedule"
+	ScheduleHourlyRandom  = "@hourly-random"
+	ScheduleDailyRandom   = "@daily-random"
+	ScheduleWeeklyRandom  = "@weekly-random"
+	ScheduleMonthlyRandom = "@monthly-random"
 )
 
 // ScheduleHandler handles the reconciles for the schedules. Schedules are a special
@@ -130,4 +137,28 @@ func (s *ScheduleHandler) updateSchedule() error {
 		return fmt.Errorf("error updating resource %s/%s: %w", s.schedule.Namespace, s.schedule.Name, err)
 	}
 	return nil
+}
+
+func (s *ScheduleHandler) generateSchedule(name, originalSchedule string) (schedule string) {
+	hash := sha1.New()
+	hash.Write([]byte(name))
+	sum := hex.EncodeToString(hash.Sum(nil))
+	sumBase16, _ := new(big.Int).SetString(sum, 16)
+	defer s.Log.V(1).Info("Generated schedule", "name", name, "sum", sum, "from_schedule", originalSchedule, "new_schedule", &schedule)
+
+	minute := new(big.Int).Set(sumBase16).Mod(sumBase16, big.NewInt(60))
+	hour := new(big.Int).Set(sumBase16).Mod(sumBase16, big.NewInt(24))
+	dayOfMonth := new(big.Int).Set(sumBase16).Mod(sumBase16, big.NewInt(7))
+	month := new(big.Int).Set(sumBase16).Mod(sumBase16, big.NewInt(12))
+	switch originalSchedule {
+	case ScheduleHourlyRandom:
+		return fmt.Sprintf("%s * * * *", minute)
+	case ScheduleDailyRandom:
+		return fmt.Sprintf("%s %s * * *", minute, hour)
+	case ScheduleWeeklyRandom:
+		return fmt.Sprintf("%s %s %s * *", minute, hour, dayOfMonth)
+	case ScheduleMonthlyRandom:
+		return fmt.Sprintf("%s %s %s %s *", minute, hour, dayOfMonth, month)
+	}
+	return originalSchedule
 }

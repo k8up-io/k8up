@@ -104,17 +104,13 @@ func (s *Scheduler) AddSchedules(jobs JobList) error {
 
 	jobIDs := make([]int, len(jobs.Jobs))
 
-	for i, job := range jobs.Jobs {
+	for i, jb := range jobs.Jobs {
 
-		jobs.Config.Log.Info("registering schedule for", "type", job.Type)
+		jobs.Config.Log.Info("registering schedule for", "type", jb.Type)
 
-		jobType := job.Type
-		obj := job.Object
-		config := jobs.Config
-
-		id, err := s.cron.AddFunc(job.Schedule, func() {
-			jobs.Config.Log.Info("running schedule for", "job", jobType)
-			s.createObject(jobType, namespacedName.Namespace, obj, config)
+		id, err := s.cron.AddFunc(jb.Schedule, func() {
+			jobs.Config.Log.Info("running schedule for", "jb", jb.Type)
+			s.createObject(jb.Type, namespacedName.Namespace, jb.Object, jobs.Config)
 		})
 		if err != nil {
 			return err

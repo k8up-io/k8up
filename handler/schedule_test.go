@@ -5,8 +5,10 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/vshn/k8up/api/v1alpha1"
 	"github.com/vshn/k8up/cfg"
+	"github.com/vshn/k8up/job"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
+	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 	"testing"
 )
 
@@ -147,6 +149,45 @@ func TestScheduleHandler_mergeResourcesWithDefaults(t *testing.T) {
 			}}}
 			result := s.mergeResourcesWithDefaults(tt.resources)
 			assert.Equal(t, tt.expected, result)
+		})
+	}
+}
+
+func TestScheduleHandler_generateSchedule(t *testing.T) {
+	name := "k8up-system/my-scheduled-backup"
+	tests := []struct {
+		name             string
+		schedule         string
+		expectedSchedule string
+	}{
+		{
+			name:             "WhenScheduleRandomHourlyGiven_ThenReturnStableRandomizedSchedule",
+			schedule:         "@hourly-random",
+			expectedSchedule: "2 * * * *",
+		},
+		{
+			name:             "WhenScheduleRandomHourlyGiven_ThenReturnStableRandomizedSchedule",
+			schedule:         "@daily-random",
+			expectedSchedule: "2 14 * * *",
+		},
+		{
+			name:             "WhenScheduleRandomHourlyGiven_ThenReturnStableRandomizedSchedule",
+			schedule:         "@weekly-random",
+			expectedSchedule: "2 14 0 * *",
+		},
+		{
+			name:             "WhenScheduleRandomHourlyGiven_ThenReturnStableRandomizedSchedule",
+			schedule:         "@monthly-random",
+			expectedSchedule: "2 14 0 2 *",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := &ScheduleHandler{
+				Config: job.Config{Log: zap.New(zap.UseDevMode(true))},
+			}
+			result := s.generateSchedule(name, tt.schedule)
+			assert.Equal(t, tt.expectedSchedule, result)
 		})
 	}
 }
