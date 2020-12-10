@@ -17,11 +17,13 @@ import (
 )
 
 const (
-	scheduleFinalizerName = "k8up.syn.tools/schedule"
-	ScheduleHourlyRandom  = "@hourly-random"
-	ScheduleDailyRandom   = "@daily-random"
-	ScheduleWeeklyRandom  = "@weekly-random"
-	ScheduleMonthlyRandom = "@monthly-random"
+	scheduleFinalizerName  = "k8up.syn.tools/schedule"
+	ScheduleHourlyRandom   = "@hourly-random"
+	ScheduleDailyRandom    = "@daily-random"
+	ScheduleYearlyRandom   = "@yearly-random"
+	ScheduleAnnuallyRandom = "@annually-random"
+	ScheduleMonthlyRandom  = "@monthly-random"
+	ScheduleWeeklyRandom   = "@weekly-random"
 )
 
 // ScheduleHandler handles the reconciles for the schedules. Schedules are a special
@@ -166,26 +168,34 @@ func (s *ScheduleHandler) getOrGenerateSchedule(jobType k8upv1alpha1.JobType, or
 	return newSchedule
 }
 
-func (s *ScheduleHandler) generateSchedule(name, originalSchedule string) (schedule string) {
+// randomizeSchedule randomizes the given originalSchedule with a seed. The originalSchedule has to be one of the supported
+// '@x-random' predefined schedules, otherwise it returns originalSchedule unmodified.
+func (s *ScheduleHandler) randomizeSchedule(seed, originalSchedule string) (schedule string) {
 	hash := sha1.New()
-	hash.Write([]byte(name))
+	hash.Write([]byte(seed))
 	sum := hex.EncodeToString(hash.Sum(nil))
 	sumBase16, _ := new(big.Int).SetString(sum, 16)
-	defer s.Log.V(1).Info("Generated schedule", "name", name, "sum", sum, "from_schedule", originalSchedule, "new_schedule", &schedule)
+	defer s.Log.V(1).Info("Randomized schedule", "seed", seed, "sum", sum, "from_schedule", originalSchedule, "new_schedule", &schedule)
 
 	minute := new(big.Int).Set(sumBase16).Mod(sumBase16, big.NewInt(60))
 	hour := new(big.Int).Set(sumBase16).Mod(sumBase16, big.NewInt(24))
-	dayOfMonth := new(big.Int).Set(sumBase16).Mod(sumBase16, big.NewInt(7))
+	// A month can have between 27 and 31 days. Cron does not automatically schedule at the end of the month if 31 in February.
+	// To not cause a skip of a scheduled backup that could potentially raise alerts, we cap the day-of-month to 27 so it fits in all months.
+	dayOfMonth := new(big.Int).Set(sumBase16).Mod(sumBase16, big.NewInt(27))
 	month := new(big.Int).Set(sumBase16).Mod(sumBase16, big.NewInt(12))
+	weekday := new(big.Int).Set(sumBase16).Mod(sumBase16, big.NewInt(6))
 	switch originalSchedule {
 	case ScheduleHourlyRandom:
 		return fmt.Sprintf("%d * * * *", minute)
 	case ScheduleDailyRandom:
 		return fmt.Sprintf("%d %d * * *", minute, hour)
-	case ScheduleWeeklyRandom:
-		return fmt.Sprintf("%d %d %d * *", minute, hour, dayOfMonth)
 	case ScheduleMonthlyRandom:
-		return fmt.Sprintf("%d %d %d %d *", minute, hour, dayOfMonth, month)
+		return fmt.Sprintf("%d %d %d * *", minute, hour, dayOfMonth.Add(dayOfMonth, big.NewInt(1)))
+	case ScheduleAnnuallyRandom:
+	case ScheduleYearlyRandom:
+		return fmt.Sprintf("%d %d %d %d *", minute, hour, dayOfMonth.Add(dayOfMonth, big.NewInt(1)), month.Add(month, big.NewInt(1)))
+	case ScheduleWeeklyRandom:
+		return fmt.Sprintf("%d %d * * %d", minute, hour, weekday)
 	}
 	return originalSchedule
 }
