@@ -33,6 +33,8 @@ KIND_REGISTRY_PORT ?= 5000
 
 SETUP_E2E_TEST := testbin/.setup_e2e_test
 
+ENABLE_LEADER_ELECTION ?= false
+
 # Image URL to use all building/pushing image targets
 DOCKER_IMG ?= docker.io/vshn/k8up:$(IMG_TAG)
 QUAY_IMG ?= quay.io/vshn/k8up:$(IMG_TAG)
@@ -78,6 +80,7 @@ build: generate fmt vet ## Build manager binary
 dist: generate fmt vet ## Generates a release
 	goreleaser release --snapshot --rm-dist --skip-sign
 
+run: export BACKUP_ENABLE_LEADER_ELECTION = $(ENABLE_LEADER_ELECTION)
 run: fmt vet ## Run against the configured Kubernetes cluster in ~/.kube/config
 	go run ./main.go
 
@@ -138,6 +141,7 @@ e2e_test: install_bats $(SETUP_E2E_TEST) docker-build ## Runs the e2e test suite
 	$(MAKE) -C e2e run_bats -e KUBECONFIG=../$(KIND_KUBECONFIG)
 
 run_kind: export KUBECONFIG = $(KIND_KUBECONFIG)
+run_kind: export BACKUP_ENABLE_LEADER_ELECTION = $(ENABLE_LEADER_ELECTION)
 run_kind: $(SETUP_E2E_TEST) ## Runs the operator in kind
 	go run ./main.go
 
