@@ -31,6 +31,8 @@ KIND_KUBECTL_ARGS ?= --validate=true
 KIND_REGISTRY_NAME ?= kind-registry
 KIND_REGISTRY_PORT ?= 5000
 
+SETUP_E2E_TEST := testbin/.setup_e2e_test
+
 # Image URL to use all building/pushing image targets
 DOCKER_IMG ?= docker.io/vshn/k8up:$(IMG_TAG)
 QUAY_IMG ?= quay.io/vshn/k8up:$(IMG_TAG)
@@ -50,11 +52,11 @@ endif
 SHELL := /bin/bash
 
 KUSTOMIZE ?= go run sigs.k8s.io/kustomize/kustomize/v3
+KUSTOMIZE_BUILD_CRD ?= $(KUSTOMIZE) build $(CRD_ROOT_DIR)/$(CRD_SPEC_VERSION)
 
-all: build
+all: build ## Invokes the build target
 
-# Run tests
-test: fmt vet
+test: fmt vet ## Run tests
 	go test ./... -coverprofile cover.out
 
 # Run tests (see https://sdk.operatorframework.io/docs/building-operators/golang/references/envtest-setup)
@@ -63,57 +65,47 @@ ENVTEST_ASSETS_DIR=$(shell pwd)/testbin
 $(TESTBIN_DIR):
 	mkdir -p $(TESTBIN_DIR)
 
-# Run integration tests with envtest
 # See https://storage.googleapis.com/kubebuilder-tools/ for list of supported K8s versions
 # No, there's no 1.18 support, so we're going for 1.19
-integration_test: export ENVTEST_K8S_VERSION = 1.19.2
+integration_test: export ENVTEST_K8S_VERSION = 1.19.2 ## Run integration tests with envtest
 integration_test: generate fmt vet $(TESTBIN_DIR)
 	test -f ${ENVTEST_ASSETS_DIR}/setup-envtest.sh || curl -sSLo ${ENVTEST_ASSETS_DIR}/setup-envtest.sh https://raw.githubusercontent.com/kubernetes-sigs/controller-runtime/master/hack/setup-envtest.sh
 	source ${ENVTEST_ASSETS_DIR}/setup-envtest.sh; fetch_envtest_tools $(ENVTEST_ASSETS_DIR); setup_envtest_env $(ENVTEST_ASSETS_DIR); go test -tags=integration -v ./... -coverprofile cover.out
 
-# Build manager binary
-build: generate fmt vet
+build: generate fmt vet ## Build manager binary
 	$(build_cmd)
 
-dist: generate fmt vet
+dist: generate fmt vet ## Generates a release
 	goreleaser release --snapshot --rm-dist --skip-sign
 
-# Run against the configured Kubernetes cluster in ~/.kube/config
-run: fmt vet
+run: fmt vet ## Run against the configured Kubernetes cluster in ~/.kube/config
 	go run ./main.go
 
-# Install CRDs into a cluster
-install: generate
+install: generate ## Install CRDs into a cluster
 	$(KUSTOMIZE) build $(CRD_ROOT_DIR)/v1 | kubectl apply -f -
 
-# Uninstall CRDs from a cluster
-uninstall: generate
+uninstall: generate ## Uninstall CRDs from a cluster
 	$(KUSTOMIZE) build $(CRD_ROOT_DIR)/v1 | kubectl delete -f -
 
-# Deploy controller in the configured Kubernetes cluster in ~/.kube/config
-deploy: generate
+deploy: generate ## Deploy controller in the configured Kubernetes cluster in ~/.kube/config
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
 	$(KUSTOMIZE) build config/default | kubectl apply -f -
 
-# Generate manifests e.g. CRD, RBAC etc.
-generate:
+generate: ## Generate manifests e.g. CRD, RBAC etc.
 	@CRD_ROOT_DIR="$(CRD_ROOT_DIR)" go generate -tags=generate generate.go
 	@rm config/*.yaml
 
-# Generate CRD to file
-crd: generate
+crd: generate ## Generate CRD to file
 	$(KUSTOMIZE) build $(CRD_ROOT_DIR)/v1 > $(CRD_FILE)
 	$(KUSTOMIZE) build $(CRD_ROOT_DIR)/v1beta1 > $(CRD_FILE_LEGACY)
 
-# Run go fmt against code
-fmt:
+fmt: ## Run go fmt against code
 	go fmt ./...
 
-# Run go vet against code
-vet:
+vet: ## Run go vet against code
 	go vet ./...
 
-lint: fmt vet
+lint: fmt vet ## Invokes the fmt and vet targets
 	@echo 'Check for uncommitted changes ...'
 	git diff --exit-code
 
@@ -121,41 +113,56 @@ lint: fmt vet
 $(BIN_FILENAME):
 	$(build_cmd)
 
-# Build the docker image
-docker-build: $(BIN_FILENAME)
+docker-build: $(BIN_FILENAME) $(KIND_KUBECONFIG) ## Build the docker image
 	docker build . -t $(DOCKER_IMG) -t $(QUAY_IMG) -t $(E2E_IMG)
 
-# Push the docker image
-docker-push:
+docker-push: ## Push the docker image
 	docker push $(DOCKER_IMG)
 	docker push $(QUAY_IMG)
 
-# Generate bundle manifests and metadata, then validate generated files.
 .PHONY: bundle
-bundle: generate
+bundle: generate ## Generate bundle manifests and metadata, then validate generated files.
 	operator-sdk generate kustomize manifests -q
 	cd config/manager && $(KUSTOMIZE) edit set image controller=$(IMG)
 	$(KUSTOMIZE) build config/manifests | operator-sdk generate bundle -q --overwrite --version $(VERSION) $(BUNDLE_METADATA_OPTS)
 	operator-sdk bundle validate ./bundle
 
-docs-serve:
+docs-serve: ## Locally run the docs server
 	$(antora_preview_cmd)
 
-install_bats:
+install_bats: ## Installs the bats util via NPM
 	$(MAKE) -C e2e install_bats
 
-e2e_test: docker-build
+e2e_test: install_bats $(SETUP_E2E_TEST) docker-build ## Runs the e2e test suite
 	docker push $(E2E_IMG)
 	$(MAKE) -C e2e run_bats -e KUBECONFIG=../$(KIND_KUBECONFIG)
 
-setup_e2e_test: export KUBECONFIG = $(KIND_KUBECONFIG)
-setup_e2e_test: $(KIND_BIN)
-	@kubectl config use-context kind-$(KIND_CLUSTER)
-	@$(KUSTOMIZE) build $(CRD_ROOT_DIR)/$(CRD_SPEC_VERSION) | kubectl apply $(KIND_KUBECTL_ARGS) -f -
-
 run_kind: export KUBECONFIG = $(KIND_KUBECONFIG)
-run_kind: setup_e2e_test
+run_kind: $(SETUP_E2E_TEST) ## Runs the operator in kind
 	go run ./main.go
+
+.PHONY: setup_e2e_test
+setup_e2e_test: $(SETUP_E2E_TEST) ## Run the e2e setup
+
+.PHONY: clean_e2e_setup
+clean_e2e_setup: export KUBECONFIG = $(KIND_KUBECONFIG)
+clean_e2e_setup: ## Clean the e2e setup (e.g. to rerun the setup_e2e_test)
+	kubectl delete ns k8up-system --ignore-not-found --force --grace-period=0 || true
+	@$(KUSTOMIZE_BUILD_CRD) | kubectl delete -f - || true
+	@rm $(SETUP_E2E_TEST) || true
+
+clean: export KUBECONFIG = $(KIND_KUBECONFIG)
+clean: ## Cleans up the generated resources
+	$(KIND_BIN) delete cluster --name $(KIND_CLUSTER) || true
+	docker stop "$(KIND_REGISTRY_NAME)" || true
+	docker rm "$(KIND_REGISTRY_NAME)" || true
+	docker rmi "$(E2E_IMG)" || true
+	rm -r testbin/ dist/ bin/ cover.out $(BIN_FILENAME) || true
+	$(MAKE) -C e2e clean
+
+.PHONY: help
+help: ## Show this help
+	@grep -E -h '\s##\s' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
 
 $(KIND_BIN): export KUBECONFIG = $(KIND_KUBECONFIG)
 $(KIND_BIN): $(TESTBIN_DIR)
@@ -167,11 +174,10 @@ $(KIND_BIN): $(TESTBIN_DIR)
 	@kubectl version
 	@kubectl cluster-info
 
-clean: export KUBECONFIG = $(KIND_KUBECONFIG)
-clean:
-	$(KIND_BIN) delete cluster --name $(KIND_CLUSTER) || true
-	docker stop "$(KIND_REGISTRY_NAME)" || true
-	docker rm "$(KIND_REGISTRY_NAME)" || true
-	docker rmi "$(E2E_IMG)" || true
-	rm -r testbin/ dist/ bin/ cover.out $(BIN_FILENAME) || true
-	$(MAKE) -C e2e clean
+$(KIND_KUBECONFIG): $(KIND_BIN)
+
+$(SETUP_E2E_TEST): export KUBECONFIG = $(KIND_KUBECONFIG)
+$(SETUP_E2E_TEST): $(KIND_BIN)
+	@kubectl config use-context kind-$(KIND_CLUSTER)
+	@$(KUSTOMIZE_BUILD_CRD) | kubectl apply $(KIND_KUBECTL_ARGS) -f -
+	@touch $(SETUP_E2E_TEST)
