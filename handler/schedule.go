@@ -89,7 +89,7 @@ func (s *ScheduleHandler) createJobList() scheduler.JobList {
 		})
 	}
 	if s.schedule.Spec.Check != nil {
-		s.schedule.Spec.Check.CheckSpec.Resources = s.mergeResourcesWithDefaults(s.schedule.Spec.Archive.Resources)
+		s.schedule.Spec.Check.CheckSpec.Resources = s.mergeResourcesWithDefaults(s.schedule.Spec.Check.Resources)
 		jobList.Jobs = append(jobList.Jobs, scheduler.Job{
 			Type:     scheduler.CheckType,
 			Schedule: s.schedule.Spec.Check.Schedule,
