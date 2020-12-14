@@ -15,6 +15,8 @@ IMG_TAG ?= latest
 
 BIN_FILENAME ?= k8up
 
+GOVERSION := 1.15
+
 CRD_SPEC_VERSION ?= v1
 
 CRD_FILE ?= k8up-crd.yaml
@@ -52,6 +54,7 @@ endif
 
 # Set Shell to bash, otherwise some targets fail with dash/zsh etc.
 SHELL := /bin/bash
+USER_SHELL = $(shell echo $${SHELL})
 
 KUSTOMIZE ?= go run sigs.k8s.io/kustomize/kustomize/v3
 KUSTOMIZE_BUILD_CRD ?= $(KUSTOMIZE) build $(CRD_ROOT_DIR)/$(CRD_SPEC_VERSION)
@@ -117,11 +120,18 @@ $(BIN_FILENAME):
 	$(build_cmd)
 
 docker-build: $(BIN_FILENAME) $(KIND_KUBECONFIG) ## Build the docker image
-	docker build . -t $(DOCKER_IMG) -t $(QUAY_IMG) -t $(E2E_IMG)
+	docker build . --build-arg "GOVERSION=$(GOVERSION)" -t $(DOCKER_IMG) -t $(QUAY_IMG) -t $(E2E_IMG)
 
 docker-push: ## Push the docker image
 	docker push $(DOCKER_IMG)
 	docker push $(QUAY_IMG)
+
+docker-push-kind: $(SETUP_E2E_TEST)
+	docker push $(E2E_IMG)
+
+docker-run: export KUBECONFIG = $(KIND_KUBECONFIG)
+docker-run: docker-push-kind install
+	kubectl run k8up --stdin=true --tty=true --rm=true --image=$(E2E_IMG) --restart=Never --env="BACKUP_ENABLE_LEADER_ELECTION=$(ENABLE_LEADER_ELECTION)"
 
 .PHONY: bundle
 bundle: generate ## Generate bundle manifests and metadata, then validate generated files.
@@ -136,14 +146,18 @@ docs-serve: ## Locally run the docs server
 install_bats: ## Installs the bats util via NPM
 	$(MAKE) -C e2e install_bats
 
-e2e_test: install_bats $(SETUP_E2E_TEST) docker-build ## Runs the e2e test suite
-	docker push $(E2E_IMG)
+e2e_test: install_bats $(SETUP_E2E_TEST) docker-build docker-push-kind ## Runs the e2e test suite
 	$(MAKE) -C e2e run_bats -e KUBECONFIG=../$(KIND_KUBECONFIG)
 
 run_kind: export KUBECONFIG = $(KIND_KUBECONFIG)
 run_kind: export BACKUP_ENABLE_LEADER_ELECTION = $(ENABLE_LEADER_ELECTION)
 run_kind: $(SETUP_E2E_TEST) ## Runs the operator in kind
 	go run ./main.go
+
+kind-shell: export KUBECONFIG = $(KIND_KUBECONFIG)
+kind-shell: export BACKUP_ENABLE_LEADER_ELECTION = $(ENABLE_LEADER_ELECTION)
+kind-shell: $(SETUP_E2E_TEST) ## Opens your shell with KUBECONFIG pre-configured for the kind
+	exec $(USER_SHELL)
 
 .PHONY: setup_e2e_test
 setup_e2e_test: $(SETUP_E2E_TEST) ## Run the e2e setup

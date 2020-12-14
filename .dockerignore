@@ -1,3 +1,16 @@
-.*
-*
-!k8up
+# dirs
+
+.git
+.github
+docs
+e2e
+testbin
+
+# files
+.*ignore
+.editorconfig
+.git*
+*.png
+*.md
+Dockerfile
+renovate.json
