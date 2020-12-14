@@ -10,6 +10,7 @@ Remove items that do not apply. For completed items, change [ ] to [x].
 
 - [ ] Keep pull requests small so they can be easily reviewed.
 - [ ] Update the documentation.
+- [ ] Update tests.
 - [ ] Link this PR to related issues.
 
 <!--
