@@ -1,0 +1,51 @@
+// Settings for manpage
+ifdef::backend-manpage[]
+= vshn-handbook(1)
+:manname: k8up
+:mantitle: k8up
+:leveloffset: +1
+endif::[]
+
+:author: VSHN AG - K8up Maintainers
+:revdate: {docdate}
+:revnumber: 0.5
+:email: ahoy@syn.tools
+:copyright: CC-BY-SA 3.0
+:doctitle: K8up Documentation
+:producer: VSHN AG
+:creator: VSHN AG
+:description: Documentation for K8up - A Backup Operator for Kubernetes
+:keywords: VSHN, DevOps, Kubernetes, K8up, Backup, Restic, Operator
+:lang: en
+:imagesdir: {docdir}/modules/ROOT/assets/images
+
+// Settings for PDF
+ifdef::backend-pdf[]
+// :media: prepress
+:leveloffset: +1
+endif::[]
+
+// Settings for EPUB3
+ifdef::backend-epub3[]
+:imagesdir: modules/ROOT/assets/images
+:imagesoutdir: {docdir}/modules/ROOT/assets/images
+:leveloffset: +1
+endif::[]
+
+// Settings for Kindle (inherits values from EPUB3)
+ifdef::ebook-format-kf8[]
+endif::[]
+
+
+
+// Include chapters: always leave blank spaces between the includes!
+[preface]
+include::modules/ROOT/pages/index.adoc[]
+
+
+// Part header
+ifdef::backend-pdf[]
+// Parts must have level
+:leveloffset: -1
+
+= K8up Docs
