@@ -1,0 +1,4 @@
+* xref:k8up:ROOT:how-tos/installation.adoc[Installation]
+* xref:k8up:ROOT:how-tos/backup.adoc[Backup]
+* xref:k8up:ROOT:how-tos/archive.adoc[Archive]
+* xref:k8up:ROOT:how-tos/restore.adoc[Restore]

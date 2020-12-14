@@ -48,4 +48,18 @@ ifdef::backend-pdf[]
 // Parts must have level
 :leveloffset: -1
 
-= K8up Docs
+= Explanation
+
+image::k8up_logo.png[]
+
+[partintro]
+--
+Our core value is people; as such, it all starts with the true success of our VSHNeers.
+--
+
+:leveloffset: +1
+endif::[]
+
+include::modules/ROOT/pages/install.adoc[]
+
+
