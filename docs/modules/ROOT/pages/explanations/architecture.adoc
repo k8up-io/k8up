@@ -1,0 +1,13 @@
+= K8up Architecture
+
+K8up consists of two parts:
+
+* Kubernetes Operator: https://github.com/vshn/k8up[K8up]
+* Restic wrapper: https://github.com/vshn/wrestic/[wrestic]
+
+== High Level Description
+
+A cluster wide Kubernetes Operator is responsible for processing the `Backup` objects and handle
+the backup schedules. When it's time to do a backup, the operator scans the namespace for matching
+PVCs and creates a backup job in the corresponding namespace, while mounting the matching PVCs under
+`/data/<pvcname>`. Restic then backups the data from this location to the configured endpoint.

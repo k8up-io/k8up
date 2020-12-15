@@ -2,37 +2,15 @@
 
 image::k8up_logo.png[]
 
-K8up is a backup operator that will handle PVC and app backups on a k8s/OpenShift cluster.
+K8up (pronounced `/keɪtæpp/`` or simply "ketchup") is a Kubernetes operator distributed via a https://github.com/appuio/charts/tree/master/k8up[Helm chart], compatible with https://www.openshift.com/[OpenShift] and plain https://kubernetes.io/[Kubernetes]. It allows cluster operators to:
 
-All you need to do is create a backup `Schedule` object in the namespace you’d like to backup.
-It’s that easy. K8up takes care of the rest. It also provides a Prometheus endpoint for monitoring.
+* Backup all PVCs marked as `ReadWriteMany` or with a specific label.
+* Perform individual, on-demand backups.
+* Schedule backups to be executed on a regular basis.
+* Schedule archivals (for example to AWS Glacier), usually executed in longer intervals.
+* Perform "Application Aware" backups, containing the output of any tool capable of writing to `stdout`.
+* Check the backup repository for its integrity.
+* Prune old backups from a repository.
+* Based on top of https://restic.readthedocs.io/en/latest/[Restic], it can save backups in Amazon S3 buckets, and Minio.
 
-K8up is currently under heavy development and far from feature complete. But it should already be stable enough for production use.
-
-== How it works
-
-A cluster wide Kubernetes Operator is responsible for processing the ``Backup`` objects and handle
-the backup schedules. When it's time to do a backup, the operator scans the namespace for matching
-PVCs and creates a backup job in the corresponding namespace, while mounting the matching PVCs under
-``/data/<pvcname>``. Restic then backups the data from this location to the configured endpoint.
-
-== Current limitations
-
-. Only supports data from PVCs with access mode ``ReadWriteMany`` at the moment
-. Backups aren't actively monitored / alerted yet
-
-== Plans
-
-. Active and automated monitoring by APPUiO staff
-. Backup of cluster objects (deployments, configmaps, ...)
-. Additional back-ends to S3 by using the rclone back-end of Restic
-
-== Presentation
-
-The slides below were presented at the https://www.meetup.com/Cloud-Native-Computing-Switzerland/events/261545051/[KubeCon & CloudNativeCon 2019 Recap Meetup] at VSHN, on Wednesday, June 5, 2019.
-
-Click on them and use the arrow keys to navigate from left to right.
-
-++++
-<iframe src="_attachments/slides_embedded.html" width="640" height="480"></iframe>
-++++
+K8up is written in https://golang.org/[Go] and is an Open Source project https://github.com/vshn/k8up[hosted in GitHub].

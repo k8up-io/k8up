@@ -1,1 +1,1 @@
-
+* xref:k8up:ROOT:explanations/architecture.adoc[Architecture]
