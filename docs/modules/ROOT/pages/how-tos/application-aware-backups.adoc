@@ -1,0 +1,28 @@
+= How to create Application-Aware Backups
+
+It's possible to define annotations on Pods with backup commands.
+These backup commands should create an application-aware backup and stream it to stdout.
+
+Define an annotation on a Pod:
+
+[source,yaml]
+----
+<SNIP>
+template:
+  metadata:
+    labels:
+      app: mariadb
+    annotations:
+      k8up.syn.tools/backupcommand: mysqldump -uroot -psecure --all-databases
+<SNIP>
+----
+
+With this annotation the Operator will trigger that command inside the the container and capture the stdout to a backup.
+
+Tested with:
+
+* MariaDB
+* MongoDB
+* tar to stdout
+
+But it should work with any command that has the ability to output the backup to stdout.

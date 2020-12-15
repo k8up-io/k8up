@@ -21,7 +21,6 @@ endif::[]
 
 // Settings for PDF
 ifdef::backend-pdf[]
-// :media: prepress
 :leveloffset: +1
 endif::[]
 
@@ -48,18 +47,64 @@ ifdef::backend-pdf[]
 // Parts must have level
 :leveloffset: -1
 
-= Explanation
-
-image::k8up_logo.png[]
-
-[partintro]
---
-Our core value is people; as such, it all starts with the true success of our VSHNeers.
---
+= Tutorial
 
 :leveloffset: +1
 endif::[]
 
-include::modules/ROOT/pages/install.adoc[]
+include::modules/ROOT/pages/tutorials/tutorial.adoc[]
 
 
+// Part header
+ifdef::backend-pdf[]
+// Parts must have level
+:leveloffset: -1
+
+= How Tos
+
+:leveloffset: +1
+endif::[]
+
+include::modules/ROOT/pages/how-tos/installation.adoc[]
+
+include::modules/ROOT/pages/how-tos/upgrade.adoc[]
+
+include::modules/ROOT/pages/how-tos/backup.adoc[]
+
+include::modules/ROOT/pages/how-tos/schedules.adoc[]
+
+include::modules/ROOT/pages/how-tos/restore.adoc[]
+
+include::modules/ROOT/pages/how-tos/check-status.adoc[]
+
+include::modules/ROOT/pages/how-tos/application-aware-backups.adoc[]
+
+include::modules/ROOT/pages/how-tos/archive.adoc[]
+
+include::modules/ROOT/pages/how-tos/prebackuppod.adoc[]
+
+// Part header
+ifdef::backend-pdf[]
+// Parts must have level
+:leveloffset: -1
+
+= Explanations
+
+:leveloffset: +1
+endif::[]
+
+include::modules/ROOT/pages/explanations/architecture.adoc[]
+
+// Part header
+ifdef::backend-pdf[]
+// Parts must have level
+:leveloffset: -1
+
+= References
+
+:leveloffset: +1
+endif::[]
+
+include::modules/ROOT/pages/references/config-reference.adoc[]
+
+include::modules/ROOT/pages/references/object-specifications.adoc[]

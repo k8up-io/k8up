@@ -1,2 +1,2 @@
-* xref:k8up:ROOT:references/advanced-config.adoc[Advanced Configuration]
+* xref:k8up:ROOT:references/config-reference.adoc[Configuration]
 * xref:k8up:ROOT:references/object-specifications.adoc[Object Specifications]

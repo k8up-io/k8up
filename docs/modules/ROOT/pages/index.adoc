@@ -1,8 +1,11 @@
-= K8up
+= K8up - Kubernetes Backup Operator
 
 image::k8up_logo.png[]
 
-K8up (pronounced `/keɪtæpp/`` or simply "ketchup") is a Kubernetes operator distributed via a https://github.com/appuio/charts/tree/master/k8up[Helm chart], compatible with https://www.openshift.com/[OpenShift] and plain https://kubernetes.io/[Kubernetes]. It allows cluster operators to:
+[discrete]
+== Introduction
+
+K8up (pronounced `/keɪtæpp/`` or simply "ketchup") is a Kubernetes Operator distributed via a https://github.com/appuio/charts/tree/master/k8up[Helm chart], compatible with https://www.openshift.com/[OpenShift] and plain https://kubernetes.io/[Kubernetes]. It allows cluster operators to:
 
 * Backup all PVCs marked as `ReadWriteMany` or with a specific label.
 * Perform individual, on-demand backups.
@@ -11,6 +14,21 @@ K8up (pronounced `/keɪtæpp/`` or simply "ketchup") is a Kubernetes operator di
 * Perform "Application Aware" backups, containing the output of any tool capable of writing to `stdout`.
 * Check the backup repository for its integrity.
 * Prune old backups from a repository.
-* Based on top of https://restic.readthedocs.io/en/latest/[Restic], it can save backups in Amazon S3 buckets, and Minio.
+* Based on top of https://restic.readthedocs.io/en/latest/[Restic], it can store backups in any S3-compatible storage, such as Amazon S3 or https://github.com/minio/minio#readme[Minio].
 
 K8up is written in https://golang.org/[Go] and is an Open Source project https://github.com/vshn/k8up[hosted in GitHub].
+
+TIP: The xref:tutorials/tutorial.adoc[tutorial] gives you a glimpse into K8up. Give it a try!
+
+[discrete]
+== Documentation
+
+The documentation is inspired by the https://documentation.divio.com/[Divio's documentation structure]:
+
+Tutorials:: _Learning-oriented_: Simple lessons to learn about K8up.
+
+How-to guides:: _Problem-oriented_: step-by-step guides to achieve a goal.
+
+Technical reference:: _Information-oriented_: explaining the inner ongoings of K8up.
+
+Explanation:: _Understanding-oriented_: puts k8up in context.

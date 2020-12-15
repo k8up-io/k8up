@@ -1,0 +1,75 @@
+= How to use Pre-Backup pods
+
+Although K8up supports xref:how-tos/application-aware-backups.adoc[executing backup commands] in already running pods, there might be a need to start a specific Pod for the backup.
+Like, what if the backup command you'd like to run isn't available in the running pod?
+Or maybe you want to backup something that's running on a RWO PVC?
+Or perhaps you want to backup something that's outside the Kubernetes cluster, like a managed cloud database?
+
+That's the perfect use case for using PreBackup pods!
+They're Pod definitions that live in your namespaces.
+Once the Operator triggers a backup for that specific namespace, then it will loop through all these Pod definitions, execute them and clean them up after the backup finished.
+They allow much more flexibility, as they support everything a normal Pod template does.
+For instance, you are able to set Pod affinity, so that the PreBackup Pods are started on a specific node.
+That will allow you to get access to data that's RWO and then trigger backups for them via a backup command.
+
+[source,yaml]
+----
+apiVersion: backup.appuio.ch/v1alpha1
+kind: PreBackupPod
+metadata:
+  name: mysqldump
+spec:
+  backupCommand: mysqldump -u$USER -p$PW -h $DB_HOST --all-databases
+  pod:
+    spec:
+      containers:
+        - env:
+            - name: USER
+              value: dumper
+            - name: PW
+              value: topsecret
+            - name: DB_HOST
+              value: mariadb.example.com
+          image: mariadb
+          command:
+            - 'sleep'
+            - 'infinity'
+          imagePullPolicy: Always
+          name: mysqldump
+
+----
+
+[TIP]
+.Passing environment variables
+====
+If you want to pass environment variables to the `backupCommand`, then you'll have to wrap them in a shell. In the prebackup pod example above, that would look like this:
+
+[source]
+--
+spec:
+  backupCommand: /bin/bash -c 'mysqldump -uroot -p "${MARIADB_ROOT_PASSWORD}" --all-databases'" --overwrite
+--
+
+You can also add it to any pods that are running in the namespace:
+
+[source,title="via kubectl"]
+--
+kubectl -n ${YOUR_NAMESPACE} annotate pods ${YOUR_POD_NAME} "k8up.syn.tools/backupcommand=/bin/bash -c 'mysqldump -uroot -p\"\${MARIADB_ROOT_PASSWORD}\" --all-databases'" --overwrite
+--
+
+[source,title="in the manifest"]
+--
+spec:
+  serviceName: "mariadb"
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: mariadb
+      annotations:
+        k8up.syn.tools/backupcommand: /bin/bash -c 'mysqldump -uroot -p "${MARIADB_ROOT_PASSWORD}" --all-databases'
+--
+====
+
+
+See <<references/object-specifications.adoc#_prebackup,PreBackup pods>> for detailed object specifications.
