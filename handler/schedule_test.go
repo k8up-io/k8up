@@ -9,8 +9,6 @@ import (
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
-	"strconv"
-	"strings"
 	"testing"
 )
 
@@ -155,60 +153,14 @@ func TestScheduleHandler_mergeResourcesWithDefaults(t *testing.T) {
 	}
 }
 
-func TestScheduleHandler_randomizeSchedule(t *testing.T) {
-	name := "k8up-system/my-scheduled-backup@backup"
-	tests := []struct {
-		name             string
-		schedule         string
-		expectedSchedule string
-	}{
-		{
-			name:             "WhenScheduleRandomHourlyGiven_ThenReturnStableRandomizedSchedule",
-			schedule:         "@hourly-random",
-			expectedSchedule: "52 * * * *",
-		},
-		{
-			name:             "WhenScheduleRandomDailyGiven_ThenReturnStableRandomizedSchedule",
-			schedule:         "@daily-random",
-			expectedSchedule: "52 4 * * *",
-		},
-		{
-			name:             "WhenScheduleRandomWeeklyGiven_ThenReturnStableRandomizedSchedule",
-			schedule:         "@weekly-random",
-			expectedSchedule: "52 4 * * 4",
-		},
-		{
-			name:             "WhenScheduleRandomMonthlyGiven_ThenReturnStableRandomizedSchedule",
-			schedule:         "@monthly-random",
-			expectedSchedule: "52 4 26 * *",
-		},
-		{
-			name:             "WhenScheduleRandomYearlyGiven_ThenReturnStableRandomizedSchedule",
-			schedule:         "@yearly-random",
-			expectedSchedule: "52 4 26 5 *",
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			s := &ScheduleHandler{
-				Config: job.Config{Log: zap.New(zap.UseDevMode(true))},
-			}
-			result := s.randomizeSchedule(name, tt.schedule)
-			assert.Equal(t, tt.expectedSchedule, result)
-		})
-	}
-}
-
-func TestScheduleHandler_getOrGenerateSchedule(t *testing.T) {
-	tests := []struct {
-		name                 string
+func TestScheduleHandler_getEffectiveSchedule(t *testing.T) {
+	tests := map[string]struct {
 		schedule             *v1alpha1.Schedule
 		originalSchedule     string
 		expectedStatusUpdate bool
 		expectedSchedule     string
 	}{
-		{
-			name: "GivenScheduleWithoutStatus_WhenUsingRandomSchedule_ThenPutGeneratedScheduleInStatus",
+		"GivenScheduleWithoutStatus_WhenUsingRandomSchedule_ThenPutGeneratedScheduleInStatus": {
 			schedule: &v1alpha1.Schedule{
 				Spec: v1alpha1.ScheduleSpec{
 					Backup: &v1alpha1.BackupSchedule{},
@@ -218,8 +170,7 @@ func TestScheduleHandler_getOrGenerateSchedule(t *testing.T) {
 			expectedSchedule:     "26 * * * *",
 			expectedStatusUpdate: true,
 		},
-		{
-			name: "GivenScheduleWithStatus_WhenUsingRandomSchedule_ThenUseGeneratedScheduleFromStatus",
+		"GivenScheduleWithStatus_WhenUsingRandomSchedule_ThenUseGeneratedScheduleFromStatus": {
 			schedule: &v1alpha1.Schedule{
 				Spec: v1alpha1.ScheduleSpec{
 					Backup: &v1alpha1.BackupSchedule{},
@@ -234,51 +185,18 @@ func TestScheduleHandler_getOrGenerateSchedule(t *testing.T) {
 			expectedSchedule: "26 * 3 * *",
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
 			s := &ScheduleHandler{
 				schedule: tt.schedule,
 				Config:   job.Config{Log: zap.New(zap.UseDevMode(true))},
 			}
-			result := s.getOrGenerateSchedule(v1alpha1.BackupType, tt.originalSchedule)
+			result := s.getEffectiveSchedule(v1alpha1.BackupType, tt.originalSchedule)
 			assert.Equal(t, tt.expectedSchedule, result)
 			assert.Equal(t, tt.expectedStatusUpdate, s.requireStatusUpdate)
 			if tt.expectedStatusUpdate {
 				assert.Equal(t, tt.expectedSchedule, tt.schedule.Status.EffectiveSchedules[v1alpha1.BackupType])
 			}
 		})
-	}
-}
-
-func TestScheduleHandler_randomizeSchedule_VerifyCronSyntax(t *testing.T) {
-	s := ScheduleHandler{
-		Config: job.Config{Log: zap.New(zap.UseDevMode(true))},
-	}
-	formatString := "%d is not between %d and %d"
-	arr := []int{0, 0, 0, 0, 0}
-	for i := 0; i < 200; i++ {
-		seed := "namespace/name-" + strconv.Itoa(i) + "@backup"
-		schedule := s.randomizeSchedule(seed, "@yearly-random")
-		fields := strings.Split(schedule, " ")
-		for j, f := range fields {
-			number, _ := strconv.Atoi(f)
-			arr[j] = number
-		}
-		assert.InDelta(t, 0, arr[0], 59.0, formatString, arr[0], 0, 59)
-		assert.InDelta(t, 0, arr[1], 59.0, formatString, arr[1], 0, 59)
-		assert.InDelta(t, 1, arr[2], 26.0, formatString, arr[2], 1, 27)
-		assert.InDelta(t, 1, arr[3], 11.0, formatString, arr[3], 1, 12)
-	}
-	for i := 0; i < 100; i++ {
-		seed := "namespace/name-" + strconv.Itoa(i) + "@backup"
-		schedule := s.randomizeSchedule(seed, "@weekly-random")
-		fields := strings.Split(schedule, " ")
-		for j, f := range fields {
-			number, _ := strconv.Atoi(f)
-			arr[j] = number
-		}
-		assert.InDelta(t, 0, arr[0], 59.0, formatString, arr[0], 0, 59)
-		assert.InDelta(t, 0, arr[1], 59.0, formatString, arr[1], 0, 59)
-		assert.InDelta(t, 1, arr[4], 5.0, formatString, arr[4], 0, 6)
 	}
 }
