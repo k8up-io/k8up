@@ -52,7 +52,7 @@ spec:
       requests:
         memory: "64Mi"
         cpu: "250m"
-    schedule: '*/5 * * * *'
+    schedule: '@hourly-random'
     promURL: http://10.144.1.224:9000
   prune:
     schedule: '*/2 * * * *'

@@ -1642,16 +1642,10 @@ spec:
           status:
             description: ScheduleStatus defines the observed state of Schedule
             properties:
-              generatedSchedules:
+              effectiveSchedules:
                 additionalProperties:
-                  description: ScheduleCommon contains fields every schedule needs
-                  properties:
-                    concurrentRunsAllowed:
-                      type: boolean
-                    schedule:
-                      type: string
-                  type: object
-                description: GeneratedSchedules displays the final schedule for each type (useful when using smart schedules).
+                  type: string
+                description: EffectiveSchedules displays the final schedule for each type (useful when using smart schedules).
                 type: object
             type: object
         type: object

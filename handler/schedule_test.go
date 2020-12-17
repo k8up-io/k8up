@@ -154,7 +154,7 @@ func TestScheduleHandler_mergeResourcesWithDefaults(t *testing.T) {
 }
 
 func TestScheduleHandler_generateSchedule(t *testing.T) {
-	name := "k8up-system/my-scheduled-backup"
+	name := "k8up-system/my-scheduled-backup@backup"
 	tests := []struct {
 		name             string
 		schedule         string
@@ -163,22 +163,22 @@ func TestScheduleHandler_generateSchedule(t *testing.T) {
 		{
 			name:             "WhenScheduleRandomHourlyGiven_ThenReturnStableRandomizedSchedule",
 			schedule:         "@hourly-random",
-			expectedSchedule: "2 * * * *",
+			expectedSchedule: "52 * * * *",
 		},
 		{
 			name:             "WhenScheduleRandomHourlyGiven_ThenReturnStableRandomizedSchedule",
 			schedule:         "@daily-random",
-			expectedSchedule: "2 14 * * *",
+			expectedSchedule: "52 4 * * *",
 		},
 		{
 			name:             "WhenScheduleRandomHourlyGiven_ThenReturnStableRandomizedSchedule",
 			schedule:         "@weekly-random",
-			expectedSchedule: "2 14 0 * *",
+			expectedSchedule: "52 4 0 * *",
 		},
 		{
 			name:             "WhenScheduleRandomHourlyGiven_ThenReturnStableRandomizedSchedule",
 			schedule:         "@monthly-random",
-			expectedSchedule: "2 14 0 2 *",
+			expectedSchedule: "52 4 0 4 *",
 		},
 	}
 	for _, tt := range tests {
@@ -188,6 +188,57 @@ func TestScheduleHandler_generateSchedule(t *testing.T) {
 			}
 			result := s.generateSchedule(name, tt.schedule)
 			assert.Equal(t, tt.expectedSchedule, result)
+		})
+	}
+}
+
+func TestScheduleHandler_getOrGenerateSchedule(t *testing.T) {
+	tests := []struct {
+		name                 string
+		schedule             *v1alpha1.Schedule
+		originalSchedule     string
+		expectedStatusUpdate bool
+		expectedSchedule     string
+	}{
+		{
+			name: "GivenScheduleWithoutStatus_WhenUsingRandomSchedule_ThenPutGeneratedScheduleInStatus",
+			schedule: &v1alpha1.Schedule{
+				Spec: v1alpha1.ScheduleSpec{
+					Backup: &v1alpha1.BackupSchedule{},
+				},
+			},
+			originalSchedule:     "@hourly-random",
+			expectedSchedule:     "26 * * * *",
+			expectedStatusUpdate: true,
+		},
+		{
+			name: "GivenScheduleWithStatus_WhenUsingRandomSchedule_ThenUseGeneratedScheduleFromStatus",
+			schedule: &v1alpha1.Schedule{
+				Spec: v1alpha1.ScheduleSpec{
+					Backup: &v1alpha1.BackupSchedule{},
+				},
+				Status: v1alpha1.ScheduleStatus{
+					EffectiveSchedules: map[v1alpha1.JobType]string{
+						v1alpha1.BackupType: "26 * 3 * *",
+					},
+				},
+			},
+			originalSchedule: "@hourly-random",
+			expectedSchedule: "26 * 3 * *",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := &ScheduleHandler{
+				schedule: tt.schedule,
+				Config:   job.Config{Log: zap.New(zap.UseDevMode(true))},
+			}
+			result := s.getOrGenerateSchedule(v1alpha1.BackupType, tt.originalSchedule)
+			assert.Equal(t, tt.expectedSchedule, result)
+			assert.Equal(t, tt.expectedStatusUpdate, s.requireStatusUpdate)
+			if tt.expectedStatusUpdate {
+				assert.Equal(t, tt.expectedSchedule, tt.schedule.Status.EffectiveSchedules[v1alpha1.BackupType])
+			}
 		})
 	}
 }

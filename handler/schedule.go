@@ -29,7 +29,8 @@ const (
 type ScheduleHandler struct {
 	schedule *k8upv1alpha1.Schedule
 	job.Config
-	requireSpecUpdate bool
+	requireSpecUpdate   bool
+	requireStatusUpdate bool
 }
 
 // NewScheduleHandler will return a new ScheduleHandler.
@@ -70,6 +71,9 @@ func (s *ScheduleHandler) Handle() error {
 	if s.requireSpecUpdate {
 		return s.updateSchedule()
 	}
+	if s.requireStatusUpdate {
+		return s.updateStatus()
+	}
 	return nil
 }
 func (s *ScheduleHandler) createJobList() scheduler.JobList {
@@ -82,7 +86,7 @@ func (s *ScheduleHandler) createJobList() scheduler.JobList {
 		s.schedule.Spec.Archive.ArchiveSpec.Resources = s.mergeResourcesWithDefaults(s.schedule.Spec.Archive.Resources)
 		jobList.Jobs = append(jobList.Jobs, scheduler.Job{
 			Type:     scheduler.ArchiveType,
-			Schedule: s.schedule.Spec.Archive.Schedule,
+			Schedule: s.getOrGenerateSchedule(k8upv1alpha1.ArchiveType, s.schedule.Spec.Archive.Schedule),
 			Object:   s.schedule.Spec.Archive.ArchiveSpec,
 		})
 	}
@@ -90,7 +94,7 @@ func (s *ScheduleHandler) createJobList() scheduler.JobList {
 		s.schedule.Spec.Backup.BackupSpec.Resources = s.mergeResourcesWithDefaults(s.schedule.Spec.Backup.Resources)
 		jobList.Jobs = append(jobList.Jobs, scheduler.Job{
 			Type:     scheduler.BackupType,
-			Schedule: s.schedule.Spec.Backup.Schedule,
+			Schedule: s.getOrGenerateSchedule(k8upv1alpha1.BackupType, s.schedule.Spec.Backup.Schedule),
 			Object:   s.schedule.Spec.Backup.BackupSpec,
 		})
 	}
@@ -98,7 +102,7 @@ func (s *ScheduleHandler) createJobList() scheduler.JobList {
 		s.schedule.Spec.Check.CheckSpec.Resources = s.mergeResourcesWithDefaults(s.schedule.Spec.Check.Resources)
 		jobList.Jobs = append(jobList.Jobs, scheduler.Job{
 			Type:     scheduler.CheckType,
-			Schedule: s.schedule.Spec.Check.Schedule,
+			Schedule: s.getOrGenerateSchedule(k8upv1alpha1.CheckType, s.schedule.Spec.Check.Schedule),
 			Object:   s.schedule.Spec.Check.CheckSpec,
 		})
 	}
@@ -106,7 +110,7 @@ func (s *ScheduleHandler) createJobList() scheduler.JobList {
 		s.schedule.Spec.Restore.RestoreSpec.Resources = s.mergeResourcesWithDefaults(s.schedule.Spec.Restore.Resources)
 		jobList.Jobs = append(jobList.Jobs, scheduler.Job{
 			Type:     scheduler.RestoreType,
-			Schedule: s.schedule.Spec.Restore.Schedule,
+			Schedule: s.getOrGenerateSchedule(k8upv1alpha1.RestoreType, s.schedule.Spec.Restore.Schedule),
 			Object:   s.schedule.Spec.Restore.RestoreSpec,
 		})
 	}
@@ -114,7 +118,7 @@ func (s *ScheduleHandler) createJobList() scheduler.JobList {
 		s.schedule.Spec.Prune.PruneSpec.Resources = s.mergeResourcesWithDefaults(s.schedule.Spec.Prune.Resources)
 		jobList.Jobs = append(jobList.Jobs, scheduler.Job{
 			Type:     scheduler.PruneType,
-			Schedule: s.schedule.Spec.Prune.Schedule,
+			Schedule: s.getOrGenerateSchedule(k8upv1alpha1.PruneType, s.schedule.Spec.Prune.Schedule),
 			Object:   s.schedule.Spec.Prune.PruneSpec,
 		})
 	}
@@ -139,6 +143,29 @@ func (s *ScheduleHandler) updateSchedule() error {
 	return nil
 }
 
+func (s *ScheduleHandler) updateStatus() error {
+	err := s.Client.Status().Update(s.CTX, s.schedule)
+	if err != nil {
+		s.Log.Error(err, "Could not update SyncConfig.", "name", s.schedule)
+		return err
+	}
+	s.Log.Info("Updated SyncConfig status.")
+	return nil
+}
+
+func (s *ScheduleHandler) getOrGenerateSchedule(jobType k8upv1alpha1.JobType, originalSchedule string) string {
+	if s.schedule.Status.EffectiveSchedules == nil {
+		s.schedule.Status.EffectiveSchedules = make(map[k8upv1alpha1.JobType]string)
+	}
+	if schedule, found := s.schedule.Status.EffectiveSchedules[jobType]; found {
+		return schedule
+	}
+	newSchedule := s.randomizeSchedule(s.schedule.Namespace+"/"+s.schedule.Name+"@"+string(jobType), originalSchedule)
+	s.schedule.Status.EffectiveSchedules[jobType] = newSchedule
+	s.requireStatusUpdate = true
+	return newSchedule
+}
+
 func (s *ScheduleHandler) generateSchedule(name, originalSchedule string) (schedule string) {
 	hash := sha1.New()
 	hash.Write([]byte(name))
@@ -152,13 +179,13 @@ func (s *ScheduleHandler) generateSchedule(name, originalSchedule string) (sched
 	month := new(big.Int).Set(sumBase16).Mod(sumBase16, big.NewInt(12))
 	switch originalSchedule {
 	case ScheduleHourlyRandom:
-		return fmt.Sprintf("%s * * * *", minute)
+		return fmt.Sprintf("%d * * * *", minute)
 	case ScheduleDailyRandom:
-		return fmt.Sprintf("%s %s * * *", minute, hour)
+		return fmt.Sprintf("%d %d * * *", minute, hour)
 	case ScheduleWeeklyRandom:
-		return fmt.Sprintf("%s %s %s * *", minute, hour, dayOfMonth)
+		return fmt.Sprintf("%d %d %d * *", minute, hour, dayOfMonth)
 	case ScheduleMonthlyRandom:
-		return fmt.Sprintf("%s %s %s %s *", minute, hour, dayOfMonth, month)
+		return fmt.Sprintf("%d %d %d %d *", minute, hour, dayOfMonth, month)
 	}
 	return originalSchedule
 }
