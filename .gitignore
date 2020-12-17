@@ -25,6 +25,12 @@ gen### Go template
 # Project-local glide cache, RE: https://github.com/Masterminds/glide/issues/736
 .glide/
 
+# Antora related
+.asciidoctor
+.cache
+_public/
+_archive/
+
 *.DS_Store
 cmd/*/debug
 cmd/operator/operator

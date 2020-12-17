@@ -1,0 +1,12 @@
+= How to Archive your Backups
+
+For long-term storage of your backups you may want to use cheaper storage. Even if this is slower to restore, you usually don't need to restore that data frequently, so you save some money.
+
+The `Archive` object defines the restore method and back-end required to archive backups of your namespace:
+
+[source,yaml]
+----
+include::example$archive.yaml[]
+----
+
+Save the YAML above in a file named `archive.yaml` and use the `kubectl apply -f archive.yaml` command to deploy this configuration to your cluster.

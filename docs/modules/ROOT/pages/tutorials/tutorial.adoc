@@ -1,0 +1,395 @@
+= Backing up Kubernetes Clusters with K8up
+
+A common question we were asked by our clients moving to Kubernetes for the first time had almost always to do with backups:
+How can we ensure that the information in our pods and services can be quickly and safely restored in case of an incident?
+
+This situation is so common that we as https://vshn.ch/[VSHN] decided to tackle it with our own Kubernetes operator for backups, which we called https://k8up.io/[**K8up**].
+
+== Introduction
+
+In this tutorial you'll learn how to backup a small https://github.com/kubernetes/minikube[Minikube] cluster running on your computer. We are going to deploy https://min.io/[Minio], https://mariadb.com/[MariaDB], and https://wordpress.org/[WordPress] to this cluster. Then we'll create a blog post on our new website. Later we're going to "deface" it so that we have a valid reason to restore it safely afterwards. Through this process you get to know K8up and its basic capabilities.
+
+NOTE: All the scripts and YAML files are available in https://github.com/vshn/k8up/tree/master/docs/modules/ROOT/examples/tutorial[GitHub].
+
+=== Requirements
+
+Please install the following software packages before starting:
+
+* The `kubectl` command.
+* The https://restic.net/[Restic] backup application.
+* The latest version of https://minikube.sigs.k8s.io/[Minikube].
+* https://helm.sh/[Helm], required to install K8up in your cluster.
+* https://k9scli.io/[k9s] to display the contents of our clusters on the terminal.
+
+== Tutorial
+
+It consists of eight steps to be executed in sequence:
+
+. <<step_1, Setting up the cluster>>.
+. <<step_2, Creating a blog>>.
+. <<step_3, Backing up the blog>>.
+. <<step_4, Restoring the contents of the backup>>.
+. <<step_5, Moving files to their actual location>>.
+. <<step_6, Deleting the backup pods>>.
+. <<step_7, Scheduling regular backups>>.
+. <<step_8, Cleaning up>>.
+
+Let's get started!
+
+[[step_1]]
+=== Setting up the cluster
+
+In this first step we're going to create a new cluster using Minikube,
+install an S3-compatible storage to store our backups using Minio,
+install a MariaDB database that holds our website's data,
+setting up our website using WordPress and finally deploy K8up.
+
+NOTE: The operations of this step can be executed at once using the `scripts/1_setup.sh` script.
+
+. Start your minikube instance with a configuration slightly more powerful than the default one:
+* `minikube start --memory 4096 --disk-size 60g --cpus 4`
+
+IMPORTANT: On some laptops, running Minikube on battery power severely undermines its performance and pods can take really long to start. Make sure to be plugged in to power before starting this tutorial.
+
+[start=2]
+. Copy all required secrets and passwords into the cluster:
+* `kubectl apply -k secrets`
+
+. Install and run https://min.io/[Minio] in your cluster:
+* `kubectl apply -k minio`
+
+. Install MariaDB in your cluster:
+* `kubectl apply -k mariadb`
+
+. Install WordPress:
+* `kubectl apply -k wordpress`
+
+. Install K8up in Minikube:
+* `helm repo add appuio \https://charts.appuio.ch`
+* `helm repo update`
+* `helm install appuio/k8up --generate-name`
+
+After finishing all these steps, check that everything is running.
+Simply launch `k9s` and leave it running in its own terminal window.
+Or – of course – you can use the usual `kubectl get pods` to check how your components are doing.
+
+The https://asciinema.org/[asciinema] movie below shows all of these steps in real time.
+
+++++
+<script id="asciicast-FuXTxaHMsZZWqnkETvFgVmHy7" src="https://asciinema.org/a/FuXTxaHMsZZWqnkETvFgVmHy7.js" async></script>
+++++
+
+[[step_2]]
+=== Viewing Minio and WordPress in a browser
+
+NOTE: The operations of this step can be executed at once using the `scripts/2_browser.sh` script.
+
+. Open WordPress in your default browser using the `minikube service wordpress` command. You should see the WordPress installation wizard appearing in your browser window.
+
+IMPORTANT: If the message "Error establishing a database connection" appears when launching WordPress, just delete the WordPress pod and try again. This usually happens if the WordPress pod starts before the MariaDB pod and can't find the database server.
+
+.WordPress showing a database error after starting
+image::tutorial/wordpress-db-error.png[]
+
+TIP: In `k9s` you can easily delete a pod by going to the "Pods" view (type kbd:[:], write `pods` at the prompt and hit kbd:[Enter]), selecting the pod to delete with the arrow keys, and hitting the kbd:[CTRL+D] key shortcut.
+
+.Deleting a pod with k9s
+image::tutorial/k9s-delete.png[]
+
+[start=2]
+. Open Minio in your default browser with the `minikube service minio` command.
+* You can login into minio with these credentials: access key `minio`, secret key `minio123`.
+
+==== Setting up the new blog
+
+Follow these instructions in the WordPress installation wizard to create your blog:
+
+. Select your language from the list and click the btn:[Continue] button.
+. Fill the form to create new blog.
+. Create a user `admin`.
+. Copy the random password shown, or use your own password.
+. Click the btn:[Install WordPress] button.
+
+.WordPress installer
+image::tutorial/wordpress-install.png[]
+
+[start=6]
+. Log in to the WordPress console using the user and password.
+* Create one or many new blog posts, for example using pictures from https://unsplash.com/[Unsplash].
+
+. Enter some text or generate some random text using a https://lipsum.com/[Lorem ipsum generator].
+. Click on the "Document" tab.
+. Add the image as "Featured image".
+. Click "Publish" and see the new blog post on the site.
+
+[[step_3]]
+=== Backing up the blog
+
+In this step we're going to create a backup of our blog and it's database.
+Everything related to this is defined in `k8up/backup.yml`.
+Once applied to our Minikube cluster,
+k8up will instantly take a backup of the database
+and copy it to Minio, our S3-compatible backup storage.
+Read on to learn how K8up exactly does what it does.
+
+NOTE: The operations of this step can be executed at once using the `scripts/3_backup.sh` script.
+
+To trigger a backup, use the command `kubectl apply -f k8up/backup.yaml`. You can see the job in the "Jobs" section of `k9s`.
+
+Running the `kubectl logs` command on a backup pod brings the following information:
+
+....
+No repository available, initialising...
+created restic repository 97efa2a6bf at s3:http://minio:9000/backups
+
+Please note that knowledge of your password is required to access
+the repository. Losing your password means that your data is
+irrecoverably lost.
+Removing locks...
+created new cache in /root/.cache/restic
+successfully removed locks
+Listing all pods with annotation k8up.syn.tools/backupcommand in namespace default
+Listing snapshots
+snapshots command:
+0 Snapshots
+backing up...
+Starting backup for folder wordpress-pvc
+done: 0.00% 
+backup finished! new files: 1907 changed files: 0 bytes added: 45561795
+Listing snapshots
+snapshots command:
+1 Snapshots
+sending webhook Listing snapshots
+snapshots command:
+1 Snapshots
+Removing locks...
+Listing snapshots
+snapshots command:
+1 Snapshots
+Sending webhooks to : %
+....
+
+If you look at the Minio browser window, there should now be a set of folders that appeared.
+That's the backup we've just performed in Restic format!
+
+.Minio browser showing backup repository
+image::tutorial/minio-browser.png[]
+
+==== How does K8up work?
+
+K8up runs Restic in the background to perform its job. It will automatically backup all PVCs in the cluster with the `ReadWriteMany` (or `RWX` for short) attribute.
+
+Just like any other Kubernetes object, K8up uses YAML files to describe every single action: backups, restores, archival, etc. The most important part of the YAML files used by K8up is the `backend` object:
+
+[source,yaml]
+....
+backend:
+  repoPasswordSecretRef:
+    name: backup-repo
+    key: password
+  s3:
+    endpoint: http://minio:9000
+    bucket: backups
+    accessKeyIDSecretRef:
+      name: backup-credentials
+      key: username
+    secretAccessKeySecretRef:
+      name: backup-credentials
+      key: password
+....
+
+This object specifies two major keys:
+
+* `repoPasswordSecretRef` contains the reference to the secret which contains the Restic password. This password is used to open, read and write to the backup repository.
+* `s3` specifies the location and credentials of the S3-compatible storage server. It's where the Restic backup should be stored. The only valid option at this moment is using AWS S3-compatible storage, such as a Minio server in our case.
+
+[[step_4]]
+=== Restoring a backup
+
+For the sake of this demonstration, let's become evil for a moment and pretend we're an attacker that has gained access to our blog.
+Because we're so bad, we're going to remove all blog posts and images from our WordPress installation and empty the trash.
+
+.Defaced WordPress site!
+image::tutorial/wordpress-defaced.png[]
+
+Oh noes! But don't worry: thanks to K8up you can bring your old blog back in a few minutes.
+
+There are many ways to restore Restic backups, for example locally (useful for debugging or inspection) and remotely (on PVCs or S3 buckets, for example.)
+
+==== Restoring locally
+
+To restore using Restic, set these variables (in a Unix-based system; for Windows, the commands are different):
+
+[source,bash]
+....
+export KUBECONFIG=""
+export RESTIC_REPOSITORY=s3:$(minikube service minio --url)/backups/
+export RESTIC_PASSWORD=p@ssw0rd
+export AWS_ACCESS_KEY_ID=minio
+export AWS_SECRET_ACCESS_KEY=minio123
+....
+
+NOTE: In this tutorial you can load these variables by simply running `source scripts/environment.sh`.
+
+With these variables in your environment, run the command `restic snapshots` to see the list of backups. Afterwards start the restore with `restic restore XXXXX --target ~/restore`, where XXXXX is one of the IDs appearing in the results of the snapshots command.
+
+==== Restoring to a PVC
+
+NOTE: The operations of this step can be executed at once using the `scripts/4_restore_pvc.sh` script.
+
+K8up is able to restore data directly on specified PVCs. This requires some manual steps.
+
+. Using the steps in the previous section, "Restore Locally", check the ID of the snapshot you would like to restore:
+
+....
+$ source scripts/environment.sh
+$ restic snapshots
+$ restic snapshots XXXXXXXX --json | jq -r '.[0].id'
+....
+
+[start=2]
+. Use that long ID in your restore YAML file `k8up/restore-wordpress.yaml`:
+* Make sure the `restoreMethod:folder:claimName:` value corresponds to the `Paths` value of the snapshot you want to restore.
+* Replace the `snapshot` key with the long ID you just found:
+
+[source,yaml]
+....
+apiVersion: backup.appuio.ch/v1alpha1
+kind: Restore
+metadata:
+  name: restore-wordpress
+spec:
+  snapshot: 00e168245753439689922c6dff985b117b00ca0e859cc69cc062ac48bf8df8a3
+  restoreMethod:
+    folder:
+      claimName: wordpress-pvc
+  backend:
+....
+
+[start=3]
+. Apply the changes:
+* `kubectl apply -f k8up/restore-wordpress.yaml`
+* Use the `kubectl get pods` commands to see when your restore job is done.
+
+TIP: Use the command `kubectl get pods --sort-by=.metadata.creationTimestamp` to order the pods in descending age order. Then you will quickly find the pod of the restore job at the end of the list.
+
+[[step_5]]
+=== Moving the files to their initial location
+
+NOTE: The operations of this step can be executed at once using the `scripts/5_restore_files.sh` script.
+
+The restore job puts back all values in the `volumeMounts.mountPath` path specified at the moment of creation; for example, in the case of WordPress:
+
+[source,yaml]
+....
+volumeMounts:
+- name: wordpress-persistent-storage
+  mountPath: /var/www/html
+....
+
+After restoration, the files will be located in a `data` folder beneath that `mountPath` value. This is clearly not what we need for a full restoration; we need to move the files to their correct location.
+
+Let's start with the WordPress pod:
+
+. Log into the running pod to restore the files to their actual location.
+* `kubectl get pods` to find the name of the WordPress pod.
+* `kubectl exec -it wordpress-XXXXXXXXXX-xxxxx -- bash` (replace the Xs with the relevant name)
+
+TIP: In K9s you can open a shell in a pod by selecting that pod and then hitting the kbd:[S] key.
+
+[start=2]
+. Replace the files inside the pod with the ones from the restore:
+
+....
+$ cd /var/www/html # or whatever value has `mountPath`
+$ mv data /
+$ rm -r *
+$ cp -R /data/wordpress-pvc/* .
+....
+
+[start=3]
+. Since it is a PHP application, nothing else is needed for this pod.
+
+In the case of the MariaDB pod, the application must be restarted after restoring the files:
+
+[start=4]
+. Follow the same logic as previously:
+
+....
+$ cd /var/lib/mysql # Attention! Different path!
+$ mv data /
+$ rm -r *
+$ cp -R /data/mariadb-pvc/* .
+....
+
+[start=5]
+. Delete the MariaDB pod and a new one will be immediately created due to the deployment policy (see `mariadb/deployment.yml`): `kubectl delete pod mariadb-XXXXXXXXXX-xxxx`
+
+Now refresh your WordPress page in your browser window. You should see the previous state of the WordPress installation restored, working and looking as expected!
+
+.WordPress website restored
+image::tutorial/wordpress-restored.png[]
+
+[[step_6]]
+=== Cleaning up the backup pods
+
+NOTE: The operations of this step can be executed at once using the `scripts/6_delete_restore_pods.sh` script.
+
+Whenever K8up performs a backup, it creates a pod for the job. The one we created previously can be manually deleted using the command:
+
+`kubectl delete -f k8up/restore-wordpress.yaml`
+
+[[step_7]]
+=== Scheduling regular backups
+
+NOTE: The operations of this step can be executed at once using the `scripts/7_schedule.sh` script.
+
+Instead of performing backups manually, you can also set a schedule on which backups are performed automatically. This requires specifying the schedule in `cron` format.
+
+[source,yaml]
+....
+backup:
+  schedule: '*/2 * * * *'    # backup every 2 minutes
+  keepJobs: 4
+  promURL: http://minio:9000
+....
+
+TIP: Use https://crontab.guru/[crontab.guru] to help you set up complex schedule formats in `cron` syntax.
+
+The schedule can also specify `archive` and `check` tasks to be executed regularly.
+
+[source,yaml]
+....
+archive:
+  schedule: '0 0 1 * *'       # archive every week
+  restoreMethod:
+    s3:
+      endpoint: http://minio:9000
+      bucket: archive
+      accessKeyIDSecretRef:
+        name: backup-credentials
+        key: username
+      secretAccessKeySecretRef:
+        name: backup-credentials
+        key: password
+check:
+  schedule: '0 1 * * 1'      # monthly check
+  promURL: http://minio:9000
+....
+
+Run the `kubectl apply -f k8up/schedule.yaml` command. This will setup an automatic schedule to backup the PVCs every 5 minutes (for minutes that are divisors of 5).
+
+Now wait for a bit more than 2 minutes. Then run `restic snapshots` again and watch more backups appearing in the repository.
+
+TIP: Running the `watch restic snapshots` command will rerun restic every 2 seconds and update the output so that you don't have to do it yourself.
+
+[[step_8]]
+=== Cleaning up the cluster
+
+NOTE: The operations of this step can be executed at once using the `scripts/8_stop.sh` script.
+
+When you are done with this tutorial, just execute the `minikube stop` command to shut the cluster down. If you would like to get rid of it completely, run `minikube delete`.
+
+== Conclusion
+
+We hope that this walkthrough provided you a quick overview of K8up and its capabilities. But K8up can do more than that! We have only briefly mentioned the archive, prune, and check commands and haven't talked about the backup of any data piped to `stdout` (called "Application Aware" backups.) You can check these features on the https://k8up.io/[K8up documentation website] where they are described in detail.

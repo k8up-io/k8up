@@ -1,6 +1,6 @@
 = How to Restore a Backup
 
-It's possible to tell the operator to perform restores either to a PVC or an S3 bucket.
+It's possible to tell the Operator to perform restores either to a PVC or an S3 bucket.
 
 == Restore from S3 to S3 bucket
 

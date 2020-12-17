@@ -1,0 +1,16 @@
+= How to Create a Schedule
+
+The `Schedule` object defines the frequency, destination and secrets required to run K8up jobs in your namespace:
+
+[source,yaml]
+----
+include::example$schedule.yaml[]
+----
+
+Save the YAML above in a file named `schedule.yaml` and use the `kubectl apply -f schedule.yaml` command to deploy this configuration to your cluster.
+
+The file above will instruct the Operator to do backups every 5 minute, prune them monthly and run check jobs for repository maintenance. It will also archive the latest snapshots to the `archive` bucket once each week.
+
+Feel free to adjust the frequencies to your liking. To help you with the crontab syntax, we recommend to check out https://crontab.guru[crontab.guru].
+
+TIP: You can always check the state and configuration of your backup by using `kubectl describe schedule`. By default, all PVCs are backed up automatically. Adding the annotation `k8up.syn.tools/backup=false` to a PVC object will excluded it from all following backup.

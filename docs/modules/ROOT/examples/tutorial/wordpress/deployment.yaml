@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wordpress
+  labels:
+    app: wordpress
+spec:
+  selector:
+    matchLabels:
+      app: wordpress
+      tier: frontend
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: wordpress
+        tier: frontend
+    spec:
+      containers:
+      - image: wordpress:5.4-apache
+        name: wordpress
+        readinessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: "/wp-admin/install.php"
+            port: 80
+            scheme: HTTP
+            httpHeaders:
+            - name: X-Forwarded-Proto
+              value: https
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 1
+        livenessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: "/wp-admin/install.php"
+            port: 80
+            scheme: HTTP
+            httpHeaders:
+            - name: X-Forwarded-Proto
+              value: https
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 1
+        env:
+        - name: WORDPRESS_DB_HOST
+          value: mariadb
+        - name: WORDPRESS_DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mariadb-pass
+              key: password
+        ports:
+        - containerPort: 80
+          name: wordpress
+        volumeMounts:
+        - name: wordpress-persistent-storage
+          mountPath: /var/www/html
+      volumes:
+      - name: wordpress-persistent-storage
+        persistentVolumeClaim:
+          claimName: wordpress-pvc

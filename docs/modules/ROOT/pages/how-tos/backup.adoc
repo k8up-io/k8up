@@ -1,0 +1,12 @@
+= How to Create a Backup
+
+The `Backup` object defines what and how to backup:
+
+[source,yaml]
+----
+include::example$backup.yaml[]
+----
+
+Save the YAML above in a file named `backup.yaml` and use the `kubectl apply -f backup.yaml` command to deploy this configuration to your cluster.
+
+TIP: To have backups run automatically at a regular interval look at xref:how-tos/schedules.adoc[schedules].

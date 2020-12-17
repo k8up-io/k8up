@@ -40,7 +40,6 @@ DOCKER_IMG ?= docker.io/vshn/k8up:$(IMG_TAG)
 QUAY_IMG ?= quay.io/vshn/k8up:$(IMG_TAG)
 E2E_IMG ?= localhost:$(KIND_REGISTRY_PORT)/vshn/k8up:e2e
 
-antora_preview_cmd ?= docker run --rm --publish 35729:35729 --publish 2020:2020 --volume "${PWD}":/preview/antora docker.io/vshn/antora-preview:2.3.4 --style=syn --antora=docs
 build_cmd ?= CGO_ENABLED=0 go build -o $(BIN_FILENAME) main.go
 
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
@@ -130,9 +129,6 @@ bundle: generate ## Generate bundle manifests and metadata, then validate genera
 	$(KUSTOMIZE) build config/manifests | operator-sdk generate bundle -q --overwrite --version $(VERSION) $(BUNDLE_METADATA_OPTS)
 	operator-sdk bundle validate ./bundle
 
-docs-serve: ## Locally run the docs server
-	$(antora_preview_cmd)
-
 install_bats: ## Installs the bats util via NPM
 	$(MAKE) -C e2e install_bats
 
@@ -185,3 +181,9 @@ $(SETUP_E2E_TEST): $(KIND_BIN)
 	@kubectl config use-context kind-$(KIND_CLUSTER)
 	@$(KUSTOMIZE_BUILD_CRD) | kubectl apply $(KIND_KUBECTL_ARGS) -f -
 	@touch $(SETUP_E2E_TEST)
+
+###
+### Documentation
+###
+
+include ./docs/docs.mk

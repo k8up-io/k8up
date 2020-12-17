@@ -1,0 +1,3 @@
+= How to Upgrade K8up
+
+This page will list instructions how to upgrade K8up once they're available.

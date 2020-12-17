@@ -1,8 +1,13 @@
-* xref:index.adoc[K8up]
-* xref:install.adoc[Install]
-* xref:backup.adoc[Backup]
-* xref:archive.adoc[Archive]
-* xref:restore.adoc[Restore]
-* xref:tutorial.adoc[Tutorial]
-* xref:advanced-config.adoc[Advanced Configuration]
-* xref:object-specifications.adoc[Object Specifications]
+* xref:index.adoc[Home]
+
+.Tutorials
+include::partial$nav-tutorials.adoc[]
+
+.How-to guides
+include::partial$nav-howtos.adoc[]
+
+.Technical reference
+include::partial$nav-reference.adoc[]
+
+.Explanation
+include::partial$nav-explanation.adoc[]
