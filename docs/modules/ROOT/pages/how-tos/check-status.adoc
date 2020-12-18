@@ -1,9 +1,153 @@
 = How to Check Status of Jobs
 
-== Status of Backup Jobs
+== Status of K8up Objects
 
-Every time a job starts, it creates a separate Pod in your namespace. You can see them using `kubectl get pods`.
-You can then use the usual `kubectl logs <POD NAME>` command to troubleshoot a failed backup job.
+The Kubernetes objects of K8up try to convey enough status information to understand common error conditions.
+All objects maintain the Status property and most of them provide additional information through Conditions.
+
+=== Status of Backups in particular
+
+When the information that `kubectl describe backup/<BACKUP NAME>` was inconclusive you may want to look at the output of the backup Pod.
+Because every time a Backup starts, it creates a corresponding Pod (in the same namespace).
+You can list them when you are listing all pods by running `kubectl get pods`.
+When you identified the relevant pod make sure that it was successfully instantiated using `kubectl describe pod/<POD NAME>`.
+Then you can use `kubectl logs pod/<POD NAME>` command to troubleshoot a failed backup job.
+
+=== Example
+
+The following excerpt shows a complete and successful execution of a K8up Backup.
+
+[source,yaml]
+....
+#$ kubectl describe backup/demo-backup
+Name:         demo-backup
+Namespace:    default
+Labels:       <none>
+Annotations:  <none>
+API Version:  backup.appuio.ch/v1alpha1
+Kind:         Backup
+Metadata:
+  # [clipped for brevity]
+Spec:
+  # [clipped for brevity]
+Status:
+  Conditions:
+    Last Transition Time:  2020-13-32T25:61:61Z
+    Status:                True
+    Type:                  CleanupSucceeded
+    Last Transition Time:  2020-13-32T25:61:61Z
+    Message:               the job 'default/demo-backup' was created
+    Status:                True
+    Type:                  JobCreated
+    Last Transition Time:  2020-13-32T25:61:61Z
+    Message:               no container definitions found
+    Status:                False
+    Type:                  PreBackupPodsAvailable
+    Last Transition Time:  2020-13-32T25:61:61Z
+    Status:                True
+    Type:                  PreBackupPodsRemoved
+    Last Transition Time:  2020-13-32T25:61:61Z
+    Status:                True
+    Type:                  RoleBindingReady
+    Last Transition Time:  2020-13-32T25:61:61Z
+    Status:                True
+    Type:                  RoleReady
+    Last Transition Time:  2020-13-32T25:61:61Z
+    Status:                True
+    Type:                  ServiceAccountReady
+  Started:                 true
+Events:                    <none>
+
+#$ kubectl get jobs
+NAME          COMPLETIONS   DURATION   AGE
+demo-backup   1/1           3m      6m
+
+#$ kubectl describe jobs
+Name:           demo-backup
+Namespace:      default
+Selector:       controller-uid=1ba56104-d1de-45c7-9d29-abf4da6943a5
+Labels:         k8upjob=true
+Annotations:    <none>
+Controlled By:  Backup/demo-backup
+Parallelism:    1
+Completions:    1
+Start Time:     Fri, 32 Jeb 2020 25:61:61 +0100
+Completed At:   Fri, 32 Jeb 2020 25:61:61 +0100
+Duration:       3m
+Pods Statuses:  0 Running / 1 Succeeded / 0 Failed
+Pod Template:
+  Labels:           controller-uid=1ba56104-d1de-45c7-9d29-abf4da6943a5
+                    job-name=demo-backup
+  Service Account:  pod-executor
+  Containers:
+   demo-backup:
+    Image:      vshn/wrestic:v0.2.0
+    Port:       <none>
+    Host Port:  <none>
+    Environment:
+      # [clipped for brevity]
+    Mounts:                      <none>
+  Volumes:                       <none>
+Events:
+  Type    Reason            Age    From            Message
+  ----    ------            ----   ----            -------
+  Normal  SuccessfulCreate  6m     job-controller  Created pod: demo-backup-t2mtp
+  Normal  Completed         3m     job-controller  Job completed
+
+#$ kubectl get pods
+NAME                READY   STATUS      RESTARTS   AGE
+demo-backup-t2mtp   0/1     Completed   0          3m
+
+#$ kubectl describe pod/demo-backup-t2mtp
+Name:           demo-backup-t2mtp
+Namespace:      default
+Priority:       0
+Node:           <none>
+Labels:         controller-uid=1ba56104-d1de-45c7-9d29-abf4da6943a5
+                job-name=demo-backup
+Annotations:    <none>
+Status:         Pending
+IP:
+IPs:            <none>
+Controlled By:  Job/demo-backup
+Containers:
+  demo-backup:
+    Image:      vshn/wrestic:v0.2.0
+    Port:       <none>
+    Host Port:  <none>
+    Environment:
+      # [clipped for brevity]
+    Mounts:
+      /var/run/secrets/kubernetes.io/serviceaccount from pod-executor-token-x5kkk (ro)
+Volumes:
+  pod-executor-token-x5kkk:
+    Type:        Secret (a volume populated by a Secret)
+    SecretName:  pod-executor-token-x5kkk
+    Optional:    false
+QoS Class:       BestEffort
+Node-Selectors:  <none>
+Tolerations:     node.kubernetes.io/not-ready:NoExecute op=Exists for 300s
+                 node.kubernetes.io/unreachable:NoExecute op=Exists for 300s
+Events:          <none>
+
+$ kubectl logs pod/demo-backup-t2mtp
+I1332 25:61:61.000001       1 main.go:42] wrestic "level"=0 "msg"="Wrestic Version: unreleased"
+I1332 25:61:61.000002       1 main.go:43] wrestic "level"=0 "msg"="Operator Build Date: now"
+I1332 25:61:61.000003       1 main.go:44] wrestic "level"=0 "msg"="Go Version: go1.14.3"
+I1332 25:61:61.000004       1 main.go:45] wrestic "level"=0 "msg"="Go OS/Arch: linux/amd64"
+I1332 25:61:61.000005       1 main.go:191] wrestic "level"=0 "msg"="setting up a signal handler"
+I1332 25:61:61.000006       1 snapshots.go:37] wrestic/snapshots "level"=0 "msg"="getting list of snapshots"
+I1332 25:61:61.000007       1 wait.go:31] wrestic/WaitForLocks "level"=0 "msg"="remove old locks"
+I1332 25:61:61.000008       1 unlock.go:7] wrestic/unlock "level"=0 "msg"="unlocking repository"  "all"=false
+I1332 25:61:61.000009       1 utils.go:51] wrestic/unlock/restic "level"=0 "msg"="successfully removed locks"
+I1332 25:61:61.000010       1 wait.go:37] wrestic/WaitForLocks "level"=0 "msg"="checking for any exclusive locks"
+I1332 25:61:61.000011       1 wait.go:43] wrestic/WaitForLocks "level"=0 "msg"="getting a list of active locks"
+I1332 25:61:61.000012       1 wait.go:62] wrestic/WaitForLocks "level"=0 "msg"="no more exclusive locks found"
+I1332 25:61:61.000013       1 pod_list.go:50] wrestic/k8sClient "level"=0 "msg"="listing all pods"  "annotation"="k8up.syn.tools/backupcommand" "namespace"="default"
+I1332 25:61:61.000014       1 main.go:174] wrestic "level"=0 "msg"="all pod commands have finished successfully"
+I1332 25:61:61.000015       1 backup.go:64] wrestic/backup "level"=0 "msg"="starting backup"
+I1332 25:61:61.000016       1 backup.go:67] wrestic/backup "level"=0 "msg"="backupdir does not exist, skipping"  "dirname"="/data"
+....
 
 == Metrics
 

@@ -4,14 +4,15 @@ import (
 	"context"
 	"strings"
 
+	k8upv1alpha1 "github.com/vshn/k8up/api/v1alpha1"
+	"github.com/vshn/k8up/job"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
 	. "github.com/onsi/gomega/gstruct"
 	gtypes "github.com/onsi/gomega/types"
 
-	k8upv1alpha1 "github.com/vshn/k8up/api/v1alpha1"
-	"github.com/vshn/k8up/job"
 	batchv1 "k8s.io/api/batch/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"

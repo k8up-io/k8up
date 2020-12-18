@@ -2,12 +2,14 @@ package prebackup
 
 import (
 	"fmt"
-	"github.com/vshn/k8up/cfg"
 	"os"
 	"path/filepath"
 
 	k8upv1alpha1 "github.com/vshn/k8up/api/v1alpha1"
+	"github.com/vshn/k8up/cfg"
 	"github.com/vshn/k8up/job"
+
+	"github.com/operator-framework/operator-lib/status"
 	appsv1 "k8s.io/api/apps/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -34,13 +36,32 @@ func NewPrebackup(config job.Config) *PreBackup {
 	}
 }
 
+const (
+	// ConditionPreBackupPodsAvailable is True if there are Container definitions
+	ConditionPreBackupPodsAvailable status.ConditionType = "PreBackupPodsAvailable"
+
+	// ConditionPreBackupPodsReady is True if Deployments for all Container definitions were created and are ready
+	ConditionPreBackupPodsReady status.ConditionType = "PreBackupPodsReady"
+
+	// ConditionPreBackupPodsRemoved is True if Deployments for all Container definitions were created
+	ConditionPreBackupPodsRemoved status.ConditionType = "PreBackupPodsRemoved"
+)
+
 // Start will start the defined pods as deployments.
 func (p *PreBackup) Start() error {
 
 	templates, err := p.getPodTemplates()
 	if err != nil {
+		p.SetConditionFalse(ConditionPreBackupPodsAvailable, "error while retrieving container definitions: %v", err.Error())
 		return err
 	}
+
+	if len(templates.Items) == 0 {
+		p.SetConditionFalse(ConditionPreBackupPodsAvailable, "no container definitions found")
+		return nil
+	}
+
+	p.SetConditionTrue(ConditionPreBackupPodsAvailable)
 
 	deployments := p.generateDeployments(templates)
 
@@ -61,10 +82,6 @@ func (p *PreBackup) getPodTemplates() (*k8upv1alpha1.PreBackupPodList, error) {
 func (p *PreBackup) generateDeployments(templates *k8upv1alpha1.PreBackupPodList) []appsv1.Deployment {
 	deployments := make([]appsv1.Deployment, 0)
 
-	if len(templates.Items) == 0 {
-		return deployments
-	}
-
 	for _, template := range templates.Items {
 
 		template.Spec.Pod.PodTemplateSpec.ObjectMeta.Annotations = map[string]string{
@@ -74,7 +91,7 @@ func (p *PreBackup) generateDeployments(templates *k8upv1alpha1.PreBackupPodList
 
 		podLabels := map[string]string{
 			"k8up.syn.tools/backupCommandPod": "true",
-			"k8up.syn.tools/preBackupPod":     template.GetName(),
+			"k8up.syn.tools/preBackupPod":     template.Name,
 		}
 
 		template.Spec.Pod.PodTemplateSpec.ObjectMeta.Labels = podLabels
@@ -112,29 +129,38 @@ func (p *PreBackup) startAndWaitForReady(deployments []appsv1.Deployment) error 
 	}
 
 	for _, deployment := range deployments {
-		p.Log.Info("starting pre backup pod", "namespace", deployment.GetNamespace(), "name", deployment.GetName())
+		name := deployment.GetName()
+		namespace := deployment.GetNamespace()
+		p.Log.Info("starting pre backup pod", "namespace", namespace, "name", name)
 
 		// Avoid exportloopref
 		deployment := deployment
 
 		err := p.Client.Create(p.CTX, &deployment)
 		if err != nil {
-			return fmt.Errorf("error creating pre backup pods: %w", err)
+			err := fmt.Errorf("error creating pre backup pod '%v/%v': %w", namespace, name, err)
+			p.SetConditionFalse(ConditionPreBackupPodsReady, err.Error())
+			return err
 		}
 
 		watcher, err := clientset.AppsV1().
 			Deployments(deployment.GetNamespace()).
 			Watch(p.CTX, metav1.SingleObject(deployment.ObjectMeta))
 		if err != nil {
-			return fmt.Errorf("could not create watcher: %w", err)
+			err := fmt.Errorf("could not create watcher for '%v/%v': %w", namespace, name, err)
+			p.SetConditionFalse(ConditionPreBackupPodsReady, err.Error())
+			return err
 		}
 
 		err = p.waitForReady(watcher)
 		if err != nil {
-			return fmt.Errorf("error during deployment watch: %w", err)
+			err := fmt.Errorf("error during deployment watch of '%v/%v': %w", namespace, name, err)
+			p.SetConditionFalse(ConditionPreBackupPodsReady, err.Error())
+			return err
 		}
-
 	}
+
+	p.SetConditionTrue(ConditionPreBackupPodsReady)
 	return nil
 }
 
@@ -164,7 +190,6 @@ func (p *PreBackup) getClientset() (*kubernetes.Clientset, error) {
 }
 
 func (p *PreBackup) waitForReady(watcher watch.Interface) error {
-
 	defer watcher.Stop()
 
 	for event := range watcher.ResultChan() {
@@ -175,37 +200,40 @@ func (p *PreBackup) waitForReady(watcher watch.Interface) error {
 
 			last := p.getLastDeploymentCondition(deployment)
 
-			if last != nil {
-				// if the deadline can't be respected https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#progress-deadline-seconds
-				if last.Type == "Progressing" && last.Status == "False" && last.Reason == "ProgressDeadlineExceeded" {
-					watcher.Stop()
-					return fmt.Errorf("error starting pre backup pod %v: %v", deployment.GetName(), last.Message)
-				}
+			if last != nil && isDeadlineExceeded(last) {
+				return fmt.Errorf("error starting pre backup pod %v: %v", deployment.GetName(), last.Message)
 			}
 
-			// Wait until at least one replica is available and continue
-			if deployment.Status.AvailableReplicas > 0 {
+			if hasAvailableReplica(deployment) {
 				return nil
 			}
 
-			p.Log.Info("waiting for command pod to get ready", "name", deployment.GetName(), "namespace", deployment.GetNamespace())
+			p.Log.Info("waiting for command pod to get ready", "name", deployment.Name, "namespace", deployment.Namespace)
 
 		case watch.Error:
 
 			last := p.getLastDeploymentCondition(deployment)
 
 			if last != nil {
-				return fmt.Errorf("there was an error while starting pre backup pod %v: %v", deployment.GetName(), last.Message)
-
+				return fmt.Errorf("there was an error while starting pre backup pod '%v/%v': %v", deployment.Namespace, deployment.Name, last.Message)
 			}
-			return fmt.Errorf("there was an unknown error while starting pre backup pod %v", deployment.GetName())
+			return fmt.Errorf("there was an unknown error while starting pre backup pod '%v/%v'", deployment.Namespace, deployment.Name)
 
 		default:
-			p.Log.Info("unexpected event during deployment wathc ", "name", deployment.GetName(), "event type", event.Type, "namespace", deployment.GetNamespace())
+			p.Log.Info("unexpected event during deployment watch ", "name", deployment.Name, "event type", event.Type, "namespace", deployment.Namespace)
 		}
 	}
 
 	return nil
+}
+
+func isDeadlineExceeded(last *appsv1.DeploymentCondition) bool {
+	// if the deadline can't be respected https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#progress-deadline-seconds
+	return last.Type == "Progressing" && last.Status == "False" && last.Reason == "ProgressDeadlineExceeded"
+}
+
+func hasAvailableReplica(deployment *appsv1.Deployment) bool {
+	return deployment.Status.AvailableReplicas > 0
 }
 
 func (p *PreBackup) getLastDeploymentCondition(deployment *appsv1.Deployment) *appsv1.DeploymentCondition {
@@ -219,28 +247,33 @@ func (p *PreBackup) getLastDeploymentCondition(deployment *appsv1.Deployment) *a
 
 // Stop will remove the deployments.
 func (p *PreBackup) Stop() {
-
 	templates, err := p.getPodTemplates()
 	if err != nil {
 		p.Log.Error(err, "could not fetch podtemplates", "name", p.Obj.GetMetaObject().GetName(), "namespace", p.Obj.GetMetaObject().GetNamespace())
+		p.SetConditionFalse(ConditionPreBackupPodsRemoved, "could not fetch pod templates: %v", err)
+		return
 	}
 
-	deployments := p.generateDeployments(templates)
+	if len(templates.Items) == 0 {
+		p.SetConditionTrue(ConditionPreBackupPodsRemoved)
+		return
+	}
 
-	namespace := p.Obj.GetMetaObject().GetNamespace()
 	option := metav1.DeletePropagationForeground
 
+	deployments := p.generateDeployments(templates)
 	for _, deployment := range deployments {
 		// Avoid exportloopref
 		deployment := deployment
-		p.Log.Info("removing prebackup pod", "name", deployment.GetName(), "namespace", namespace)
+
+		p.Log.Info("removing prebackup pod", "name", deployment.Name, "namespace", deployment.Namespace)
 		err := p.Client.Delete(p.CTX, &deployment, &client.DeleteOptions{
 			PropagationPolicy: &option,
 		})
-		if err != nil {
-			if !errors.IsNotFound(err) {
-				p.Log.Error(err, "could not create deployment", "name", p.Obj.GetMetaObject().GetName(), "namespace", p.Obj.GetMetaObject().GetNamespace())
-			}
+		if err != nil && !errors.IsNotFound(err) {
+			p.Log.Error(err, "could not create deployment", "name", p.Obj.GetMetaObject().GetName(), "namespace", p.Obj.GetMetaObject().GetNamespace())
 		}
 	}
+
+	p.SetConditionTrue(ConditionPreBackupPodsRemoved)
 }

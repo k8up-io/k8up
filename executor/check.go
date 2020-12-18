@@ -3,10 +3,10 @@ package executor
 import (
 	stderrors "errors"
 
-	"github.com/vshn/k8up/cfg"
-
 	k8upv1alpha1 "github.com/vshn/k8up/api/v1alpha1"
+	"github.com/vshn/k8up/cfg"
 	"github.com/vshn/k8up/job"
+
 	corev1 "k8s.io/api/core/v1"
 )
 
@@ -41,15 +41,25 @@ func (c *CheckExecutor) Execute() error {
 		return nil
 	}
 
-	jobObj, err := job.GetGenericJob(c.Obj, c.Config)
-	jobObj.GetLabels()[job.K8upExclusive] = "true"
+	checkJob, err := job.GetGenericJob(c.Obj, c.Config)
 	if err != nil {
+		c.SetConditionFalse(ConditionJobCreated, "could not get job template: %v", err)
+		return err
+	}
+	checkJob.GetLabels()[job.K8upExclusive] = "true"
+
+	checkJob.Spec.Template.Spec.Containers[0].Env = c.setupEnvVars()
+	checkJob.Spec.Template.Spec.Containers[0].Args = []string{"-check"}
+	err = c.Client.Create(c.CTX, checkJob)
+	if err != nil {
+		c.SetConditionFalse(ConditionJobCreated,
+			"could not create check job '%v/%v': %v",
+			checkJob.Namespace, checkJob.Name, err)
 		return err
 	}
 
-	jobObj.Spec.Template.Spec.Containers[0].Env = c.setupEnvVars()
-	jobObj.Spec.Template.Spec.Containers[0].Args = []string{"-check"}
-	return c.Client.Create(c.CTX, jobObj)
+	c.SetConditionTrueWithMessage(ConditionJobCreated, "the job '%v/%v' was created", checkJob.Namespace, checkJob.Name)
+	return nil
 }
 
 // Exclusive should return true for jobs that can't run while other jobs run.

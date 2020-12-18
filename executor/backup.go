@@ -5,12 +5,13 @@ import (
 	"path"
 	"strconv"
 
-	"github.com/vshn/k8up/cfg"
-
 	k8upv1alpha1 "github.com/vshn/k8up/api/v1alpha1"
+	"github.com/vshn/k8up/cfg"
 	"github.com/vshn/k8up/job"
 	"github.com/vshn/k8up/observer"
 	"github.com/vshn/k8up/prebackup"
+
+	"github.com/operator-framework/operator-lib/status"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
@@ -33,6 +34,18 @@ type serviceAccount struct {
 	account     *corev1.ServiceAccount
 }
 
+// Conditions a Backup object can take
+const (
+	// ConditionRoleReady indicates whether the k8up Role was created successfully
+	ConditionRoleReady status.ConditionType = "RoleReady"
+
+	// ConditionRoleBindingReady indicates whether the k8up RoleBinding was created successfully
+	ConditionRoleBindingReady status.ConditionType = "RoleBindingReady"
+
+	// ConditionServiceAccountReady indicates whether the k8up ServiceAccount was created successfully
+	ConditionServiceAccountReady status.ConditionType = "ServiceAccountReady"
+)
+
 // NewBackupExecutor returns a new BackupExecutor.
 func NewBackupExecutor(config job.Config) *BackupExecutor {
 	return &BackupExecutor{
@@ -49,7 +62,6 @@ func (b *BackupExecutor) GetConcurrencyLimit() int {
 // a callback function on the observer so the prebackup pods can be removed after the backup
 // has finished.
 func (b *BackupExecutor) Execute() error {
-
 	backupObject, ok := b.Obj.(*k8upv1alpha1.Backup)
 	if !ok {
 		return stderrors.New("object is not a backup")
@@ -68,13 +80,13 @@ func (b *BackupExecutor) Execute() error {
 		return err
 	}
 
-	job, err := job.GetGenericJob(b.Obj, b.Config)
+	genericJob, err := job.GetGenericJob(b.Obj, b.Config)
 	if err != nil {
 		return err
 	}
 
 	go func() {
-		b.startBackup(job)
+		b.startBackup(genericJob)
 	}()
 
 	return nil
@@ -148,8 +160,7 @@ func (b *BackupExecutor) containsAccessMode(s []corev1.PersistentVolumeAccessMod
 	return false
 }
 
-func (b *BackupExecutor) startBackup(job *batchv1.Job) {
-
+func (b *BackupExecutor) startBackup(backupJob *batchv1.Job) {
 	preBackup := prebackup.NewPrebackup(b.Config)
 	err := preBackup.Start()
 	if err != nil {
@@ -163,24 +174,21 @@ func (b *BackupExecutor) startBackup(job *batchv1.Job) {
 
 	volumes := b.listPVCs(cfg.Config.BackupAnnotation)
 
-	job.Spec.Template.Spec.Containers[0].Env = b.setupEnvVars()
-	job.Spec.Template.Spec.Volumes = volumes
-	job.Spec.Template.Spec.ServiceAccountName = cfg.Config.ServiceAccount
-	job.Spec.Template.Spec.Containers[0].VolumeMounts = b.getVolumeMounts(volumes)
-	err = b.Client.Create(b.CTX, job)
+	backupJob.Spec.Template.Spec.Containers[0].Env = b.setupEnvVars()
+	backupJob.Spec.Template.Spec.Volumes = volumes
+	backupJob.Spec.Template.Spec.ServiceAccountName = cfg.Config.ServiceAccount
+	backupJob.Spec.Template.Spec.Containers[0].VolumeMounts = b.getVolumeMounts(volumes)
+
+	err = b.Client.Create(b.CTX, backupJob)
 	if err != nil {
 		if !errors.IsAlreadyExists(err) {
 			b.Config.Log.Error(err, "could not create job")
+			b.SetConditionFalse(ConditionJobCreated, "could not create job: %v", err)
 			return
 		}
 	}
-	b.Obj.GetStatus().Started = true
 
-	err = b.Client.Status().Update(b.CTX, b.Obj.GetRuntimeObject().DeepCopyObject())
-	if err != nil {
-		b.Config.Log.Error(err, "could not update backup status")
-	}
-
+	b.SetStarted(ConditionJobCreated, "the job '%v/%v' was created", backupJob.Namespace, backupJob.Name)
 }
 
 func (b *BackupExecutor) setBackupCallback(name types.NamespacedName, preBackup *prebackup.PreBackup) {
@@ -195,9 +203,13 @@ func (b *BackupExecutor) cleanupOldBackups(name types.NamespacedName) {
 	err := b.Client.List(b.CTX, backupList, &client.ListOptions{
 		Namespace: name.Namespace,
 	})
+
 	if err != nil {
 		b.Log.Error(err, "could not list objects for cleanup old backups", "Namespace", name.Namespace)
+		b.SetConditionFalse(ConditionCleanupSucceeded, "cloud not list objects for clean old backups: %v", err)
+		return
 	}
+
 	jobs := make(jobObjectList, 0)
 	for _, backup := range backupList.Items {
 		// Avoid exportloopref
@@ -211,35 +223,45 @@ func (b *BackupExecutor) cleanupOldBackups(name types.NamespacedName) {
 	err = cleanOldObjects(jobs, getKeepJobs(keepJobs), b.Config)
 	if err != nil {
 		b.Log.Error(err, "could not delete old backups", "namespace", name.Namespace)
+		b.SetConditionFalse(ConditionCleanupSucceeded, "could not delete old backups: %v", err)
 	}
+
+	b.SetConditionTrue(ConditionCleanupSucceeded)
 }
 
 func (b *BackupExecutor) createServiceAccountAndBinding() error {
 	serviceAccount := newServiceAccountDefinition(b.Obj.GetMetaObject().GetNamespace())
 
 	err := b.Client.Create(b.CTX, serviceAccount.role)
-	if err != nil {
-		if !errors.IsAlreadyExists(err) {
-			return err
-		}
+	if err != nil && !errors.IsAlreadyExists(err) {
+		b.SetConditionFalse(ConditionRoleReady,
+			"unable to create role '%v/%v': %v",
+			serviceAccount.role.Namespace, serviceAccount.role.Name, err.Error())
+		return err
 	}
+
+	b.SetConditionTrue(ConditionRoleReady)
 
 	err = b.Client.Create(b.CTX, serviceAccount.account)
-	if err != nil {
-		if !errors.IsAlreadyExists(err) {
-			return err
-		}
+	if err != nil && !errors.IsAlreadyExists(err) {
+		b.SetConditionFalse(ConditionServiceAccountReady,
+			"unable to create service account '%v/%v': %v",
+			serviceAccount.account.Namespace, serviceAccount.account.Name, err.Error())
+		return err
 	}
+
+	b.SetConditionTrue(ConditionServiceAccountReady)
 
 	err = b.Client.Create(b.CTX, serviceAccount.roleBinding)
-	if err != nil {
-		if !errors.IsAlreadyExists(err) {
-			return err
-		}
+	if err != nil && !errors.IsAlreadyExists(err) {
+		b.SetConditionFalse(ConditionRoleBindingReady,
+			"unable to create role binding '%v/%v': %v",
+			serviceAccount.roleBinding.Namespace, serviceAccount.roleBinding.Name, err.Error())
+		return err
 	}
 
+	b.SetConditionTrue(ConditionRoleBindingReady)
 	return nil
-
 }
 
 func newServiceAccountDefinition(namespace string) serviceAccount {
