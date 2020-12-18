@@ -205,13 +205,13 @@ func (g *GCSSpec) EnvVars(vars map[string]*corev1.EnvVarSource) map[string]*core
 type AzureSpec struct {
 	Container            string                    `json:"container,omitempty"`
 	AccountNameSecretRef *corev1.SecretKeySelector `json:"accountNameSecretRef,omitempty"`
-	AccountKeySecreftRef *corev1.SecretKeySelector `json:"accountKeySecreftRef,omitempty"`
+	AccountKeySecretRef  *corev1.SecretKeySelector `json:"accountKeySecretRef,omitempty"`
 }
 
 func (a *AzureSpec) EnvVars(vars map[string]*corev1.EnvVarSource) map[string]*corev1.EnvVarSource {
-	if a.AccountKeySecreftRef != nil {
+	if a.AccountKeySecretRef != nil {
 		vars["AZURE_ACCOUNT_KEY"] = &corev1.EnvVarSource{
-			SecretKeyRef: a.AccountKeySecreftRef,
+			SecretKeyRef: a.AccountKeySecretRef,
 		}
 	}
 

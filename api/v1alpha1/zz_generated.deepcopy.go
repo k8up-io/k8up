@@ -120,8 +120,8 @@ func (in *AzureSpec) DeepCopyInto(out *AzureSpec) {
 		*out = new(v1.SecretKeySelector)
 		(*in).DeepCopyInto(*out)
 	}
-	if in.AccountKeySecreftRef != nil {
-		in, out := &in.AccountKeySecreftRef, &out.AccountKeySecreftRef
+	if in.AccountKeySecretRef != nil {
+		in, out := &in.AccountKeySecretRef, &out.AccountKeySecretRef
 		*out = new(v1.SecretKeySelector)
 		(*in).DeepCopyInto(*out)
 	}

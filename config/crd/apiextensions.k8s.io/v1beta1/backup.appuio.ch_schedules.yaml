@@ -40,7 +40,7 @@ spec:
                   properties:
                     azure:
                       properties:
-                        accountKeySecreftRef:
+                        accountKeySecretRef:
                           description: SecretKeySelector selects a key of a Secret.
                           properties:
                             key:
@@ -339,7 +339,7 @@ spec:
               properties:
                 azure:
                   properties:
-                    accountKeySecreftRef:
+                    accountKeySecretRef:
                       description: SecretKeySelector selects a key of a Secret.
                       properties:
                         key:
@@ -552,7 +552,7 @@ spec:
                   properties:
                     azure:
                       properties:
-                        accountKeySecreftRef:
+                        accountKeySecretRef:
                           description: SecretKeySelector selects a key of a Secret.
                           properties:
                             key:
@@ -805,7 +805,7 @@ spec:
                   properties:
                     azure:
                       properties:
-                        accountKeySecreftRef:
+                        accountKeySecretRef:
                           description: SecretKeySelector selects a key of a Secret.
                           properties:
                             key:
@@ -1049,7 +1049,7 @@ spec:
                   properties:
                     azure:
                       properties:
-                        accountKeySecreftRef:
+                        accountKeySecretRef:
                           description: SecretKeySelector selects a key of a Secret.
                           properties:
                             key:
@@ -1343,7 +1343,7 @@ spec:
                   properties:
                     azure:
                       properties:
-                        accountKeySecreftRef:
+                        accountKeySecretRef:
                           description: SecretKeySelector selects a key of a Secret.
                           properties:
                             key:
