@@ -1,0 +1,63 @@
+= Schedule Specification
+
+K8up comes with its own integrated scheduler and supports more advanced schedule specifications.
+The standard Cron syntax (e.g. `0 */12 * * *`) is supported (see https://en.wikipedia.org/wiki/Cron[Wikipedia])
+
+All interpretation and scheduling is done in the machine's local time zone, as provided by the http://www.golang.org/pkg/time[Go time package].
+
+The following non-standard schedules are supported:
+
+.Non-Standard schedule specification
+|===
+|Entry in Spec|Description|Equivalent to
+
+|`@yearly` or `@annually`
+|Run once a year, midnight, Jan. 1st
+|`0 0 1 1 *`
+
+|`@monthly`
+|Run once a month, midnight, first of month
+|`0 0 1 * *`
+
+|`@weekly`
+|Run once a week, midnight between Sat/Sun
+|`0 0 * * 0`
+
+|`@daily` or `@midnight`
+|Run once a day, midnight
+|`0 0 * * *`
+
+|`@hourly`
+|Run once an hour, beginning of hour
+|`0 * * * *`
+
+|`@every <duration>`
+|Run once at fixed intervals, starting at the time it's added or K8up is started up.
+ `<duration>` is a string accepted by http://golang.org/pkg/time/#ParseDuration[time.ParseDuration] (e.g. `1h30m`).
+|
+
+|`@yearly-random` or `@annually-random`
+|Run once a year, randomized start time and date
+|`52 4 26 5 *` (example)
+
+|`@monthly-random`
+|Run once a month, randomized start time and date
+|`52 4 26 * *` (example)
+
+|`@weekly-random`
+|Run once a week, randomized start time and weekday
+|`52 4 * * 4` (example)
+
+|`@daily-random` or `@midnight`
+|Run once a day, randomized start time
+|`52 4 * * *` (example)
+
+|`@hourly-random`
+|Run once an hour, randomized minute
+|`52 * * * *` (example)
+|===
+
+NOTE: The day-of-month in the `@monthly` or `@yearly` is capped at the number 27.
+      This is because there are months that have between 27 and 31 days.
+      Cron skips a job when the day-of-month is higher than the current month has  days in it.
+      This is to prevent skipping backups and alerts from being fired.
