@@ -2,6 +2,7 @@
 * xref:k8up:ROOT:how-tos/upgrade.adoc[Upgrade]
 * xref:k8up:ROOT:how-tos/backup.adoc[Backup]
 * xref:k8up:ROOT:how-tos/schedules.adoc[Schedules]
+* xref:k8up:ROOT:how-tos/optimize-schedules.adoc[Optimize Schedules]
 * xref:k8up:ROOT:how-tos/restore.adoc[Restore]
 * xref:k8up:ROOT:how-tos/check-status.adoc[Check Status]
 * xref:k8up:ROOT:how-tos/application-aware-backups.adoc[Application-Aware Backups]

@@ -6,7 +6,6 @@ For the following keywords documentation is missing and will be added over time:
 * Webhooks with backup information
 * Prometheus Metrics of Operator
 * Prometheus Pushgateway Metrics of Wrestic
-* Smart Schedules
 * K8up HA (leader election)
 * Index of possible annotations
 * Generated CRD API Doc just like in Lieutenant Operator

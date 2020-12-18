@@ -56,6 +56,8 @@ type PruneSchedule struct {
 
 // ScheduleStatus defines the observed state of Schedule
 type ScheduleStatus struct {
+	// EffectiveSchedules displays the final schedule for each type (useful when using smart schedules).
+	EffectiveSchedules map[JobType]string `json:"effectiveSchedules,omitempty"`
 }
 
 // +kubebuilder:object:root=true

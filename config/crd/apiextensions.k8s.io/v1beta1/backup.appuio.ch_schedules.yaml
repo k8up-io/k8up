@@ -1641,6 +1641,12 @@ spec:
           type: object
         status:
           description: ScheduleStatus defines the observed state of Schedule
+          properties:
+            effectiveSchedules:
+              additionalProperties:
+                type: string
+              description: EffectiveSchedules displays the final schedule for each type (useful when using smart schedules).
+              type: object
           type: object
       type: object
   version: v1alpha1

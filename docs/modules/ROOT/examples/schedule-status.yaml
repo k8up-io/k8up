@@ -1,0 +1,10 @@
+apiVersion: backup.appuio.ch/v1alpha1
+kind: Schedule
+metadata:
+  name: schedule-test
+spec:
+  check:
+    schedule: '@hourly-random'
+status:
+  effectiveSchedules:
+    check: 44 * * * *

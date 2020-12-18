@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"context"
 	"fmt"
 	"strconv"
 
@@ -10,7 +9,6 @@ import (
 	"github.com/vshn/k8up/observer"
 	batchv1 "k8s.io/api/batch/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
@@ -23,6 +21,7 @@ const (
 type JobHandler struct {
 	job *batchv1.Job
 	job.Config
+	requireSpecUpdate bool
 }
 
 // NewJobHandler returns a new JobHandler.
@@ -45,20 +44,13 @@ func (j *JobHandler) Handle() error {
 
 	if j.job.GetDeletionTimestamp() != nil && contains(j.job.GetFinalizers(), jobFinalizerName) {
 		jobEvent = observer.Delete
-		err := removeFinalizer(j.CTX, j.job, jobFinalizerName, j.Client)
-		if err != nil {
-			if errors.IsNotFound(err) {
-				return nil
-			}
-			return fmt.Errorf("error removing finalizer: %w", err)
-		}
+		controllerutil.RemoveFinalizer(j.job, jobFinalizerName)
+		j.requireSpecUpdate = true
 	} else {
 		if j.job.Status.Active > 0 {
 			jobEvent = observer.Running
-			err := addFinalizer(j.CTX, j.job, jobFinalizerName, j.Client)
-			if err != nil {
-				return err
-			}
+			controllerutil.AddFinalizer(j.job, jobFinalizerName)
+			j.requireSpecUpdate = true
 		}
 
 		if j.job.Status.Succeeded > 0 {
@@ -88,27 +80,12 @@ func (j *JobHandler) Handle() error {
 		Event:     jobEvent,
 	}
 
+	if j.requireSpecUpdate {
+		if err := j.Client.Update(j.CTX, j.job); err != nil && !errors.IsNotFound(err) {
+			return fmt.Errorf("error updating resource: %w", err)
+		}
+	}
 	observer.GetObserver().GetUpdateChannel() <- oj
-	return nil
-}
-
-func addFinalizer(ctx context.Context, obj controllerutil.Object, name string, client client.Client) error {
-	controllerutil.AddFinalizer(obj, name)
-
-	// Update CR
-	err := client.Update(ctx, obj)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func removeFinalizer(ctx context.Context, obj controllerutil.Object, name string, client client.Client) error {
-	controllerutil.RemoveFinalizer(obj, name)
-	err := client.Update(ctx, obj)
-	if err != nil {
-		return err
-	}
 	return nil
 }
 
