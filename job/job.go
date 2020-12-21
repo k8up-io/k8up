@@ -6,6 +6,8 @@ import (
 	"context"
 	"fmt"
 
+	"k8s.io/apimachinery/pkg/api/errors"
+
 	"github.com/vshn/k8up/api/v1alpha1"
 	k8upv1alpha1 "github.com/vshn/k8up/api/v1alpha1"
 	"github.com/vshn/k8up/cfg"
@@ -126,6 +128,9 @@ func (c *Config) patchConditions(conditionStatus corev1.ConditionStatus, message
 
 	err := c.Client.Status().Patch(c.CTX, c.Obj.GetRuntimeObject(), patch)
 	if err != nil {
+		if errors.IsNotFound(err) {
+			return
+		}
 		c.Log.Error(err, "could not patch backup conditions")
 	}
 }
@@ -147,6 +152,9 @@ func (c *Config) SetStarted(trueCondition status.ConditionType, message string, 
 
 	err := c.Client.Status().Patch(c.CTX, c.Obj.GetRuntimeObject(), patch)
 	if err != nil {
+		if errors.IsNotFound(err) {
+			return
+		}
 		c.Log.Error(err, "could not patch backup conditions")
 	}
 }
