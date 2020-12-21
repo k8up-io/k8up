@@ -16,11 +16,17 @@ snapshot:
   name_template: "{{ .Tag }}-snapshot"
 
 dockers:
+# The `latest` is not touched for pre release.
+# The template string `{{ if .Prerelease }}v{{ .Version }}{{ else }}latest{{ end }}`
+# will compute to `latest` for regular release. For pre releases, it will
+# compute to `v{{ .Version }}`. This duplicates one of the other list items
+# and therefore eliminates `latest` from the list. This is OK to do since
+# `goreleaser` builds the image only once and tagging is a cheap operation.
 - image_templates:
-  - "docker.io/vshn/k8up:latest"
+  - "docker.io/vshn/k8up:{{ if .Prerelease }}v{{ .Version }}{{ else }}latest{{ end }}"
   - "docker.io/vshn/k8up:v{{ .Version }}"
   - "docker.io/vshn/k8up:v{{ .Major }}"
-  - "quay.io/vshn/k8up:latest"
+  - "quay.io/vshn/k8up:{{ if .Prerelease }}v{{ .Version }}{{ else }}latest{{ end }}"
   - "quay.io/vshn/k8up:v{{ .Version }}"
   - "quay.io/vshn/k8up:v{{ .Major }}"
 
