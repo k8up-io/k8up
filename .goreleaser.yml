@@ -34,6 +34,8 @@ changelog:
     - '^Merge pull request'
 
 release:
+  prerelease: auto
+
   github:
     owner: vshn
     name: k8up
