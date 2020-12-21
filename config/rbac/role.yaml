@@ -69,6 +69,26 @@ rules:
 - apiGroups:
   - backup.appuio.ch
   resources:
+  - prebackuppods
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - backup.appuio.ch
+  resources:
+  - prebackuppods/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - backup.appuio.ch
+  resources:
   - prunes
   verbs:
   - create
@@ -149,7 +169,39 @@ rules:
 - apiGroups:
   - ""
   resources:
+  - persistentvolumeclaims
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
   - pods
   verbs:
+  - '*'
+- apiGroups:
+  - ""
+  resources:
+  - pods/exec
+  verbs:
+  - '*'
+- apiGroups:
+  - ""
+  resources:
+  - serviceaccounts
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+- apiGroups:
+  - rbac.authorization.k8s.io
+  resources:
+  - rolebindings
+  - roles
+  verbs:
+  - create
+  - delete
   - get
   - list

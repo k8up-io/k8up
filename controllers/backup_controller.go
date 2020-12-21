@@ -25,8 +25,14 @@ type BackupReconciler struct {
 
 // +kubebuilder:rbac:groups=backup.appuio.ch,resources=backups,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=backup.appuio.ch,resources=backups/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=backup.appuio.ch,resources=prebackuppods,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=backup.appuio.ch,resources=prebackuppods/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=batch,resources=jobs,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=core,resources=pods,verbs=get;list;
+// +kubebuilder:rbac:groups=core,resources=pods,verbs="*"
+// +kubebuilder:rbac:groups=core,resources=pods/exec,verbs="*"
+// +kubebuilder:rbac:groups=core,resources=serviceaccounts,verbs=get;list;create;delete
+// +kubebuilder:rbac:groups=core,resources=persistentvolumeclaims,verbs=get;list;watch
+// +kubebuilder:rbac:groups=rbac.authorization.k8s.io,resources=roles;rolebindings,verbs=get;list;create;delete
 
 func (r *BackupReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	ctx := context.Background()
