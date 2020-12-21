@@ -8,9 +8,12 @@ import (
 	"fmt"
 	"sort"
 
+	"k8s.io/apimachinery/pkg/types"
+
 	"github.com/vshn/k8up/api/v1alpha1"
 	"github.com/vshn/k8up/cfg"
 	"github.com/vshn/k8up/job"
+	"github.com/vshn/k8up/observer"
 	"github.com/vshn/k8up/queue"
 
 	"github.com/go-logr/logr"
@@ -43,6 +46,9 @@ type EnvVarConverter struct {
 const (
 	// ConditionJobCreated indicates whether the relevant job was created or not and perhaps why
 	ConditionJobCreated status.ConditionType = "JobCreated"
+
+	// ConditionJobSucceeded indicates that the relevant job has ended and was successful
+	ConditionJobSucceeded status.ConditionType = "JobSucceeded"
 
 	// ConditionCleanupSucceeded indicates whether the cleanup job succeeded
 	ConditionCleanupSucceeded status.ConditionType = "CleanupSucceeded"
@@ -124,8 +130,30 @@ func (g *generic) GetJobNamespace() string {
 	return g.Obj.GetMetaObject().GetNamespace()
 }
 
+func (g *generic) GetJobNamespacedName() types.NamespacedName {
+	return types.NamespacedName{Namespace: g.Obj.GetMetaObject().GetNamespace(), Name: g.Obj.GetMetaObject().GetName()}
+}
+
 func (g *generic) GetJobType() v1alpha1.JobType {
 	return g.Obj.GetType()
+}
+
+// RegisterJobSucceededConditionCallback registers an observer on the job which updates ConditionJobSucceeded when
+// the job succeeds or fails, respectively.
+func (g *generic) RegisterJobSucceededConditionCallback() {
+	name := g.GetJobNamespacedName()
+	observer.GetObserver().RegisterCallback(name.String(), func(event observer.ObservableJob) {
+		switch event.Event {
+		case observer.Suceeded:
+			g.SetConditionTrueWithMessage(ConditionJobSucceeded,
+				"the job %v/%v ended successfully",
+				event.Job.Namespace, event.Job.Name)
+		case observer.Failed:
+			g.SetConditionFalse(ConditionJobSucceeded,
+				"the job %v/%v failed, please check it's log for details",
+				event.Job.Namespace, event.Job.Name)
+		}
+	})
 }
 
 // NewExecutor will return the right Executor for the given job object.

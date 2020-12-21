@@ -63,8 +63,8 @@ func (p *PruneExecutor) Exclusive() bool {
 }
 
 func (p *PruneExecutor) startPrune(pruneJob *batchv1.Job, prune *k8upv1alpha1.Prune) {
-	name := types.NamespacedName{Namespace: p.Obj.GetMetaObject().GetNamespace(), Name: p.Obj.GetMetaObject().GetName()}
-	p.setPruneCallback(name, prune)
+	p.registerPruneCallback(prune)
+	p.RegisterJobSucceededConditionCallback()
 
 	pruneJob.Spec.Template.Spec.Containers[0].Env = p.setupEnvVars(prune)
 	pruneJob.Spec.Template.Spec.Containers[0].Args = []string{"-prune"}
@@ -80,8 +80,9 @@ func (p *PruneExecutor) startPrune(pruneJob *batchv1.Job, prune *k8upv1alpha1.Pr
 	p.SetStarted(ConditionJobCreated, "the job '%v/%v' was created", pruneJob.Namespace, pruneJob.Name)
 }
 
-func (p *PruneExecutor) setPruneCallback(name types.NamespacedName, prune *k8upv1alpha1.Prune) {
-	observer.GetObserver().RegisterCallback(name.String(), func() {
+func (p *PruneExecutor) registerPruneCallback(prune *k8upv1alpha1.Prune) {
+	name := p.GetJobNamespacedName()
+	observer.GetObserver().RegisterCallback(name.String(), func(_ observer.ObservableJob) {
 		p.cleanupOldPrunes(name, prune)
 	})
 }

@@ -168,9 +168,8 @@ func (b *BackupExecutor) startBackup(backupJob *batchv1.Job) {
 		return
 	}
 
-	name := types.NamespacedName{Namespace: b.Obj.GetMetaObject().GetNamespace(), Name: b.Obj.GetMetaObject().GetName()}
-
-	b.setBackupCallback(name, preBackup)
+	b.registerBackupCallback(preBackup)
+	b.RegisterJobSucceededConditionCallback()
 
 	volumes := b.listPVCs(cfg.Config.BackupAnnotation)
 
@@ -191,8 +190,9 @@ func (b *BackupExecutor) startBackup(backupJob *batchv1.Job) {
 	b.SetStarted(ConditionJobCreated, "the job '%v/%v' was created", backupJob.Namespace, backupJob.Name)
 }
 
-func (b *BackupExecutor) setBackupCallback(name types.NamespacedName, preBackup *prebackup.PreBackup) {
-	observer.GetObserver().RegisterCallback(name.String(), func() {
+func (b *BackupExecutor) registerBackupCallback(preBackup *prebackup.PreBackup) {
+	name := b.GetJobNamespacedName()
+	observer.GetObserver().RegisterCallback(name.String(), func(_ observer.ObservableJob) {
 		preBackup.Stop()
 		b.cleanupOldBackups(name)
 	})
