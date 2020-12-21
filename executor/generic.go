@@ -146,11 +146,11 @@ func (g *generic) RegisterJobSucceededConditionCallback() {
 		switch event.Event {
 		case observer.Suceeded:
 			g.SetConditionTrueWithMessage(ConditionJobSucceeded,
-				"the job %v/%v ended successfully",
+				"the job '%v/%v' ended successfully",
 				event.Job.Namespace, event.Job.Name)
 		case observer.Failed:
 			g.SetConditionFalse(ConditionJobSucceeded,
-				"the job %v/%v failed, please check it's log for details",
+				"the job '%v/%v' failed, please check its log for details",
 				event.Job.Namespace, event.Job.Name)
 		}
 	})

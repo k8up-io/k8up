@@ -40,6 +40,10 @@ Status:
     Status:                True
     Type:                  JobCreated
     Last Transition Time:  2020-13-32T25:61:61Z
+    Message:               the job 'default/demo-backup' ended successfully
+    Status:                True
+    Type:                  JobSucceeded
+    Last Transition Time:  2020-13-32T25:61:61Z
     Message:               no container definitions found
     Status:                False
     Type:                  PreBackupPodsAvailable
