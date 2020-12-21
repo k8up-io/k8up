@@ -23,12 +23,14 @@ dockers:
 # and therefore eliminates `latest` from the list. This is OK to do since
 # `goreleaser` builds the image only once and tagging is a cheap operation.
 - image_templates:
-  - "docker.io/vshn/k8up:{{ if .Prerelease }}v{{ .Version }}{{ else }}latest{{ end }}"
   - "docker.io/vshn/k8up:v{{ .Version }}"
-  - "docker.io/vshn/k8up:v{{ .Major }}"
-  - "quay.io/vshn/k8up:{{ if .Prerelease }}v{{ .Version }}{{ else }}latest{{ end }}"
   - "quay.io/vshn/k8up:v{{ .Version }}"
-  - "quay.io/vshn/k8up:v{{ .Major }}"
+
+  - "docker.io/vshn/k8up:{{ if .Prerelease }}v{{ .Version }}{{ else }}v{{ .Major }}{{ end }}"
+  - "quay.io/vshn/k8up:{{ if .Prerelease }}v{{ .Version }}{{ else }}v{{ .Major }}{{ end }}"
+
+  - "docker.io/vshn/k8up:{{ if .Prerelease }}v{{ .Version }}{{ else }}latest{{ end }}"
+  - "quay.io/vshn/k8up:{{ if .Prerelease }}v{{ .Version }}{{ else }}latest{{ end }}"
 
 changelog:
   sort: asc
