@@ -44,3 +44,4 @@ testbin/
 node_modules/
 e2e/debug
 __debug_bin
+coverage/
