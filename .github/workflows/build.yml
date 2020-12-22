@@ -30,6 +30,13 @@ jobs:
           ${{ runner.os }}-go-
     - name: Run tests
       run: make test
+    - name: Upload code coverage report to Code Climate
+      uses: paambaati/codeclimate-action@v2.7.5
+      env:
+        CC_TEST_REPORTER_ID: b25e8875aef082d5eee059d71d76dac6d3e0ed23847f6004c1598afe35dadff5
+      with:
+        coverageLocations: cover.out:gocov
+        prefix: github.com/vshn/k8up
   e2e-test:
     runs-on: ubuntu-latest
     strategy:

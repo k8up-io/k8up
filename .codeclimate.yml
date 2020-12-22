@@ -25,4 +25,4 @@ exclude_patterns:
 - '**/*_test.go'
 - '**/*.d.ts'
 - 'e2e/lib/'
-- '**/zz_generated*.go'
+- '**/zz_generated.deepcopy.go'
