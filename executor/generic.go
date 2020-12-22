@@ -10,11 +10,12 @@ import (
 
 	"github.com/vshn/k8up/api/v1alpha1"
 	"github.com/vshn/k8up/cfg"
+	"github.com/vshn/k8up/job"
+	"github.com/vshn/k8up/queue"
 
 	"github.com/go-logr/logr"
 	"github.com/imdario/mergo"
-	"github.com/vshn/k8up/job"
-	"github.com/vshn/k8up/queue"
+	"github.com/operator-framework/operator-lib/status"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -37,6 +38,15 @@ type envVarEntry struct {
 type EnvVarConverter struct {
 	Vars map[string]envVarEntry
 }
+
+// Generic conditions
+const (
+	// ConditionJobCreated indicates whether the relevant job was created or not and perhaps why
+	ConditionJobCreated status.ConditionType = "JobCreated"
+
+	// ConditionCleanupSucceeded indicates whether the cleanup job succeeded
+	ConditionCleanupSucceeded status.ConditionType = "CleanupSucceeded"
+)
 
 // NewEnvVarConverter returns a new
 func NewEnvVarConverter() EnvVarConverter {

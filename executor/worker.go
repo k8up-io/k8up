@@ -7,6 +7,7 @@ import (
 
 	"github.com/vshn/k8up/observer"
 	"github.com/vshn/k8up/queue"
+
 	"k8s.io/apimachinery/pkg/api/errors"
 )
 
@@ -33,7 +34,6 @@ func GetExecutor() *QueueWorker {
 
 func (qe *QueueWorker) executeQueue() {
 	for {
-
 		time.Sleep(1 * time.Second)
 
 		repositories := queue.GetExecQueue().GetRepositories()
@@ -71,8 +71,7 @@ func (qe *QueueWorker) loopRepositoryJobs(repository string) {
 			}
 		}
 
-		// Skip the rest for this repository if we just started an exclusive
-		// job.
+		// Skip the rest for this repository if we just started an exclusive job.
 		if job.Exclusive() {
 			return
 		}

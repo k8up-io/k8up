@@ -2,19 +2,19 @@ package executor
 
 import (
 	"errors"
+	"fmt"
 	"strconv"
 
+	k8upv1alpha1 "github.com/vshn/k8up/api/v1alpha1"
 	"github.com/vshn/k8up/cfg"
+	"github.com/vshn/k8up/job"
+	"github.com/vshn/k8up/observer"
 
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-
-	k8upv1alpha1 "github.com/vshn/k8up/api/v1alpha1"
-	"github.com/vshn/k8up/job"
-	"github.com/vshn/k8up/observer"
 )
 
 const restorePath = "/restore"
@@ -55,30 +55,22 @@ func (r *RestoreExecutor) startRestore(restore *k8upv1alpha1.Restore) {
 	name := types.NamespacedName{Namespace: r.Obj.GetMetaObject().GetNamespace(), Name: r.Obj.GetMetaObject().GetName()}
 	r.setRestoreCallback(name, restore)
 
-	j, err := r.buildRestoreObject(restore)
+	restoreJob, err := r.buildRestoreObject(restore)
 	if err != nil {
 		r.Log.Error(err, "unable to build restore object")
+		r.SetConditionFalse(ConditionJobCreated, "unable to build restore object: %v", err)
 		return
 	}
 
-	if err := r.Client.Create(r.CTX, j); err != nil {
+	if err := r.Client.Create(r.CTX, restoreJob); err != nil {
 		if !apierrors.IsAlreadyExists(err) {
 			r.Log.Error(err, "could not create job")
+			r.SetConditionFalse(ConditionJobCreated, "could not create job: %v", err)
 			return
 		}
 	}
 
-	if err := r.setJobStatusStarted(); err != nil {
-		r.Log.Error(err, "could not update prune status")
-	}
-}
-
-func (r *RestoreExecutor) setJobStatusStarted() error {
-	original := r.Obj
-	new := r.Obj.GetRuntimeObject().DeepCopyObject().(*k8upv1alpha1.Restore)
-	new.GetStatus().Started = true
-
-	return r.Client.Status().Patch(r.CTX, new, client.MergeFrom(original.GetRuntimeObject()))
+	r.SetStarted(ConditionJobCreated, "the job '%v/%v' was created", restoreJob.Namespace, restoreJob.Name)
 }
 
 func (r *RestoreExecutor) setRestoreCallback(name types.NamespacedName, restore *k8upv1alpha1.Restore) {
@@ -94,6 +86,8 @@ func (r *RestoreExecutor) cleanupOldRestores(name types.NamespacedName, restore 
 	})
 	if err != nil {
 		r.Log.Error(err, "could not list objects to cleanup old restores", "Namespace", name.Namespace)
+		r.SetConditionFalse(ConditionCleanupSucceeded, "could not list objects to cleanup old restores: %v", err)
+		return
 	}
 
 	jobs := make(jobObjectList, len(restoreList.Items))
@@ -101,12 +95,14 @@ func (r *RestoreExecutor) cleanupOldRestores(name types.NamespacedName, restore 
 		jobs[i] = &restore
 	}
 
-	var keepJobs *int = restore.Spec.KeepJobs
-
-	err = cleanOldObjects(jobs, getKeepJobs(keepJobs), r.Config)
+	keepJobs := getKeepJobs(restore.Spec.KeepJobs)
+	err = cleanOldObjects(jobs, keepJobs, r.Config)
 	if err != nil {
 		r.Log.Error(err, "could not delete old restores", "namespace", name.Namespace)
+		r.SetConditionFalse(ConditionCleanupSucceeded, "could not delete old restores: %v", err)
 	}
+
+	r.SetConditionTrue(ConditionCleanupSucceeded)
 }
 
 func (r *RestoreExecutor) buildRestoreObject(restore *k8upv1alpha1.Restore) (*batchv1.Job, error) {
@@ -137,15 +133,13 @@ func (r *RestoreExecutor) buildRestoreObject(restore *k8upv1alpha1.Restore) (*ba
 		args = append(args, "-restoreSnap", restore.Spec.Snapshot)
 	}
 
-	methodDefined := false
-	if restore.Spec.RestoreMethod.Folder != nil {
+	switch {
+	case restore.Spec.RestoreMethod.Folder != nil:
 		args = append(args, "-restoreType", "folder")
-		methodDefined = true
-	}
-
-	if !methodDefined && restore.Spec.RestoreMethod.S3 != nil {
+	case restore.Spec.RestoreMethod.S3 != nil:
 		args = append(args, "-restoreType", "s3")
-		methodDefined = true
+	default:
+		return nil, fmt.Errorf("undefined restore method (-restoreType) on '%v/%v'", restore.Namespace, restore.Name)
 	}
 
 	j.Spec.Template.Spec.Containers[0].Args = args
@@ -154,7 +148,7 @@ func (r *RestoreExecutor) buildRestoreObject(restore *k8upv1alpha1.Restore) (*ba
 }
 
 func (r *RestoreExecutor) volumeConfig(restore *k8upv1alpha1.Restore) ([]corev1.Volume, []corev1.VolumeMount) {
-	volumes := []corev1.Volume{}
+	volumes := make([]corev1.Volume, 0)
 	if restore.Spec.RestoreMethod.S3 == nil {
 		volumes = append(volumes,
 			corev1.Volume{

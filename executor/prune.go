@@ -5,11 +5,11 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/vshn/k8up/cfg"
-
 	k8upv1alpha1 "github.com/vshn/k8up/api/v1alpha1"
+	"github.com/vshn/k8up/cfg"
 	"github.com/vshn/k8up/job"
 	"github.com/vshn/k8up/observer"
+
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -46,10 +46,11 @@ func (p *PruneExecutor) Execute() error {
 	}
 
 	jobObj, err := job.GetGenericJob(prune, p.Config)
-	jobObj.GetLabels()[job.K8upExclusive] = "true"
 	if err != nil {
+		p.SetConditionFalse(ConditionJobCreated, "could not get job template: %v", err)
 		return err
 	}
+	jobObj.GetLabels()[job.K8upExclusive] = "true"
 
 	p.startPrune(jobObj, prune)
 
@@ -61,31 +62,22 @@ func (p *PruneExecutor) Exclusive() bool {
 	return true
 }
 
-func (p *PruneExecutor) startPrune(job *batchv1.Job, prune *k8upv1alpha1.Prune) {
+func (p *PruneExecutor) startPrune(pruneJob *batchv1.Job, prune *k8upv1alpha1.Prune) {
 	name := types.NamespacedName{Namespace: p.Obj.GetMetaObject().GetNamespace(), Name: p.Obj.GetMetaObject().GetName()}
 	p.setPruneCallback(name, prune)
 
-	job.Spec.Template.Spec.Containers[0].Env = p.setupEnvVars(prune)
-	job.Spec.Template.Spec.Containers[0].Args = []string{"-prune"}
+	pruneJob.Spec.Template.Spec.Containers[0].Env = p.setupEnvVars(prune)
+	pruneJob.Spec.Template.Spec.Containers[0].Args = []string{"-prune"}
 
-	if err := p.Client.Create(p.CTX, job); err != nil {
+	if err := p.Client.Create(p.CTX, pruneJob); err != nil {
 		if !apierrors.IsAlreadyExists(err) {
 			p.Log.Error(err, "could not create job")
+			p.SetConditionFalse(ConditionJobCreated, "could not create job: %v", err)
 			return
 		}
 	}
 
-	if err := p.setJobStatusStarted(); err != nil {
-		p.Log.Error(err, "could not update prune status")
-	}
-}
-
-func (p *PruneExecutor) setJobStatusStarted() error {
-	original := p.Obj
-	new := p.Obj.GetRuntimeObject().DeepCopyObject().(*k8upv1alpha1.Prune)
-	new.GetStatus().Started = true
-
-	return p.Client.Status().Patch(p.CTX, new, client.MergeFrom(original.GetRuntimeObject()))
+	p.SetStarted(ConditionJobCreated, "the job '%v/%v' was created", pruneJob.Namespace, pruneJob.Name)
 }
 
 func (p *PruneExecutor) setPruneCallback(name types.NamespacedName, prune *k8upv1alpha1.Prune) {
@@ -101,6 +93,7 @@ func (p *PruneExecutor) cleanupOldPrunes(name types.NamespacedName, prune *k8upv
 	})
 	if err != nil {
 		p.Log.Error(err, "could not list objects to cleanup old prunes", "Namespace", name.Namespace)
+		p.SetConditionFalse(ConditionCleanupSucceeded, "could not list objects to cleanup old prunes: %v", err)
 	}
 
 	jobs := make(jobObjectList, len(pruneList.Items))
@@ -108,12 +101,14 @@ func (p *PruneExecutor) cleanupOldPrunes(name types.NamespacedName, prune *k8upv
 		jobs[i] = &prune
 	}
 
-	var keepJobs *int = prune.Spec.KeepJobs
-
-	err = cleanOldObjects(jobs, getKeepJobs(keepJobs), p.Config)
+	keepJobs := getKeepJobs(prune.Spec.KeepJobs)
+	err = cleanOldObjects(jobs, keepJobs, p.Config)
 	if err != nil {
 		p.Log.Error(err, "could not delete old prunes", "namespace", name.Namespace)
+		p.SetConditionFalse(ConditionCleanupSucceeded, "could not delete old prunes: %v", err)
 	}
+
+	p.SetConditionTrue(ConditionCleanupSucceeded)
 }
 
 func (p *PruneExecutor) setupEnvVars(prune *k8upv1alpha1.Prune) []corev1.EnvVar {

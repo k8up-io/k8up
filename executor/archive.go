@@ -3,11 +3,11 @@ package executor
 import (
 	stderrors "errors"
 
-	"github.com/vshn/k8up/cfg"
-
 	k8upv1alpha1 "github.com/vshn/k8up/api/v1alpha1"
+	"github.com/vshn/k8up/cfg"
 	"github.com/vshn/k8up/job"
 	"github.com/vshn/k8up/observer"
+
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -46,37 +46,34 @@ func (a *ArchiveExecutor) Execute() error {
 	}
 
 	jobObj, err := job.GetGenericJob(archive, a.Config)
-	jobObj.GetLabels()[job.K8upExclusive] = "true"
 	if err != nil {
+		a.SetConditionFalse(ConditionJobCreated, "could not get job template: %v", err)
 		return err
 	}
+	jobObj.GetLabels()[job.K8upExclusive] = "true"
 
 	a.startArchive(jobObj, archive)
 
 	return nil
 }
 
-func (a *ArchiveExecutor) startArchive(job *batchv1.Job, archive *k8upv1alpha1.Archive) {
+func (a *ArchiveExecutor) startArchive(archiveJob *batchv1.Job, archive *k8upv1alpha1.Archive) {
 	name := types.NamespacedName{Namespace: a.Obj.GetMetaObject().GetNamespace(), Name: a.Obj.GetMetaObject().GetName()}
 	a.setArchiveCallback(name, archive)
 
-	job.Spec.Template.Spec.Containers[0].Env = a.setupEnvVars(archive)
-	job.Spec.Template.Spec.Containers[0].Args = a.setupArgs(archive)
+	archiveJob.Spec.Template.Spec.Containers[0].Env = a.setupEnvVars(archive)
+	archiveJob.Spec.Template.Spec.Containers[0].Args = a.setupArgs(archive)
 
-	err := a.Client.Create(a.CTX, job)
+	err := a.Client.Create(a.CTX, archiveJob)
 	if err != nil {
 		if !apierrors.IsAlreadyExists(err) {
 			a.Log.Error(err, "could not create job")
+			a.SetConditionFalse(ConditionJobCreated, "could not create job: %v", err)
 			return
 		}
 	}
 
-	a.Obj.GetStatus().Started = true
-
-	err = a.Client.Status().Update(a.CTX, a.Obj.GetRuntimeObject().DeepCopyObject())
-	if err != nil {
-		a.Config.Log.Error(err, "could not update archive status")
-	}
+	a.SetStarted(ConditionJobCreated, "the job '%v/%v' was created", archiveJob.Namespace, archiveJob.Name)
 }
 
 func (a *ArchiveExecutor) setArchiveCallback(name types.NamespacedName, archive *k8upv1alpha1.Archive) {
@@ -132,6 +129,8 @@ func (a *ArchiveExecutor) cleanupOldArchives(name types.NamespacedName, archive 
 	})
 	if err != nil {
 		a.Log.Error(err, "could not list objects to cleanup old archives", "Namespace", name.Namespace)
+		a.SetConditionFalse(ConditionCleanupSucceeded, "cloud not list objects to cleanup old archives: %v", err)
+		return
 	}
 
 	jobs := make(jobObjectList, len(archiveList.Items))
@@ -139,30 +138,13 @@ func (a *ArchiveExecutor) cleanupOldArchives(name types.NamespacedName, archive 
 		jobs[i] = &aItem
 	}
 
-	var keepJobs *int = archive.Spec.KeepJobs
+	var keepJobs = archive.Spec.KeepJobs
 
 	err = cleanOldObjects(jobs, getKeepJobs(keepJobs), a.Config)
 	if err != nil {
 		a.Log.Error(err, "could not delete old archives", "namespace", name.Namespace)
-	}
-}
-
-func getS3EndpointValue(archive *k8upv1alpha1.Archive) string {
-	v := archive.Spec.RestoreSpec.RestoreMethod.S3.Endpoint
-
-	if v == "" {
-		v = cfg.Config.GlobalRestoreS3Endpoint
+		a.SetConditionFalse(ConditionCleanupSucceeded, "could not delete old archives: %v", err)
 	}
 
-	return v
-}
-
-func getS3BucketValue(archive *k8upv1alpha1.Archive) string {
-	v := archive.Spec.RestoreSpec.RestoreMethod.S3.Bucket
-
-	if v == "" {
-		v = cfg.Config.GlobalRestoreS3Bucket
-	}
-
-	return v
+	a.SetConditionTrue(ConditionCleanupSucceeded)
 }
