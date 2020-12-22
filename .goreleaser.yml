@@ -16,13 +16,23 @@ snapshot:
   name_template: "{{ .Tag }}-snapshot"
 
 dockers:
+# For pre releases, updating `latest` and the floating tags of the major
+# version does not make sense. So only the image for the exact version should
+# be pushed.
+# For the lack of a less verbose solution, go templating is used to set the
+# image tags to the major version or latest for normal releases. For pre
+# releases, all image tags are set to the exact version. This will result in
+# having the same image tag tree times in the list. This is fine to do as the
+# image will be built only once and tagging is a cheap operation.
 - image_templates:
-  - "docker.io/vshn/k8up:latest"
   - "docker.io/vshn/k8up:v{{ .Version }}"
-  - "docker.io/vshn/k8up:v{{ .Major }}"
-  - "quay.io/vshn/k8up:latest"
   - "quay.io/vshn/k8up:v{{ .Version }}"
-  - "quay.io/vshn/k8up:v{{ .Major }}"
+
+  - "docker.io/vshn/k8up:{{ if .Prerelease }}v{{ .Version }}{{ else }}v{{ .Major }}{{ end }}"
+  - "quay.io/vshn/k8up:{{ if .Prerelease }}v{{ .Version }}{{ else }}v{{ .Major }}{{ end }}"
+
+  - "docker.io/vshn/k8up:{{ if .Prerelease }}v{{ .Version }}{{ else }}latest{{ end }}"
+  - "quay.io/vshn/k8up:{{ if .Prerelease }}v{{ .Version }}{{ else }}latest{{ end }}"
 
 changelog:
   sort: asc
@@ -34,6 +44,8 @@ changelog:
     - '^Merge pull request'
 
 release:
+  prerelease: auto
+
   github:
     owner: vshn
     name: k8up
