@@ -1,0 +1,28 @@
+version: "2"
+plugins:
+  shellcheck:
+    enabled: true
+  govet:
+    enabled: true
+  gofmt:
+    enabled: true
+  golint:
+    enabled: true
+  fixme:
+    enabled: true
+exclude_patterns:
+- 'config/'
+- 'db/'
+- 'dist/'
+- 'features/'
+- '**/node_modules/'
+- 'script/'
+- '**/spec/'
+- '**/test/'
+- '**/tests/'
+- 'Tests/'
+- '**/vendor/'
+- '**/*_test.go'
+- '**/*.d.ts'
+- 'e2e/lib/'
+- '**/zz_generated.deepcopy.go'
