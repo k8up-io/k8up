@@ -1,7 +1,9 @@
 package v1alpha1
 
-// JobType defines what job type this is.
-type JobType string
+type (
+	// JobType defines what job type this is.
+	JobType string
+)
 
 const (
 	BackupType   JobType = "backup"

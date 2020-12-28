@@ -1,5 +1,3 @@
-// scheduler ensures that scheduled jobs will be added to the queue
-
 package scheduler
 
 import (
@@ -11,19 +9,45 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/robfig/cron/v3"
-	"github.com/vshn/k8up/job"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/metrics"
+
+	k8upv1alpha1 "github.com/vshn/k8up/api/v1alpha1"
+	"github.com/vshn/k8up/job"
 )
 
-const (
-	BackupType  Type = "backup"
-	CheckType   Type = "check"
-	ArchiveType Type = "archive"
-	RestoreType Type = "restore"
-	PruneType   Type = "prune"
+type (
+	// ObjectCreator defines an interface that each schedulable newJobs must implement.
+	// The simplest implementation is that the concrete object just returns itself.
+	ObjectCreator interface {
+		CreateObject(name, namespace string) runtime.Object
+	}
+	// JobList contains a slice of jobs and job.Config to actually apply the
+	// the newJobs objects.
+	JobList struct {
+		Jobs   []Job
+		Config job.Config
+	}
+	// Job contains all necessary information to create a schedule.
+	Job struct {
+		JobType  k8upv1alpha1.JobType
+		Schedule string
+		Object   ObjectCreator
+	}
+	// Scheduler handles all the schedules.
+	Scheduler struct {
+		cron                *cron.Cron
+		registeredSchedules map[string][]scheduleRef
+		mutex               sync.Mutex
+	}
+	scheduleRef struct {
+		EntryID  cron.EntryID
+		JobType  k8upv1alpha1.JobType
+		Schedule string
+		Command  func()
+	}
 )
 
 var (
@@ -37,36 +61,6 @@ var (
 	})
 )
 
-// ObjectCreator defines an interface that each schedulable job must implement.
-// The simplest implementation is that the concrete object just returns itself.
-type ObjectCreator interface {
-	CreateObject(name, namespace string) runtime.Object
-}
-
-// Type defines what schedule type this is.
-type Type string
-
-// Job contains all necessary information to create a schedule.
-type Job struct {
-	Type     Type
-	Schedule string
-	Object   ObjectCreator
-}
-
-// JobList contains a slice of jobs and job.Config to actually apply the
-// the job objects.
-type JobList struct {
-	Jobs   []Job
-	Config job.Config
-}
-
-// Scheduler handles all the schedules.
-type Scheduler struct {
-	cron                *cron.Cron
-	registeredSchedules map[string][]int
-	mutex               sync.Mutex
-}
-
 func init() {
 	// Register custom metrics with the global prometheus registry
 	metrics.Registry.MustRegister(scheduleGauge)
@@ -75,51 +69,59 @@ func init() {
 // GetScheduler returns the scheduler singleton instance.
 func GetScheduler() *Scheduler {
 	if scheduler == nil {
-		scheduler = &Scheduler{
-			cron:                cron.New(),
-			registeredSchedules: make(map[string][]int),
-			mutex:               sync.Mutex{},
-		}
+		scheduler = newScheduler()
 		scheduler.cron.Start()
 	}
 
 	return scheduler
 }
 
-// AddSchedules will add the given schedule to the running cron.
-func (s *Scheduler) AddSchedules(jobs JobList) error {
+func newScheduler() *Scheduler {
+	return &Scheduler{
+		cron:                cron.New(),
+		registeredSchedules: make(map[string][]scheduleRef),
+		mutex:               sync.Mutex{},
+	}
+}
+
+// SyncSchedules will add the given schedule to the running cron.
+func (s *Scheduler) SyncSchedules(jobs JobList) error {
 
 	namespacedName := types.NamespacedName{
 		Name:      jobs.Config.Obj.GetMetaObject().GetName(),
 		Namespace: jobs.Config.Obj.GetMetaObject().GetNamespace(),
 	}
 
+	s.RemoveSchedules(namespacedName)
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
-
-	if len(s.registeredSchedules[namespacedName.String()]) > 0 {
-		return nil
-	}
-
-	jobIDs := make([]int, len(jobs.Jobs))
-
-	for i, jb := range jobs.Jobs {
-
-		jobs.Config.Log.Info("registering schedule for", "type", jb.Type, "schedule", jb.Schedule)
-
-		id, err := s.cron.AddFunc(jb.Schedule, func() {
-			jobs.Config.Log.Info("running schedule for", "jb", jb.Type)
-			s.createObject(jb.Type, namespacedName.Namespace, jb.Object, jobs.Config)
-		})
-		if err != nil {
+	for _, jb := range jobs.Jobs {
+		jobs.Config.Log.Info("registering schedule for", "type", jb.JobType, "schedule", jb.Schedule)
+		if err := s.addSchedule(jb, namespacedName, func() {
+			jobs.Config.Log.Info("running schedule for", "jb", jb.JobType)
+			s.createObject(jb.JobType, namespacedName.Namespace, jb.Object, jobs.Config)
+		}); err != nil {
 			return err
 		}
-		jobIDs[i] = int(id)
 	}
 
-	s.registeredSchedules[namespacedName.String()] = jobIDs
-
 	s.incRegisteredSchedulesGauge(namespacedName.Namespace)
+	return nil
+}
+
+// addSchedule adds the given newJobs to the cron scheduler
+func (s *Scheduler) addSchedule(jb Job, namespacedName types.NamespacedName, cmd func()) error {
+	id, err := s.cron.AddFunc(jb.Schedule, cmd)
+	if err != nil {
+		return err
+	}
+	schedules := s.registeredSchedules[namespacedName.String()]
+	s.registeredSchedules[namespacedName.String()] = append(schedules, scheduleRef{
+		EntryID:  id,
+		JobType:  jb.JobType,
+		Schedule: jb.Schedule,
+		Command:  cmd,
+	})
 	return nil
 }
 
@@ -127,19 +129,15 @@ func (s *Scheduler) AddSchedules(jobs JobList) error {
 func (s *Scheduler) RemoveSchedules(namespacedName types.NamespacedName) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
-	schedules, found := s.registeredSchedules[namespacedName.String()]
-	if !found {
-		return
-	}
-	for _, id := range schedules {
-		s.cron.Remove(cron.EntryID(id))
+	for _, ref := range s.registeredSchedules[namespacedName.String()] {
+		s.cron.Remove(ref.EntryID)
 	}
 	delete(s.registeredSchedules, namespacedName.String())
 
 	s.decRegisteredSchedulesGauge(namespacedName.Namespace)
 }
 
-func (s *Scheduler) createObject(jobType Type, namespace string, obj ObjectCreator, config job.Config) {
+func (s *Scheduler) createObject(jobType k8upv1alpha1.JobType, namespace string, obj ObjectCreator, config job.Config) {
 
 	name := fmt.Sprintf("%sjob-%d", jobType, time.Now().Unix())
 
@@ -158,7 +156,7 @@ func (s *Scheduler) createObject(jobType Type, namespace string, obj ObjectCreat
 
 	err = config.Client.Create(config.CTX, rtObj)
 	if err != nil {
-		config.Log.Error(err, "could not trigger k8up job", "name", namespace+"/"+name)
+		config.Log.Error(err, "could not trigger k8up newJobs", "name", namespace+"/"+name)
 	}
 
 }
