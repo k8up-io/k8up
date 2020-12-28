@@ -2,16 +2,18 @@ package handler
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/imdario/mergo"
-	k8upv1alpha1 "github.com/vshn/k8up/api/v1alpha1"
-	"github.com/vshn/k8up/cfg"
-	"github.com/vshn/k8up/job"
-	"github.com/vshn/k8up/scheduler"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
-	"strings"
+
+	k8upv1alpha1 "github.com/vshn/k8up/api/v1alpha1"
+	"github.com/vshn/k8up/cfg"
+	"github.com/vshn/k8up/job"
+	"github.com/vshn/k8up/scheduler"
 )
 
 const (
@@ -52,6 +54,7 @@ func (s *ScheduleHandler) Handle() error {
 
 	jobList := s.createJobList()
 
+	scheduler.GetScheduler().RemoveSchedules(namespacedName)
 	err = scheduler.GetScheduler().AddSchedules(jobList)
 	if err != nil {
 		return fmt.Errorf("cannot add to cron: %w", err)

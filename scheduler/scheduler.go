@@ -86,8 +86,7 @@ func GetScheduler() *Scheduler {
 	return scheduler
 }
 
-// AddSchedules will add the given schedule to the running cron. It returns the
-// id of the job. That can be used to remove it later.
+// AddSchedules will add the given schedule to the running cron.
 func (s *Scheduler) AddSchedules(jobs JobList) error {
 
 	namespacedName := types.NamespacedName{
@@ -106,7 +105,7 @@ func (s *Scheduler) AddSchedules(jobs JobList) error {
 
 	for i, jb := range jobs.Jobs {
 
-		jobs.Config.Log.Info("registering schedule for", "type", jb.Type)
+		jobs.Config.Log.Info("registering schedule for", "type", jb.Type, "schedule", jb.Schedule)
 
 		id, err := s.cron.AddFunc(jb.Schedule, func() {
 			jobs.Config.Log.Info("running schedule for", "jb", jb.Type)
@@ -124,11 +123,15 @@ func (s *Scheduler) AddSchedules(jobs JobList) error {
 	return nil
 }
 
-// RemoveSchedules will remove the schedules with the given types.NamespacedName.
+// RemoveSchedules will remove the schedules with the given types.NamespacedName if existing.
 func (s *Scheduler) RemoveSchedules(namespacedName types.NamespacedName) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
-	for _, id := range s.registeredSchedules[namespacedName.String()] {
+	schedules, found := s.registeredSchedules[namespacedName.String()]
+	if !found {
+		return
+	}
+	for _, id := range schedules {
 		s.cron.Remove(cron.EntryID(id))
 	}
 	delete(s.registeredSchedules, namespacedName.String())
