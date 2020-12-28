@@ -71,7 +71,7 @@ func (p *PreBackup) Start() error {
 func (p *PreBackup) getPodTemplates() (*k8upv1alpha1.PreBackupPodList, error) {
 	podList := &k8upv1alpha1.PreBackupPodList{}
 
-	err := p.Client.List(p.CTX, podList)
+	err := p.Client.List(p.CTX, podList, client.InNamespace(p.Obj.GetMetaObject().GetNamespace()))
 	if err != nil {
 		return nil, fmt.Errorf("could not list pod templates: %w", err)
 	}
