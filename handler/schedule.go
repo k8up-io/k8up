@@ -2,16 +2,18 @@ package handler
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/imdario/mergo"
-	k8upv1alpha1 "github.com/vshn/k8up/api/v1alpha1"
-	"github.com/vshn/k8up/cfg"
-	"github.com/vshn/k8up/job"
-	"github.com/vshn/k8up/scheduler"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
-	"strings"
+
+	k8upv1alpha1 "github.com/vshn/k8up/api/v1alpha1"
+	"github.com/vshn/k8up/cfg"
+	"github.com/vshn/k8up/job"
+	"github.com/vshn/k8up/scheduler"
 )
 
 const (
@@ -52,7 +54,8 @@ func (s *ScheduleHandler) Handle() error {
 
 	jobList := s.createJobList()
 
-	err = scheduler.GetScheduler().AddSchedules(jobList)
+	scheduler.GetScheduler().RemoveSchedules(namespacedName)
+	err = scheduler.GetScheduler().SyncSchedules(jobList)
 	if err != nil {
 		return fmt.Errorf("cannot add to cron: %w", err)
 	}
@@ -78,40 +81,45 @@ func (s *ScheduleHandler) createJobList() scheduler.JobList {
 
 	if s.schedule.Spec.Archive != nil {
 		s.schedule.Spec.Archive.ArchiveSpec.Resources = s.mergeResourcesWithDefaults(s.schedule.Spec.Archive.Resources)
+		jobType := k8upv1alpha1.ArchiveType
 		jobList.Jobs = append(jobList.Jobs, scheduler.Job{
-			Type:     scheduler.ArchiveType,
-			Schedule: s.getEffectiveSchedule(k8upv1alpha1.ArchiveType, s.schedule.Spec.Archive.Schedule),
+			JobType:  jobType,
+			Schedule: s.getEffectiveSchedule(jobType, s.schedule.Spec.Archive.Schedule),
 			Object:   s.schedule.Spec.Archive.ArchiveSpec,
 		})
 	}
 	if s.schedule.Spec.Backup != nil {
 		s.schedule.Spec.Backup.BackupSpec.Resources = s.mergeResourcesWithDefaults(s.schedule.Spec.Backup.Resources)
+		jobType := k8upv1alpha1.BackupType
 		jobList.Jobs = append(jobList.Jobs, scheduler.Job{
-			Type:     scheduler.BackupType,
+			JobType:  jobType,
 			Schedule: s.getEffectiveSchedule(k8upv1alpha1.BackupType, s.schedule.Spec.Backup.Schedule),
 			Object:   s.schedule.Spec.Backup.BackupSpec,
 		})
 	}
 	if s.schedule.Spec.Check != nil {
 		s.schedule.Spec.Check.CheckSpec.Resources = s.mergeResourcesWithDefaults(s.schedule.Spec.Check.Resources)
+		jobType := k8upv1alpha1.CheckType
 		jobList.Jobs = append(jobList.Jobs, scheduler.Job{
-			Type:     scheduler.CheckType,
+			JobType:  jobType,
 			Schedule: s.getEffectiveSchedule(k8upv1alpha1.CheckType, s.schedule.Spec.Check.Schedule),
 			Object:   s.schedule.Spec.Check.CheckSpec,
 		})
 	}
 	if s.schedule.Spec.Restore != nil {
 		s.schedule.Spec.Restore.RestoreSpec.Resources = s.mergeResourcesWithDefaults(s.schedule.Spec.Restore.Resources)
+		jobType := k8upv1alpha1.RestoreType
 		jobList.Jobs = append(jobList.Jobs, scheduler.Job{
-			Type:     scheduler.RestoreType,
+			JobType:  jobType,
 			Schedule: s.getEffectiveSchedule(k8upv1alpha1.RestoreType, s.schedule.Spec.Restore.Schedule),
 			Object:   s.schedule.Spec.Restore.RestoreSpec,
 		})
 	}
 	if s.schedule.Spec.Prune != nil {
 		s.schedule.Spec.Prune.PruneSpec.Resources = s.mergeResourcesWithDefaults(s.schedule.Spec.Prune.Resources)
+		jobType := k8upv1alpha1.PruneType
 		jobList.Jobs = append(jobList.Jobs, scheduler.Job{
-			Type:     scheduler.PruneType,
+			JobType:  jobType,
 			Schedule: s.getEffectiveSchedule(k8upv1alpha1.PruneType, s.schedule.Spec.Prune.Schedule),
 			Object:   s.schedule.Spec.Prune.PruneSpec,
 		})
