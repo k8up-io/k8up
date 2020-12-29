@@ -30,15 +30,6 @@ dockers:
   - "{{ if not .Prerelease }}docker.io/vshn/k8up:latest{{ end }}"
   - "{{ if not .Prerelease }}quay.io/vshn/k8up:latest{{ end }}"
 
-changelog:
-  sort: asc
-  filters:
-    exclude:
-    - '^(D|d)oc(s|umentation):'
-    - '^(T|t)ests?:'
-    - '^(R|r)efactor:'
-    - '^Merge pull request'
-
 release:
   prerelease: auto
   github:

@@ -29,9 +29,21 @@ jobs:
       run: docker login -u "${{ secrets.QUAY_IO_USERNAME }}" -p "${{ secrets.QUAY_IO_PASSWORD }}" quay.io
     - name: Generate artifacts
       run: make crd
+    - name: Build changelog from PRs with labels
+      id: build_changelog
+      uses: mikepenz/release-changelog-builder-action@v1.2.3
+      with:
+        configuration: ".github/changelog-configuration.json"
+        # Prereleases still get a changelog, but the next full release gets a diff since the last full release,
+        # combining possible changelogs of all previous prereleases inbetween.
+        ignorePreReleases: "true"
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Make release notes
+      run: echo "${{steps.build_changelog.outputs.changelog}}" > .github/release-notes.md
     - name: Publish releases
       uses: goreleaser/goreleaser-action@v2
       with:
-        args: release
+        args: release --release-notes .github/release-notes.md
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

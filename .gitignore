@@ -38,6 +38,7 @@ cmd/restic/restic
 
 bin/
 dist/
+.github/release-notes.md
 k8up-crd*.yaml
 k8up
 testbin/
