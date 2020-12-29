@@ -9,10 +9,11 @@ import (
 	"github.com/go-logr/logr"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
-	"github.com/vshn/k8up/api/v1alpha1"
 	batchv1 "k8s.io/api/batch/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/metrics"
+
+	"github.com/vshn/k8up/api/v1alpha1"
 )
 
 const (
@@ -64,8 +65,14 @@ type ObservableJob struct {
 	Event      EventType
 	Exclusive  bool
 	Repository string
-	callback   func()
+	callbacks  []ObservableJobCallback
 }
+
+// ObservableJobCallback is invoked on certain events of the ObservableJob.
+// The related ObservableJob is passed as argument.
+// Check the ObservableJob.Event property if you need to know the exact event on which
+// your ObservableJobCallback was invoked.
+type ObservableJobCallback func(ObservableJob)
 
 // EventType describes an event for the observer
 type EventType string
@@ -92,49 +99,50 @@ func GetObserver() *Observer {
 
 func (o *Observer) run() {
 	for event := range o.events {
+		o.handleEvent(event)
+	}
+}
 
-		jobName := o.getJobName(event.Job)
+func (o *Observer) handleEvent(event ObservableJob) {
+	jobName := o.getJobName(event.Job)
 
-		o.mutex.Lock()
+	o.mutex.Lock()
+	defer o.mutex.Unlock()
 
-		existingJob, exists := o.observedJobs[jobName]
+	existingJob, exists := o.observedJobs[jobName]
 
-		// we need to add the callbacks to the new event so they won't get lost
+	// we need to add the callbacks to the new event so they won't get lost
+	if exists {
+		event.callbacks = existingJob.callbacks
+	}
+
+	o.log.Info("new event on observed job", "event", event.Event, "jobName", jobName)
+
+	switch event.Event {
+	case Failed:
+		incFailureCounters(event.Job.Namespace)
+		invokeCallbacks(event)
+	case Suceeded:
+		// Only report succeeded jobs we've already seen to prevent
+		// reporting succeeded jobs on operator restart
 		if exists {
-			event.callback = existingJob.callback
-		}
-
-		o.log.Info("new event on observed job", "event", event.Event, "jobName", jobName)
-
-		switch event.Event {
-		case Failed:
-			if event.callback != nil {
-				event.callback()
-			}
-			incFailureCounters(event.Job.Namespace)
-		case Suceeded:
-			// only report back succeeded jobs we've already seen. Will prevent
-			// reporting succeeded jobs on operator restart
-			if exists {
-				o.log.Info("job succeeded", "jobName", jobName)
-				o.observedJobs[jobName] = event
-				incSuccessCounters(event.Job.Namespace)
-				if event.callback != nil {
-					event.callback()
-				}
-			}
-		case Delete:
-			o.log.Info("deleting job from observer", "jobName", jobName)
-			delete(o.observedJobs, jobName)
-			if event.callback != nil {
-				event.callback()
-			}
-		default:
+			o.log.Info("job succeeded", "jobName", jobName)
 			o.observedJobs[jobName] = event
+			incSuccessCounters(event.Job.Namespace)
+			invokeCallbacks(event)
 		}
+	case Delete:
+		o.log.Info("deleting job from observer", "jobName", jobName)
+		delete(o.observedJobs, jobName)
+		invokeCallbacks(event)
+	default:
+		o.observedJobs[jobName] = event
+	}
+}
 
-		o.mutex.Unlock()
-
+func invokeCallbacks(event ObservableJob) {
+	for _, callback := range event.callbacks {
+		callback(event)
 	}
 }
 
@@ -234,14 +242,14 @@ func (o *Observer) IsConcurrentJobsLimitReached(jobType v1alpha1.JobType, limit 
 }
 
 // RegisterCallback will register a function to the given observed job.
-// The callback will be executed if the job is, successful, failed or deleted.
-func (o *Observer) RegisterCallback(name string, callback func()) {
+// The callbacks will be executed if the job is successful, failed or deleted.
+func (o *Observer) RegisterCallback(name string, callback ObservableJobCallback) {
 	o.mutex.Lock()
 	defer o.mutex.Unlock()
 	if event, exists := o.observedJobs[name]; !exists {
-		o.observedJobs[name] = ObservableJob{callback: callback}
+		o.observedJobs[name] = ObservableJob{callbacks: []ObservableJobCallback{callback}}
 	} else {
-		event.callback = callback
+		event.callbacks = append(event.callbacks, callback)
 		o.observedJobs[name] = event
 	}
 }

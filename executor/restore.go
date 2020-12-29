@@ -52,8 +52,8 @@ func (r *RestoreExecutor) Execute() error {
 }
 
 func (r *RestoreExecutor) startRestore(restore *k8upv1alpha1.Restore) {
-	name := types.NamespacedName{Namespace: r.Obj.GetMetaObject().GetNamespace(), Name: r.Obj.GetMetaObject().GetName()}
-	r.setRestoreCallback(name, restore)
+	r.registerRestoreCallback(restore)
+	r.RegisterJobSucceededConditionCallback()
 
 	restoreJob, err := r.buildRestoreObject(restore)
 	if err != nil {
@@ -73,8 +73,9 @@ func (r *RestoreExecutor) startRestore(restore *k8upv1alpha1.Restore) {
 	r.SetStarted(ConditionJobCreated, "the job '%v/%v' was created", restoreJob.Namespace, restoreJob.Name)
 }
 
-func (r *RestoreExecutor) setRestoreCallback(name types.NamespacedName, restore *k8upv1alpha1.Restore) {
-	observer.GetObserver().RegisterCallback(name.String(), func() {
+func (r *RestoreExecutor) registerRestoreCallback(restore *k8upv1alpha1.Restore) {
+	name := r.GetJobNamespacedName()
+	observer.GetObserver().RegisterCallback(name.String(), func(_ observer.ObservableJob) {
 		r.cleanupOldRestores(name, restore)
 	})
 }

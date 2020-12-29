@@ -58,8 +58,8 @@ func (a *ArchiveExecutor) Execute() error {
 }
 
 func (a *ArchiveExecutor) startArchive(archiveJob *batchv1.Job, archive *k8upv1alpha1.Archive) {
-	name := types.NamespacedName{Namespace: a.Obj.GetMetaObject().GetNamespace(), Name: a.Obj.GetMetaObject().GetName()}
-	a.setArchiveCallback(name, archive)
+	a.registerArchiveCallback(archive)
+	a.RegisterJobSucceededConditionCallback()
 
 	archiveJob.Spec.Template.Spec.Containers[0].Env = a.setupEnvVars(archive)
 	archiveJob.Spec.Template.Spec.Containers[0].Args = a.setupArgs(archive)
@@ -76,8 +76,9 @@ func (a *ArchiveExecutor) startArchive(archiveJob *batchv1.Job, archive *k8upv1a
 	a.SetStarted(ConditionJobCreated, "the job '%v/%v' was created", archiveJob.Namespace, archiveJob.Name)
 }
 
-func (a *ArchiveExecutor) setArchiveCallback(name types.NamespacedName, archive *k8upv1alpha1.Archive) {
-	observer.GetObserver().RegisterCallback(name.String(), func() {
+func (a *ArchiveExecutor) registerArchiveCallback(archive *k8upv1alpha1.Archive) {
+	name := a.GetJobNamespacedName()
+	observer.GetObserver().RegisterCallback(name.String(), func(_ observer.ObservableJob) {
 		a.cleanupOldArchives(name, archive)
 	})
 }
