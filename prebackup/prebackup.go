@@ -137,7 +137,7 @@ func (p *PreBackup) startAndWaitForReady(deployments []appsv1.Deployment) error 
 		deployment := deployment
 
 		err := p.Client.Create(p.CTX, &deployment)
-		if err != nil {
+		if err != nil && !errors.IsAlreadyExists(err) {
 			err := fmt.Errorf("error creating pre backup pod '%v/%v': %w", namespace, name, err)
 			p.SetConditionFalse(ConditionPreBackupPodsReady, err.Error())
 			return err
@@ -208,7 +208,7 @@ func (p *PreBackup) waitForReady(watcher watch.Interface) error {
 				return nil
 			}
 
-			p.Log.Info("waiting for command pod to get ready", "name", deployment.Name, "namespace", deployment.Namespace)
+			p.Log.Info("waiting for command pod to get ready", "deployment", fmt.Sprintf("%s/%s", deployment.Namespace, deployment.Name))
 
 		case watch.Error:
 
@@ -219,8 +219,10 @@ func (p *PreBackup) waitForReady(watcher watch.Interface) error {
 			}
 			return fmt.Errorf("there was an unknown error while starting pre backup pod '%v/%v'", deployment.Namespace, deployment.Name)
 
+		case watch.Added:
+			p.Log.V(1).Info("ignoring event", "deployment", fmt.Sprintf("%s/%s", deployment.Namespace, deployment.Name), "event type", event.Type)
 		default:
-			p.Log.Info("unexpected event during deployment watch ", "name", deployment.Name, "event type", event.Type, "namespace", deployment.Namespace)
+			p.Log.Info("unexpected event during deployment watch ", "deployment", fmt.Sprintf("%s/%s", deployment.Namespace, deployment.Name), "event type", event.Type)
 		}
 	}
 
