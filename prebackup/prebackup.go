@@ -137,7 +137,7 @@ func (p *PreBackup) startAndWaitForReady(deployments []appsv1.Deployment) error 
 		deployment := deployment
 
 		err := p.Client.Create(p.CTX, &deployment)
-		if err != nil {
+		if err != nil && !errors.IsAlreadyExists(err) {
 			err := fmt.Errorf("error creating pre backup pod '%v/%v': %w", namespace, name, err)
 			p.SetConditionFalse(ConditionPreBackupPodsReady, err.Error())
 			return err
