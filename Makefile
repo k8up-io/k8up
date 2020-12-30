@@ -170,7 +170,7 @@ $(KIND_BIN): export KUBECONFIG = $(KIND_KUBECONFIG)
 $(KIND_BIN): $(TESTBIN_DIR)
 	curl -Lo $(KIND_BIN) "https://kind.sigs.k8s.io/dl/v$(KIND_VERSION)/kind-$$(uname)-amd64"
 	@chmod +x $(KIND_BIN)
-	$(KIND_BIN) create cluster --name $(KIND_CLUSTER) --image kindest/node:$(KIND_NODE_VERSION) --config=e2e/kind-config.yaml
+	$(KIND_BIN) create cluster --name $(KIND_CLUSTER) --image kindest/node:$(KIND_NODE_VERSION)
 	@kubectl version
 	@kubectl cluster-info
 
