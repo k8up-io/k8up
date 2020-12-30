@@ -1,0 +1,29 @@
+{
+    "pr_template": "- ${{TITLE}} (#${{NUMBER}})",
+    "categories": [
+        {
+            "title": "## 🚀 Features",
+            "labels": ["enhancement", "feature"]
+        },
+        {
+            "title": "## 🛠️ Minor Changes",
+            "labels": ["change"]
+        },
+        {
+            "title": "## 🔎 Breaking Changes",
+            "labels": ["breaking"]
+        },
+        {
+            "title": "## 🐛 Fixes",
+            "labels": ["bug", "fix"]
+        },
+        {
+            "title": "## 📄 Documentation",
+            "labels": ["documentation"]
+        },
+        {
+            "title": "## 🔗 Dependency Updates",
+            "labels": ["dependency"]
+        }
+    ]
+}
