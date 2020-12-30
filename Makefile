@@ -1,5 +1,8 @@
+# Set Shell to bash, otherwise some targets fail with dash/zsh etc.
+SHELL := /bin/bash
+
 # Current Operator version
-VERSION ?= 0.0.1
+VERSION ?= $(shell date +%Y-%m-%d_%H-%M-%S)
 # Default bundle image tag
 BUNDLE_IMG ?= controller-bundle:$(VERSION)
 # Options for 'bundle-build'
@@ -28,17 +31,17 @@ KIND_KUBECONFIG ?= ./testbin/kind-kubeconfig
 KIND_NODE_VERSION ?= v1.18.8
 KIND_CLUSTER ?= k8up-$(KIND_NODE_VERSION)
 KIND_KUBECTL_ARGS ?= --validate=true
-KIND_REGISTRY_NAME ?= kind-registry
-KIND_REGISTRY_PORT ?= 5000
 
 SETUP_E2E_TEST := testbin/.setup_e2e_test
+E2E_TAG ?= e2e_$(VERSION)
+E2E_REPO ?= local.dev/k8up/e2e
 
 ENABLE_LEADER_ELECTION ?= false
 
 # Image URL to use all building/pushing image targets
 DOCKER_IMG ?= docker.io/vshn/k8up:$(IMG_TAG)
 QUAY_IMG ?= quay.io/vshn/k8up:$(IMG_TAG)
-E2E_IMG ?= localhost:$(KIND_REGISTRY_PORT)/vshn/k8up:e2e
+E2E_IMG := $(E2E_REPO):$(E2E_TAG)
 
 build_cmd ?= CGO_ENABLED=0 go build -o $(BIN_FILENAME) main.go
 
@@ -48,9 +51,6 @@ GOBIN=$(shell go env GOPATH)/bin
 else
 GOBIN=$(shell go env GOBIN)
 endif
-
-# Set Shell to bash, otherwise some targets fail with dash/zsh etc.
-SHELL := /bin/bash
 
 KUSTOMIZE ?= go run sigs.k8s.io/kustomize/kustomize/v3
 KUSTOMIZE_BUILD_CRD ?= $(KUSTOMIZE) build $(CRD_ROOT_DIR)/$(CRD_SPEC_VERSION)
@@ -112,10 +112,12 @@ lint: fmt vet ## Invokes the fmt and vet targets
 	git diff --exit-code
 
 # Build the binary without running generators
+.PHONY: $(BIN_FILENAME)
 $(BIN_FILENAME):
 	$(build_cmd)
 
-docker-build: $(BIN_FILENAME) $(KIND_KUBECONFIG) ## Build the docker image
+docker-build: export GOOS = linux
+docker-build: $(BIN_FILENAME) ## Build the docker image
 	docker build . -t $(DOCKER_IMG) -t $(QUAY_IMG) -t $(E2E_IMG)
 
 docker-push: ## Push the docker image
@@ -132,8 +134,10 @@ bundle: generate ## Generate bundle manifests and metadata, then validate genera
 install_bats: ## Installs the bats util via NPM
 	$(MAKE) -C e2e install_bats
 
-e2e_test: install_bats $(SETUP_E2E_TEST) docker-build ## Runs the e2e test suite
-	docker push $(E2E_IMG)
+e2e_test: export E2E_IMAGE = $(E2E_IMG)
+e2e_test: install_bats $(SETUP_E2E_TEST) $(KIND_KUBECONFIG) docker-build ## Runs the e2e test suite
+	@$(KIND_BIN) load docker-image --name $(KIND_CLUSTER) $(E2E_IMG)
+	@docker rmi $(E2E_IMG)
 	$(MAKE) -C e2e run_bats -e KUBECONFIG=../$(KIND_KUBECONFIG)
 
 run_kind: export KUBECONFIG = $(KIND_KUBECONFIG)
@@ -154,9 +158,7 @@ clean_e2e_setup: ## Clean the e2e setup (e.g. to rerun the setup_e2e_test)
 clean: export KUBECONFIG = $(KIND_KUBECONFIG)
 clean: ## Cleans up the generated resources
 	$(KIND_BIN) delete cluster --name $(KIND_CLUSTER) || true
-	docker stop "$(KIND_REGISTRY_NAME)" || true
-	docker rm "$(KIND_REGISTRY_NAME)" || true
-	docker rmi "$(E2E_IMG)" || true
+	docker images --filter "reference=$(E2E_REPO)" --format "{{.Repository }}:{{ .Tag }}" | xargs --no-run-if-empty docker rmi || true
 	rm -r testbin/ dist/ bin/ cover.out $(BIN_FILENAME) || true
 	$(MAKE) -C e2e clean
 
@@ -168,9 +170,7 @@ $(KIND_BIN): export KUBECONFIG = $(KIND_KUBECONFIG)
 $(KIND_BIN): $(TESTBIN_DIR)
 	curl -Lo $(KIND_BIN) "https://kind.sigs.k8s.io/dl/v$(KIND_VERSION)/kind-$$(uname)-amd64"
 	@chmod +x $(KIND_BIN)
-	docker run -d --restart=always -p "$(KIND_REGISTRY_PORT):5000" --name "$(KIND_REGISTRY_NAME)" docker.io/library/registry:2
-	$(KIND_BIN) create cluster --name $(KIND_CLUSTER) --image kindest/node:$(KIND_NODE_VERSION) --config=e2e/kind-config.yaml
-	@docker network connect "kind" "$(KIND_REGISTRY_NAME)" || true
+	$(KIND_BIN) create cluster --name $(KIND_CLUSTER) --image kindest/node:$(KIND_NODE_VERSION)
 	@kubectl version
 	@kubectl cluster-info
 
