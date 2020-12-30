@@ -9,4 +9,4 @@ spec:
     spec:
       containers:
       - name: k8up
-        image: localhost:5000/vshn/k8up:e2e
+        image: $E2E_IMAGE

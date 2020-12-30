@@ -15,6 +15,7 @@ import (
 
 	"github.com/knadh/koanf"
 	"github.com/knadh/koanf/providers/env"
+
 	k8upv1alpha1 "github.com/vshn/k8up/api/v1alpha1"
 	"github.com/vshn/k8up/cfg"
 	"github.com/vshn/k8up/controllers"
@@ -48,6 +49,7 @@ func main() {
 
 	loadEnvironmentVariables()
 
+	setupLog.WithValues("version", version, "date", date, "commit", commit).Info("Starting K8up operator")
 	executor.GetExecutor()
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
@@ -120,7 +122,6 @@ func main() {
 	}
 	// +kubebuilder:scaffold:builder
 
-	setupLog.WithValues("version", version, "date", date, "commit", commit).Info("Starting K8up operator")
 	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {
 		setupLog.Error(err, "problem running K8up")
 		os.Exit(1)
