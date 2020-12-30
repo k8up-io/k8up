@@ -27,6 +27,7 @@ type BackupReconciler struct {
 // +kubebuilder:rbac:groups=backup.appuio.ch,resources=backups/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=backup.appuio.ch,resources=prebackuppods,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=backup.appuio.ch,resources=prebackuppods/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=apps,resources=deployments,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=batch,resources=jobs,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=core,resources=pods,verbs="*"
 // +kubebuilder:rbac:groups=core,resources=pods/exec,verbs="*"
