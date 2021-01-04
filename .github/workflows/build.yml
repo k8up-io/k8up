@@ -60,7 +60,7 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-go-
     - name: Run e2e tests
-      run: make crd e2e_test -e CRD_SPEC_VERSION=${{ matrix.crd-spec-version }} -e KIND_NODE_VERSION=${{ matrix.kind-node-version }} -e KIND_KUBECTL_ARGS=--validate=false
+      run: make crd e2e-test -e CRD_SPEC_VERSION=${{ matrix.crd-spec-version }} -e KIND_NODE_VERSION=${{ matrix.kind-node-version }} -e KIND_KUBECTL_ARGS=--validate=false
     - name: Show e2e debug logs
       run: cat e2e/debug/detik/*
   image:

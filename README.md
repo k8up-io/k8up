@@ -12,7 +12,8 @@
 
 K8up is a backup operator that will handle PVC and app backups on a k8s/OpenShift cluster.
 
-Just create a `schedule` and a `credentials` object in the namespace you’d like to backup. It’s that easy. K8up takes care of the rest. It also provides a Prometheus endpoint for monitoring.
+Just create a `schedule` and a `credentials` object in the namespace you’d like to backup.
+It’s that easy. K8up takes care of the rest. It also provides a Prometheus endpoint for monitoring.
 
 K8up is currently under heavy development and far from feature complete. But it should already be stable enough for production use.
 
@@ -33,12 +34,13 @@ You'll need:
 - docker
 - make
 
-These are the most common make targets: `build`, `test`, `docker-build`, `run`.
+These are the most common make targets: `build`, `test`, `docker-build`, `run`, `kind-run`.
 Run `make help` to get an overview over the relevant targets and their intentions.
 
-## Generate kubernetes code
+## Generate Kubernetes code
 
-If you make changes to the CRD structs you'll need to run code generation. This can be done with make:
+If you make changes to the CRD structs you'll need to run code generation.
+This can be done with make:
 
 ```bash
 make generate
@@ -57,7 +59,7 @@ You can run the operator in different ways:
 
 1. as a docker image (see [quickstart](https://sdk.operatorframework.io/docs/building-operators/golang/quickstart/))
 2. using `make run` (provide your own kubeconfig)
-3. using `make run_kind` (uses KIND to install a cluster in docker and provides its own kubeconfig in `testbin/`)
+3. using `make kind-run` (uses KIND to install a cluster in docker and provides its own kubeconfig in `testbin/`)
 4. using a configuration of your favorite IDE (see below for VSCode example)
 
 Example VSCode run configuration:
@@ -100,13 +102,13 @@ You need `node` and `npm` to run the tests, as it runs with [DETIK][detik].
 To run e2e tests run:
 
 ```bash
-make e2e_test
+make e2e-test
 ```
 
 To test compatibility of k8up with OpenShift 3.11 (or any other specific K8s version), you can run end-to-end tests like this:
 
 ```bash
-make e2e_test -e CRD_SPEC_VERSION=v1beta1 -e KIND_NODE_VERSION=v1.13.12
+make e2e-test -e CRD_SPEC_VERSION=v1beta1 -e KIND_NODE_VERSION=v1.13.12 -e KIND_KUBECTL_ARGS=--validate=false
 ```
 
 To remove the local KIND cluster and other resources, run
