@@ -1,4 +1,7 @@
 * xref:index.adoc[Home]
+ifeval::['{page-origin-reftype}' == 'tag']
+* https://github.com/vshn/k8up/releases/tag/{page-origin-refname}[Changelog,window=_blank]
+endif::[]
 
 .Tutorials
 include::partial$nav-tutorials.adoc[]
