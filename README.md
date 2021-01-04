@@ -97,17 +97,13 @@ K8up supports both OpenShift 3.11 clusters and newer Kubernetes clusters 1.16+.
 However, to support OpenShift 3.11 a legacy CRD definition with `apiextensions.k8s.io/v1beta1` is needed, while K8s 1.22+ only supports `apiextensions.k8s.io/v1`.
 You need `node` and `npm` to run the tests, as it runs with [DETIK][detik].
 
-First, setup a local e2e environment
-```
-make install_bats setup_e2e_test
-```
+To run e2e tests run:
 
-To run e2e tests for newer K8s versions run
 ```bash
 make e2e_test
 ```
 
-To test compatibility of k8up with OpenShift 3.11, we can run end-to-end tests as following:
+To test compatibility of k8up with OpenShift 3.11 (or any other specific K8s version), you can run end-to-end tests like this:
 
 ```bash
 make e2e_test -e CRD_SPEC_VERSION=v1beta1 -e KIND_NODE_VERSION=v1.13.12

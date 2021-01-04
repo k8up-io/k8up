@@ -27,12 +27,12 @@ CRD_ROOT_DIR ?= config/crd/apiextensions.k8s.io
 TESTBIN_DIR ?= ./testbin/bin
 KIND_BIN ?= $(TESTBIN_DIR)/kind
 KIND_VERSION ?= 0.9.0
-KIND_KUBECONFIG ?= ./testbin/kind-kubeconfig
 KIND_NODE_VERSION ?= v1.18.8
+KIND_KUBECONFIG ?= ./testbin/kind-kubeconfig-$(KIND_NODE_VERSION)
 KIND_CLUSTER ?= k8up-$(KIND_NODE_VERSION)
 KIND_KUBECTL_ARGS ?= --validate=true
 
-SETUP_E2E_TEST := testbin/.setup_e2e_test
+SETUP_KIND := testbin/.kind_setup_complete
 E2E_TAG ?= e2e_$(VERSION)
 E2E_REPO ?= local.dev/k8up/e2e
 
@@ -131,56 +131,70 @@ bundle: generate ## Generate bundle manifests and metadata, then validate genera
 	$(KUSTOMIZE) build config/manifests | operator-sdk generate bundle -q --overwrite --version $(VERSION) $(BUNDLE_METADATA_OPTS)
 	operator-sdk bundle validate ./bundle
 
-install_bats: ## Installs the bats util via NPM
-	$(MAKE) -C e2e install_bats
+clean: export KUBECONFIG = $(KIND_KUBECONFIG)
+clean: clean_e2e clean_kind ## Cleans up the generated resources
+	rm -r testbin/ dist/ bin/ cover.out $(BIN_FILENAME) || true
 
-e2e_test: export E2E_IMAGE = $(E2E_IMG)
-e2e_test: install_bats $(SETUP_E2E_TEST) $(KIND_KUBECONFIG) docker-build ## Runs the e2e test suite
-	@$(KIND_BIN) load docker-image --name $(KIND_CLUSTER) $(E2E_IMG)
-	@docker rmi $(E2E_IMG)
-	$(MAKE) -C e2e run_bats -e KUBECONFIG=../$(KIND_KUBECONFIG)
+.PHONY: help
+help: ## Show this help
+	@grep -E -h '\s##\s' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
 
+###
+### KIND
+###
+
+.PHONY: rund_kind
 run_kind: export KUBECONFIG = $(KIND_KUBECONFIG)
 run_kind: export BACKUP_ENABLE_LEADER_ELECTION = $(ENABLE_LEADER_ELECTION)
-run_kind: $(SETUP_E2E_TEST) ## Runs the operator in kind
+run_kind: $(SETUP_KIND) ## Runs the operator in kind
 	go run ./main.go
 
+$(KIND_BIN): export KUBECONFIG = $(KIND_KUBECONFIG)
+$(KIND_BIN): $(TESTBIN_DIR)
+	curl -Lo $(KIND_BIN) "https://kind.sigs.k8s.io/dl/v$(KIND_VERSION)/kind-$$(uname)-amd64"
+	@chmod +x $(KIND_BIN)
+
+$(KIND_KUBECONFIG): export KUBECONFIG = $(KIND_KUBECONFIG)
+$(KIND_KUBECONFIG): $(KIND_BIN)
+	$(KIND_BIN) create cluster --name $(KIND_CLUSTER) --image kindest/node:$(KIND_NODE_VERSION)
+	@kubectl version
+	@kubectl cluster-info
+
+$(SETUP_KIND): export KUBECONFIG = $(KIND_KUBECONFIG)
+$(SETUP_KIND): $(KIND_KUBECONFIG)
+	@kubectl config use-context kind-$(KIND_CLUSTER)
+	@$(KUSTOMIZE_BUILD_CRD) | kubectl apply $(KIND_KUBECTL_ARGS) -f -
+	@touch $(SETUP_KIND)
+
+.PHONY: clean_kind
+clean_kind: export KUBECONFIG = $(KIND_KUBECONFIG)
+clean_kind: ## Remove the KIND Cluster
+	$(KIND_BIN) delete cluster --name $(KIND_CLUSTER) || true
+	@rm $(SETUP_KIND) || true
+
+###
+### E2E Test
+###
+
+e2e_test: export E2E_IMAGE = $(E2E_IMG)
+e2e_test: setup_e2e_test $(KIND_KUBECONFIG) ## Runs the e2e test suite
+	$(MAKE) -C e2e run_bats -e KUBECONFIG=../$(KIND_KUBECONFIG)
+
 .PHONY: setup_e2e_test
-setup_e2e_test: $(SETUP_E2E_TEST) ## Run the e2e setup
+setup_e2e_test: $(SETUP_KIND) docker-build ## Run the e2e setup
+	$(MAKE) -C e2e install_bats
+	@$(KIND_BIN) load docker-image --name $(KIND_CLUSTER) $(E2E_IMG)
 
 .PHONY: clean_e2e_setup
 clean_e2e_setup: export KUBECONFIG = $(KIND_KUBECONFIG)
 clean_e2e_setup: ## Clean the e2e setup (e.g. to rerun the setup_e2e_test)
 	kubectl delete ns k8up-system --ignore-not-found --force --grace-period=0 || true
 	@$(KUSTOMIZE_BUILD_CRD) | kubectl delete -f - || true
-	@rm $(SETUP_E2E_TEST) || true
 
-clean: export KUBECONFIG = $(KIND_KUBECONFIG)
-clean: ## Cleans up the generated resources
-	$(KIND_BIN) delete cluster --name $(KIND_CLUSTER) || true
+.PHONY: clean_e2e
+clean_e2e: clean_e2e_setup
 	docker images --filter "reference=$(E2E_REPO)" --format "{{.Repository }}:{{ .Tag }}" | xargs --no-run-if-empty docker rmi || true
-	rm -r testbin/ dist/ bin/ cover.out $(BIN_FILENAME) || true
 	$(MAKE) -C e2e clean
-
-.PHONY: help
-help: ## Show this help
-	@grep -E -h '\s##\s' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
-
-$(KIND_BIN): export KUBECONFIG = $(KIND_KUBECONFIG)
-$(KIND_BIN): $(TESTBIN_DIR)
-	curl -Lo $(KIND_BIN) "https://kind.sigs.k8s.io/dl/v$(KIND_VERSION)/kind-$$(uname)-amd64"
-	@chmod +x $(KIND_BIN)
-	$(KIND_BIN) create cluster --name $(KIND_CLUSTER) --image kindest/node:$(KIND_NODE_VERSION)
-	@kubectl version
-	@kubectl cluster-info
-
-$(KIND_KUBECONFIG): $(KIND_BIN)
-
-$(SETUP_E2E_TEST): export KUBECONFIG = $(KIND_KUBECONFIG)
-$(SETUP_E2E_TEST): $(KIND_BIN)
-	@kubectl config use-context kind-$(KIND_CLUSTER)
-	@$(KUSTOMIZE_BUILD_CRD) | kubectl apply $(KIND_KUBECTL_ARGS) -f -
-	@touch $(SETUP_E2E_TEST)
 
 ###
 ### Documentation
