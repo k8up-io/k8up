@@ -11,3 +11,11 @@ A cluster wide Kubernetes Operator is responsible for processing the `Backup` ob
 the backup schedules. When it's time to do a backup, the operator scans the namespace for matching
 PVCs and creates a backup job in the corresponding namespace, while mounting the matching PVCs under
 `/data/<pvcname>`. Restic then backups the data from this location to the configured endpoint.
+
+== Internal Architecture
+
+The following diagram shows a high-level architecture of K8up internals.
+This is mainly aimed at developers helping to understand the code.
+But it could be interesting for anyone trying to understand an issue they may face with K8up.
+
+image::architecture.drawio.svg[]
