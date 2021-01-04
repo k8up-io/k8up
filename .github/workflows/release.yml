@@ -31,16 +31,15 @@ jobs:
       run: make crd
     - name: Build changelog from PRs with labels
       id: build_changelog
-      uses: mikepenz/release-changelog-builder-action@v1.2.3
+      uses: mikepenz/release-changelog-builder-action@v1.3.0
       with:
         configuration: ".github/changelog-configuration.json"
         # Prereleases still get a changelog, but the next full release gets a diff since the last full release,
         # combining possible changelogs of all previous prereleases inbetween.
         ignorePreReleases: "true"
+        outputFile: .github/release-notes.md
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    - name: Make release notes
-      run: echo "${{steps.build_changelog.outputs.changelog}}" > .github/release-notes.md
     - name: Publish releases
       uses: goreleaser/goreleaser-action@v2
       with:
