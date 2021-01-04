@@ -40,7 +40,7 @@ Run `make help` to get an overview over the relevant targets and their intention
 
 If you make changes to the CRD structs you'll need to run code generation. This can be done with make:
 
-```
+```bash
 make generate
 ```
 
@@ -62,7 +62,7 @@ You can run the operator in different ways:
 
 Example VSCode run configuration:
 
-```
+```json
 {
   // Use IntelliSense to learn about possible attributes.
   // Hover to view descriptions of existing attributes.
@@ -103,23 +103,26 @@ make install_bats setup_e2e_test
 ```
 
 To run e2e tests for newer K8s versions run
-```
+```bash
 make e2e_test
 ```
 
 To test compatibility of k8up with OpenShift 3.11, we can run end-to-end tests as following:
-```
+
+```bash
 make e2e_test -e CRD_SPEC_VERSION=v1beta1 -e KIND_NODE_VERSION=v1.13.12
 ```
 
 To remove the local KIND cluster and other resources, run
-```
+
+```bash
 make clean
 ```
 
 ## Example configurations
 
-There are a number of example configurations in [`config/samples`](config/samples). Apply them using `kubectl apply -f config/samples/somesample.yaml`
+There are a number of example configurations in [`config/samples`](config/samples).
+Apply them using `kubectl apply -f config/samples/somesample.yaml`
 
 [build]: https://github.com/vshn/k8up/actions?query=workflow%3ABuild
 [releases]: https://github.com/vshn/k8up/releases
