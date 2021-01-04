@@ -37,10 +37,9 @@ jobs:
         # Prereleases still get a changelog, but the next full release gets a diff since the last full release,
         # combining possible changelogs of all previous prereleases inbetween.
         ignorePreReleases: "true"
+        outputFile: .github/release-notes.md
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    - name: Make release notes
-      run: echo "${{steps.build_changelog.outputs.changelog}}" > .github/release-notes.md
     - name: Publish releases
       uses: goreleaser/goreleaser-action@v2
       with:
