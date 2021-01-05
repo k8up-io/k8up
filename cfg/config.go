@@ -30,10 +30,10 @@ type Configuration struct {
 	GlobalRestoreS3AccessKey         string `koanf:"globalrestores3accesskeyid"`
 	GlobalRestoreS3Bucket            string `koanf:"globalrestores3bucket"`
 	GlobalRestoreS3Endpoint          string `koanf:"globalrestores3endpoint"`
-	GlobalRestoreS3SecretAccessKey   string `koanf:"globalrestores3secretaccesskeyid"`
+	GlobalRestoreS3SecretAccessKey   string `koanf:"globalrestores3secretaccesskey"`
 	GlobalS3Bucket                   string `koanf:"globals3bucket"`
 	GlobalS3Endpoint                 string `koanf:"globals3endpoint"`
-	GlobalSecretAccessKey            string `koanf:"globalsecretaccesskeyid"`
+	GlobalSecretAccessKey            string `koanf:"globalsecretaccesskey"`
 	GlobalStatsURL                   string `koanf:"globalstatsurl"`
 	GlobalConcurrentArchiveJobsLimit int    `koanf:"globalconcurrentarchivejobslimit"`
 	GlobalConcurrentBackupJobsLimit  int    `koanf:"globalconcurrentbackupjobslimit"`
