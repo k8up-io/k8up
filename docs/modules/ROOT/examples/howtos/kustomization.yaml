@@ -1,0 +1,26 @@
+resources:
+- github.com/vshn/k8up/config/default?ref={page-origin-refname}
+- github.com/vshn/k8up/config/auth-proxy?ref={page-origin-refname}
+
+namespace: my-custom-namespace
+
+patchesJson6902:
+- target:
+    group: apps
+    version: v1
+    kind: Deployment
+    name: operator
+  patch: |-
+    - op: add
+      path: "/spec/template/spec/containers/-"
+      value:
+        name: kube-rbac-proxy
+        image: gcr.io/kubebuilder/kube-rbac-proxy:v0.5.0
+        args:
+        - "--secure-listen-address=0.0.0.0:8443"
+        - "--upstream=http://127.0.0.1:8080/"
+        - "--logtostderr=true"
+        - "--v=10"
+        ports:
+        - containerPort: 8443
+          name: https
