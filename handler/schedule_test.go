@@ -147,8 +147,8 @@ func TestScheduleHandler_mergeResourcesWithDefaults(t *testing.T) {
 			s := ScheduleHandler{schedule: &v1alpha1.Schedule{Spec: v1alpha1.ScheduleSpec{
 				ResourceRequirementsTemplate: tt.template,
 			}}}
-			result := s.mergeResourcesWithDefaults(tt.resources)
-			assert.Equal(t, tt.expected, result)
+			s.mergeResourcesWithDefaults(&tt.resources)
+			assert.Equal(t, tt.expected, tt.resources)
 		})
 	}
 }

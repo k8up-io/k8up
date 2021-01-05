@@ -9,11 +9,14 @@ import (
 // CheckSpec defines the desired state of Check. It needs to contain the repository
 // information.
 type CheckSpec struct {
-	PromURL  string   `json:"promURL,omitempty"`
-	Backend  *Backend `json:"backend,omitempty"`
-	KeepJobs *int     `json:"keepJobs,omitempty"`
-	// Resources describes the compute resource requirements (cpu, memory, etc.)
-	Resources corev1.ResourceRequirements `json:"resources,omitempty"`
+	SchedulableSpec `json:",inline"`
+
+	// PromURL sets a prometheus push URL where the backup container send metrics to
+	// +optional
+	PromURL string `json:"promURL,omitempty"`
+
+	// KeepJobs amount of jobs to keep for later analysis
+	KeepJobs *int `json:"keepJobs,omitempty"`
 }
 
 // +kubebuilder:object:root=true

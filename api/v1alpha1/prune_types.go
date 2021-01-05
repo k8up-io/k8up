@@ -9,12 +9,11 @@ import (
 // PruneSpec needs to contain the repository information as well as the desired
 // retention policies.
 type PruneSpec struct {
+	SchedulableSpec `json:",inline"`
+
 	// Retention sets how many backups should be kept after a forget and prune
 	Retention RetentionPolicy `json:"retention,omitempty"`
-	Backend   *Backend        `json:"backend,omitempty"`
 	KeepJobs  *int            `json:"keepJobs,omitempty"`
-	// Resources describes the compute resource requirements (cpu, memory, etc.)
-	Resources corev1.ResourceRequirements `json:"resources,omitempty"`
 }
 
 func (p PruneSpec) CreateObject(name, namespace string) runtime.Object {

@@ -33,6 +33,7 @@ spec:
           description: CheckSpec defines the desired state of Check. It needs to contain the repository information.
           properties:
             backend:
+              description: Backend contains the restic repo where the job should backup to.
               properties:
                 azure:
                   properties:
@@ -242,8 +243,10 @@ spec:
                   type: object
               type: object
             keepJobs:
+              description: KeepJobs amount of jobs to keep for later analysis
               type: integer
             promURL:
+              description: PromURL sets a prometheus push URL where the backup container send metrics to
               type: string
             resources:
               description: Resources describes the compute resource requirements (cpu, memory, etc.)

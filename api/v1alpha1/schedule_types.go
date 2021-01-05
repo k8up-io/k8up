@@ -25,6 +25,15 @@ type ScheduleCommon struct {
 	ConcurrentRunsAllowed bool   `json:"concurrentRunsAllowed,omitempty"`
 }
 
+// SchedulableSpec defines the fields that are necessary on types which are schedulable
+type SchedulableSpec struct {
+	// Backend contains the restic repo where the job should backup to.
+	Backend *Backend `json:"backend,omitempty"`
+
+	// Resources describes the compute resource requirements (cpu, memory, etc.)
+	Resources corev1.ResourceRequirements `json:"resources,omitempty"`
+}
+
 // RestoreSchedule manages schedules for the restore service
 type RestoreSchedule struct {
 	RestoreSpec     `json:",inline"`

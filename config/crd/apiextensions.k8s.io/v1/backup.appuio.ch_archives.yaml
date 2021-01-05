@@ -33,7 +33,7 @@ spec:
             description: ArchiveSpec defines the desired state of Archive.
             properties:
               backend:
-                description: Backend contains the backend information
+                description: Backend contains the restic repo where the job should backup to.
                 properties:
                   azure:
                     properties:

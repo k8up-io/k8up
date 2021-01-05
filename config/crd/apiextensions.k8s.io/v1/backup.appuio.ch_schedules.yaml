@@ -36,7 +36,7 @@ spec:
                 description: ArchiveSchedule manages schedules for the archival service
                 properties:
                   backend:
-                    description: Backend contains the backend information
+                    description: Backend contains the restic repo where the job should backup to.
                     properties:
                       azure:
                         properties:
@@ -802,6 +802,7 @@ spec:
                 description: CheckSchedule manages the schedules for the checks
                 properties:
                   backend:
+                    description: Backend contains the restic repo where the job should backup to.
                     properties:
                       azure:
                         properties:
@@ -1013,8 +1014,10 @@ spec:
                   concurrentRunsAllowed:
                     type: boolean
                   keepJobs:
+                    description: KeepJobs amount of jobs to keep for later analysis
                     type: integer
                   promURL:
+                    description: PromURL sets a prometheus push URL where the backup container send metrics to
                     type: string
                   resources:
                     description: Resources describes the compute resource requirements (cpu, memory, etc.)
@@ -1046,6 +1049,7 @@ spec:
               prune:
                 properties:
                   backend:
+                    description: Backend contains the restic repo where the job should backup to.
                     properties:
                       azure:
                         properties:
@@ -1339,7 +1343,7 @@ spec:
                 description: RestoreSchedule manages schedules for the restore service
                 properties:
                   backend:
-                    description: Backend contains the backend information
+                    description: Backend contains the restic repo where the job should backup to.
                     properties:
                       azure:
                         properties:
