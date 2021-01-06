@@ -60,9 +60,13 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-go-
     - name: Run e2e tests
-      run: make crd e2e-test -e CRD_SPEC_VERSION=${{ matrix.crd-spec-version }} -e KIND_NODE_VERSION=${{ matrix.kind-node-version }} -e KIND_KUBECTL_ARGS=--validate=false
-    - name: Show e2e debug logs
-      run: cat e2e/debug/detik/*
+      run: make crd e2e-test -e CRD_SPEC_VERSION=${{ matrix.crd-spec-version }} -e KIND_NODE_VERSION=${{ matrix.kind-node-version }} -e KIND_KUBECTL_ARGS=--validate=false -e bats_args="-F junit || true"
+    - name: Publish Test Report
+      uses: mikepenz/action-junit-report@v1
+      with:
+        report_paths: '**/e2e/TestReport-*.xml'
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        check_name: e2e-report (${{ matrix.kind-node-version }}, ${{ matrix.crd-spec-version }})
   image:
     runs-on: ubuntu-latest
     steps:

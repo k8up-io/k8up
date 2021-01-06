@@ -19,6 +19,7 @@ else
 endif
 
 bats := node_modules/.bin/bats
+bats_args ?=
 
 .DEFAULT_GOAL := help
 
@@ -28,7 +29,7 @@ test: export E2E_IMAGE = $(E2E_IMG)
 test: setup ## Run the E2E tests
 	@mkdir -p debug
 	@$(KIND) load docker-image --name $(KIND_CLUSTER) $(E2E_IMG)
-	@$(bats) .
+	@$(bats) . $(bats_args)
 
 .PHONY: setup
 setup: export KUBECONFIG = $(KIND_KUBECONFIG)
