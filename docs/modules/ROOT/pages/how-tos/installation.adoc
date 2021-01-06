@@ -20,9 +20,36 @@ kubectl create namespace k8up-operator
 helm install k8up appuio/k8up --namespace k8up-operator
 ----
 
-== Manual
+== Kustomize
 
-All required definitions for the installation are located at `config/samples/`:
+The following installs Kustomize in the `k8up-system` namespace with default values.
+
+[source,bash]
+----
+kubectl apply -k config/default
+----
+
+If you wish to customize manifests, you need to create a new directory with `kustomization.yaml`.
+The following example sets another namespace and adds the RBAC auth proxy for the metrics (if you want to restrict the metrics from public access).
+
+[source,yaml]
+[subs="verbatim,attributes"]
+----
+include::example$howtos/kustomization.yaml[]
+----
+
+Then you can build with Kustomize:
+[source,bash]
+----
+kustomize build my-custom-k8up-dir | kubectl apply -f -
+----
+
+TIP: The Kustomize version included in `kubectl -k` is often several versions behind Kustomize itself.
+     It may not support advanced features such as directly referencing a Git repository with path and ref to import manifests.
+
+== Samples
+
+Some K8up examples are located at `config/samples/` in the K8up repository:
 
 [source,bash]
 ----
@@ -30,6 +57,3 @@ kubectl apply -k config/samples/
 ----
 
 Please be aware that these manifests are intended for dev and as examples.
-They're not the official way to install the Operator in production.
-You may need to adjust the namespaces in the manifests.
-There are various other examples under `manifest/examples/`.

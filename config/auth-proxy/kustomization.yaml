@@ -1,0 +1,7 @@
+resources:
+- auth_proxy_service.yaml
+- auth_proxy_role.yaml
+- auth_proxy_role_binding.yaml
+- auth_proxy_client_clusterrole.yaml
+# See documentation on how to install the auth-proxy properly
+# There's a patch needed to activate the proxy as sidecar, but it doesn't work from this kustomization.yaml

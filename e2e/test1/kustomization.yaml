@@ -1,6 +1,7 @@
 resources:
 - ../../config/manager
 - ../../config/rbac
+- ../../config/namespace
 patchesStrategicMerge:
 - deployment.yaml
 namespace: k8up-system
