@@ -71,7 +71,7 @@ var _ = Describe("Restore", func() {
 							},
 						},
 					},
-					SchedulableSpec: k8upv1alpha1.SchedulableSpec{
+					RunnableSpec: k8upv1alpha1.RunnableSpec{
 						Backend: &k8upv1alpha1.Backend{
 							S3: &k8upv1alpha1.S3Spec{
 								Endpoint: "http://localhost:9000",

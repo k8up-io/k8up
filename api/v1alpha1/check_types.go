@@ -9,7 +9,7 @@ import (
 // CheckSpec defines the desired state of Check. It needs to contain the repository
 // information.
 type CheckSpec struct {
-	SchedulableSpec `json:",inline"`
+	RunnableSpec `json:",inline"`
 
 	// PromURL sets a prometheus push URL where the backup container send metrics to
 	// +optional

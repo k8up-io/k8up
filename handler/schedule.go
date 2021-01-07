@@ -25,7 +25,6 @@ const (
 type ScheduleHandler struct {
 	schedule *k8upv1alpha1.Schedule
 	job.Config
-	requireSpecUpdate   bool
 	requireStatusUpdate bool
 }
 
@@ -62,12 +61,9 @@ func (s *ScheduleHandler) Handle() error {
 
 	if !controllerutil.ContainsFinalizer(s.schedule, scheduleFinalizerName) {
 		controllerutil.AddFinalizer(s.schedule, scheduleFinalizerName)
-		s.requireSpecUpdate = true
-	}
-
-	if s.requireSpecUpdate {
 		return s.updateSchedule()
 	}
+
 	if s.requireStatusUpdate {
 		return s.updateStatus()
 	}
@@ -81,61 +77,66 @@ func (s *ScheduleHandler) createJobList() scheduler.JobList {
 	}
 
 	if archive := s.schedule.Spec.Archive; archive != nil {
-		s.mergeWithDefaults(&archive.SchedulableSpec)
+		jobTemplate := archive.DeepCopy()
+		s.mergeWithDefaults(&jobTemplate.RunnableSpec)
 		jobType := k8upv1alpha1.ArchiveType
 		jobList.Jobs = append(jobList.Jobs, scheduler.Job{
 			JobType:  jobType,
-			Schedule: s.getEffectiveSchedule(jobType, archive.Schedule),
-			Object:   archive.ArchiveSpec,
+			Schedule: s.getEffectiveSchedule(jobType, jobTemplate.Schedule),
+			Object:   jobTemplate.ArchiveSpec,
 		})
 	}
 	if backup := s.schedule.Spec.Backup; backup != nil {
-		s.mergeWithDefaults(&backup.SchedulableSpec)
+		backupTemplate := backup.DeepCopy()
+		s.mergeWithDefaults(&backupTemplate.RunnableSpec)
 		jobType := k8upv1alpha1.BackupType
 		jobList.Jobs = append(jobList.Jobs, scheduler.Job{
 			JobType:  jobType,
-			Schedule: s.getEffectiveSchedule(k8upv1alpha1.BackupType, backup.Schedule),
-			Object:   backup.BackupSpec,
+			Schedule: s.getEffectiveSchedule(jobType, backupTemplate.Schedule),
+			Object:   backupTemplate.BackupSpec,
 		})
 	}
 	if check := s.schedule.Spec.Check; check != nil {
-		s.mergeWithDefaults(&check.SchedulableSpec)
+		checkTemplate := check.DeepCopy()
+		s.mergeWithDefaults(&checkTemplate.RunnableSpec)
 		jobType := k8upv1alpha1.CheckType
 		jobList.Jobs = append(jobList.Jobs, scheduler.Job{
 			JobType:  jobType,
-			Schedule: s.getEffectiveSchedule(k8upv1alpha1.CheckType, check.Schedule),
-			Object:   check.CheckSpec,
+			Schedule: s.getEffectiveSchedule(jobType, checkTemplate.Schedule),
+			Object:   checkTemplate.CheckSpec,
 		})
 	}
 	if restore := s.schedule.Spec.Restore; restore != nil {
-		s.mergeWithDefaults(&restore.SchedulableSpec)
+		restoreTemplate := restore.DeepCopy()
+		s.mergeWithDefaults(&restoreTemplate.RunnableSpec)
 		jobType := k8upv1alpha1.RestoreType
 		jobList.Jobs = append(jobList.Jobs, scheduler.Job{
 			JobType:  jobType,
-			Schedule: s.getEffectiveSchedule(k8upv1alpha1.RestoreType, restore.Schedule),
-			Object:   restore.RestoreSpec,
+			Schedule: s.getEffectiveSchedule(jobType, restoreTemplate.Schedule),
+			Object:   restoreTemplate.RestoreSpec,
 		})
 	}
 	if prune := s.schedule.Spec.Prune; prune != nil {
-		s.mergeWithDefaults(&prune.SchedulableSpec)
+		pruneTemplate := prune.DeepCopy()
+		s.mergeWithDefaults(&pruneTemplate.RunnableSpec)
 		jobType := k8upv1alpha1.PruneType
 		jobList.Jobs = append(jobList.Jobs, scheduler.Job{
 			JobType:  jobType,
-			Schedule: s.getEffectiveSchedule(k8upv1alpha1.PruneType, prune.Schedule),
-			Object:   prune.PruneSpec,
+			Schedule: s.getEffectiveSchedule(jobType, pruneTemplate.Schedule),
+			Object:   pruneTemplate.PruneSpec,
 		})
 	}
 
 	return jobList
 }
 
-func (s *ScheduleHandler) mergeWithDefaults(spec *k8upv1alpha1.SchedulableSpec) {
-	s.mergeResourcesWithDefaults(&spec.Resources)
+func (s *ScheduleHandler) mergeWithDefaults(specInstance *k8upv1alpha1.RunnableSpec) {
+	s.mergeResourcesWithDefaults(&specInstance.Resources)
 
-	if spec.Backend == nil {
-		spec.Backend = new(k8upv1alpha1.Backend)
+	if specInstance.Backend == nil {
+		specInstance.Backend = new(k8upv1alpha1.Backend)
 	}
-	s.mergeBackendWithDefaults(spec.Backend)
+	s.mergeBackendWithDefaults(specInstance.Backend)
 }
 
 func (s *ScheduleHandler) mergeResourcesWithDefaults(resources *corev1.ResourceRequirements) {
@@ -170,14 +171,14 @@ func (s *ScheduleHandler) updateStatus() error {
 	return nil
 }
 
-func (s *ScheduleHandler) getEffectiveSchedule(jobType k8upv1alpha1.JobType, originalSchedule string) string {
+func (s *ScheduleHandler) getEffectiveSchedule(jobType k8upv1alpha1.JobType, originalSchedule k8upv1alpha1.ScheduleDefinition) k8upv1alpha1.ScheduleDefinition {
 	if s.schedule.Status.EffectiveSchedules == nil {
-		s.schedule.Status.EffectiveSchedules = make(map[k8upv1alpha1.JobType]string)
+		s.schedule.Status.EffectiveSchedules = make(map[k8upv1alpha1.JobType]k8upv1alpha1.ScheduleDefinition)
 	}
 	if existingSchedule, found := s.schedule.Status.EffectiveSchedules[jobType]; found {
 		return existingSchedule
 	}
-	if !strings.HasSuffix(originalSchedule, "-random") {
+	if !strings.HasSuffix(string(originalSchedule), "-random") {
 		return originalSchedule
 	}
 	schedule := originalSchedule

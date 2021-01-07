@@ -9,7 +9,7 @@ import (
 // RestoreSpec can either contain an S3 restore point or a local one. For the local
 // one you need to define an existing PVC.
 type RestoreSpec struct {
-	SchedulableSpec `json:",inline"`
+	RunnableSpec `json:",inline"`
 
 	RestoreMethod *RestoreMethod `json:"restoreMethod,omitempty"`
 	RestoreFilter string         `json:"restoreFilter,omitempty"`

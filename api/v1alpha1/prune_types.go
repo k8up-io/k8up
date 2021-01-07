@@ -9,7 +9,7 @@ import (
 // PruneSpec needs to contain the repository information as well as the desired
 // retention policies.
 type PruneSpec struct {
-	SchedulableSpec `json:",inline"`
+	RunnableSpec `json:",inline"`
 
 	// Retention sets how many backups should be kept after a forget and prune
 	Retention RetentionPolicy `json:"retention,omitempty"`

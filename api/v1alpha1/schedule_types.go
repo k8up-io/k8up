@@ -19,19 +19,13 @@ type ScheduleSpec struct {
 	ResourceRequirementsTemplate corev1.ResourceRequirements `json:"resourceRequirementsTemplate,omitempty"`
 }
 
+// ScheduleDefinition is the actual cron-type expression that defines the interval of the actions.
+type ScheduleDefinition string
+
 // ScheduleCommon contains fields every schedule needs
 type ScheduleCommon struct {
-	Schedule              string `json:"schedule,omitempty"`
-	ConcurrentRunsAllowed bool   `json:"concurrentRunsAllowed,omitempty"`
-}
-
-// SchedulableSpec defines the fields that are necessary on types which are schedulable
-type SchedulableSpec struct {
-	// Backend contains the restic repo where the job should backup to.
-	Backend *Backend `json:"backend,omitempty"`
-
-	// Resources describes the compute resource requirements (cpu, memory, etc.)
-	Resources corev1.ResourceRequirements `json:"resources,omitempty"`
+	Schedule              ScheduleDefinition `json:"schedule,omitempty"`
+	ConcurrentRunsAllowed bool               `json:"concurrentRunsAllowed,omitempty"`
 }
 
 // RestoreSchedule manages schedules for the restore service
@@ -66,7 +60,7 @@ type PruneSchedule struct {
 // ScheduleStatus defines the observed state of Schedule
 type ScheduleStatus struct {
 	// EffectiveSchedules displays the final schedule for each type (useful when using smart schedules).
-	EffectiveSchedules map[JobType]string `json:"effectiveSchedules,omitempty"`
+	EffectiveSchedules map[JobType]ScheduleDefinition `json:"effectiveSchedules,omitempty"`
 }
 
 // +kubebuilder:object:root=true

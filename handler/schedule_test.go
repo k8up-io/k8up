@@ -156,9 +156,9 @@ func TestScheduleHandler_mergeResourcesWithDefaults(t *testing.T) {
 func TestScheduleHandler_getEffectiveSchedule(t *testing.T) {
 	tests := map[string]struct {
 		schedule             *v1alpha1.Schedule
-		originalSchedule     string
+		originalSchedule     v1alpha1.ScheduleDefinition
 		expectedStatusUpdate bool
-		expectedSchedule     string
+		expectedSchedule     v1alpha1.ScheduleDefinition
 	}{
 		"GivenScheduleWithoutStatus_WhenUsingRandomSchedule_ThenPutGeneratedScheduleInStatus": {
 			schedule: &v1alpha1.Schedule{
@@ -176,7 +176,7 @@ func TestScheduleHandler_getEffectiveSchedule(t *testing.T) {
 					Backup: &v1alpha1.BackupSchedule{},
 				},
 				Status: v1alpha1.ScheduleStatus{
-					EffectiveSchedules: map[v1alpha1.JobType]string{
+					EffectiveSchedules: map[v1alpha1.JobType]v1alpha1.ScheduleDefinition{
 						v1alpha1.BackupType: "26 * 3 * *",
 					},
 				},

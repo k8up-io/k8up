@@ -326,6 +326,7 @@ spec:
                         type: object
                     type: object
                   schedule:
+                    description: ScheduleDefinition is the actual cron-type expression that defines the interval of the actions.
                     type: string
                   snapshot:
                     type: string
@@ -788,6 +789,7 @@ spec:
                         type: object
                     type: object
                   schedule:
+                    description: ScheduleDefinition is the actual cron-type expression that defines the interval of the actions.
                     type: string
                   statsURL:
                     description: StatsURL sets an arbitrary URL where the wrestic container posts metrics and information about the snapshots to. This is in addition to the prometheus pushgateway.
@@ -1042,6 +1044,7 @@ spec:
                         type: object
                     type: object
                   schedule:
+                    description: ScheduleDefinition is the actual cron-type expression that defines the interval of the actions.
                     type: string
                 type: object
               keepJobs:
@@ -1315,6 +1318,7 @@ spec:
                         type: array
                     type: object
                   schedule:
+                    description: ScheduleDefinition is the actual cron-type expression that defines the interval of the actions.
                     type: string
                 type: object
               resourceRequirementsTemplate:
@@ -1633,6 +1637,7 @@ spec:
                         type: object
                     type: object
                   schedule:
+                    description: ScheduleDefinition is the actual cron-type expression that defines the interval of the actions.
                     type: string
                   snapshot:
                     type: string
@@ -1648,6 +1653,7 @@ spec:
             properties:
               effectiveSchedules:
                 additionalProperties:
+                  description: ScheduleDefinition is the actual cron-type expression that defines the interval of the actions.
                   type: string
                 description: EffectiveSchedules displays the final schedule for each type (useful when using smart schedules).
                 type: object

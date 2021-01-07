@@ -10,7 +10,7 @@ import (
 // the backup repository when applied. If used with defaults or schedules the operator will
 // ensure that the defaults are applied before creating the object on the API.
 type BackupSpec struct {
-	SchedulableSpec `json:",inline"`
+	RunnableSpec `json:",inline"`
 
 	// KeepJobs amount of jobs to keep for later analysis
 	KeepJobs *int `json:"keepJobs,omitempty"`
