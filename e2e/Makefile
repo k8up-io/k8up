@@ -26,10 +26,12 @@ bats_args ?=
 .PHONY: test
 test: export KUBECONFIG = $(KIND_KUBECONFIG)
 test: export E2E_IMAGE = $(E2E_IMG)
-test: setup ## Run the E2E tests
+test: setup kind-e2e-image ## Run the E2E tests
 	@mkdir -p debug
-	@$(KIND) load docker-image --name $(KIND_CLUSTER) $(E2E_IMG)
 	@$(bats) . $(bats_args)
+
+kind-e2e-image: kind-setup ## Load the e2e container image onto e2e cluster
+	@$(KIND) load docker-image --name $(KIND_CLUSTER) $(E2E_IMG)
 
 .PHONY: setup
 setup: export KUBECONFIG = $(KIND_KUBECONFIG)

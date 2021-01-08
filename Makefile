@@ -10,7 +10,7 @@ MAKEFLAGS += --no-builtin-variables
 PROJECT_ROOT_DIR = .
 include Makefile.vars.mk
 
-e2e_make := $(MAKE) -C e2e -e 'VERSION=$(VERSION)'
+e2e_make := $(MAKE) -C e2e
 go_build ?= CGO_ENABLED=0 go build -o $(BIN_FILENAME) main.go
 
 # Options for 'bundle-build'
@@ -145,6 +145,9 @@ kind-clean: ## Removes the kind instance if it exists.
 .PHONY: kind-run
 kind-run: export KUBECONFIG = $(KIND_KUBECONFIG)
 kind-run: kind-setup install run ## Runs the operator on the local host but configured for the kind cluster
+
+kind-e2e-image: docker-build
+	$(e2e_make) kind-e2e-image
 
 ###
 ### E2E Test

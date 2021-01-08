@@ -1,6 +1,5 @@
 # Current Operator version
-VERSION ?= $(shell date +%Y-%m-%d_%H-%M-%S)
-VERSION := $(VERSION)
+VERSION ?=
 
 # Default bundle image tag
 BUNDLE_IMG ?= controller-bundle:$(VERSION)
