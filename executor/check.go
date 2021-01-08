@@ -3,6 +3,9 @@ package executor
 import (
 	stderrors "errors"
 
+	batchv1 "k8s.io/api/batch/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
+
 	k8upv1alpha1 "github.com/vshn/k8up/api/v1alpha1"
 	"github.com/vshn/k8up/cfg"
 	"github.com/vshn/k8up/job"
@@ -35,8 +38,6 @@ func (c *CheckExecutor) Execute() error {
 		return stderrors.New("object is not a check")
 	}
 
-	c.check = checkObject
-
 	if c.Obj.GetStatus().Started {
 		return nil
 	}
@@ -48,17 +49,28 @@ func (c *CheckExecutor) Execute() error {
 	}
 	checkJob.GetLabels()[job.K8upExclusive] = "true"
 
+	return c.startCheck(checkObject, checkJob, err)
+}
+
+func (c *CheckExecutor) startCheck(checkObject *k8upv1alpha1.Check, checkJob *batchv1.Job, err error) error {
+	c.check = checkObject
+	c.RegisterJobSucceededConditionCallback()
+
 	checkJob.Spec.Template.Spec.Containers[0].Env = c.setupEnvVars()
 	checkJob.Spec.Template.Spec.Containers[0].Args = []string{"-check"}
+
 	err = c.Client.Create(c.CTX, checkJob)
 	if err != nil {
-		c.SetConditionFalse(ConditionJobCreated,
-			"could not create check job '%v/%v': %v",
-			checkJob.Namespace, checkJob.Name, err)
-		return err
+		if !apierrors.IsAlreadyExists(err) {
+			c.Log.Error(err, "could not create job")
+			c.SetConditionFalse(ConditionJobCreated,
+				"could not create check job '%v/%v': %v",
+				checkJob.Namespace, checkJob.Name, err)
+			return err
+		}
 	}
 
-	c.SetConditionTrueWithMessage(ConditionJobCreated, "the job '%v/%v' was created", checkJob.Namespace, checkJob.Name)
+	c.SetStarted(ConditionJobCreated, "the job '%v/%v' was created", checkJob.Namespace, checkJob.Name)
 	return nil
 }
 
