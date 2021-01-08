@@ -35,6 +35,11 @@ The following non-standard schedules are supported:
 |Run once at fixed intervals, starting at the time it's added or K8up is started up.
  `<duration>` is a string accepted by http://golang.org/pkg/time/#ParseDuration[time.ParseDuration] (e.g. `1h30m`).
 |
+|===
+
+.K8up-specific schedule specification
+|===
+|Entry in Spec|Description|Equivalent to
 
 |`@yearly-random` or `@annually-random`
 |Run once a year, randomized start time and date
@@ -57,7 +62,7 @@ The following non-standard schedules are supported:
 |`52 * * * *` (example)
 |===
 
-NOTE: The day-of-month in the `@monthly` or `@yearly` is capped at the number 27.
+NOTE: The day-of-month in the `@monthly-random` or `@yearly-random` is capped at the number 27.
       This is because there are months that have between 27 and 31 days.
       Cron skips a job when the day-of-month is higher than the current month has  days in it.
       This is to prevent skipping backups and alerts from being fired.
