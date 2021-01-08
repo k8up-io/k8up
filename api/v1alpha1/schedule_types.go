@@ -1,6 +1,8 @@
 package v1alpha1
 
 import (
+	"strings"
+
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -106,4 +108,24 @@ func (s *Schedule) GetStatus() *Status {
 
 func (s *Schedule) GetResources() corev1.ResourceRequirements {
 	return s.Spec.ResourceRequirementsTemplate
+}
+
+// String casts the value to string.
+// "aScheduleDefinition.String()" and "string(aScheduleDefinition)" are equivalent.
+func (s ScheduleDefinition) String() string {
+	return string(s)
+}
+
+// IsNonStandard returns true if the value begins with "@",
+// indicating a special definition.
+// Two examples are '@daily' and '@daily-random'.
+func (s ScheduleDefinition) IsNonStandard() bool {
+	return strings.HasPrefix(string(s), "@")
+}
+
+// IsRandom is true if the value is a special definition (as indicated by IsNonStandard)
+// and if it ends with '-random'.
+// Two examples are '@daily-random' and '@weekly-random'.
+func (s ScheduleDefinition) IsRandom() bool {
+	return s.IsNonStandard() && strings.HasSuffix(string(s), "-random")
 }

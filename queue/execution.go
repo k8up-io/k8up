@@ -117,9 +117,9 @@ func (eq *ExecutionQueue) GetRepositories() []string {
 }
 
 func (eq *ExecutionQueue) incQueueGauge(namespace string, jobType v1alpha1.JobType) {
-	queueGauge.WithLabelValues(namespace, string(jobType)).Inc()
+	queueGauge.WithLabelValues(namespace, jobType.String()).Inc()
 }
 
 func (eq *ExecutionQueue) decQueueGauge(namespace string, jobType v1alpha1.JobType) {
-	queueGauge.WithLabelValues(namespace, string(jobType)).Dec()
+	queueGauge.WithLabelValues(namespace, jobType.String()).Dec()
 }

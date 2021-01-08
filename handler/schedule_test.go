@@ -1,15 +1,17 @@
 package handler
 
 import (
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/vshn/k8up/api/v1alpha1"
-	"github.com/vshn/k8up/cfg"
-	"github.com/vshn/k8up/job"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
-	"testing"
+
+	"github.com/vshn/k8up/api/v1alpha1"
+	"github.com/vshn/k8up/cfg"
+	"github.com/vshn/k8up/job"
 )
 
 func TestScheduleHandler_mergeResourcesWithDefaults(t *testing.T) {
@@ -147,8 +149,9 @@ func TestScheduleHandler_mergeResourcesWithDefaults(t *testing.T) {
 			s := ScheduleHandler{schedule: &v1alpha1.Schedule{Spec: v1alpha1.ScheduleSpec{
 				ResourceRequirementsTemplate: tt.template,
 			}}}
-			s.mergeResourcesWithDefaults(&tt.resources)
-			assert.Equal(t, tt.expected, tt.resources)
+			spec := &v1alpha1.RunnableSpec{Resources: tt.resources}
+			s.mergeResourcesWithDefaults(spec)
+			assert.Equal(t, tt.expected, spec.Resources)
 		})
 	}
 }

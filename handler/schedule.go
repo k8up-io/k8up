@@ -2,10 +2,8 @@ package handler
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/imdario/mergo"
-	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -131,15 +129,13 @@ func (s *ScheduleHandler) createJobList() scheduler.JobList {
 }
 
 func (s *ScheduleHandler) mergeWithDefaults(specInstance *k8upv1alpha1.RunnableSpec) {
-	s.mergeResourcesWithDefaults(&specInstance.Resources)
-
-	if specInstance.Backend == nil {
-		specInstance.Backend = new(k8upv1alpha1.Backend)
-	}
-	s.mergeBackendWithDefaults(specInstance.Backend)
+	s.mergeResourcesWithDefaults(specInstance)
+	s.mergeBackendWithDefaults(specInstance)
 }
 
-func (s *ScheduleHandler) mergeResourcesWithDefaults(resources *corev1.ResourceRequirements) {
+func (s *ScheduleHandler) mergeResourcesWithDefaults(specInstance *k8upv1alpha1.RunnableSpec) {
+	resources := &specInstance.Resources
+
 	if err := mergo.Merge(&s.schedule.Spec.ResourceRequirementsTemplate, cfg.Config.GetGlobalDefaultResources()); err != nil {
 		s.Log.Info("could not merge specific resources with global defaults", "err", err.Error(), "schedule", s.Obj.GetMetaObject().GetName(), "namespace", s.Obj.GetMetaObject().GetNamespace())
 	}
@@ -148,8 +144,13 @@ func (s *ScheduleHandler) mergeResourcesWithDefaults(resources *corev1.ResourceR
 	}
 }
 
-func (s *ScheduleHandler) mergeBackendWithDefaults(backend *k8upv1alpha1.Backend) {
-	if err := mergo.Merge(backend, s.schedule.Spec.Backend); err != nil {
+func (s *ScheduleHandler) mergeBackendWithDefaults(specInstance *k8upv1alpha1.RunnableSpec) {
+	if specInstance.Backend == nil {
+		specInstance.Backend = s.schedule.Spec.Backend.DeepCopy()
+		return
+	}
+
+	if err := mergo.Merge(specInstance.Backend, s.schedule.Spec.Backend); err != nil {
 		s.Log.Info("could not merge the schedule's backend with the resource's backend", "err", err.Error(), "schedule", s.Obj.GetMetaObject().GetName(), "namespace", s.Obj.GetMetaObject().GetNamespace())
 	}
 }
@@ -178,18 +179,33 @@ func (s *ScheduleHandler) getEffectiveSchedule(jobType k8upv1alpha1.JobType, ori
 	if existingSchedule, found := s.schedule.Status.EffectiveSchedules[jobType]; found {
 		return existingSchedule
 	}
-	if !strings.HasSuffix(string(originalSchedule), "-random") {
+
+	isStandardOrNotRandom := !originalSchedule.IsNonStandard() || !originalSchedule.IsRandom()
+	if isStandardOrNotRandom {
 		return originalSchedule
 	}
-	schedule := originalSchedule
-	seed := s.createSeed(s.schedule, jobType)
-	schedule, err := randomizeSchedule(seed, originalSchedule)
+
+	randomizedSchedule, err := s.getRandomSchedule(jobType, originalSchedule)
 	if err != nil {
-		s.Log.Info("Could not randomize schedule, ignoring and try original schedule", "error", err.Error())
-	} else {
-		s.Log.V(1).Info("Randomized schedule", "seed", seed, "from_schedule", originalSchedule, "effective_schedule", schedule)
+		s.Log.Info("Could not randomize schedule, continuing with original schedule", "schedule", originalSchedule, "error", err.Error())
+		return originalSchedule
 	}
+	s.setEffectiveSchedule(jobType, randomizedSchedule)
+	return randomizedSchedule
+}
+
+func (s *ScheduleHandler) getRandomSchedule(jobType k8upv1alpha1.JobType, originalSchedule k8upv1alpha1.ScheduleDefinition) (k8upv1alpha1.ScheduleDefinition, error) {
+	seed := s.createSeed(s.schedule, jobType)
+	randomizedSchedule, err := randomizeSchedule(seed, originalSchedule)
+	if err != nil {
+		return originalSchedule, err
+	}
+
+	s.Log.V(1).Info("Randomized schedule", "seed", seed, "from_schedule", originalSchedule, "effective_schedule", randomizedSchedule)
+	return randomizedSchedule, nil
+}
+
+func (s *ScheduleHandler) setEffectiveSchedule(jobType k8upv1alpha1.JobType, schedule k8upv1alpha1.ScheduleDefinition) {
 	s.schedule.Status.EffectiveSchedules[jobType] = schedule
 	s.requireStatusUpdate = true
-	return schedule
 }

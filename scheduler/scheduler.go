@@ -111,7 +111,7 @@ func (s *Scheduler) SyncSchedules(jobs JobList) error {
 
 // addSchedule adds the given newJobs to the cron scheduler
 func (s *Scheduler) addSchedule(jb Job, namespacedName types.NamespacedName, cmd func()) error {
-	id, err := s.cron.AddFunc(string(jb.Schedule), cmd)
+	id, err := s.cron.AddFunc(jb.Schedule.String(), cmd)
 	if err != nil {
 		return err
 	}
