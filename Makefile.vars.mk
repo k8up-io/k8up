@@ -1,10 +1,3 @@
-# Current Operator version
-VERSION ?= $(shell date +%Y-%m-%d_%H-%M-%S)
-VERSION := $(VERSION)
-
-# Default bundle image tag
-BUNDLE_IMG ?= controller-bundle:$(VERSION)
-
 IMG_TAG ?= latest
 
 BIN_FILENAME ?= $(PROJECT_ROOT_DIR)/k8up
