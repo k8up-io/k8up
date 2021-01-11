@@ -10,23 +10,22 @@ import (
 // the backup repository when applied. If used with defaults or schedules the operator will
 // ensure that the defaults are applied before creating the object on the API.
 type BackupSpec struct {
-	// Backend contains the restic repo where the job should backup to.
-	Backend *Backend `json:"backend,omitempty"`
+	RunnableSpec `json:",inline"`
+
 	// KeepJobs amount of jobs to keep for later analysis
 	KeepJobs *int `json:"keepJobs,omitempty"`
 
 	// PromURL sets a prometheus push URL where the backup container send metrics to
 	// +optional
 	PromURL string `json:"promURL,omitempty"`
+
 	// StatsURL sets an arbitrary URL where the wrestic container posts metrics and
 	// information about the snapshots to. This is in addition to the prometheus
 	// pushgateway.
 	StatsURL string `json:"statsURL,omitempty"`
+
 	// Tags is a list of arbitrary tags that get added to the backup via Restic's tagging system
 	Tags []string `json:"tags,omitempty"`
-
-	// Resources describes the compute resource requirements (cpu, memory, etc.)
-	Resources corev1.ResourceRequirements `json:"resources,omitempty"`
 }
 
 type BackupTemplate struct {

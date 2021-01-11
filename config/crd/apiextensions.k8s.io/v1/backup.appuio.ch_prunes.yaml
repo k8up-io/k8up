@@ -33,6 +33,7 @@ spec:
             description: PruneSpec needs to contain the repository information as well as the desired retention policies.
             properties:
               backend:
+                description: Backend contains the restic repo where the job should backup to.
                 properties:
                   azure:
                     properties:

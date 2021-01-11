@@ -36,7 +36,7 @@ spec:
               description: ArchiveSchedule manages schedules for the archival service
               properties:
                 backend:
-                  description: Backend contains the backend information
+                  description: Backend contains the restic repo where the job should backup to.
                   properties:
                     azure:
                       properties:
@@ -326,6 +326,7 @@ spec:
                       type: object
                   type: object
                 schedule:
+                  description: ScheduleDefinition is the actual cron-type expression that defines the interval of the actions.
                   type: string
                 snapshot:
                   type: string
@@ -788,6 +789,7 @@ spec:
                       type: object
                   type: object
                 schedule:
+                  description: ScheduleDefinition is the actual cron-type expression that defines the interval of the actions.
                   type: string
                 statsURL:
                   description: StatsURL sets an arbitrary URL where the wrestic container posts metrics and information about the snapshots to. This is in addition to the prometheus pushgateway.
@@ -802,6 +804,7 @@ spec:
               description: CheckSchedule manages the schedules for the checks
               properties:
                 backend:
+                  description: Backend contains the restic repo where the job should backup to.
                   properties:
                     azure:
                       properties:
@@ -1013,8 +1016,10 @@ spec:
                 concurrentRunsAllowed:
                   type: boolean
                 keepJobs:
+                  description: KeepJobs amount of jobs to keep for later analysis
                   type: integer
                 promURL:
+                  description: PromURL sets a prometheus push URL where the backup container send metrics to
                   type: string
                 resources:
                   description: Resources describes the compute resource requirements (cpu, memory, etc.)
@@ -1039,6 +1044,7 @@ spec:
                       type: object
                   type: object
                 schedule:
+                  description: ScheduleDefinition is the actual cron-type expression that defines the interval of the actions.
                   type: string
               type: object
             keepJobs:
@@ -1046,6 +1052,7 @@ spec:
             prune:
               properties:
                 backend:
+                  description: Backend contains the restic repo where the job should backup to.
                   properties:
                     azure:
                       properties:
@@ -1311,6 +1318,7 @@ spec:
                       type: array
                   type: object
                 schedule:
+                  description: ScheduleDefinition is the actual cron-type expression that defines the interval of the actions.
                   type: string
               type: object
             resourceRequirementsTemplate:
@@ -1339,7 +1347,7 @@ spec:
               description: RestoreSchedule manages schedules for the restore service
               properties:
                 backend:
-                  description: Backend contains the backend information
+                  description: Backend contains the restic repo where the job should backup to.
                   properties:
                     azure:
                       properties:
@@ -1629,6 +1637,7 @@ spec:
                       type: object
                   type: object
                 schedule:
+                  description: ScheduleDefinition is the actual cron-type expression that defines the interval of the actions.
                   type: string
                 snapshot:
                   type: string
@@ -1644,6 +1653,7 @@ spec:
           properties:
             effectiveSchedules:
               additionalProperties:
+                description: ScheduleDefinition is the actual cron-type expression that defines the interval of the actions.
                 type: string
               description: EffectiveSchedules displays the final schedule for each type (useful when using smart schedules).
               type: object

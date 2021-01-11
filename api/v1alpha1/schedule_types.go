@@ -1,6 +1,8 @@
 package v1alpha1
 
 import (
+	"strings"
+
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -19,10 +21,13 @@ type ScheduleSpec struct {
 	ResourceRequirementsTemplate corev1.ResourceRequirements `json:"resourceRequirementsTemplate,omitempty"`
 }
 
+// ScheduleDefinition is the actual cron-type expression that defines the interval of the actions.
+type ScheduleDefinition string
+
 // ScheduleCommon contains fields every schedule needs
 type ScheduleCommon struct {
-	Schedule              string `json:"schedule,omitempty"`
-	ConcurrentRunsAllowed bool   `json:"concurrentRunsAllowed,omitempty"`
+	Schedule              ScheduleDefinition `json:"schedule,omitempty"`
+	ConcurrentRunsAllowed bool               `json:"concurrentRunsAllowed,omitempty"`
 }
 
 // RestoreSchedule manages schedules for the restore service
@@ -57,7 +62,7 @@ type PruneSchedule struct {
 // ScheduleStatus defines the observed state of Schedule
 type ScheduleStatus struct {
 	// EffectiveSchedules displays the final schedule for each type (useful when using smart schedules).
-	EffectiveSchedules map[JobType]string `json:"effectiveSchedules,omitempty"`
+	EffectiveSchedules map[JobType]ScheduleDefinition `json:"effectiveSchedules,omitempty"`
 }
 
 // +kubebuilder:object:root=true
@@ -103,4 +108,24 @@ func (s *Schedule) GetStatus() *Status {
 
 func (s *Schedule) GetResources() corev1.ResourceRequirements {
 	return s.Spec.ResourceRequirementsTemplate
+}
+
+// String casts the value to string.
+// "aScheduleDefinition.String()" and "string(aScheduleDefinition)" are equivalent.
+func (s ScheduleDefinition) String() string {
+	return string(s)
+}
+
+// IsNonStandard returns true if the value begins with "@",
+// indicating a special definition.
+// Two examples are '@daily' and '@daily-random'.
+func (s ScheduleDefinition) IsNonStandard() bool {
+	return strings.HasPrefix(string(s), "@")
+}
+
+// IsRandom is true if the value is a special definition (as indicated by IsNonStandard)
+// and if it ends with '-random'.
+// Two examples are '@daily-random' and '@weekly-random'.
+func (s ScheduleDefinition) IsRandom() bool {
+	return s.IsNonStandard() && strings.HasSuffix(string(s), "-random")
 }

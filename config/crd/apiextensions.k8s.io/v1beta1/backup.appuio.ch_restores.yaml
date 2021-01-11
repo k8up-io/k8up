@@ -33,7 +33,7 @@ spec:
           description: RestoreSpec can either contain an S3 restore point or a local one. For the local one you need to define an existing PVC.
           properties:
             backend:
-              description: Backend contains the backend information
+              description: Backend contains the restic repo where the job should backup to.
               properties:
                 azure:
                   properties:

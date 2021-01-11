@@ -53,7 +53,7 @@ The following non-standard schedules are supported:
 |Run once a week, randomized start time and weekday
 |`52 4 * * 4` (example)
 
-|`@daily-random` or `@midnight`
+|`@daily-random`
 |Run once a day, randomized start time
 |`52 4 * * *` (example)
 

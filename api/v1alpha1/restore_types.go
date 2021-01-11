@@ -9,16 +9,14 @@ import (
 // RestoreSpec can either contain an S3 restore point or a local one. For the local
 // one you need to define an existing PVC.
 type RestoreSpec struct {
-	// Backend contains the backend information
-	Backend       *Backend       `json:"backend,omitempty"`
+	RunnableSpec `json:",inline"`
+
 	RestoreMethod *RestoreMethod `json:"restoreMethod,omitempty"`
 	RestoreFilter string         `json:"restoreFilter,omitempty"`
 	Snapshot      string         `json:"snapshot,omitempty"`
 	KeepJobs      *int           `json:"keepJobs,omitempty"`
 	// Tags is a list of arbitrary tags that get added to the backup via Restic's tagging system
 	Tags []string `json:"tags,omitempty"`
-	// Resources describes the compute resource requirements (cpu, memory, etc.)
-	Resources corev1.ResourceRequirements `json:"resources,omitempty"`
 }
 
 func (r RestoreSpec) CreateObject(name, namespace string) runtime.Object {

@@ -1,10 +1,13 @@
 package handler
 
 import (
-	"github.com/stretchr/testify/assert"
 	"strconv"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+
+	"github.com/vshn/k8up/api/v1alpha1"
 )
 
 func Test_randomizeSchedule_VerifyCronSyntax(t *testing.T) {
@@ -15,7 +18,7 @@ func Test_randomizeSchedule_VerifyCronSyntax(t *testing.T) {
 			seed := "namespace/name-" + strconv.Itoa(i) + "@backup"
 			schedule, err := randomizeSchedule(seed, "@yearly-random")
 			assert.NoError(t, err)
-			fields := strings.Split(schedule, " ")
+			fields := strings.Split(schedule.String(), " ")
 			for j, f := range fields {
 				number, _ := strconv.Atoi(f)
 				arr[j] = number
@@ -31,7 +34,7 @@ func Test_randomizeSchedule_VerifyCronSyntax(t *testing.T) {
 			seed := "namespace/name-" + strconv.Itoa(i) + "@backup"
 			schedule, err := randomizeSchedule(seed, "@weekly-random")
 			assert.NoError(t, err)
-			fields := strings.Split(schedule, " ")
+			fields := strings.Split(schedule.String(), " ")
 			for j, f := range fields {
 				number, _ := strconv.Atoi(f)
 				arr[j] = number
@@ -46,8 +49,8 @@ func Test_randomizeSchedule_VerifyCronSyntax(t *testing.T) {
 func Test_randomizeSchedule_VerifySchedules(t *testing.T) {
 	seed := "k8up-system/my-scheduled-backup@backup"
 	tests := map[string]struct {
-		schedule         string
-		expectedSchedule string
+		schedule         v1alpha1.ScheduleDefinition
+		expectedSchedule v1alpha1.ScheduleDefinition
 	}{
 		"WhenScheduleRandomHourlyGiven_ThenReturnStableRandomizedSchedule": {
 			schedule:         "@hourly-random",

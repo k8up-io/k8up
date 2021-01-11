@@ -33,7 +33,7 @@ type (
 	// Job contains all necessary information to create a schedule.
 	Job struct {
 		JobType  k8upv1alpha1.JobType
-		Schedule string
+		Schedule k8upv1alpha1.ScheduleDefinition
 		Object   ObjectCreator
 	}
 	// Scheduler handles all the schedules.
@@ -45,7 +45,7 @@ type (
 	scheduleRef struct {
 		EntryID  cron.EntryID
 		JobType  k8upv1alpha1.JobType
-		Schedule string
+		Schedule k8upv1alpha1.ScheduleDefinition
 		Command  func()
 	}
 )
@@ -86,7 +86,6 @@ func newScheduler() *Scheduler {
 
 // SyncSchedules will add the given schedule to the running cron.
 func (s *Scheduler) SyncSchedules(jobs JobList) error {
-
 	namespacedName := types.NamespacedName{
 		Name:      jobs.Config.Obj.GetMetaObject().GetName(),
 		Namespace: jobs.Config.Obj.GetMetaObject().GetNamespace(),
@@ -95,12 +94,13 @@ func (s *Scheduler) SyncSchedules(jobs JobList) error {
 	s.RemoveSchedules(namespacedName)
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
-	for _, jb := range jobs.Jobs {
-		jobs.Config.Log.Info("registering schedule for", "type", jb.JobType, "schedule", jb.Schedule)
-		if err := s.addSchedule(jb, namespacedName, func() {
-			jobs.Config.Log.Info("running schedule for", "jb", jb.JobType)
-			s.createObject(jb.JobType, namespacedName.Namespace, jb.Object, jobs.Config)
-		}); err != nil {
+	for _, schedulableJob := range jobs.Jobs {
+		jobs.Config.Log.Info("registering schedule for", "type", schedulableJob.JobType, "schedule", schedulableJob.Schedule)
+		err := s.addSchedule(schedulableJob, namespacedName, func() {
+			jobs.Config.Log.Info("running schedule for", "job", schedulableJob.JobType)
+			s.createObject(schedulableJob.JobType, namespacedName.Namespace, schedulableJob.Object, jobs.Config)
+		})
+		if err != nil {
 			return err
 		}
 	}
@@ -111,7 +111,7 @@ func (s *Scheduler) SyncSchedules(jobs JobList) error {
 
 // addSchedule adds the given newJobs to the cron scheduler
 func (s *Scheduler) addSchedule(jb Job, namespacedName types.NamespacedName, cmd func()) error {
-	id, err := s.cron.AddFunc(jb.Schedule, cmd)
+	id, err := s.cron.AddFunc(jb.Schedule.String(), cmd)
 	if err != nil {
 		return err
 	}

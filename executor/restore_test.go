@@ -71,15 +71,17 @@ var _ = Describe("Restore", func() {
 							},
 						},
 					},
-					Backend: &k8upv1alpha1.Backend{
-						S3: &k8upv1alpha1.S3Spec{
-							Endpoint: "http://localhost:9000",
-							Bucket:   "test-backend",
-							AccessKeyIDSecretRef: &v1.SecretKeySelector{
-								Key: "accessKey-backend",
-							},
-							SecretAccessKeySecretRef: &v1.SecretKeySelector{
-								Key: "secretKey-backend",
+					RunnableSpec: k8upv1alpha1.RunnableSpec{
+						Backend: &k8upv1alpha1.Backend{
+							S3: &k8upv1alpha1.S3Spec{
+								Endpoint: "http://localhost:9000",
+								Bucket:   "test-backend",
+								AccessKeyIDSecretRef: &v1.SecretKeySelector{
+									Key: "accessKey-backend",
+								},
+								SecretAccessKeySecretRef: &v1.SecretKeySelector{
+									Key: "secretKey-backend",
+								},
 							},
 						},
 					},
