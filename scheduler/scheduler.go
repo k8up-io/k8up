@@ -92,14 +92,18 @@ func (s *Scheduler) SyncSchedules(jobs JobList) error {
 	}
 
 	s.RemoveSchedules(namespacedName)
+	return s.addSchedules(jobs, namespacedName)
+}
+
+// addSchedules registers all the jobs in the job list in the internal cron scheduler by invoking addSchedule.
+func (s *Scheduler) addSchedules(jobs JobList, namespacedName types.NamespacedName) error {
+	config := jobs.Config
+
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 	for _, schedulableJob := range jobs.Jobs {
-		jobs.Config.Log.Info("registering schedule for", "type", schedulableJob.JobType, "schedule", schedulableJob.Schedule)
-		err := s.addSchedule(schedulableJob, namespacedName, func() {
-			jobs.Config.Log.Info("running schedule for", "job", schedulableJob.JobType)
-			s.createObject(schedulableJob.JobType, namespacedName.Namespace, schedulableJob.Object, jobs.Config)
-		})
+		config.Log.Info("registering schedule for", "type", schedulableJob.JobType, "schedule", schedulableJob.Schedule)
+		err := s.addSchedule(schedulableJob, namespacedName, s.getScheduleCallback(config, namespacedName, schedulableJob))
 		if err != nil {
 			return err
 		}
@@ -107,6 +111,13 @@ func (s *Scheduler) SyncSchedules(jobs JobList) error {
 
 	s.incRegisteredSchedulesGauge(namespacedName.Namespace)
 	return nil
+}
+
+func (s *Scheduler) getScheduleCallback(config job.Config, namespacedName types.NamespacedName, schedulableJob Job) func() {
+	return func() {
+		config.Log.Info("running schedule for", "job", schedulableJob.JobType)
+		s.createObject(schedulableJob.JobType, namespacedName.Namespace, schedulableJob.Object, config)
+	}
 }
 
 // addSchedule adds the given newJobs to the cron scheduler
@@ -125,10 +136,11 @@ func (s *Scheduler) addSchedule(jb Job, namespacedName types.NamespacedName, cmd
 	return nil
 }
 
-// RemoveSchedules will remove the schedules with the given types.NamespacedName if existing.
+// RemoveSchedules will remove the schedules of the given types.NamespacedName if existing.
 func (s *Scheduler) RemoveSchedules(namespacedName types.NamespacedName) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
+
 	for _, ref := range s.registeredSchedules[namespacedName.String()] {
 		s.cron.Remove(ref.EntryID)
 	}

@@ -68,7 +68,9 @@ func (a *ArchiveExecutor) startArchive(archiveJob *batchv1.Job, archive *k8upv1a
 	if err != nil {
 		if !apierrors.IsAlreadyExists(err) {
 			a.Log.Error(err, "could not create job")
-			a.SetConditionFalse(ConditionJobCreated, "could not create job: %v", err)
+			a.SetConditionFalse(ConditionJobCreated,
+				"could not create archive job '%v/%v': %v",
+				archiveJob.Namespace, archiveJob.Name, err)
 			return
 		}
 	}
