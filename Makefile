@@ -13,22 +13,6 @@ include Makefile.vars.mk
 e2e_make := $(MAKE) -C e2e
 go_build ?= CGO_ENABLED=0 go build -o $(BIN_FILENAME) main.go
 
-# Options for 'bundle-build'
-ifneq ($(origin CHANNELS), undefined)
-BUNDLE_CHANNELS := --channels=$(CHANNELS)
-endif
-ifneq ($(origin DEFAULT_CHANNEL), undefined)
-BUNDLE_DEFAULT_CHANNEL := --default-channel=$(DEFAULT_CHANNEL)
-endif
-BUNDLE_METADATA_OPTS ?= $(BUNDLE_CHANNELS) $(BUNDLE_DEFAULT_CHANNEL)
-
-# Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
-ifeq (,$(shell go env GOBIN))
-GOBIN=$(shell go env GOPATH)/bin
-else
-GOBIN=$(shell go env GOBIN)
-endif
-
 # Run tests (see https://sdk.operatorframework.io/docs/building-operators/golang/references/envtest-setup)
 ENVTEST_ASSETS_DIR=$(shell pwd)/testbin
 
@@ -98,13 +82,6 @@ docker-build: $(BIN_FILENAME) ## Build the docker image
 docker-push: ## Push the docker image
 	docker push $(DOCKER_IMG)
 	docker push $(QUAY_IMG)
-
-.PHONY: bundle
-bundle: generate ## Generate bundle manifests and metadata, then validate generated files.
-	operator-sdk generate kustomize manifests -q
-	cd config/manager && $(KUSTOMIZE) edit set image controller=$(IMG)
-	$(KUSTOMIZE) build config/manifests | operator-sdk generate bundle -q --overwrite --version $(VERSION) $(BUNDLE_METADATA_OPTS)
-	operator-sdk bundle validate ./bundle
 
 clean: export KUBECONFIG = $(KIND_KUBECONFIG)
 clean: e2e-clean kind-clean ## Cleans up the generated resources
