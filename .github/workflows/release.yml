@@ -34,9 +34,10 @@ jobs:
       uses: mikepenz/release-changelog-builder-action@v1.4.1
       with:
         configuration: ".github/changelog-configuration.json"
-        # Prereleases still get a changelog, but the next full release gets a diff since the last full release,
-        # combining possible changelogs of all previous prereleases inbetween.
-        ignorePreReleases: "true"
+        # PreReleases still get a changelog, but the next full release gets a diff since the last full release,
+        # combining possible changelogs of all previous PreReleases in between. PreReleases show a partial changelog
+        # since last PreRelease.
+        ignorePreReleases: "${{ !contains(github.ref, '-rc') }}"
         outputFile: .github/release-notes.md
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
