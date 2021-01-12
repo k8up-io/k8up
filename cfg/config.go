@@ -109,9 +109,9 @@ func (c Configuration) GetGlobalDefaultResources() (res corev1.ResourceRequireme
 	}
 	if r, err := resource.ParseQuantity(c.GlobalMemoryResourceLimit); err == nil && c.GlobalMemoryResourceLimit != "" {
 		if res.Limits == nil {
-			res.Requests = make(corev1.ResourceList)
+			res.Limits = make(corev1.ResourceList)
 		}
-		res.Requests[corev1.ResourceCPU] = r
+		res.Limits[corev1.ResourceMemory] = r
 	}
 	if r, err := resource.ParseQuantity(c.GlobalCPUResourceLimit); err == nil && c.GlobalCPUResourceLimit != "" {
 		if res.Limits == nil {
