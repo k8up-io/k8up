@@ -13,9 +13,13 @@ spec:
       labels:
         control-plane: controller-manager
     spec:
+      securityContext:
+        runAsUser: 1001
       containers:
       - name: k8up
         image: quay.io/vshn/k8up:latest
+        securityContext:
+          allowPrivilegeEscalation: false
         resources:
           limits:
             cpu: 300m

@@ -19,11 +19,9 @@ rules:
 - apiGroups:
   - ""
   resources:
-  - configmaps/status
+  - configmaps/finalizers
   verbs:
-  - get
   - update
-  - patch
 - apiGroups:
   - ""
   resources:
