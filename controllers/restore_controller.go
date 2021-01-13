@@ -27,8 +27,7 @@ type RestoreReconciler struct {
 // +kubebuilder:rbac:groups=backup.appuio.ch,resources=restores,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=backup.appuio.ch,resources=restores/status,verbs=get;update;patch
 
-func (r *RestoreReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
-	ctx := context.Background()
+func (r *RestoreReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := r.Log.WithValues("restore", req.NamespacedName)
 
 	restore := &k8upv1alpha1.Restore{}

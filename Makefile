@@ -23,8 +23,7 @@ test: fmt vet ## Run tests
 	go test ./... -coverprofile cover.out
 
 # See https://storage.googleapis.com/kubebuilder-tools/ for list of supported K8s versions
-# No, there's no 1.18 support, so we're going for 1.19
-integration-test: export ENVTEST_K8S_VERSION = 1.19.2
+integration-test: export ENVTEST_K8S_VERSION = 1.20.2
 integration-test: generate fmt vet $(testbin_created) ## Run integration tests with envtest
 	test -f ${ENVTEST_ASSETS_DIR}/setup-envtest.sh || curl -sSLo ${ENVTEST_ASSETS_DIR}/setup-envtest.sh https://raw.githubusercontent.com/kubernetes-sigs/controller-runtime/master/hack/setup-envtest.sh
 	source ${ENVTEST_ASSETS_DIR}/setup-envtest.sh; fetch_envtest_tools $(ENVTEST_ASSETS_DIR); setup_envtest_env $(ENVTEST_ASSETS_DIR); go test -tags=integration -v ./... -coverprofile cover.out

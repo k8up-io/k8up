@@ -11,6 +11,7 @@ import (
 	"github.com/robfig/cron/v3"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/metrics"
 
@@ -166,7 +167,7 @@ func (s *Scheduler) createObject(jobType k8upv1alpha1.JobType, namespace string,
 		config.Log.Error(err, "cannot set owner on object", "name", jobObject.GetMetaObject().GetName())
 	}
 
-	err = config.Client.Create(config.CTX, rtObj)
+	err = config.Client.Create(config.CTX, rtObj.(client.Object))
 	if err != nil {
 		config.Log.Error(err, "could not trigger k8up newJobs", "name", namespace+"/"+name)
 	}

@@ -27,8 +27,7 @@ type CheckReconciler struct {
 // +kubebuilder:rbac:groups=backup.appuio.ch,resources=checks,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=backup.appuio.ch,resources=checks/status,verbs=get;update;patch
 
-func (r *CheckReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
-	ctx := context.Background()
+func (r *CheckReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	logger := r.Log.WithValues("check", req.NamespacedName)
 
 	check := &k8upv1alpha1.Check{}
