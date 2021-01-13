@@ -1,42 +1,11 @@
 name: Build
 
 on:
-  push:
-    branches:
-    - master
-    - development
-    tags-ignore:
-    - "*"
   pull_request:
     branches:
     - master
-    - development
 
 jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v2
-    - name: Determine Go version from go.mod
-      run: echo "GO_VERSION=$(grep "go 1." go.mod | cut -d " " -f 2)" >> $GITHUB_ENV
-    - uses: actions/setup-go@v2
-      with:
-        go-version: ${{ env.GO_VERSION }}
-    - uses: actions/cache@v2
-      with:
-        path: ~/go/pkg/mod
-        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-        restore-keys: |
-          ${{ runner.os }}-go-
-    - name: Run tests
-      run: make test
-    - name: Upload code coverage report to Code Climate
-      uses: paambaati/codeclimate-action@v2.7.5
-      env:
-        CC_TEST_REPORTER_ID: b25e8875aef082d5eee059d71d76dac6d3e0ed23847f6004c1598afe35dadff5
-      with:
-        coverageLocations: cover.out:gocov
-        prefix: github.com/vshn/k8up
   e2e-test:
     runs-on: ubuntu-latest
     strategy:
