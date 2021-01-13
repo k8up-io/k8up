@@ -1,7 +1,8 @@
-[![Build](https://img.shields.io/github/workflow/status/vshn/k8up/Build)][build]
+[![Build](https://img.shields.io/github/workflow/status/vshn/k8up/Test)][build]
 ![Go version](https://img.shields.io/github/go-mod/go-version/vshn/k8up)
 ![Kubernetes version](https://img.shields.io/badge/k8s-v1.20-blue)
 [![Version](https://img.shields.io/github/v/release/vshn/k8up)][releases]
+[![Maintainability](https://img.shields.io/codeclimate/maintainability/vshn/k8up)][codeclimate]
 [![GitHub downloads](https://img.shields.io/github/downloads/vshn/k8up/total)][releases]
 [![Docker image](https://img.shields.io/docker/pulls/vshn/k8up)][dockerhub]
 [![License](https://img.shields.io/github/license/vshn/k8up)][license]
@@ -122,8 +123,9 @@ make clean
 There are a number of example configurations in [`config/samples`](config/samples).
 Apply them using `kubectl apply -f config/samples/somesample.yaml`
 
-[build]: https://github.com/vshn/k8up/actions?query=workflow%3ABuild
+[build]: https://github.com/vshn/k8up/actions?query=workflow%3ATest
 [releases]: https://github.com/vshn/k8up/releases
 [license]: https://github.com/vshn/k8up/blob/master/LICENSE
 [dockerhub]: https://hub.docker.com/r/vshn/k8up
 [detik]: https://github.com/bats-core/bats-detik
+[codeclimate]: https://codeclimate.com/github/vshn/k8up
