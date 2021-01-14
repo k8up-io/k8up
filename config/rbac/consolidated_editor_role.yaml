@@ -1,17 +1,17 @@
-# permissions for end users to edit snapshots.
+# permissions for end users to edit K8up resources.
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: snapshot-editor-role
+  name: k8up-edit
   labels:
     # Add these permissions to the "admin" and "edit" default roles.
     rbac.authorization.k8s.io/aggregate-to-admin: "true"
     rbac.authorization.k8s.io/aggregate-to-edit: "true"
 rules:
 - apiGroups:
-  - k8up.syn.tools
+  - backup.appuio.ch
   resources:
-  - snapshots
+  - "*"
   verbs:
   - create
   - delete
@@ -20,9 +20,3 @@ rules:
   - patch
   - update
   - watch
-- apiGroups:
-  - k8up.syn.tools
-  resources:
-  - snapshots/status
-  verbs:
-  - get

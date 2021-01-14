@@ -4,26 +4,5 @@ resources:
 - leader_election_role.yaml
 - leader_election_role_binding.yaml
 
-- archive_viewer_role.yaml
-- archive_editor_role.yaml
-
-- backup_viewer_role.yaml
-- backup_editor_role.yaml
-
-- check_viewer_role.yaml
-- check_editor_role.yaml
-
-- prebackuppod_viewer_role.yaml
-- prebackuppod_editor_role.yaml
-
-- prune_viewer_role.yaml
-- prune_editor_role.yaml
-
-- restore_viewer_role.yaml
-- restore_editor_role.yaml
-
-- schedule_viewer_role.yaml
-- schedule_editor_role.yaml
-
-- snapshot_viewer_role.yaml
-- snapshot_editor_role.yaml
+- consolidated_viewer_role.yaml
+- consolidated_editor_role.yaml

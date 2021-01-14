@@ -1,23 +1,17 @@
-# permissions for end users to view archives.
+# permissions for end users to view K8up resources.
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: archive-viewer-role
+  name: k8up-view
   labels:
     # Add these permissions to the "view" default role.
     rbac.authorization.k8s.io/aggregate-to-view: "true"
 rules:
 - apiGroups:
-  - k8up.syn.tools
+  - backup.appuio.ch
   resources:
-  - archives
+  - "*"
   verbs:
   - get
   - list
   - watch
-- apiGroups:
-  - k8up.syn.tools
-  resources:
-  - archives/status
-  verbs:
-  - get

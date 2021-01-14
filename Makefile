@@ -38,12 +38,10 @@ run: fmt vet ## Run against the configured Kubernetes cluster in ~/.kube/config
 	go run ./main.go
 
 .PHONY: install
-install: export KUBECONFIG = $(KIND_KUBECONFIG)
 install: generate ## Install CRDs into a cluster
 	$(KUSTOMIZE) build $(CRD_ROOT_DIR)/$(CRD_SPEC_VERSION) | kubectl apply $(KIND_KUBECTL_ARGS) -f -
 
 .PHONY: uninstall
-install: export KUBECONFIG = $(KIND_KUBECONFIG)
 uninstall: generate ## Uninstall CRDs from a cluster
 	$(KUSTOMIZE) build $(CRD_ROOT_DIR)/$(CRD_SPEC_VERSION) | kubectl delete -f -
 
