@@ -14,7 +14,7 @@ spec:
         control-plane: controller-manager
     spec:
       securityContext:
-        runAsUser: 1001
+        runAsUser: 65532
       containers:
       - name: k8up
         image: quay.io/vshn/k8up:latest
