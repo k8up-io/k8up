@@ -1,0 +1,17 @@
+# permissions for end users to view K8up resources.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: k8up-view
+  labels:
+    # Add these permissions to the "view" default role.
+    rbac.authorization.k8s.io/aggregate-to-view: "true"
+rules:
+- apiGroups:
+  - backup.appuio.ch
+  resources:
+  - "*"
+  verbs:
+  - get
+  - list
+  - watch
