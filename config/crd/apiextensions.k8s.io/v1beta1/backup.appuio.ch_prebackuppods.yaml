@@ -8,6 +8,7 @@ metadata:
   creationTimestamp: null
   name: prebackuppods.backup.appuio.ch
 spec:
+  preserveUnknownFields: false
   group: backup.appuio.ch
   names:
     kind: PreBackupPod

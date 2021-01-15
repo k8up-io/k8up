@@ -15,7 +15,7 @@ import (
 	"os"
 )
 
-var patchFiles = []string{"v1beta1/backup.appuio.ch_prebackuppods.yaml"}
+var patchFiles = []string{"v1beta1/backup.appuio.ch_prebackuppods.yaml", "v1/backup.appuio.ch_prebackuppods.yaml"}
 
 // controller-gen 0.3 creates CRDs with apiextensions.k8s.io/v1beta1, but some generated properties aren't valid for that version
 // in K8s 1.18+. We would have to switch to apiextensions.k8s.io/v1, but that would make the CRD incompatible with OpenShift 3.11.
@@ -26,26 +26,40 @@ func main() {
 	log.Println("Running post-generate in " + workdir)
 	for _, file := range patchFiles {
 		fileName := os.Getenv("CRD_ROOT_DIR") + "/" + file
-		log.Println(fmt.Sprintf("Reading file %s", fileName))
-		lines, err := readLines(fileName)
-		if err != nil {
-			log.Fatalf("readLines: %s", err)
-		}
-		count := 0
-		var result []string
-		for i, line := range lines {
-			if line == "                            - protocol" {
-				count++
-				log.Println(fmt.Sprintf("Removed 'protocol' in line %d", i))
-			} else {
-				result = append(result, line)
-			}
-		}
+		patchFile(fileName)
+	}
+}
 
-		log.Println(fmt.Sprintf("Writing new file to %s", fileName))
-		if err := writeLines(result, fileName); err != nil {
-			log.Fatalf("writeLines: %s", err)
+func patchFile(fileName string) {
+	log.Println(fmt.Sprintf("Reading file %s", fileName))
+	lines, err := readLines(fileName)
+	if err != nil {
+		log.Fatalf("readLines: %s", err)
+	}
+	count := 0
+	var result []string
+	for i, line := range lines {
+		switch line {
+		case "                            - protocol":
+			count++
+			log.Println(fmt.Sprintf("Removed 'protocol' in line %d", i))
+		case "spec:":
+			/*
+				preserveUnknownFields is explicitly needed in v1 in our case, see https://github.com/vshn/k8up/issues/281.
+				Setting the flag in the generator CLI like "controller-gen crd:preserveUnknownFields=false ..." actually
+				doesn't write the line to YAML, thus we need to add it manually.
+			*/
+			result = append(result, line)
+			result = append(result, "  preserveUnknownFields: false")
+			log.Println(fmt.Sprintf("Added  'preserveUnknownFields' after line %d", i))
+		default:
+			result = append(result, line)
 		}
+	}
+
+	log.Println(fmt.Sprintf("Writing new file to %s", fileName))
+	if err := writeLines(result, fileName); err != nil {
+		log.Fatalf("writeLines: %s", err)
 	}
 }
 
