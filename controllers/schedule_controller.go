@@ -27,6 +27,7 @@ type ScheduleReconciler struct {
 // +kubebuilder:rbac:groups=backup.appuio.ch,resources=schedules,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=backup.appuio.ch,resources=schedules/status,verbs=get;update;patch
 
+// Reconcile is the entrypoint to manage the given resource.
 func (r *ScheduleReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := r.Log.WithValues("schedule", req.NamespacedName)
 

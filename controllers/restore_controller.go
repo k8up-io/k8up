@@ -27,6 +27,7 @@ type RestoreReconciler struct {
 // +kubebuilder:rbac:groups=backup.appuio.ch,resources=restores,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=backup.appuio.ch,resources=restores/status,verbs=get;update;patch
 
+// Reconcile is the entrypoint to manage the given resource.
 func (r *RestoreReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := r.Log.WithValues("restore", req.NamespacedName)
 
