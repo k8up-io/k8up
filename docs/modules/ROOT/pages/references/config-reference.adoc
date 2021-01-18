@@ -14,16 +14,16 @@ The Operator can be configured in two ways:
 `BACKUP_ENABLE_LEADER_ELECTION`:: enable leader election within the operator Pod, default: `true`
 `BACKUP_FILEEXTENSIONANNOTATION`:: set the annotation name where the file extension is stored for backup commands, default `k8up.syn.tools/file-extension`
 `BACKUP_GLOBALACCESSKEYID`:: set the S3 access key id to be used globally
-`BACKUP_GLOBALCONCURRENTARCHIVEJOBSLIMIT`:: set the limit of concurrent archive jobs
-`BACKUP_GLOBALCONCURRENTBACKUPJOBSLIMIT`:: set the limit of concurrent backup jobs
-`BACKUP_GLOBALCONCURRENTCHECKJOBSLIMIT`:: set the limit of concurrent check jobs
-`BACKUP_GLOBALCONCURRENTPRUNEJOBSLIMIT`:: set the limit of concurrent prune jobs
-`BACKUP_GLOBALCONCURRENTRESTOREJOBSLIMIT`:: set the limit of concurrent restore jobs
-`BACKUP_GLOBALCPU_LIMIT`:: set the CPU limit for scheduled jobs
-`BACKUP_GLOBALCPU_REQUEST`:: set the CPU request for scheduled jobs
+`BACKUP_GLOBAL_CONCURRENT_ARCHIVE_JOBS_LIMIT`:: set the limit of concurrent archive jobs
+`BACKUP_GLOBAL_CONCURRENT_BACKUP_JOBS_LIMIT`:: set the limit of concurrent backup jobs
+`BACKUP_GLOBAL_CONCURRENT_CHECK_JOBS_LIMIT`:: set the limit of concurrent check jobs
+`BACKUP_GLOBAL_CONCURRENT_PRUNE_JOBS_LIMIT`:: set the limit of concurrent prune jobs
+`BACKUP_GLOBAL_CONCURRENT_RESTORE_JOBS_LIMIT`:: set the limit of concurrent restore jobs
+`BACKUP_GLOBAL_CPU_LIMIT`:: set the CPU limit for scheduled jobs
+`BACKUP_GLOBAL_CPU_REQUEST`:: set the CPU request for scheduled jobs
 `BACKUP_GLOBALKEEPJOBS`:: set the number of old backup jobs to keep globally
-`BACKUP_GLOBALMEMORY_LIMIT`:: set the memory limit for scheduled jobs
-`BACKUP_GLOBALMEMORY_REQUEST`:: set the memory request for scheduled jobs
+`BACKUP_GLOBAL_MEMORY_LIMIT`:: set the memory limit for scheduled jobs
+`BACKUP_GLOBAL_MEMORY_REQUEST`:: set the memory request for scheduled jobs
 `BACKUP_GLOBALREPOPASSWORD`:: set the restic repository password to be used globally
 `BACKUP_GLOBALRESTORES3ACCESKEYID`:: set the global restore S3 accessKeyID for restores
 `BACKUP_GLOBALRESTORES3BUCKET`:: set the global restore S3 bucket for restores
