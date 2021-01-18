@@ -126,7 +126,7 @@ func (c *Config) patchConditions(conditionStatus corev1.ConditionStatus, message
 		})
 	}
 
-	err := c.Client.Status().Patch(c.CTX, c.Obj.GetRuntimeObject(), patch)
+	err := c.Client.Status().Patch(c.CTX, c.Obj.GetRuntimeObject().(client.Object), patch)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			return
@@ -150,7 +150,7 @@ func (c *Config) SetStarted(trueCondition status.ConditionType, message string, 
 		Message: fmt.Sprintf(message, args...),
 	})
 
-	err := c.Client.Status().Patch(c.CTX, c.Obj.GetRuntimeObject(), patch)
+	err := c.Client.Status().Patch(c.CTX, c.Obj.GetRuntimeObject().(client.Object), patch)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			return

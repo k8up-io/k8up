@@ -1,6 +1,6 @@
 [![Build](https://img.shields.io/github/workflow/status/vshn/k8up/Build)][build]
 ![Go version](https://img.shields.io/github/go-mod/go-version/vshn/k8up)
-![Kubernetes version](https://img.shields.io/badge/k8s-v1.18-blue)
+![Kubernetes version](https://img.shields.io/badge/k8s-v1.20-blue)
 [![Version](https://img.shields.io/github/v/release/vshn/k8up)][releases]
 [![GitHub downloads](https://img.shields.io/github/downloads/vshn/k8up/total)][releases]
 [![Docker image](https://img.shields.io/docker/pulls/vshn/k8up)][dockerhub]

@@ -199,7 +199,7 @@ func cleanOldObjects(jobObjects jobObjectList, maxObjects int, config job.Config
 	for i := 0; i < numToDelete; i++ {
 		config.Log.Info("cleaning old job", "namespace", jobObjects[i].GetMetaObject().GetNamespace(), "name", jobObjects[i].GetMetaObject().GetName())
 		option := metav1.DeletePropagationForeground
-		err := config.Client.Delete(config.CTX, jobObjects[i].GetRuntimeObject(), &client.DeleteOptions{
+		err := config.Client.Delete(config.CTX, jobObjects[i].GetRuntimeObject().(client.Object), &client.DeleteOptions{
 			PropagationPolicy: &option,
 		})
 		if err != nil {

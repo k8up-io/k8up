@@ -27,8 +27,8 @@ type ArchiveReconciler struct {
 // +kubebuilder:rbac:groups=backup.appuio.ch,resources=archives,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=backup.appuio.ch,resources=archives/status,verbs=get;update;patch
 
-func (r *ArchiveReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
-	ctx := context.Background()
+// Reconcile is the entrypoint to manage the given resource.
+func (r *ArchiveReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := r.Log.WithValues("archive", req.NamespacedName)
 
 	archive := &k8upv1alpha1.Archive{}

@@ -2,6 +2,8 @@
 // +kubebuilder:object:generate=true
 // +groupName=backup.appuio.ch
 
+// +kubebuilder:rbac:groups=coordination.k8s.io,resources=leases,verbs=get;list;create;update
+
 package v1alpha1
 
 import (
