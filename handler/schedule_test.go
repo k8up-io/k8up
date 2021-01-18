@@ -15,8 +15,7 @@ import (
 )
 
 func TestScheduleHandler_mergeResourcesWithDefaults(t *testing.T) {
-	tests := []struct {
-		name                        string
+	tests := map[string]struct {
 		globalCPUResourceLimit      string
 		globalCPUResourceRequest    string
 		globalMemoryResourceLimit   string
@@ -25,73 +24,49 @@ func TestScheduleHandler_mergeResourcesWithDefaults(t *testing.T) {
 		givenResourceTemplate       v1.ResourceRequirements
 		expectedTemplate            v1.ResourceRequirements
 	}{
-		{
-			name:             "Given_NoGlobalDefaults_And_NoScheduleDefaults_When_NoSpec_Then_LeaveEmpty",
+		"Given_NoGlobalDefaults_And_NoScheduleDefaults_When_NoSpec_Then_LeaveEmpty": {
 			expectedTemplate: v1.ResourceRequirements{},
 		},
-		{
-			name: "Given_NoGlobalDefaults_And_NoScheduleDefaults_When_Spec_Then_UseSpec",
+		"Given_NoGlobalDefaults_And_NoScheduleDefaults_When_Spec_Then_UseSpec": {
 			givenResourceTemplate: v1.ResourceRequirements{
-				Requests: v1.ResourceList{
-					v1.ResourceCPU: resource.MustParse("50m"),
-				},
+				Requests: newCPUResourceList("50m"),
 			},
 			expectedTemplate: v1.ResourceRequirements{
-				Requests: v1.ResourceList{
-					v1.ResourceCPU: resource.MustParse("50m"),
-				},
+				Requests: newCPUResourceList("50m"),
 			},
 		},
-		{
-			name: "Given_NoGlobalDefaults_And_ScheduleDefaults_When_NoSpec_Then_ApplyScheduleDefaults",
+		"Given_NoGlobalDefaults_And_ScheduleDefaults_When_NoSpec_Then_ApplyScheduleDefaults": {
 			givenScheduleTemplate: v1.ResourceRequirements{
-				Limits: v1.ResourceList{
-					v1.ResourceCPU: resource.MustParse("200m"),
-				},
+				Limits: newCPUResourceList("200m"),
 			},
 			expectedTemplate: v1.ResourceRequirements{
-				Limits: v1.ResourceList{
-					v1.ResourceCPU: resource.MustParse("200m"),
-				},
+				Limits: newCPUResourceList("200m"),
 			},
 		},
-		{
-			name: "Given_NoGlobalDefaults_And_ScheduleDefaults_When_Spec_Then_UseSpec",
+		"Given_NoGlobalDefaults_And_ScheduleDefaults_When_Spec_Then_UseSpec": {
 			givenScheduleTemplate: v1.ResourceRequirements{
-				Limits: v1.ResourceList{
-					v1.ResourceCPU: resource.MustParse("200m"),
-				},
+				Limits: newCPUResourceList("200m"),
 			},
 			givenResourceTemplate: v1.ResourceRequirements{
-				Limits: v1.ResourceList{
-					v1.ResourceCPU: resource.MustParse("50m"),
-				},
+				Limits: newCPUResourceList("50m"),
 			},
 			expectedTemplate: v1.ResourceRequirements{
-				Limits: v1.ResourceList{
-					v1.ResourceCPU: resource.MustParse("50m"),
-				},
+				Limits: newCPUResourceList("50m"),
 			},
 		},
-		{
-			name:                        "Given_GlobalDefaults_And_NoScheduleDefaults_When_NoSpec_Then_UseGlobalDefaults",
+		"Given_GlobalDefaults_And_NoScheduleDefaults_When_NoSpec_Then_UseGlobalDefaults": {
 			globalMemoryResourceRequest: "10Mi",
 			givenScheduleTemplate: v1.ResourceRequirements{
-				Limits: v1.ResourceList{
-					v1.ResourceCPU: resource.MustParse("200m"),
-				},
+				Limits: newCPUResourceList("200m"),
 			},
 			expectedTemplate: v1.ResourceRequirements{
-				Limits: v1.ResourceList{
-					v1.ResourceCPU: resource.MustParse("200m"),
-				},
+				Limits: newCPUResourceList("200m"),
 				Requests: v1.ResourceList{
 					v1.ResourceMemory: resource.MustParse("10Mi"),
 				},
 			},
 		},
-		{
-			name:                        "Given_GlobalDefaults_And_NoScheduleDefaults_When_Spec_Then_UseSpec",
+		"Given_GlobalDefaults_And_NoScheduleDefaults_When_Spec_Then_UseSpec": {
 			globalMemoryResourceRequest: "10Mi",
 			givenResourceTemplate: v1.ResourceRequirements{
 				Requests: v1.ResourceList{
@@ -104,43 +79,31 @@ func TestScheduleHandler_mergeResourcesWithDefaults(t *testing.T) {
 				},
 			},
 		},
-		{
-			name:                   "Given_GlobalDefaults_And_ScheduleDefaults_When_NoSpec_Then_UseSchedule",
+		"Given_GlobalDefaults_And_ScheduleDefaults_When_NoSpec_Then_UseSchedule": {
 			globalCPUResourceLimit: "10m",
 			givenScheduleTemplate: v1.ResourceRequirements{
-				Limits: v1.ResourceList{
-					v1.ResourceCPU: resource.MustParse("200m"),
-				},
+				Limits: newCPUResourceList("200m"),
 			},
 			expectedTemplate: v1.ResourceRequirements{
-				Limits: v1.ResourceList{
-					v1.ResourceCPU: resource.MustParse("200m"),
-				},
+				Limits: newCPUResourceList("200m"),
 			},
 		},
-		{
-			name:                   "Given_GlobalDefaults_And_ScheduleDefaults_When_Spec_Then_UseSpec",
+		"Given_GlobalDefaults_And_ScheduleDefaults_When_Spec_Then_UseSpec": {
 			globalCPUResourceLimit: "10m",
 			givenScheduleTemplate: v1.ResourceRequirements{
-				Limits: v1.ResourceList{
-					v1.ResourceCPU: resource.MustParse("100m"),
-				},
+				Limits: newCPUResourceList("100m"),
 			},
 			givenResourceTemplate: v1.ResourceRequirements{
-				Limits: v1.ResourceList{
-					v1.ResourceCPU: resource.MustParse("200m"),
-				},
+				Limits: newCPUResourceList("200m"),
 			},
 			expectedTemplate: v1.ResourceRequirements{
-				Limits: v1.ResourceList{
-					v1.ResourceCPU: resource.MustParse("200m"),
-				},
+				Limits: newCPUResourceList("200m"),
 			},
 		},
 	}
 	cfg.Config = cfg.NewDefaultConfig()
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
 			cfg.Config.GlobalCPUResourceLimit = tt.globalCPUResourceLimit
 			cfg.Config.GlobalCPUResourceRequest = tt.globalCPUResourceRequest
 			cfg.Config.GlobalMemoryResourceLimit = tt.globalMemoryResourceLimit
@@ -158,138 +121,57 @@ func TestScheduleHandler_mergeResourcesWithDefaults(t *testing.T) {
 	}
 }
 
+func newCPUResourceList(amount string) v1.ResourceList {
+	return v1.ResourceList{
+		v1.ResourceCPU: resource.MustParse(amount),
+	}
+}
+
 func TestScheduleHandler_mergeBackendWithDefaults(t *testing.T) {
-	tests := []struct {
-		name                 string
+	tests := map[string]struct {
 		globalS3Bucket       string
 		givenScheduleBackend v1alpha1.Backend
 		givenResourceBackend v1alpha1.Backend
 		expectedBackend      v1alpha1.Backend
 	}{
-		{
-			name: "Given_NoGlobalDefaults_And_NoScheduleDefaults_When_Spec_Then_UseSpec",
-			givenResourceBackend: v1alpha1.Backend{
-				S3: &v1alpha1.S3Spec{
-					Endpoint: "https://resource-url",
-					Bucket:   "resource-bucket",
-				},
-			},
-			expectedBackend: v1alpha1.Backend{
-				S3: &v1alpha1.S3Spec{
-					Endpoint: "https://resource-url",
-					Bucket:   "resource-bucket",
-				},
-			},
+		"Given_NoGlobalDefaults_And_NoScheduleDefaults_When_Spec_Then_UseSpec": {
+			givenResourceBackend: newS3Backend("https://resource-url", "resource-bucket"),
+			expectedBackend:      newS3Backend("https://resource-url", "resource-bucket"),
 		},
-		{
-			name: "Given_NoGlobalDefaults_And_ScheduleDefaults_When_NoSpec_Then_ApplyScheduleDefaults",
-			givenScheduleBackend: v1alpha1.Backend{
-				S3: &v1alpha1.S3Spec{
-					Endpoint: "https://schedule-url",
-					Bucket:   "schedule-bucket",
-				},
-			},
-			expectedBackend: v1alpha1.Backend{
-				S3: &v1alpha1.S3Spec{
-					Endpoint: "https://schedule-url",
-					Bucket:   "schedule-bucket",
-				},
-			},
+		"Given_NoGlobalDefaults_And_ScheduleDefaults_When_NoSpec_Then_ApplyScheduleDefaults": {
+			givenScheduleBackend: newS3Backend("https://schedule-url", "schedule-bucket"),
+			expectedBackend:      newS3Backend("https://schedule-url", "schedule-bucket"),
 		},
-		{
-			name: "Given_NoGlobalDefaults_And_ScheduleDefaults_When_Spec_Then_UseSpec",
-			givenScheduleBackend: v1alpha1.Backend{
-				S3: &v1alpha1.S3Spec{
-					Endpoint: "https://schedule-url",
-					Bucket:   "schedule-bucket",
-				},
-			},
-			givenResourceBackend: v1alpha1.Backend{
-				S3: &v1alpha1.S3Spec{
-					Endpoint: "https://resource-url",
-					Bucket:   "resource-bucket",
-				},
-			},
-			expectedBackend: v1alpha1.Backend{
-				S3: &v1alpha1.S3Spec{
-					Endpoint: "https://resource-url",
-					Bucket:   "resource-bucket",
-				},
-			},
+		"Given_NoGlobalDefaults_And_ScheduleDefaults_When_Spec_Then_UseSpec": {
+			givenScheduleBackend: newS3Backend("https://schedule-url", "schedule-bucket"),
+			givenResourceBackend: newS3Backend("https://resource-url", "resource-bucket"),
+			expectedBackend:      newS3Backend("https://resource-url", "resource-bucket"),
 		},
-		{
-			name:           "Given_GlobalDefaults_And_NoScheduleDefaults_When_NoSpec_Then_UseGlobalDefaults",
-			globalS3Bucket: "global-bucket",
-			givenScheduleBackend: v1alpha1.Backend{
-				S3: &v1alpha1.S3Spec{
-					Endpoint: "https://schedule-url",
-				},
-			},
-			expectedBackend: v1alpha1.Backend{
-				S3: &v1alpha1.S3Spec{
-					Endpoint: "https://schedule-url",
-					Bucket:   "",
-				},
-			},
+		"Given_GlobalDefaults_And_NoScheduleDefaults_When_NoSpec_Then_UseGlobalDefaults": {
+			globalS3Bucket:       "global-bucket",
+			givenScheduleBackend: newS3Backend("https://schedule-url", ""),
+			expectedBackend:      newS3Backend("https://schedule-url", ""),
 		},
-		{
-			name:           "Given_GlobalDefaults_And_NoScheduleDefaults_When_Spec_Then_UseSpec",
-			globalS3Bucket: "global-bucket",
-			givenResourceBackend: v1alpha1.Backend{
-				S3: &v1alpha1.S3Spec{
-					Endpoint: "https://resource-url",
-					Bucket:   "resource-bucket",
-				},
-			},
-			expectedBackend: v1alpha1.Backend{
-				S3: &v1alpha1.S3Spec{
-					Endpoint: "https://resource-url",
-					Bucket:   "resource-bucket",
-				},
-			},
+		"Given_GlobalDefaults_And_NoScheduleDefaults_When_Spec_Then_UseSpec": {
+			globalS3Bucket:       "global-bucket",
+			givenResourceBackend: newS3Backend("https://resource-url", "resource-bucket"),
+			expectedBackend:      newS3Backend("https://resource-url", "resource-bucket"),
 		},
-		{
-			name:           "Given_GlobalDefaults_And_ScheduleDefaults_When_NoSpec_Then_UseSchedule",
-			globalS3Bucket: "global-bucket",
-			givenScheduleBackend: v1alpha1.Backend{
-				S3: &v1alpha1.S3Spec{
-					Endpoint: "https://schedule-url",
-					Bucket:   "schedule-bucket",
-				},
-			},
-			expectedBackend: v1alpha1.Backend{
-				S3: &v1alpha1.S3Spec{
-					Endpoint: "https://schedule-url",
-					Bucket:   "schedule-bucket",
-				},
-			},
+		"Given_GlobalDefaults_And_ScheduleDefaults_When_NoSpec_Then_UseSchedule": {
+			globalS3Bucket:       "global-bucket",
+			givenScheduleBackend: newS3Backend("https://schedule-url", "schedule-bucket"),
+			expectedBackend:      newS3Backend("https://schedule-url", "schedule-bucket"),
 		},
-		{
-			name:           "Given_GlobalDefaults_And_ScheduleDefaults_When_Spec_Then_UseSpec",
-			globalS3Bucket: "global-bucket",
-			givenScheduleBackend: v1alpha1.Backend{
-				S3: &v1alpha1.S3Spec{
-					Endpoint: "https://schedule-url",
-					Bucket:   "schedule-bucket",
-				},
-			},
-			givenResourceBackend: v1alpha1.Backend{
-				S3: &v1alpha1.S3Spec{
-					Endpoint: "https://resource-url",
-					Bucket:   "resource-bucket",
-				},
-			},
-			expectedBackend: v1alpha1.Backend{
-				S3: &v1alpha1.S3Spec{
-					Endpoint: "https://resource-url",
-					Bucket:   "resource-bucket",
-				},
-			},
+		"Given_GlobalDefaults_And_ScheduleDefaults_When_Spec_Then_UseSpec": {
+			globalS3Bucket:       "global-bucket",
+			givenScheduleBackend: newS3Backend("https://schedule-url", "schedule-bucket"),
+			givenResourceBackend: newS3Backend("https://resource-url", "resource-bucket"),
+			expectedBackend:      newS3Backend("https://resource-url", "resource-bucket"),
 		},
 	}
 	cfg.Config = cfg.NewDefaultConfig()
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
 			cfg.Config.GlobalS3Bucket = tt.globalS3Bucket
 			require.NoError(t, cfg.Config.ValidateSyntax())
 			schedule := ScheduleHandler{schedule: &v1alpha1.Schedule{Spec: v1alpha1.ScheduleSpec{
@@ -302,6 +184,15 @@ func TestScheduleHandler_mergeBackendWithDefaults(t *testing.T) {
 			assert.NotNil(t, res.Backend.S3)
 			assert.Equal(t, *tt.expectedBackend.S3, *res.Backend.S3)
 		})
+	}
+}
+
+func newS3Backend(endpoint, bucket string) v1alpha1.Backend {
+	return v1alpha1.Backend{
+		S3: &v1alpha1.S3Spec{
+			Endpoint: endpoint,
+			Bucket:   bucket,
+		},
 	}
 }
 
