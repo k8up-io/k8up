@@ -32,4 +32,4 @@ jobs:
         CC_TEST_REPORTER_ID: b25e8875aef082d5eee059d71d76dac6d3e0ed23847f6004c1598afe35dadff5
       with:
         coverageLocations: cover.out:gocov
-        prefix: github.com/vshn/k8up
+        prefix: github.com/${{ github.repository }}

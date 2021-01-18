@@ -1,16 +1,10 @@
 name: Lint
 
 on:
+  pull_request: {}
   push:
     branches:
     - master
-    - development
-    tags-ignore:
-    - "*"
-  pull_request:
-    branches:
-    - master
-    - development
 
 jobs:
   lint:

@@ -1,4 +1,4 @@
-name: Build
+name: E2E
 
 on:
   pull_request:
@@ -37,20 +37,3 @@ jobs:
         report_paths: '**/e2e/TestReport-*.xml'
         github_token: ${{ secrets.GITHUB_TOKEN }}
         check_name: e2e-report (${{ matrix.kind-node-version }}, ${{ matrix.crd-spec-version }})
-  image:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v2
-    - name: Determine Go version from go.mod
-      run: echo "GO_VERSION=$(grep "go 1." go.mod | cut -d " " -f 2)" >> $GITHUB_ENV
-    - uses: actions/setup-go@v2
-      with:
-        go-version: ${{ env.GO_VERSION }}
-    - uses: actions/cache@v2
-      with:
-        path: ~/go/pkg/mod
-        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-        restore-keys: |
-          ${{ runner.os }}-go-
-    - name: Build image
-      run: make docker-build
