@@ -35,15 +35,15 @@ type Configuration struct {
 	GlobalS3Endpoint                 string `koanf:"globals3endpoint"`
 	GlobalSecretAccessKey            string `koanf:"globalsecretaccesskey"`
 	GlobalStatsURL                   string `koanf:"globalstatsurl"`
-	GlobalConcurrentArchiveJobsLimit int    `koanf:"globalconcurrentarchivejobslimit"`
-	GlobalConcurrentBackupJobsLimit  int    `koanf:"globalconcurrentbackupjobslimit"`
-	GlobalConcurrentCheckJobsLimit   int    `koanf:"globalconcurrentcheckjobslimit"`
-	GlobalConcurrentPruneJobsLimit   int    `koanf:"globalconcurrentprunejobslimit"`
-	GlobalConcurrentRestoreJobsLimit int    `koanf:"globalconcurrentrestorejobslimit"`
-	GlobalCPUResourceRequest         string `koanf:"globalcpu-request"`
-	GlobalCPUResourceLimit           string `koanf:"globalcpu-limit"`
-	GlobalMemoryResourceRequest      string `koanf:"globalmemory-request"`
-	GlobalMemoryResourceLimit        string `koanf:"globalmemory-limit"`
+	GlobalConcurrentArchiveJobsLimit int    `koanf:"global-concurrent-archive-jobs-limit"`
+	GlobalConcurrentBackupJobsLimit  int    `koanf:"global-concurrent-backup-jobs-limit"`
+	GlobalConcurrentCheckJobsLimit   int    `koanf:"global-concurrent-check-jobs-limit"`
+	GlobalConcurrentPruneJobsLimit   int    `koanf:"global-concurrent-prune-jobs-limit"`
+	GlobalConcurrentRestoreJobsLimit int    `koanf:"global-concurrent-restore-jobs-limit"`
+	GlobalCPUResourceRequest         string `koanf:"global-cpu-request"`
+	GlobalCPUResourceLimit           string `koanf:"global-cpu-limit"`
+	GlobalMemoryResourceRequest      string `koanf:"global-memory-request"`
+	GlobalMemoryResourceLimit        string `koanf:"global-memory-limit"`
 	BackupImage                      string `koanf:"image"`
 	MetricsBindAddress               string `koanf:"metrics-bindaddress"`
 	PodExecRoleName                  string `koanf:"podexecrolename"`
