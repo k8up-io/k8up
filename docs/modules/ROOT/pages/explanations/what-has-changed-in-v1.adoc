@@ -1,0 +1,11 @@
+= What has changed in K8up v1.0?
+
+https://github.com/vshn/k8up/releases/tag/v1.0.0[K8up v1.0] is a big milestone for K8up.
+Although K8up `1.x` itself is backwards compatible with `0.x` resources, the installation method has changed greatly.
+
+K8up sprang to life before Operators "exploded" in the Kubernetes ecosystem.
+There weren't many frameworks available then.
+It was initially built with https://github.com/spotahome/kooper[Kooper], but for v1.0 it was rewritten and migrated the Operator to https://github.com/operator-framework/operator-sdk[Operator SDK] and https://github.com/kubernetes-sigs/kubebuilder[Kubebuilder].
+
+The resources should stay the same and are backwards compatible.
+But the CRDs feature new properties and thus should be upgraded.
