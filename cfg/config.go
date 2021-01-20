@@ -2,6 +2,7 @@ package cfg
 
 import (
 	"fmt"
+
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 )
@@ -52,7 +53,8 @@ type Configuration struct {
 	RestartPolicy                    string `koanf:"restartpolicy"`
 
 	// Enabling this will ensure there is only one active controller manager.
-	EnableLeaderElection bool `koanf:"enable-leader-election"`
+	EnableLeaderElection bool   `koanf:"enable-leader-election"`
+	LogLevel             string `koanf:"log-level"`
 }
 
 var (
