@@ -35,6 +35,7 @@ The Operator can be configured in two ways:
 `BACKUP_GLOBALSTATSURL`:: set the URL of wrestic to post additional metrics globally, default `""`
 `BACKUP_IMAGE`:: URL of the restic image, default: `172.30.1.1:5000/myproject/restic`
 `BACKUP_JOBNAME`:: names for the backup job objects in OpenShift, default: `backupjob`
+`BACKUP_LOG_LEVEL`:: Set to "debug" to enable verbose logging, default: `info`
 `BACKUP_METRICS_BINDADDRESS`:: set the bind address for the prometheus endpoint, default: `:8080`
 `BACKUP_PODEXECACCOUNTNAME`:: set the service account name that should be used for the pod command execution, default: `pod-executor`
 `BACKUP_PODEXECROLENAME`:: set the role name that should be used for pod command execution, default `pod-executor`

@@ -33,6 +33,7 @@ build: generate fmt vet $(BIN_FILENAME) ## Build manager binary
 
 .PHONY: run
 run: export BACKUP_ENABLE_LEADER_ELECTION = $(ENABLE_LEADER_ELECTION)
+run: export BACKUP_LOG_LEVEL = debug
 run: fmt vet ## Run against the configured Kubernetes cluster in ~/.kube/config
 	go run ./main.go
 

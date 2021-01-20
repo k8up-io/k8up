@@ -4,6 +4,7 @@ import (
 	"os"
 	"strings"
 
+	"go.uber.org/zap/zapcore"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
@@ -45,9 +46,12 @@ func init() {
 
 func main() {
 
-	ctrl.SetLogger(zap.New(zap.UseDevMode(true)))
-
 	loadEnvironmentVariables()
+	level := zapcore.InfoLevel
+	if strings.EqualFold(cfg.Config.LogLevel, "debug") {
+		level = zapcore.DebugLevel
+	}
+	ctrl.SetLogger(zap.New(zap.UseDevMode(true), zap.Level(level)))
 
 	setupLog.WithValues("version", version, "date", date, "commit", commit).Info("Starting K8up operator")
 	executor.GetExecutor()
