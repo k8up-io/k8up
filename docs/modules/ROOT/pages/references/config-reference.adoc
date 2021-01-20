@@ -33,7 +33,7 @@ The Operator can be configured in two ways:
 `BACKUP_GLOBALS3ENDPOINT`:: set the S3 endpoint to be used globally
 `BACKUP_GLOBALSECRETACCESSKEY`:: set the S3 secret access key to be used globally
 `BACKUP_GLOBALSTATSURL`:: set the URL of wrestic to post additional metrics globally, default `""`
-`BACKUP_IMAGE`:: URL of the restic image, default: `172.30.1.1:5000/myproject/restic`
+`BACKUP_IMAGE`:: URL of the restic image, default: `quay.io/vshn/wrestic:latest`
 `BACKUP_JOBNAME`:: names for the backup job objects in OpenShift, default: `backupjob`
 `BACKUP_LOG_LEVEL`:: Set to "debug" to enable verbose logging, default: `info`
 `BACKUP_METRICS_BINDADDRESS`:: set the bind address for the prometheus endpoint, default: `:8080`
