@@ -4,16 +4,12 @@ package job
 
 import (
 	"context"
-	"fmt"
-
-	"k8s.io/apimachinery/pkg/api/errors"
 
 	"github.com/vshn/k8up/api/v1alpha1"
 	k8upv1alpha1 "github.com/vshn/k8up/api/v1alpha1"
 	"github.com/vshn/k8up/cfg"
 
 	"github.com/go-logr/logr"
-	"github.com/operator-framework/operator-lib/status"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -49,7 +45,8 @@ type Config struct {
 type Object interface {
 	GetMetaObject() metav1.Object
 	GetRuntimeObject() runtime.Object
-	GetStatus() *k8upv1alpha1.Status
+	GetStatus() k8upv1alpha1.Status
+	SetStatus(s k8upv1alpha1.Status)
 	GetType() v1alpha1.JobType
 	GetResources() corev1.ResourceRequirements
 }
@@ -66,8 +63,8 @@ func NewConfig(ctx context.Context, client client.Client, log logr.Logger, obj O
 	}
 }
 
-// GetGenericJob returns a generic batchv1.job for further use.
-func GetGenericJob(obj Object, config Config) (*batchv1.Job, error) {
+// GenerateGenericJob returns a generic batchv1.job for further use.
+func GenerateGenericJob(obj Object, config Config) (*batchv1.Job, error) {
 	job := &batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      obj.GetMetaObject().GetName(),
@@ -96,69 +93,4 @@ func GetGenericJob(obj Object, config Config) (*batchv1.Job, error) {
 	err := ctrl.SetControllerReference(obj.GetMetaObject(), job, config.Scheme)
 
 	return job, err
-}
-
-// SetConditionTrue tells the K8s controller at once that the status of the given Conditions is now "True"
-func (c *Config) SetConditionTrue(condition status.ConditionType) {
-	c.patchConditions(corev1.ConditionTrue, "", condition)
-}
-
-// SetConditionFalse tells the K8s controller at once that the status of the given Condition is now "True" and
-// provides the given message.
-// The arguments `message` and `args` follow the fmt.Sprintf() syntax.
-func (c *Config) SetConditionTrueWithMessage(condition status.ConditionType, message string, args ...interface{}) {
-	c.patchConditions(corev1.ConditionTrue, fmt.Sprintf(message, args...), condition)
-}
-
-// SetConditionFalse tells the K8s controller at once that the status of the given Condition is now "False" and
-// provides the given message.
-// The arguments `message` and `args` follow the fmt.Sprintf() syntax.
-func (c *Config) SetConditionFalse(condition status.ConditionType, message string, args ...interface{}) {
-	c.patchConditions(corev1.ConditionFalse, fmt.Sprintf(message, args...), condition)
-}
-
-// patchConditions patches the Status object on the K8s controller with the given Conditions
-func (c *Config) patchConditions(conditionStatus corev1.ConditionStatus, message string, conditions ...status.ConditionType) {
-	runtimeObject := c.Obj.GetRuntimeObject()
-	patch := client.MergeFrom(runtimeObject.DeepCopyObject())
-
-	for _, condition := range conditions {
-		c.Obj.GetStatus().Conditions.SetCondition(status.Condition{
-			Type:    condition,
-			Status:  conditionStatus,
-			Message: message,
-		})
-	}
-
-	err := c.Client.Status().Patch(c.CTX, c.Obj.GetRuntimeObject().(client.Object), patch)
-	if err != nil {
-		if errors.IsNotFound(err) {
-			return
-		}
-		c.Log.Error(err, "could not patch backup conditions")
-	}
-}
-
-// SetStarted sets the `c.Obj.GetStatus().Started` property to `true`.
-// In the same call to the k8s API it also sets all the given conditions to "True".
-// The arguments `message` and `args` follow the fmt.Sprintf() syntax.
-func (c *Config) SetStarted(trueCondition status.ConditionType, message string, args ...interface{}) {
-	runtimeObject := c.Obj.GetRuntimeObject()
-	patch := client.MergeFrom(runtimeObject.DeepCopyObject())
-
-	c.Obj.GetStatus().Started = true
-
-	c.Obj.GetStatus().Conditions.SetCondition(status.Condition{
-		Type:    trueCondition,
-		Status:  corev1.ConditionTrue,
-		Message: fmt.Sprintf(message, args...),
-	})
-
-	err := c.Client.Status().Patch(c.CTX, c.Obj.GetRuntimeObject().(client.Object), patch)
-	if err != nil {
-		if errors.IsNotFound(err) {
-			return
-		}
-		c.Log.Error(err, "could not patch backup conditions")
-	}
 }

@@ -76,8 +76,14 @@ func (*Backup) GetType() JobType {
 	return BackupType
 }
 
-func (b *Backup) GetStatus() *Status {
-	return &b.Status
+// GetStatus retrieves the Status property
+func (b *Backup) GetStatus() Status {
+	return b.Status
+}
+
+// SetStatus sets the Status property
+func (b *Backup) SetStatus(status Status) {
+	b.Status = status
 }
 
 func (b *Backup) GetResources() corev1.ResourceRequirements {

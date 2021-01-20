@@ -4,12 +4,13 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/vshn/k8up/api/v1alpha1"
-	"github.com/vshn/k8up/job"
-	"github.com/vshn/k8up/observer"
 	batchv1 "k8s.io/api/batch/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+
+	"github.com/vshn/k8up/api/v1alpha1"
+	"github.com/vshn/k8up/job"
+	"github.com/vshn/k8up/observer"
 )
 
 const (

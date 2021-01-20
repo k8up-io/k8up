@@ -59,12 +59,3 @@ spec:
     retention:
       keepLast: 5
       keepDaily: 14
----
-apiVersion: backup.appuio.ch/v1alpha1
-kind: Schedule
-metadata:
-  name: schedule-global
-spec:
-  backup:
-    schedule: '* * * * *'
-    keepJobs: 10

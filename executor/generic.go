@@ -10,7 +10,7 @@ import (
 
 	"k8s.io/apimachinery/pkg/types"
 
-	"github.com/vshn/k8up/api/v1alpha1"
+	k8upv1alpha1 "github.com/vshn/k8up/api/v1alpha1"
 	"github.com/vshn/k8up/cfg"
 	"github.com/vshn/k8up/job"
 	"github.com/vshn/k8up/observer"
@@ -18,7 +18,6 @@ import (
 
 	"github.com/go-logr/logr"
 	"github.com/imdario/mergo"
-	"github.com/operator-framework/operator-lib/status"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -41,18 +40,6 @@ type envVarEntry struct {
 type EnvVarConverter struct {
 	Vars map[string]envVarEntry
 }
-
-// Generic conditions
-const (
-	// ConditionJobCreated indicates whether the relevant job was created or not and perhaps why
-	ConditionJobCreated status.ConditionType = "JobCreated"
-
-	// ConditionJobSucceeded indicates that the relevant job has ended and was successful
-	ConditionJobSucceeded status.ConditionType = "JobSucceeded"
-
-	// ConditionCleanupSucceeded indicates whether the cleanup job succeeded
-	ConditionCleanupSucceeded status.ConditionType = "CleanupSucceeded"
-)
 
 // NewEnvVarConverter returns a new
 func NewEnvVarConverter() EnvVarConverter {
@@ -134,7 +121,7 @@ func (g *generic) GetJobNamespacedName() types.NamespacedName {
 	return types.NamespacedName{Namespace: g.Obj.GetMetaObject().GetNamespace(), Name: g.Obj.GetMetaObject().GetName()}
 }
 
-func (g *generic) GetJobType() v1alpha1.JobType {
+func (g *generic) GetJobType() k8upv1alpha1.JobType {
 	return g.Obj.GetType()
 }
 
@@ -145,29 +132,62 @@ func (g *generic) RegisterJobSucceededConditionCallback() {
 	observer.GetObserver().RegisterCallback(name.String(), func(event observer.ObservableJob) {
 		switch event.Event {
 		case observer.Suceeded:
-			g.SetConditionTrueWithMessage(ConditionJobSucceeded,
+			g.SetFinished(event.Job.Namespace, event.Job.Name)
+			g.SetConditionTrueWithMessage(k8upv1alpha1.ConditionCompleted,
+				k8upv1alpha1.ReasonSucceeded,
 				"the job '%v/%v' ended successfully",
 				event.Job.Namespace, event.Job.Name)
 		case observer.Failed:
-			g.SetConditionFalse(ConditionJobSucceeded,
+			g.SetFinished(event.Job.Namespace, event.Job.Name)
+			g.SetConditionFalseWithMessage(k8upv1alpha1.ConditionCompleted,
+				k8upv1alpha1.ReasonFailed,
 				"the job '%v/%v' failed, please check its log for details",
 				event.Job.Namespace, event.Job.Name)
 		}
 	})
 }
 
+// CreateObjectIfNotExisting tries to create the given object, but ignores AlreadyExistsError.
+// If it fails for any other reason, the Ready condition is set to False with the error message and reason.
+func (g *generic) CreateObjectIfNotExisting(obj client.Object) error {
+	err := g.Client.Create(g.CTX, obj)
+	if err != nil && !errors.IsAlreadyExists(err) {
+		g.SetConditionFalseWithMessage(k8upv1alpha1.ConditionReady,
+			k8upv1alpha1.ReasonCreationFailed,
+			"unable to create %v '%v/%v': %v",
+			obj.GetObjectKind().GroupVersionKind().Kind,
+			obj.GetNamespace(), obj.GetName(), err.Error())
+		return err
+	}
+	return nil
+}
+
+// listOldResources retrieves a list of the given resource type in the given namespace and fills the Item property
+// of objList. On errors, the error is being logged and the Scrubbed condition set to False with reason RetrievalFailed.
+func (g *generic) listOldResources(namespace string, objList client.ObjectList) error {
+	err := g.Client.List(g.CTX, objList, &client.ListOptions{
+		Namespace: namespace,
+	})
+	if err != nil {
+		g.Log.Error(err, "could not list objects to cleanup old resources", "Namespace", namespace, "kind", objList.GetObjectKind().GroupVersionKind().Kind)
+		g.SetConditionFalseWithMessage(k8upv1alpha1.ConditionScrubbed, k8upv1alpha1.ReasonRetrievalFailed, "could not list objects to cleanup old resources: %v", err)
+		return err
+	}
+	return nil
+}
+
 // NewExecutor will return the right Executor for the given job object.
 func NewExecutor(config job.Config) queue.Executor {
 	switch config.Obj.GetType() {
-	case v1alpha1.BackupType:
+	case k8upv1alpha1.BackupType:
 		return NewBackupExecutor(config)
-	case v1alpha1.CheckType:
+	case k8upv1alpha1.CheckType:
 		return NewCheckExecutor(config)
-	case v1alpha1.ArchiveType:
+	case k8upv1alpha1.ArchiveType:
 		return NewArchiveExecutor(config)
-	case v1alpha1.PruneType:
+	case k8upv1alpha1.PruneType:
 		return NewPruneExecutor(config)
-	case v1alpha1.RestoreType:
+	case k8upv1alpha1.RestoreType:
 		return NewRestoreExecutor(config)
 	}
 	return nil
@@ -187,29 +207,32 @@ func DefaultEnv(namespace string) EnvVarConverter {
 	return defaults
 }
 
-func cleanOldObjects(jobObjects jobObjectList, maxObjects int, config job.Config) error {
+// cleanOldObjects iterates sorted over the given list and deletes them until maxObjects remain. If a deletion fails,
+// the Scrubbed condition will be set to false with the error message, which will also be logged. The func also aborts early.
+// If all succeed, the condition is set to "true".
+func cleanOldObjects(jobObjects jobObjectList, maxObjects int, config job.Config) {
 	numToDelete := len(jobObjects) - maxObjects
 
 	if numToDelete <= 0 {
-		return nil
+		return
 	}
 
 	sort.Sort(jobObjects)
-
 	for i := 0; i < numToDelete; i++ {
-		config.Log.Info("cleaning old job", "namespace", jobObjects[i].GetMetaObject().GetNamespace(), "name", jobObjects[i].GetMetaObject().GetName())
+		name := jobObjects[i].GetMetaObject().GetName()
+		ns := jobObjects[i].GetMetaObject().GetNamespace()
+		config.Log.Info("cleaning old job", "namespace", ns, "name", name)
 		option := metav1.DeletePropagationForeground
 		err := config.Client.Delete(config.CTX, jobObjects[i].GetRuntimeObject().(client.Object), &client.DeleteOptions{
 			PropagationPolicy: &option,
 		})
-		if err != nil {
-			if !errors.IsNotFound(err) {
-				return err
-			}
+		if err != nil && !errors.IsNotFound(err) {
+			config.Log.Error(err, "could not delete old job", "namespace", ns)
+			config.SetConditionFalseWithMessage(k8upv1alpha1.ConditionScrubbed, k8upv1alpha1.ReasonDeletionFailed, "could not delete old %s: %v", jobObjects[i].GetType(), err)
+			return
 		}
 	}
-
-	return nil
+	config.SetConditionTrueWithMessage(k8upv1alpha1.ConditionScrubbed, k8upv1alpha1.ReasonSucceeded, "Deleted %d resources", numToDelete)
 }
 
 func getKeepJobs(keepJobs *int) int {

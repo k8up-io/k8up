@@ -64,8 +64,14 @@ func (r *Restore) GetType() JobType {
 	return RestoreType
 }
 
-func (r *Restore) GetStatus() *Status {
-	return &r.Status
+// GetStatus retrieves the Status property
+func (r *Restore) GetStatus() Status {
+	return r.Status
+}
+
+// SetStatus sets the Status property
+func (r *Restore) SetStatus(status Status) {
+	r.Status = status
 }
 
 func (r *Restore) GetResources() corev1.ResourceRequirements {

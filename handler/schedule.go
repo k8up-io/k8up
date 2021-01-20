@@ -54,18 +54,18 @@ func (s *ScheduleHandler) Handle() error {
 	scheduler.GetScheduler().RemoveSchedules(namespacedName)
 	err = scheduler.GetScheduler().SyncSchedules(jobList)
 	if err != nil {
-		return fmt.Errorf("cannot add to cron: %w", err)
+		s.SetConditionFalseWithMessage(k8upv1alpha1.ConditionReady, k8upv1alpha1.ReasonFailed, "cannot add to cron: %v", err.Error())
+		return s.updateStatus()
 	}
+
+	s.SetConditionTrue(k8upv1alpha1.ConditionReady, k8upv1alpha1.ReasonReady)
 
 	if !controllerutil.ContainsFinalizer(s.schedule, scheduleFinalizerName) {
 		controllerutil.AddFinalizer(s.schedule, scheduleFinalizerName)
 		return s.updateSchedule()
 	}
 
-	if s.requireStatusUpdate {
-		return s.updateStatus()
-	}
-	return nil
+	return s.updateStatus()
 }
 
 func (s *ScheduleHandler) createJobList() scheduler.JobList {

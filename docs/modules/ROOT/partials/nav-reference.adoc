@@ -1,3 +1,4 @@
 * xref:k8up:ROOT:references/config-reference.adoc[Configuration]
 * xref:k8up:ROOT:references/object-specifications.adoc[Object Specifications]
 * xref:k8up:ROOT:references/schedule-specification.adoc[Schedule Specifications]
+* xref:k8up:ROOT:references/status.adoc[Status and Conditions]

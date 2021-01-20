@@ -9,7 +9,6 @@ import (
 	"github.com/vshn/k8up/cfg"
 	"github.com/vshn/k8up/job"
 
-	"github.com/operator-framework/operator-lib/status"
 	appsv1 "k8s.io/api/apps/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -37,14 +36,13 @@ func NewPrebackup(config job.Config) *PreBackup {
 }
 
 const (
-	// ConditionPreBackupPodsAvailable is True if there are Container definitions
-	ConditionPreBackupPodsAvailable status.ConditionType = "PreBackupPodsAvailable"
-
 	// ConditionPreBackupPodsReady is True if Deployments for all Container definitions were created and are ready
-	ConditionPreBackupPodsReady status.ConditionType = "PreBackupPodsReady"
+	ConditionPreBackupPodsReady k8upv1alpha1.ConditionType = "PreBackupPodsReady"
 
-	// ConditionPreBackupPodsRemoved is True if Deployments for all Container definitions were created
-	ConditionPreBackupPodsRemoved status.ConditionType = "PreBackupPodsRemoved"
+	// ReasonNoPreBackupPodsFound is given when no PreBackupPods are found in the same namespace
+	ReasonNoPreBackupPodsFound k8upv1alpha1.ConditionReason = "NoPreBackupPodsFound"
+	// ReasonWaiting is given when PreBackupPods are waiting to be started
+	ReasonWaiting k8upv1alpha1.ConditionReason = "Waiting"
 )
 
 // Start will start the defined pods as deployments.
@@ -52,16 +50,16 @@ func (p *PreBackup) Start() error {
 
 	templates, err := p.getPodTemplates()
 	if err != nil {
-		p.SetConditionFalse(ConditionPreBackupPodsAvailable, "error while retrieving container definitions: %v", err.Error())
+		p.SetConditionFalseWithMessage(ConditionPreBackupPodsReady, k8upv1alpha1.ReasonRetrievalFailed, "error while retrieving container definitions: %v", err.Error())
 		return err
 	}
 
 	if len(templates.Items) == 0 {
-		p.SetConditionFalse(ConditionPreBackupPodsAvailable, "no container definitions found")
+		p.SetConditionTrueWithMessage(ConditionPreBackupPodsReady, ReasonNoPreBackupPodsFound, "no container definitions found")
 		return nil
 	}
 
-	p.SetConditionTrue(ConditionPreBackupPodsAvailable)
+	p.SetConditionUnknownWithMessage(ConditionPreBackupPodsReady, ReasonWaiting, "ready to start %d PreBackupPods", len(templates.Items))
 
 	deployments := p.generateDeployments(templates)
 
@@ -139,7 +137,7 @@ func (p *PreBackup) startAndWaitForReady(deployments []appsv1.Deployment) error 
 		err := p.Client.Create(p.CTX, &deployment)
 		if err != nil && !errors.IsAlreadyExists(err) {
 			err := fmt.Errorf("error creating pre backup pod '%v/%v': %w", namespace, name, err)
-			p.SetConditionFalse(ConditionPreBackupPodsReady, err.Error())
+			p.SetConditionFalseWithMessage(ConditionPreBackupPodsReady, k8upv1alpha1.ReasonCreationFailed, err.Error())
 			return err
 		}
 
@@ -148,19 +146,19 @@ func (p *PreBackup) startAndWaitForReady(deployments []appsv1.Deployment) error 
 			Watch(p.CTX, metav1.SingleObject(deployment.ObjectMeta))
 		if err != nil {
 			err := fmt.Errorf("could not create watcher for '%v/%v': %w", namespace, name, err)
-			p.SetConditionFalse(ConditionPreBackupPodsReady, err.Error())
+			p.SetConditionFalseWithMessage(ConditionPreBackupPodsReady, k8upv1alpha1.ReasonCreationFailed, err.Error())
 			return err
 		}
 
 		err = p.waitForReady(watcher)
 		if err != nil {
 			err := fmt.Errorf("error during deployment watch of '%v/%v': %w", namespace, name, err)
-			p.SetConditionFalse(ConditionPreBackupPodsReady, err.Error())
+			p.SetConditionFalseWithMessage(ConditionPreBackupPodsReady, k8upv1alpha1.ReasonFailed, err.Error())
 			return err
 		}
 	}
 
-	p.SetConditionTrue(ConditionPreBackupPodsReady)
+	p.SetConditionTrue(ConditionPreBackupPodsReady, k8upv1alpha1.ReasonSucceeded)
 	return nil
 }
 
@@ -220,6 +218,8 @@ func (p *PreBackup) waitForReady(watcher watch.Interface) error {
 			return fmt.Errorf("there was an unknown error while starting pre backup pod '%v/%v'", deployment.Namespace, deployment.Name)
 
 		case watch.Added:
+		case watch.Bookmark:
+		case watch.Deleted:
 			p.Log.V(1).Info("ignoring event", "deployment", fmt.Sprintf("%s/%s", deployment.Namespace, deployment.Name), "event type", event.Type)
 		default:
 			p.Log.Info("unexpected event during deployment watch ", "deployment", fmt.Sprintf("%s/%s", deployment.Namespace, deployment.Name), "event type", event.Type)
@@ -251,13 +251,13 @@ func (p *PreBackup) getLastDeploymentCondition(deployment *appsv1.Deployment) *a
 func (p *PreBackup) Stop() {
 	templates, err := p.getPodTemplates()
 	if err != nil {
-		p.Log.Error(err, "could not fetch podtemplates", "name", p.Obj.GetMetaObject().GetName(), "namespace", p.Obj.GetMetaObject().GetNamespace())
-		p.SetConditionFalse(ConditionPreBackupPodsRemoved, "could not fetch pod templates: %v", err)
+		p.Log.Error(err, "could not fetch pod templates", "name", p.Obj.GetMetaObject().GetName(), "namespace", p.Obj.GetMetaObject().GetNamespace())
+		p.SetConditionFalseWithMessage(ConditionPreBackupPodsReady, k8upv1alpha1.ReasonRetrievalFailed, "could not fetch pod templates: %v", err)
 		return
 	}
 
 	if len(templates.Items) == 0 {
-		p.SetConditionTrue(ConditionPreBackupPodsRemoved)
+		p.SetConditionTrue(ConditionPreBackupPodsReady, ReasonNoPreBackupPodsFound)
 		return
 	}
 
@@ -268,14 +268,15 @@ func (p *PreBackup) Stop() {
 		// Avoid exportloopref
 		deployment := deployment
 
-		p.Log.Info("removing prebackup pod", "name", deployment.Name, "namespace", deployment.Namespace)
+		p.Log.Info("removing PreBackupPod deployment", "name", deployment.Name, "namespace", deployment.Namespace)
 		err := p.Client.Delete(p.CTX, &deployment, &client.DeleteOptions{
 			PropagationPolicy: &option,
 		})
 		if err != nil && !errors.IsNotFound(err) {
-			p.Log.Error(err, "could not create deployment", "name", p.Obj.GetMetaObject().GetName(), "namespace", p.Obj.GetMetaObject().GetNamespace())
+			p.Log.Error(err, "could not delete deployment", "name", p.Obj.GetMetaObject().GetName(), "namespace", p.Obj.GetMetaObject().GetNamespace())
+			p.SetConditionFalseWithMessage(ConditionPreBackupPodsReady, k8upv1alpha1.ReasonDeletionFailed, "could not delete deployment: %v", err.Error())
 		}
 	}
 
-	p.SetConditionTrue(ConditionPreBackupPodsRemoved)
+	p.SetConditionTrue(ConditionPreBackupPodsReady, k8upv1alpha1.ReasonSucceeded)
 }

@@ -4,7 +4,6 @@ import (
 	stderrors "errors"
 
 	batchv1 "k8s.io/api/batch/v1"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
 
 	k8upv1alpha1 "github.com/vshn/k8up/api/v1alpha1"
 	"github.com/vshn/k8up/cfg"
@@ -42,35 +41,29 @@ func (c *CheckExecutor) Execute() error {
 		return nil
 	}
 
-	checkJob, err := job.GetGenericJob(c.Obj, c.Config)
+	checkJob, err := job.GenerateGenericJob(c.Obj, c.Config)
 	if err != nil {
-		c.SetConditionFalse(ConditionJobCreated, "could not get job template: %v", err)
+		c.SetConditionFalseWithMessage(k8upv1alpha1.ConditionReady, k8upv1alpha1.ReasonCreationFailed, "could not get job template: %v", err)
 		return err
 	}
 	checkJob.GetLabels()[job.K8upExclusive] = "true"
 
-	return c.startCheck(checkObject, checkJob, err)
+	return c.startCheck(checkObject, checkJob)
 }
 
-func (c *CheckExecutor) startCheck(checkObject *k8upv1alpha1.Check, checkJob *batchv1.Job, err error) error {
+func (c *CheckExecutor) startCheck(checkObject *k8upv1alpha1.Check, checkJob *batchv1.Job) error {
 	c.check = checkObject
 	c.RegisterJobSucceededConditionCallback()
 
 	checkJob.Spec.Template.Spec.Containers[0].Env = c.setupEnvVars()
 	checkJob.Spec.Template.Spec.Containers[0].Args = []string{"-check"}
 
-	err = c.Client.Create(c.CTX, checkJob)
+	err := c.CreateObjectIfNotExisting(checkJob)
 	if err != nil {
-		if !apierrors.IsAlreadyExists(err) {
-			c.Log.Error(err, "could not create job")
-			c.SetConditionFalse(ConditionJobCreated,
-				"could not create check job '%v/%v': %v",
-				checkJob.Namespace, checkJob.Name, err)
-			return err
-		}
+		return err
 	}
 
-	c.SetStarted(ConditionJobCreated, "the job '%v/%v' was created", checkJob.Namespace, checkJob.Name)
+	c.SetStarted("the job '%v/%v' was created", checkJob.Namespace, checkJob.Name)
 	return nil
 }
 
