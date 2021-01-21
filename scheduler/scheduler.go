@@ -4,13 +4,14 @@ import (
 	"errors"
 	"fmt"
 	"sync"
-	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/robfig/cron/v3"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/rand"
+	"k8s.io/utils/strings"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/metrics"
@@ -152,7 +153,7 @@ func (s *Scheduler) RemoveSchedules(namespacedName types.NamespacedName) {
 
 func (s *Scheduler) createObject(jobType k8upv1alpha1.JobType, namespace string, obj ObjectCreator, config job.Config) {
 
-	name := fmt.Sprintf("%sjob-%d", jobType, time.Now().Unix())
+	name := generateName(jobType, config.Obj.GetMetaObject().GetName())
 
 	rtObj := obj.CreateObject(name, namespace)
 
@@ -172,6 +173,13 @@ func (s *Scheduler) createObject(jobType k8upv1alpha1.JobType, namespace string,
 		config.Log.Error(err, "could not trigger k8up newJobs", "name", namespace+"/"+name)
 	}
 
+}
+
+func generateName(jobType k8upv1alpha1.JobType, prefix string) string {
+	lenRandom := 5
+	remainingLength := 63 - lenRandom - len(jobType) - 2
+	shortPrefix := strings.ShortenString(prefix, remainingLength)
+	return fmt.Sprintf("%s-%s-%s", shortPrefix, jobType, rand.String(lenRandom))
 }
 
 func (s *Scheduler) incRegisteredSchedulesGauge(namespace string) {
