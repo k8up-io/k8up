@@ -63,6 +63,11 @@ type PruneSchedule struct {
 type ScheduleStatus struct {
 	// EffectiveSchedules displays the final schedule for each type (useful when using smart schedules).
 	EffectiveSchedules map[JobType]ScheduleDefinition `json:"effectiveSchedules,omitempty"`
+
+	// Conditions provide a standard mechanism for higher-level status reporting from a controller.
+	// They are an extension mechanism which allows tools and other controllers to collect summary information about
+	// resources without needing to understand resource-specific status details.
+	Conditions []metav1.Condition `json:"conditions,omitempty"`
 }
 
 // +kubebuilder:object:root=true
@@ -102,8 +107,14 @@ func (*Schedule) GetType() JobType {
 	return ScheduleType
 }
 
-func (s *Schedule) GetStatus() *Status {
-	return nil
+// GetStatus retrieves the Status property
+func (s *Schedule) GetStatus() Status {
+	return Status{Conditions: s.Status.Conditions}
+}
+
+// SetStatus sets the Status.Conditions property
+func (s *Schedule) SetStatus(status Status) {
+	s.Status.Conditions = status.Conditions
 }
 
 func (s *Schedule) GetResources() corev1.ResourceRequirements {

@@ -58,8 +58,14 @@ func (*Archive) GetType() JobType {
 	return ArchiveType
 }
 
-func (a *Archive) GetStatus() *Status {
-	return &a.Status
+// GetStatus retrieves the Status property
+func (a *Archive) GetStatus() Status {
+	return a.Status
+}
+
+// SetStatus sets the Status property
+func (a *Archive) SetStatus(status Status) {
+	a.Status = status
 }
 
 func (a *Archive) GetResources() corev1.ResourceRequirements {

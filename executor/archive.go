@@ -12,7 +12,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 const archivePath = "/archive"
@@ -45,9 +44,9 @@ func (a *ArchiveExecutor) Execute() error {
 		return nil
 	}
 
-	jobObj, err := job.GetGenericJob(archive, a.Config)
+	jobObj, err := job.GenerateGenericJob(archive, a.Config)
 	if err != nil {
-		a.SetConditionFalse(ConditionJobCreated, "could not get job template: %v", err)
+		a.SetConditionFalseWithMessage(k8upv1alpha1.ConditionReady, k8upv1alpha1.ReasonCreationFailed, "could not get job template: %v", err)
 		return err
 	}
 	jobObj.GetLabels()[job.K8upExclusive] = "true"
@@ -68,14 +67,15 @@ func (a *ArchiveExecutor) startArchive(archiveJob *batchv1.Job, archive *k8upv1a
 	if err != nil {
 		if !apierrors.IsAlreadyExists(err) {
 			a.Log.Error(err, "could not create job")
-			a.SetConditionFalse(ConditionJobCreated,
+			a.SetConditionFalseWithMessage(k8upv1alpha1.ConditionReady,
+				k8upv1alpha1.ReasonCreationFailed,
 				"could not create archive job '%v/%v': %v",
 				archiveJob.Namespace, archiveJob.Name, err)
 			return
 		}
 	}
 
-	a.SetStarted(ConditionJobCreated, "the job '%v/%v' was created", archiveJob.Namespace, archiveJob.Name)
+	a.SetStarted("the job '%v/%v' was created", archiveJob.Namespace, archiveJob.Name)
 }
 
 func (a *ArchiveExecutor) registerArchiveCallback(archive *k8upv1alpha1.Archive) {
@@ -126,28 +126,18 @@ func (a *ArchiveExecutor) setupEnvVars(archive *k8upv1alpha1.Archive) []corev1.E
 }
 
 func (a *ArchiveExecutor) cleanupOldArchives(name types.NamespacedName, archive *k8upv1alpha1.Archive) {
-	archiveList := &k8upv1alpha1.ArchiveList{}
-	err := a.Client.List(a.CTX, archiveList, &client.ListOptions{
-		Namespace: name.Namespace,
-	})
+	list := &k8upv1alpha1.ArchiveList{}
+	err := a.listOldResources(name.Namespace, list)
 	if err != nil {
-		a.Log.Error(err, "could not list objects to cleanup old archives", "Namespace", name.Namespace)
-		a.SetConditionFalse(ConditionCleanupSucceeded, "cloud not list objects to cleanup old archives: %v", err)
 		return
 	}
 
-	jobs := make(jobObjectList, len(archiveList.Items))
-	for i, aItem := range archiveList.Items {
+	jobs := make(jobObjectList, len(list.Items))
+	for i, aItem := range list.Items {
 		jobs[i] = &aItem
 	}
 
 	var keepJobs = archive.Spec.KeepJobs
 
-	err = cleanOldObjects(jobs, getKeepJobs(keepJobs), a.Config)
-	if err != nil {
-		a.Log.Error(err, "could not delete old archives", "namespace", name.Namespace)
-		a.SetConditionFalse(ConditionCleanupSucceeded, "could not delete old archives: %v", err)
-	}
-
-	a.SetConditionTrue(ConditionCleanupSucceeded)
+	cleanOldObjects(jobs, getKeepJobs(keepJobs), a.Config)
 }

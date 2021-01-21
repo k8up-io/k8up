@@ -1,0 +1,81 @@
+= K8up Status and Conditions
+
+The following resources support `.status.conditions`.
+Conditions are like a multi-state state-machine and give high-level information about the resources.
+
+Each condition also contains a human-readable message that describes the status and reason.
+
+.Conditions for `Schedule`
+|===
+| Condition | Reasons | Description
+
+.2+| `Ready`
+| Ready
+| The jobs have been created and added to the cron scheduler.
+
+| Failed
+| The jobs could not be added to the cron scheduler.
+
+|===
+
+.Conditions for `Archive`, `Backup`, `Check`, `Prune`, `Restore`
+|===
+| Condition | Reasons | Description
+
+.2+| `Ready`
+| Ready
+| All dependent resource are successfully created, the resource is ready for its main function.
+
+| CreationFailed
+| Dependent resources could not be created.
+
+.2+| `Progressing`
+| Started
+| This is given when the resource is in the process of doing its main function. This condition is true after reaching Ready condition and reset when it's finished.
+
+| Finished
+| The resource is done with its main function. It does not give indication about its success.
+
+.2+| `Completed`
+| Succeeded
+| The resource could successfully finish its main function.
+
+| Failed
+| A not further categorized failure happened during progression.
+
+.3+| `Scrubbed` (does not apply to `Check`)
+| RetrievalFailed
+| The resource could not retrieve the resources it's supposed to clean up.
+
+| DeletionFailed
+| The resource could not delete one or more resources during cleanup.
+
+| Succeeded
+| The resource successfully cleaned up old resources.
+
+|===
+
+.Additional Conditions for `Backup`
+|===
+| Condition | Reasons | Description
+
+.6+| `PreBackupPodsReady`
+| NoPreBackupPodsFound
+| No PreBackupPod definitions have been found, backups are created without them.
+
+| RetrievalFailed
+| `PreBackupPod` definitions could not be retrieved from Kubernetes
+
+| Waiting
+| The `Backup` is waiting for `PreBackupPods` to finish.
+
+| CreationFailed
+| `PreBackupPod` deployments could not be created.
+
+| Failed
+| `PreBackupPod` deployments failed with an unknown error.
+
+| Succeeded
+| `PreBackupPod` deployments successfully finished.
+
+|===

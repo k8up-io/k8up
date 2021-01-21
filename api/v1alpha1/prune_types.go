@@ -65,8 +65,14 @@ func (p *Prune) GetType() JobType {
 	return PruneType
 }
 
-func (p *Prune) GetStatus() *Status {
-	return &p.Status
+// GetStatus retrieves the Status property
+func (p *Prune) GetStatus() Status {
+	return p.Status
+}
+
+// SetStatus sets the Status property
+func (p *Prune) SetStatus(status Status) {
+	p.Status = status
 }
 
 func (p *Prune) GetResources() corev1.ResourceRequirements {

@@ -14,7 +14,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // PruneExecutor will execute the batch.job for Prunes.
@@ -45,9 +44,9 @@ func (p *PruneExecutor) Execute() error {
 		return nil
 	}
 
-	jobObj, err := job.GetGenericJob(prune, p.Config)
+	jobObj, err := job.GenerateGenericJob(prune, p.Config)
 	if err != nil {
-		p.SetConditionFalse(ConditionJobCreated, "could not get job template: %v", err)
+		p.SetConditionFalseWithMessage(k8upv1alpha1.ConditionReady, k8upv1alpha1.ReasonCreationFailed, "could not get job template: %v", err)
 		return err
 	}
 	jobObj.GetLabels()[job.K8upExclusive] = "true"
@@ -72,12 +71,12 @@ func (p *PruneExecutor) startPrune(pruneJob *batchv1.Job, prune *k8upv1alpha1.Pr
 	if err := p.Client.Create(p.CTX, pruneJob); err != nil {
 		if !apierrors.IsAlreadyExists(err) {
 			p.Log.Error(err, "could not create job")
-			p.SetConditionFalse(ConditionJobCreated, "could not create job: %v", err)
+			p.SetConditionFalseWithMessage(k8upv1alpha1.ConditionReady, k8upv1alpha1.ReasonCreationFailed, "could not create job: %v", err)
 			return
 		}
 	}
 
-	p.SetStarted(ConditionJobCreated, "the job '%v/%v' was created", pruneJob.Namespace, pruneJob.Name)
+	p.SetStarted("the job '%v/%v' was created", pruneJob.Namespace, pruneJob.Name)
 }
 
 func (p *PruneExecutor) registerPruneCallback(prune *k8upv1alpha1.Prune) {
@@ -88,28 +87,19 @@ func (p *PruneExecutor) registerPruneCallback(prune *k8upv1alpha1.Prune) {
 }
 
 func (p *PruneExecutor) cleanupOldPrunes(name types.NamespacedName, prune *k8upv1alpha1.Prune) {
-	pruneList := &k8upv1alpha1.PruneList{}
-	err := p.Client.List(p.CTX, pruneList, &client.ListOptions{
-		Namespace: name.Namespace,
-	})
+	list := &k8upv1alpha1.PruneList{}
+	err := p.listOldResources(name.Namespace, list)
 	if err != nil {
-		p.Log.Error(err, "could not list objects to cleanup old prunes", "Namespace", name.Namespace)
-		p.SetConditionFalse(ConditionCleanupSucceeded, "could not list objects to cleanup old prunes: %v", err)
+		return
 	}
 
-	jobs := make(jobObjectList, len(pruneList.Items))
-	for i, prune := range pruneList.Items {
+	jobs := make(jobObjectList, len(list.Items))
+	for i, prune := range list.Items {
 		jobs[i] = &prune
 	}
 
 	keepJobs := getKeepJobs(prune.Spec.KeepJobs)
-	err = cleanOldObjects(jobs, keepJobs, p.Config)
-	if err != nil {
-		p.Log.Error(err, "could not delete old prunes", "namespace", name.Namespace)
-		p.SetConditionFalse(ConditionCleanupSucceeded, "could not delete old prunes: %v", err)
-	}
-
-	p.SetConditionTrue(ConditionCleanupSucceeded)
+	cleanOldObjects(jobs, keepJobs, p.Config)
 }
 
 func (p *PruneExecutor) setupEnvVars(prune *k8upv1alpha1.Prune) []corev1.EnvVar {

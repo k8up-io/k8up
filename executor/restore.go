@@ -14,7 +14,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 const restorePath = "/restore"
@@ -58,19 +57,19 @@ func (r *RestoreExecutor) startRestore(restore *k8upv1alpha1.Restore) {
 	restoreJob, err := r.buildRestoreObject(restore)
 	if err != nil {
 		r.Log.Error(err, "unable to build restore object")
-		r.SetConditionFalse(ConditionJobCreated, "unable to build restore object: %v", err)
+		r.SetConditionFalseWithMessage(k8upv1alpha1.ConditionReady, k8upv1alpha1.ReasonCreationFailed, "unable to build restore object: %v", err)
 		return
 	}
 
 	if err := r.Client.Create(r.CTX, restoreJob); err != nil {
 		if !apierrors.IsAlreadyExists(err) {
 			r.Log.Error(err, "could not create job")
-			r.SetConditionFalse(ConditionJobCreated, "could not create job: %v", err)
+			r.SetConditionFalseWithMessage(k8upv1alpha1.ConditionReady, k8upv1alpha1.ReasonCreationFailed, "could not create job: %v", err)
 			return
 		}
 	}
 
-	r.SetStarted(ConditionJobCreated, "the job '%v/%v' was created", restoreJob.Namespace, restoreJob.Name)
+	r.SetStarted("the job '%v/%v' was created", restoreJob.Namespace, restoreJob.Name)
 }
 
 func (r *RestoreExecutor) registerRestoreCallback(restore *k8upv1alpha1.Restore) {
@@ -81,33 +80,23 @@ func (r *RestoreExecutor) registerRestoreCallback(restore *k8upv1alpha1.Restore)
 }
 
 func (r *RestoreExecutor) cleanupOldRestores(name types.NamespacedName, restore *k8upv1alpha1.Restore) {
-	restoreList := &k8upv1alpha1.RestoreList{}
-	err := r.Client.List(r.CTX, restoreList, &client.ListOptions{
-		Namespace: name.Namespace,
-	})
+	list := &k8upv1alpha1.RestoreList{}
+	err := r.listOldResources(name.Namespace, list)
 	if err != nil {
-		r.Log.Error(err, "could not list objects to cleanup old restores", "Namespace", name.Namespace)
-		r.SetConditionFalse(ConditionCleanupSucceeded, "could not list objects to cleanup old restores: %v", err)
 		return
 	}
 
-	jobs := make(jobObjectList, len(restoreList.Items))
-	for i, restore := range restoreList.Items {
+	jobs := make(jobObjectList, len(list.Items))
+	for i, restore := range list.Items {
 		jobs[i] = &restore
 	}
 
 	keepJobs := getKeepJobs(restore.Spec.KeepJobs)
-	err = cleanOldObjects(jobs, keepJobs, r.Config)
-	if err != nil {
-		r.Log.Error(err, "could not delete old restores", "namespace", name.Namespace)
-		r.SetConditionFalse(ConditionCleanupSucceeded, "could not delete old restores: %v", err)
-	}
-
-	r.SetConditionTrue(ConditionCleanupSucceeded)
+	cleanOldObjects(jobs, keepJobs, r.Config)
 }
 
 func (r *RestoreExecutor) buildRestoreObject(restore *k8upv1alpha1.Restore) (*batchv1.Job, error) {
-	j, err := job.GetGenericJob(restore, r.Config)
+	j, err := job.GenerateGenericJob(restore, r.Config)
 	if err != nil {
 		return nil, err
 	}

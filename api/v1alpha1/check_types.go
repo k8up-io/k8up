@@ -56,8 +56,14 @@ func (c *Check) GetType() JobType {
 	return CheckType
 }
 
-func (c *Check) GetStatus() *Status {
-	return &c.Status
+// GetStatus retrieves the Status property
+func (c *Check) GetStatus() Status {
+	return c.Status
+}
+
+// SetStatus sets the Status property
+func (c *Check) SetStatus(status Status) {
+	c.Status = status
 }
 
 func (c *Check) GetResources() corev1.ResourceRequirements {
