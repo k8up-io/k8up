@@ -287,8 +287,8 @@ func jobMatcher(restoreType string, additionalArgs []string, env Elements, volum
 				"Spec": MatchFields(IgnoreExtras, Fields{
 					"Volumes": MatchAllElements(volumeID, volumes),
 					"Containers": MatchAllElements(containerID, Elements{
-						"172.30.1.1:5000/myproject/restic" + strings.Join(additionalArgs, ","): MatchFields(IgnoreExtras, Fields{
-							"Image":        Equal("172.30.1.1:5000/myproject/restic"),
+						"quay.io/vshn/wrestic:latest" + strings.Join(additionalArgs, ","): MatchFields(IgnoreExtras, Fields{
+							"Image":        Equal("quay.io/vshn/wrestic:latest"),
 							"Args":         ContainElements(additionalArgs),
 							"Env":          MatchAllElements(envID, env),
 							"VolumeMounts": MatchAllElements(volumeMountID, volumeMounts),

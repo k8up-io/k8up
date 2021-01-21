@@ -71,7 +71,7 @@ func NewDefaultConfig() *Configuration {
 		ServiceAccount:          "pod-executor",
 		BackupCheckSchedule:     "0 0 * * 0",
 		GlobalKeepJobs:          6,
-		BackupImage:             "172.30.1.1:5000/myproject/restic",
+		BackupImage:             "quay.io/vshn/wrestic:latest",
 		PodExecRoleName:         "pod-executor",
 		RestartPolicy:           "OnFailure",
 		MetricsBindAddress:      ":8080",
