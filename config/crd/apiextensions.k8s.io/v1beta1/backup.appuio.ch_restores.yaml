@@ -13,6 +13,10 @@ spec:
     description: Reference to Schedule
     name: Schedule Ref
     type: string
+  - JSONPath: .status.conditions[?(@.type == "Completed")].reason
+    description: Status of Completion
+    name: Completion
+    type: string
   - JSONPath: .metadata.creationTimestamp
     name: Age
     type: date

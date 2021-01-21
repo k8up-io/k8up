@@ -42,6 +42,8 @@ type Env struct {
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 // +kubebuilder:printcolumn:name="Schedule Ref",type="string",JSONPath=`.metadata.ownerReferences[?(@.kind == "Schedule")].name`,description="Reference to Schedule"
+// +kubebuilder:printcolumn:name="Completion",type="string",JSONPath=`.status.conditions[?(@.type == "Completed")].reason`,description="Status of Completion"
+// +kubebuilder:printcolumn:name="PreBackup",type="string",JSONPath=`.status.conditions[?(@.type == "PreBackupPodsReady")].reason`,description="Status of PreBackupPods"
 // +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
 
 // Backup is the Schema for the backups API

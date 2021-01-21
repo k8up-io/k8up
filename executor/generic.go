@@ -139,7 +139,7 @@ func (g *generic) RegisterJobSucceededConditionCallback() {
 				event.Job.Namespace, event.Job.Name)
 		case observer.Failed:
 			g.SetFinished(event.Job.Namespace, event.Job.Name)
-			g.SetConditionFalseWithMessage(k8upv1alpha1.ConditionCompleted,
+			g.SetConditionTrueWithMessage(k8upv1alpha1.ConditionCompleted,
 				k8upv1alpha1.ReasonFailed,
 				"the job '%v/%v' failed, please check its log for details",
 				event.Job.Namespace, event.Job.Name)
