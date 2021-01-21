@@ -8,6 +8,14 @@ metadata:
   creationTimestamp: null
   name: archives.backup.appuio.ch
 spec:
+  additionalPrinterColumns:
+  - JSONPath: .metadata.ownerReferences[?(@.kind == "Schedule")].name
+    description: Reference to Schedule
+    name: Schedule Ref
+    type: string
+  - JSONPath: .metadata.creationTimestamp
+    name: Age
+    type: date
   group: backup.appuio.ch
   names:
     kind: Archive

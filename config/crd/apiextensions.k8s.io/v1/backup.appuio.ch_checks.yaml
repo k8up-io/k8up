@@ -16,7 +16,15 @@ spec:
     singular: check
   scope: Namespaced
   versions:
-  - name: v1alpha1
+  - additionalPrinterColumns:
+    - description: Reference to Schedule
+      jsonPath: .metadata.ownerReferences[?(@.kind == "Schedule")].name
+      name: Schedule Ref
+      type: string
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    name: v1alpha1
     schema:
       openAPIV3Schema:
         description: Check is the Schema for the checks API

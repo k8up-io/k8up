@@ -16,7 +16,15 @@ spec:
     singular: prune
   scope: Namespaced
   versions:
-  - name: v1alpha1
+  - additionalPrinterColumns:
+    - description: Reference to Schedule
+      jsonPath: .metadata.ownerReferences[?(@.kind == "Schedule")].name
+      name: Schedule Ref
+      type: string
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    name: v1alpha1
     schema:
       openAPIV3Schema:
         description: Prune is the Schema for the prunes API
