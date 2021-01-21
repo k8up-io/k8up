@@ -280,6 +280,7 @@ func jobMatcher(restoreType string, additionalArgs []string, env Elements, volum
 			"Labels": MatchAllKeys(Keys{
 				"k8upjob":           Equal("true"),
 				"k8upjob/exclusive": Equal("false"),
+				"k8up.io/type":      Equal("restore"),
 			}),
 		}),
 		"Spec": MatchFields(IgnoreExtras, Fields{
