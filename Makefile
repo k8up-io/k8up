@@ -23,10 +23,15 @@ test: fmt vet ## Run tests
 	go test ./... -coverprofile cover.out
 
 # See https://storage.googleapis.com/kubebuilder-tools/ for list of supported K8s versions
-integration-test: export ENVTEST_K8S_VERSION = 1.20.2
-integration-test: generate fmt vet $(testbin_created) ## Run integration tests with envtest
-	test -f ${ENVTEST_ASSETS_DIR}/setup-envtest.sh || curl -sSLo ${ENVTEST_ASSETS_DIR}/setup-envtest.sh https://raw.githubusercontent.com/kubernetes-sigs/controller-runtime/master/hack/setup-envtest.sh
-	source ${ENVTEST_ASSETS_DIR}/setup-envtest.sh; fetch_envtest_tools $(ENVTEST_ASSETS_DIR); setup_envtest_env $(ENVTEST_ASSETS_DIR); go test -tags=integration -v ./... -coverprofile cover.out
+#integration-test: export ENVTEST_K8S_VERSION = 1.20.2
+integration-test: export ENVTEST_K8S_VERSION = 1.19.2
+integration-test: generate $(testbin_created) ## Run integration tests with envtest
+	test -f ${ENVTEST_ASSETS_DIR}/setup-envtest.sh || \
+		curl -sSLo ${ENVTEST_ASSETS_DIR}/setup-envtest.sh https://raw.githubusercontent.com/kubernetes-sigs/controller-runtime/master/hack/setup-envtest.sh
+	source ${ENVTEST_ASSETS_DIR}/setup-envtest.sh; \
+		fetch_envtest_tools $(ENVTEST_ASSETS_DIR); \
+		setup_envtest_env $(ENVTEST_ASSETS_DIR); \
+		go test -tags=integration -v ./integration -coverprofile cover.out
 
 .PHONY: build
 build: generate fmt vet $(BIN_FILENAME) ## Build manager binary
@@ -51,9 +56,11 @@ deploy: generate ## Deploy controller in the configured Kubernetes cluster in ~/
 	$(KUSTOMIZE) build config/default | kubectl apply -f -
 
 .PHONY: generate
-generate: ## Generate manifests e.g. CRD, RBAC etc.
+generate: $(testbin_created) ## Generate manifests e.g. CRD, RBAC etc.
 	@CRD_ROOT_DIR="$(CRD_ROOT_DIR)" go generate -tags=generate generate.go
 	@rm config/*.yaml
+	@cp -r config/crd/apiextensions.k8s.io $(TESTBIN_DIR)/
+	@rm $(TESTBIN_DIR)/apiextensions.k8s.io/{v1,v1beta1}/kustomiz*.yaml || true
 
 .PHONY: crd
 crd: generate ## Generate CRD to file
