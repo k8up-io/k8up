@@ -4,6 +4,27 @@
 
 The Kubernetes objects of K8up try to convey enough status information to understand common error conditions.
 All objects maintain the Status property and most of them provide additional information through Conditions.
+This allows to wait for certain steps in the process.
+
+This will wait until the backup has started:
+[example]
+kubectl wait --for condition=progressing backup/demo-backup
+
+This will wait until the backup was completed.
+The `Reason` of the condition tells you whether it was successful or not:
+[example]
+kubectl wait --for condition=completed backup/demo-backup`
+
+.Sample output when querying for backups
+[source,bash]
+....
+$ kubectl get backup
+NAME                         SCHEDULE REF    COMPLETION   PREBACKUP              AGE
+demo-backup                                  Succeeded    NoPreBackupPodsFound   3m20s
+schedule-test-backup-b6bxz   schedule-test                NoPreBackupPodsFound   20s
+schedule-test-backup-sj5rt   schedule-test                NoPreBackupPodsFound   80s
+schedule-test-backup-whnkl   schedule-test   Failed       NoPreBackupPodsFound   2m20s
+....
 
 === Status of Backups in particular
 
@@ -32,33 +53,31 @@ Spec:
   # [clipped for brevity]
 Status:
   Conditions:
-    Last Transition Time:  2020-13-32T25:61:61Z
+    Last Transition Time:  2020-13-32T25:71:61Z
+    Message:               Deleted 1 resources
+    Reason:                Succeeded
     Status:                True
-    Type:                  CleanupSucceeded
+    Type:                  Scrubbed
     Last Transition Time:  2020-13-32T25:61:61Z
     Message:               the job 'default/demo-backup' was created
+    Reason:                Ready
     Status:                True
-    Type:                  JobCreated
-    Last Transition Time:  2020-13-32T25:61:61Z
+    Type:                  Ready
+    Last Transition Time:  2020-13-32T25:71:61Z
+    Message:               the job 'default/demo-backup' ended
+    Reason:                Finished
+    Status:                False
+    Type:                  Progressing
+    Last Transition Time:  2020-13-32T25:71:61Z
     Message:               the job 'default/demo-backup' ended successfully
+    Reason:                Succeeded
     Status:                True
-    Type:                  JobSucceeded
+    Type:                  Completed
     Last Transition Time:  2020-13-32T25:61:61Z
     Message:               no container definitions found
-    Status:                False
-    Type:                  PreBackupPodsAvailable
-    Last Transition Time:  2020-13-32T25:61:61Z
+    Reason:                NoPreBackupPodsFound
     Status:                True
-    Type:                  PreBackupPodsRemoved
-    Last Transition Time:  2020-13-32T25:61:61Z
-    Status:                True
-    Type:                  RoleBindingReady
-    Last Transition Time:  2020-13-32T25:61:61Z
-    Status:                True
-    Type:                  RoleReady
-    Last Transition Time:  2020-13-32T25:61:61Z
-    Status:                True
-    Type:                  ServiceAccountReady
+    Type:                  PreBackupPodsReady
   Started:                 true
 Events:                    <none>
 
