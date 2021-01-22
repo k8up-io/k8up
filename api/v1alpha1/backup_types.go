@@ -4,6 +4,8 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+
+	"github.com/vshn/k8up/api/v1alpha1/backend"
 )
 
 // BackupSpec defines a single backup. It must contain all inforomation to connect to
@@ -29,9 +31,9 @@ type BackupSpec struct {
 }
 
 type BackupTemplate struct {
-	Tags    *[]string `json:"tags,omitempty"`
-	Backend Backend   `json:"backend,omitempty"`
-	Env     Env       `json:"env,omitempty"`
+	Tags    *[]string       `json:"tags,omitempty"`
+	Backend backend.Backend `json:"backend,omitempty"`
+	Env     Env             `json:"env,omitempty"`
 }
 
 type Env struct {

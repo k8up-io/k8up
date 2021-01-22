@@ -56,11 +56,6 @@ func (p *PruneExecutor) Execute() error {
 	return nil
 }
 
-// Exclusive should return true for jobs that can't run while other jobs run.
-func (p *PruneExecutor) Exclusive() bool {
-	return true
-}
-
 func (p *PruneExecutor) startPrune(pruneJob *batchv1.Job, prune *k8upv1alpha1.Prune) {
 	p.registerPruneCallback(prune)
 	p.RegisterJobSucceededConditionCallback()

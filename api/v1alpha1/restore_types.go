@@ -4,6 +4,8 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+
+	"github.com/vshn/k8up/api/v1alpha1/backend"
 )
 
 // RestoreSpec can either contain an S3 restore point or a local one. For the local
@@ -32,8 +34,8 @@ func (r RestoreSpec) CreateObject(name, namespace string) runtime.Object {
 // RestoreMethod contains how and where the restore should happen
 // all the settings are mutual exclusive.
 type RestoreMethod struct {
-	S3     *S3Spec        `json:"s3,omitempty"`
-	Folder *FolderRestore `json:"folder,omitempty"`
+	S3     *backend.S3Spec `json:"s3,omitempty"`
+	Folder *FolderRestore  `json:"folder,omitempty"`
 }
 
 type FolderRestore struct {

@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	k8upv1alpha1 "github.com/vshn/k8up/api/v1alpha1"
+	"github.com/vshn/k8up/api/v1alpha1/backend"
 	"github.com/vshn/k8up/job"
 
 	. "github.com/onsi/ginkgo"
@@ -60,7 +61,7 @@ var _ = Describe("Restore", func() {
 			Restore: &k8upv1alpha1.Restore{
 				Spec: k8upv1alpha1.RestoreSpec{
 					RestoreMethod: &k8upv1alpha1.RestoreMethod{
-						S3: &k8upv1alpha1.S3Spec{
+						S3: &backend.S3Spec{
 							Endpoint: "http://localhost:9000",
 							Bucket:   "test",
 							AccessKeyIDSecretRef: &v1.SecretKeySelector{
@@ -72,8 +73,8 @@ var _ = Describe("Restore", func() {
 						},
 					},
 					RunnableSpec: k8upv1alpha1.RunnableSpec{
-						Backend: &k8upv1alpha1.Backend{
-							S3: &k8upv1alpha1.S3Spec{
+						Backend: &backend.Backend{
+							S3: &backend.S3Spec{
 								Endpoint: "http://localhost:9000",
 								Bucket:   "test-backend",
 								AccessKeyIDSecretRef: &v1.SecretKeySelector{

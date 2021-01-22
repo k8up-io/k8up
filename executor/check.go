@@ -67,11 +67,6 @@ func (c *CheckExecutor) startCheck(checkObject *k8upv1alpha1.Check, checkJob *ba
 	return nil
 }
 
-// Exclusive should return true for jobs that can't run while other jobs run.
-func (*CheckExecutor) Exclusive() bool {
-	return true
-}
-
 func (c *CheckExecutor) setupEnvVars() []corev1.EnvVar {
 	vars := NewEnvVarConverter()
 

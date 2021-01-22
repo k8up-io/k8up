@@ -10,6 +10,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	"github.com/vshn/k8up/api/v1alpha1"
+	"github.com/vshn/k8up/api/v1alpha1/backend"
 	"github.com/vshn/k8up/cfg"
 	"github.com/vshn/k8up/job"
 )
@@ -130,9 +131,9 @@ func newCPUResourceList(amount string) v1.ResourceList {
 func TestScheduleHandler_mergeBackendWithDefaults(t *testing.T) {
 	tests := map[string]struct {
 		globalS3Bucket       string
-		givenScheduleBackend v1alpha1.Backend
-		givenResourceBackend v1alpha1.Backend
-		expectedBackend      v1alpha1.Backend
+		givenScheduleBackend backend.Backend
+		givenResourceBackend backend.Backend
+		expectedBackend      backend.Backend
 	}{
 		"Given_NoGlobalDefaults_And_NoScheduleDefaults_When_Spec_Then_UseSpec": {
 			givenResourceBackend: newS3Backend("https://resource-url", "resource-bucket"),
@@ -187,9 +188,9 @@ func TestScheduleHandler_mergeBackendWithDefaults(t *testing.T) {
 	}
 }
 
-func newS3Backend(endpoint, bucket string) v1alpha1.Backend {
-	return v1alpha1.Backend{
-		S3: &v1alpha1.S3Spec{
+func newS3Backend(endpoint, bucket string) backend.Backend {
+	return backend.Backend{
+		S3: &backend.S3Spec{
 			Endpoint: endpoint,
 			Bucket:   bucket,
 		},

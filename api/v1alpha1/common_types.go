@@ -15,6 +15,15 @@ type (
 	ConditionReason string
 )
 
+func (j JobType) IsExclusive() bool {
+	switch j {
+	case CheckType:
+	case PruneType:
+		return true
+	}
+	return false
+}
+
 // The jobs types that k8up deals with
 const (
 	BackupType   JobType = "backup"

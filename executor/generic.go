@@ -105,8 +105,8 @@ func (g *generic) Logger() logr.Logger {
 	return g.Log
 }
 
-func (*generic) Exclusive() bool {
-	return false
+func (g *generic) Exclusive() bool {
+	return g.Obj.GetType().IsExclusive()
 }
 
 func (g *generic) GetRepository() string {

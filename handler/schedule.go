@@ -51,6 +51,8 @@ func (s *ScheduleHandler) Handle() error {
 
 	jobList := s.createJobList()
 
+	s.deduplicateJobs(jobList)
+
 	scheduler.GetScheduler().RemoveSchedules(namespacedName)
 	err = scheduler.GetScheduler().SyncSchedules(jobList)
 	if err != nil {
@@ -208,4 +210,65 @@ func (s *ScheduleHandler) getRandomSchedule(jobType k8upv1alpha1.JobType, origin
 func (s *ScheduleHandler) setEffectiveSchedule(jobType k8upv1alpha1.JobType, schedule k8upv1alpha1.ScheduleDefinition) {
 	s.schedule.Status.EffectiveSchedules[jobType] = schedule
 	s.requireStatusUpdate = true
+}
+
+func (s *ScheduleHandler) needsDeduplication(list scheduler.JobList) bool {
+	for _, j := range list.Jobs {
+		if j.JobType.IsExclusive() {
+			return true
+		}
+	}
+	return false
+}
+
+func (s *ScheduleHandler) deduplicateJobs(list scheduler.JobList) scheduler.JobList {
+	if !s.needsDeduplication(list) {
+		return list
+	}
+	allSchedules := &k8upv1alpha1.ScheduleList{}
+	_ = s.Client.List(s.CTX, allSchedules)
+
+	var deduplicatedList []scheduler.Job
+
+
+
+	for _, j := range list.Jobs {
+
+		switch j.JobType {
+		case k8upv1alpha1.CheckType:
+			allJobs := &k8upv1alpha1.CheckList{}
+
+			err := s.Client.List(s.CTX, allJobs)
+			if err != nil {
+				s.Log.Error(err, "could not fetch jobs")
+				// TODO: add a condition?
+				continue
+			}
+			if s.hasJobSameBackendAsExistingJobs(allJobs) {
+				continue
+			}
+			deduplicatedList = append(deduplicatedList, j)
+		default:
+			deduplicatedList = append(deduplicatedList, j)
+			continue
+		}
+	}
+	list.Jobs = deduplicatedList
+	return list
+}
+
+func (s *ScheduleHandler) hasJobSameBackendAsExistingJobs(jobs *k8upv1alpha1.CheckList) bool {
+	for _, item := range jobs.Items {
+		if backend := item.Spec.Backend; backend != nil && backend.IsEqualTo(s.schedule.Spec.Backend) {
+			return true
+		}
+	}
+	return false
+}
+
+func (s *ScheduleHandler) hasJobSameScheduleAsExistingJobs(schedules k8upv1alpha1.ScheduleList) bool {
+	for _, item := range schedules.Items {
+		if s.schedule.Name !=
+	}
+	return false
 }
