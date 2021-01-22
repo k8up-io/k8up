@@ -16,7 +16,23 @@ spec:
     singular: backup
   scope: Namespaced
   versions:
-  - name: v1alpha1
+  - additionalPrinterColumns:
+    - description: Reference to Schedule
+      jsonPath: .metadata.ownerReferences[?(@.kind == "Schedule")].name
+      name: Schedule Ref
+      type: string
+    - description: Status of Completion
+      jsonPath: .status.conditions[?(@.type == "Completed")].reason
+      name: Completion
+      type: string
+    - description: Status of PreBackupPods
+      jsonPath: .status.conditions[?(@.type == "PreBackupPodsReady")].reason
+      name: PreBackup
+      type: string
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    name: v1alpha1
     schema:
       openAPIV3Schema:
         description: Backup is the Schema for the backups API
