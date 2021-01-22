@@ -1,6 +1,7 @@
 = Missing Documentation
 
-For the following keywords documentation is missing and will be added over time:
+For the following keywords documentation is missing and will be added over time.
+This should give you an idea what is included, but currently not documented.
 
 * Describe prune and check jobs and their implications (e.g. locking)
 * Webhooks with backup information
@@ -8,7 +9,7 @@ For the following keywords documentation is missing and will be added over time:
 * Prometheus Pushgateway Metrics of Wrestic
 * K8up HA (leader election)
 * Index of possible annotations
-* Generated CRD API Doc just like in Lieutenant Operator
+* Generated CRD API reference documentation
 * More detailed description of backupcommand annotation
 * Tag support https://github.com/vshn/k8up/pull/94
 * document how/that the operator picks up running jobs on restart

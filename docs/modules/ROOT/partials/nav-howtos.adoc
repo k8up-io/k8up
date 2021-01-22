@@ -1,5 +1,5 @@
 * xref:k8up:ROOT:how-tos/installation.adoc[Installation]
-* xref:k8up:ROOT:how-tos/upgrade.adoc[Upgrade]
+* xref:k8up:ROOT:how-tos/upgrade.adoc[Upgrade K8up]
 * xref:k8up:ROOT:how-tos/backup.adoc[Backup]
 * xref:k8up:ROOT:how-tos/schedules.adoc[Schedules]
 * xref:k8up:ROOT:how-tos/optimize-schedules.adoc[Optimize Schedules]

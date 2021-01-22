@@ -1,3 +1,63 @@
 = How to Upgrade K8up
 
-This page will list instructions how to upgrade K8up once they're available.
+== Upgrade K8up from 0.x to 1.x
+
+The upgrade is generally done with the following steps:
+
+. Prepare new Helm release
+. Uninstall K8up `0.x`
+. Install K8up `1.x`
+. Verify your backups work
+
+WARNING: Do not remove the CRDs, as you might loose the resources!
+
+=== Prerequisites
+
+. `kubectl` or `oc`
+. `helm` version 3, version 2 for deinstallation if you're still using Tiller
+
+NOTE: You might need to adapt the commands to your needs.
+      This guide does not provide a copy-paste upgrade script, but points you in the right direction. It also assumes that you know basic usage of Helm.
+
+=== Prepare new Helm release
+
+The https://github.com/appuio/charts/tree/master/k8up[Helm Chart v1.0] comes with a few new and changed properties.
+Please consult the README.
+
+Most notably, the Chart is targeted to recent Kubernetes versions.
+
+WARNING: Use `helm upgrade --reuse-values` only when you know what you're doing.
+         Some parameters have changed and are backwards incompatible.
+         Make sure you have the new CRDs installed beforehand.
+
+=== Uninstall 0.x
+
+[source,bash]
+----
+# Set the namespace
+ns=k8up-system
+# Shut down and uninstall K8up. This should not delete the CRDs
+helm -n ${ns} uninstall k8up
+----
+
+=== Install 1.x
+
+. Make sure to migrate any changed Helm values before installing the release.
+. Update the CRDs as documented in the Chart README.
+. Install the Helm Chart version 1.x.
+
+NOTE: For Kubernetes < 1.15 (OpenShift 3.11), please add `--set k8up.enableLeaderElection=false` to the `helm install` command.
+
+=== Verify your backups work
+
+[source,bash]
+----
+# See if the K8up pod came up
+kubectl -n ${ns} get pods
+
+# Check for errors in the logs
+kubectl -n ${ns} logs -l "app.kubernetes.io/name=k8up"
+
+# Trigger a new backup by creating a new Backup object
+kubectl create -f <your-backup-file-spec>
+----
