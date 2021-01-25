@@ -22,6 +22,8 @@ E2E_TAG ?= e2e_$(shell sha1sum $(BIN_FILENAME) | cut -b-8)
 E2E_REPO ?= local.dev/k8up/e2e
 E2E_IMG = $(E2E_REPO):$(E2E_TAG)
 
+INTEGRATION_TEST_DEBUG_OUTPUT ?= false
+
 KUSTOMIZE ?= go run sigs.k8s.io/kustomize/kustomize/v3
 
 # Image URL to use all building/pushing image targets
