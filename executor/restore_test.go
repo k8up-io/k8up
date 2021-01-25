@@ -2,306 +2,272 @@ package executor
 
 import (
 	"context"
-	"strings"
+	"testing"
 
-	k8upv1alpha1 "github.com/vshn/k8up/api/v1alpha1"
-	"github.com/vshn/k8up/job"
-
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/ginkgo/extensions/table"
-	. "github.com/onsi/gomega"
-	. "github.com/onsi/gomega/gstruct"
-	gtypes "github.com/onsi/gomega/types"
-
-	batchv1 "k8s.io/api/batch/v1"
-	v1 "k8s.io/api/core/v1"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/client-go/rest"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/envtest"
-)
 
-// These tests use Ginkgo (BDD-style Go testing framework). Refer to
-// http://onsi.github.io/ginkgo/ to learn more about Ginkgo.
+	k8upv1a1 "github.com/vshn/k8up/api/v1alpha1"
+	"github.com/vshn/k8up/job"
+)
 
 var (
-	restCfg   *rest.Config
-	k8sClient client.Client
-	testEnv   *envtest.Environment
-	scheme    = runtime.NewScheme()
+	testScheme = runtime.NewScheme()
 )
 
-var _ = BeforeSuite(func(done Done) {
-	err := k8upv1alpha1.AddToScheme(scheme)
-	Expect(err).NotTo(HaveOccurred())
-
-	err = batchv1.AddToScheme(scheme)
-	Expect(err).NotTo(HaveOccurred())
-
-	close(done)
-})
-
-var _ = Describe("Restore", func() {
-	type buildRestoreObjectCase struct {
-		Restore     *k8upv1alpha1.Restore
-		Config      *job.Config
-		ExpectedJob *batchv1.Job
-		JobMatcher  gtypes.GomegaMatcher
-	}
-	DescribeTable("buildRestoreObject", func(c buildRestoreObjectCase) {
-		e := NewRestoreExecutor(*c.Config)
-		j, err := e.buildRestoreObject(c.Restore)
-
-		Expect(err).To(BeNil())
-		Expect(j).NotTo(BeNil())
-		Expect(j).To(PointTo(c.JobMatcher))
-	},
-		Entry("builds a job object for S3 restore", buildRestoreObjectCase{
-			Restore: &k8upv1alpha1.Restore{
-				Spec: k8upv1alpha1.RestoreSpec{
-					RestoreMethod: &k8upv1alpha1.RestoreMethod{
-						S3: &k8upv1alpha1.S3Spec{
-							Endpoint: "http://localhost:9000",
-							Bucket:   "test",
-							AccessKeyIDSecretRef: &v1.SecretKeySelector{
-								Key: "accessKey",
-							},
-							SecretAccessKeySecretRef: &v1.SecretKeySelector{
-								Key: "secretKey",
-							},
-						},
-					},
-					RunnableSpec: k8upv1alpha1.RunnableSpec{
-						Backend: &k8upv1alpha1.Backend{
-							S3: &k8upv1alpha1.S3Spec{
-								Endpoint: "http://localhost:9000",
-								Bucket:   "test-backend",
-								AccessKeyIDSecretRef: &v1.SecretKeySelector{
-									Key: "accessKey-backend",
-								},
-								SecretAccessKeySecretRef: &v1.SecretKeySelector{
-									Key: "secretKey-backend",
-								},
-							},
-						},
-					},
-				},
-			},
-			Config: newConfig(),
-			JobMatcher: jobMatcher("s3", nil, Elements{
-				"RESTIC_REPOSITORY": MatchAllFields(Fields{
-					"Name":      Equal("RESTIC_REPOSITORY"),
-					"Value":     Equal("s3:http://localhost:9000/test-backend"),
-					"ValueFrom": BeNil(),
-				}),
-				"RESTORE_S3ENDPOINT": MatchAllFields(Fields{
-					"Name":      Equal("RESTORE_S3ENDPOINT"),
-					"Value":     Equal("http://localhost:9000/test"),
-					"ValueFrom": BeNil(),
-				}),
-				"RESTORE_ACCESSKEYID": MatchAllFields(Fields{
-					"Name":  Equal("RESTORE_ACCESSKEYID"),
-					"Value": Equal(""),
-					"ValueFrom": PointTo(MatchFields(IgnoreExtras, Fields{
-						"SecretKeyRef": PointTo(MatchFields(IgnoreExtras, Fields{
-							"Key": Equal("accessKey"),
-						})),
-					})),
-				}),
-				"RESTORE_SECRETACCESSKEY": MatchAllFields(Fields{
-					"Name":  Equal("RESTORE_SECRETACCESSKEY"),
-					"Value": Equal(""),
-					"ValueFrom": PointTo(MatchFields(IgnoreExtras, Fields{
-						"SecretKeyRef": PointTo(MatchFields(IgnoreExtras, Fields{
-							"Key": Equal("secretKey"),
-						})),
-					})),
-				}),
-				"AWS_ACCESS_KEY_ID": MatchAllFields(Fields{
-					"Name":  Equal("AWS_ACCESS_KEY_ID"),
-					"Value": Equal(""),
-					"ValueFrom": PointTo(MatchFields(IgnoreExtras, Fields{
-						"SecretKeyRef": PointTo(MatchFields(IgnoreExtras, Fields{
-							"Key": Equal("accessKey-backend"),
-						})),
-					})),
-				}),
-				"AWS_SECRET_ACCESS_KEY": MatchAllFields(Fields{
-					"Name":  Equal("AWS_SECRET_ACCESS_KEY"),
-					"Value": Equal(""),
-					"ValueFrom": PointTo(MatchFields(IgnoreExtras, Fields{
-						"SecretKeyRef": PointTo(MatchFields(IgnoreExtras, Fields{
-							"Key": Equal("secretKey-backend"),
-						})),
-					})),
-				}),
-			}, Elements{}, Elements{}),
-		}),
-		Entry("builds a job object for folder restore", buildRestoreObjectCase{
-			Restore: &k8upv1alpha1.Restore{
-				Spec: k8upv1alpha1.RestoreSpec{
-					RestoreMethod: &k8upv1alpha1.RestoreMethod{
-						Folder: &k8upv1alpha1.FolderRestore{
-							PersistentVolumeClaimVolumeSource: &v1.PersistentVolumeClaimVolumeSource{
-								ClaimName: "test",
-								ReadOnly:  false,
-							},
-						},
-					},
-				},
-			},
-			Config: newConfig(),
-			JobMatcher: jobMatcher("folder", nil, Elements{
-				"AWS_ACCESS_KEY_ID": MatchAllFields(Fields{
-					"Name":      Equal("AWS_ACCESS_KEY_ID"),
-					"Value":     Equal(""),
-					"ValueFrom": BeNil(),
-				}),
-				"AWS_SECRET_ACCESS_KEY": MatchAllFields(Fields{
-					"Name":      Equal("AWS_SECRET_ACCESS_KEY"),
-					"Value":     Equal(""),
-					"ValueFrom": BeNil(),
-				}),
-				"RESTORE_DIR": MatchAllFields(Fields{
-					"Name":      Equal("RESTORE_DIR"),
-					"Value":     Equal("/restore"),
-					"ValueFrom": BeNil(),
-				}),
-			}, Elements{
-				"test": MatchFields(IgnoreExtras, Fields{
-					"Name": Equal("test"),
-					"VolumeSource": MatchFields(IgnoreExtras, Fields{
-						"PersistentVolumeClaim": PointTo(MatchFields(IgnoreExtras, Fields{
-							"ClaimName": Equal("test"),
-							"ReadOnly":  Equal(false),
-						})),
-					}),
-				}),
-			}, Elements{
-				"test": MatchFields(IgnoreExtras, Fields{
-					"Name":      Equal("test"),
-					"MountPath": Equal("/restore"),
-				}),
-			}),
-		}),
-		Entry("builds a job object with tags, filters and snapshot", buildRestoreObjectCase{
-			Restore: &k8upv1alpha1.Restore{
-				Spec: k8upv1alpha1.RestoreSpec{
-					RestoreMethod: &k8upv1alpha1.RestoreMethod{
-						Folder: &k8upv1alpha1.FolderRestore{
-							PersistentVolumeClaimVolumeSource: &v1.PersistentVolumeClaimVolumeSource{
-								ClaimName: "test",
-								ReadOnly:  false,
-							},
-						},
-					},
-					Tags:          []string{"testtag", "another"},
-					RestoreFilter: "testfilter",
-					Snapshot:      "testsnapshot",
-				},
-			},
-			Config: newConfig(),
-			JobMatcher: jobMatcher("folder", []string{"--tag", "testtag", "--tag", "another", "-restoreFilter", "testfilter", "-restoreSnap", "testsnapshot"}, Elements{
-				"AWS_ACCESS_KEY_ID": MatchAllFields(Fields{
-					"Name":      Equal("AWS_ACCESS_KEY_ID"),
-					"Value":     Equal(""),
-					"ValueFrom": BeNil(),
-				}),
-				"AWS_SECRET_ACCESS_KEY": MatchAllFields(Fields{
-					"Name":      Equal("AWS_SECRET_ACCESS_KEY"),
-					"Value":     Equal(""),
-					"ValueFrom": BeNil(),
-				}),
-				"RESTORE_DIR": MatchAllFields(Fields{
-					"Name":      Equal("RESTORE_DIR"),
-					"Value":     Equal("/restore"),
-					"ValueFrom": BeNil(),
-				}),
-			}, Elements{
-				"test": MatchFields(IgnoreExtras, Fields{
-					"Name": Equal("test"),
-					"VolumeSource": MatchFields(IgnoreExtras, Fields{
-						"PersistentVolumeClaim": PointTo(MatchFields(IgnoreExtras, Fields{
-							"ClaimName": Equal("test"),
-							"ReadOnly":  Equal(false),
-						})),
-					}),
-				}),
-			}, Elements{
-				"test": MatchFields(IgnoreExtras, Fields{
-					"Name":      Equal("test"),
-					"MountPath": Equal("/restore"),
-				}),
-			}),
-		}),
-	)
-})
-
-// gstruct `Identifier` functions (see: https://onsi.github.io/gomega/#gstruct-testing-complex-data-types)
-func containerID(el interface{}) string {
-	c := el.(v1.Container)
-	return c.Image + strings.Join(c.Args, ",")
+type PVCExpectation struct {
+	Expected  bool
+	ClaimName string
+	ReadOnly  bool
 }
-func envID(el interface{}) string {
-	e := el.(v1.EnvVar)
-	return e.Name
-}
-func volumeID(el interface{}) string {
-	v := el.(v1.Volume)
-	return v.Name
-}
-func volumeMountID(el interface{}) string {
-	v := el.(v1.VolumeMount)
-	return v.Name
-}
-
-func jobMatcher(restoreType string, additionalArgs []string, env Elements, volumes Elements, volumeMounts Elements) gtypes.GomegaMatcher {
-	additionalArgs = append([]string{"-restore"}, additionalArgs...)
-	additionalArgs = append(additionalArgs, "-restoreType", restoreType)
-
-	env["HOSTNAME"] = MatchFields(IgnoreExtras, Fields{
-		"Name": Equal("HOSTNAME"),
-	})
-	env["STATS_URL"] = MatchFields(IgnoreExtras, Fields{
-		"Name": Equal("STATS_URL"),
-	})
-	env["RESTIC_PASSWORD"] = MatchFields(IgnoreExtras, Fields{
-		"Name": Equal("RESTIC_PASSWORD"),
-	})
-	if _, ok := env["RESTIC_REPOSITORY"]; !ok {
-		env["RESTIC_REPOSITORY"] = MatchFields(IgnoreExtras, Fields{
-			"Name":  Equal("RESTIC_REPOSITORY"),
-			"Value": Equal("s3:/"),
-		})
-	}
-
-	return MatchFields(IgnoreExtras, Fields{
-		"ObjectMeta": MatchFields(IgnoreExtras, Fields{
-			"Labels": MatchAllKeys(Keys{
-				"k8upjob":           Equal("true"),
-				"k8upjob/exclusive": Equal("false"),
-				"k8up.io/type":      Equal("restore"),
-			}),
-		}),
-		"Spec": MatchFields(IgnoreExtras, Fields{
-			"Template": MatchFields(IgnoreExtras, Fields{
-				"Spec": MatchFields(IgnoreExtras, Fields{
-					"Volumes": MatchAllElements(volumeID, volumes),
-					"Containers": MatchAllElements(containerID, Elements{
-						"quay.io/vshn/wrestic:latest" + strings.Join(additionalArgs, ","): MatchFields(IgnoreExtras, Fields{
-							"Image":        Equal("quay.io/vshn/wrestic:latest"),
-							"Args":         ContainElements(additionalArgs),
-							"Env":          MatchAllElements(envID, env),
-							"VolumeMounts": MatchAllElements(volumeMountID, volumeMounts),
-						}),
-					}),
-				}),
-			}),
-		}),
-	})
+type VolumeMountExpectation struct {
+	Expected bool
+	Name     string
+	Path     string
 }
 
 func newConfig() *job.Config {
-	cfg := job.NewConfig(context.TODO(), nil, nil, &k8upv1alpha1.Restore{}, scheme, "")
+	cfg := job.NewConfig(context.TODO(), nil, nil, &k8upv1a1.Restore{}, testScheme, "")
 	return &cfg
+}
+
+func newS3RestoreResource() *k8upv1a1.Restore {
+	return &k8upv1a1.Restore{
+		Spec: k8upv1a1.RestoreSpec{
+			RestoreMethod: &k8upv1a1.RestoreMethod{
+				S3: &k8upv1a1.S3Spec{
+					Endpoint: "http://localhost:9000",
+					Bucket:   "test",
+					AccessKeyIDSecretRef: &corev1.SecretKeySelector{
+						Key: "accessKey",
+					},
+					SecretAccessKeySecretRef: &corev1.SecretKeySelector{
+						Key: "secretKey",
+					},
+				},
+			},
+			RunnableSpec: k8upv1a1.RunnableSpec{
+				Backend: &k8upv1a1.Backend{
+					S3: &k8upv1a1.S3Spec{
+						Endpoint: "http://localhost:9000",
+						Bucket:   "test-backend",
+						AccessKeyIDSecretRef: &corev1.SecretKeySelector{
+							Key: "accessKey-backend",
+						},
+						SecretAccessKeySecretRef: &corev1.SecretKeySelector{
+							Key: "secretKey-backend",
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+func newFolderRestoreResource() *k8upv1a1.Restore {
+	return &k8upv1a1.Restore{
+		Spec: k8upv1a1.RestoreSpec{
+			RestoreMethod: &k8upv1a1.RestoreMethod{
+				Folder: &k8upv1a1.FolderRestore{
+					PersistentVolumeClaimVolumeSource: &corev1.PersistentVolumeClaimVolumeSource{
+						ClaimName: "test",
+						ReadOnly:  false,
+					},
+				},
+			},
+		},
+	}
+}
+
+func newFilteredFolderRestoreResource() *k8upv1a1.Restore {
+	return &k8upv1a1.Restore{
+		Spec: k8upv1a1.RestoreSpec{
+			RestoreMethod: &k8upv1a1.RestoreMethod{
+				Folder: &k8upv1a1.FolderRestore{
+					PersistentVolumeClaimVolumeSource: &corev1.PersistentVolumeClaimVolumeSource{
+						ClaimName: "test",
+						ReadOnly:  false,
+					},
+				},
+			},
+			Tags:          []string{"testtag", "another"},
+			RestoreFilter: "testfilter",
+			Snapshot:      "testsnapshot",
+		},
+	}
+}
+
+func TestRestore_setupEnvVars(t *testing.T) {
+	tests := map[string]struct {
+		GivenJobConfig        *job.Config
+		GivenResource         *k8upv1a1.Restore
+		ExpectedEnvVars       map[string]string
+		ExpectedSecretKeyRefs map[string]string
+	}{
+		"givenS3RestoreResource_whenSetupEnvVars_expectCertainEnvVars": {
+			GivenJobConfig: newConfig(),
+			GivenResource:  newS3RestoreResource(),
+			ExpectedEnvVars: map[string]string{
+				"HOSTNAME":           "",
+				"RESTIC_PASSWORD":    "",
+				"RESTIC_REPOSITORY":  "s3:http://localhost:9000/test-backend",
+				"RESTORE_S3ENDPOINT": "http://localhost:9000/test",
+				"STATS_URL":          "",
+			},
+			ExpectedSecretKeyRefs: map[string]string{
+				"AWS_ACCESS_KEY_ID":       "accessKey-backend",
+				"AWS_SECRET_ACCESS_KEY":   "secretKey-backend",
+				"RESTORE_ACCESSKEYID":     "accessKey",
+				"RESTORE_SECRETACCESSKEY": "secretKey",
+			},
+		},
+		"givenFolderRestoreResource_whenSetupEnvVars_expectCertainEnvVars": {
+			GivenJobConfig: newConfig(),
+			GivenResource:  newFolderRestoreResource(),
+			ExpectedEnvVars: map[string]string{
+				"AWS_ACCESS_KEY_ID":     "",
+				"AWS_SECRET_ACCESS_KEY": "",
+				"HOSTNAME":              "",
+				"RESTIC_PASSWORD":       "",
+				"RESTIC_REPOSITORY":     "s3:/",
+				"RESTORE_DIR":           "/restore",
+				"STATS_URL":             "",
+			},
+			ExpectedSecretKeyRefs: map[string]string{},
+		},
+	}
+
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			e := NewRestoreExecutor(*tt.GivenJobConfig)
+			envVars := e.setupEnvVars(tt.GivenResource)
+
+			actualEnvVars, actualSecretKeyRefs := extractVarsAndSecretRefs(envVars)
+
+			assert.Equal(t, actualEnvVars, tt.ExpectedEnvVars)
+			assert.Equal(t, actualSecretKeyRefs, tt.ExpectedSecretKeyRefs)
+		})
+	}
+}
+
+func extractVarsAndSecretRefs(envVars []corev1.EnvVar) (map[string]string, map[string]string) {
+	actualVars := make(map[string]string)
+	actualSecretRefs := make(map[string]string)
+	for _, envVar := range envVars {
+		if envVar.ValueFrom != nil && envVar.ValueFrom.SecretKeyRef != nil {
+			actualSecretRefs[envVar.Name] = envVar.ValueFrom.SecretKeyRef.Key
+		} else {
+			actualVars[envVar.Name] = envVar.Value
+		}
+	}
+	return actualVars, actualSecretRefs
+}
+
+func TestRestore_volumeConfig(t *testing.T) {
+	tests := map[string]struct {
+		GivenJobConfig      *job.Config
+		GivenResource       *k8upv1a1.Restore
+		ExpectedPVC         PVCExpectation
+		ExpectedVolumeMount VolumeMountExpectation
+	}{
+		"givenS3RestoreResource_whenVolumeConfig_expectNoPVCAndNoMount": {
+			GivenJobConfig:      newConfig(),
+			GivenResource:       newS3RestoreResource(),
+			ExpectedPVC:         PVCExpectation{Expected: false},
+			ExpectedVolumeMount: VolumeMountExpectation{Expected: false},
+		},
+		"givenFolderRestoreResource_whenVolumeConfig_expectPVCAndMount": {
+			GivenJobConfig: newConfig(),
+			GivenResource:  newFolderRestoreResource(),
+			ExpectedPVC: PVCExpectation{
+				Expected:  true,
+				ClaimName: "test",
+				ReadOnly:  false,
+			},
+			ExpectedVolumeMount: VolumeMountExpectation{
+				Expected: true,
+				Name:     "test",
+				Path:     "/restore",
+			},
+		},
+	}
+
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			e := NewRestoreExecutor(*tt.GivenJobConfig)
+			volumes, mounts := e.volumeConfig(tt.GivenResource)
+
+			assertVolumes(t, tt.ExpectedPVC, volumes)
+			assertVolumeMounts(t, tt.ExpectedVolumeMount, mounts)
+		})
+	}
+}
+
+func assertVolumeMounts(t *testing.T, ex VolumeMountExpectation, mounts []corev1.VolumeMount) {
+	if !ex.Expected {
+		assert.Len(t, mounts, 0)
+		return
+	}
+
+	assert.Len(t, mounts, 1)
+	volumeMount := mounts[0]
+
+	assert.Equal(t, ex.Name, volumeMount.Name)
+	assert.Equal(t, ex.Path, volumeMount.MountPath)
+}
+
+func assertVolumes(t *testing.T, ex PVCExpectation, volumes []corev1.Volume) {
+	if !ex.Expected {
+		assert.Len(t, volumes, 0)
+		return
+	}
+
+	assert.Len(t, volumes, 1)
+	volume := volumes[0]
+
+	assert.Equal(t, ex.ClaimName, volume.PersistentVolumeClaim.ClaimName)
+	assert.Equal(t, ex.ReadOnly, volume.PersistentVolumeClaim.ReadOnly)
+}
+
+func TestRestore_args(t *testing.T) {
+	tests := map[string]struct {
+		GivenJobConfig *job.Config
+		GivenResource  *k8upv1a1.Restore
+		ExpectedArgs   []string
+	}{
+		"givenS3RestoreResource_whenArgs_expectS3RestoreType": {
+			GivenJobConfig: newConfig(),
+			GivenResource:  newS3RestoreResource(),
+			ExpectedArgs:   []string{"-restore", "-restoreType", "s3"},
+		},
+		"givenFolderRestoreResource_whenArgs_expectFolderRestoreType": {
+			GivenJobConfig: newConfig(),
+			GivenResource:  newFolderRestoreResource(),
+			ExpectedArgs:   []string{"-restore", "-restoreType", "folder"},
+		},
+		"givenFolderRestoreResourceWithAdditionalArguments_whenBuildRestoreObject_expectJobResource": {
+			GivenJobConfig: newConfig(),
+			GivenResource:  newFilteredFolderRestoreResource(),
+			ExpectedArgs: []string{
+				"-restore",
+				"--tag", "testtag",
+				"--tag", "another",
+				"-restoreFilter", "testfilter",
+				"-restoreSnap", "testsnapshot",
+				"-restoreType", "folder",
+			},
+		},
+	}
+
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			e := NewRestoreExecutor(*tt.GivenJobConfig)
+			args, err := e.args(tt.GivenResource)
+
+			require.NoError(t, err)
+			assert.Equal(t, tt.ExpectedArgs, args)
+		})
+	}
 }

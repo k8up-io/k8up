@@ -109,6 +109,16 @@ func (r *RestoreExecutor) buildRestoreObject(restore *k8upv1alpha1.Restore) (*ba
 	j.Spec.Template.Spec.Volumes = volumes
 	j.Spec.Template.Spec.Containers[0].VolumeMounts = volumeMounts
 
+	args, err := r.args(restore)
+	if err != nil {
+		return nil, err
+	}
+	j.Spec.Template.Spec.Containers[0].Args = args
+
+	return j, nil
+}
+
+func (r *RestoreExecutor) args(restore *k8upv1alpha1.Restore) ([]string, error) {
 	args := []string{"-restore"}
 
 	if len(restore.Spec.Tags) > 0 {
@@ -131,10 +141,7 @@ func (r *RestoreExecutor) buildRestoreObject(restore *k8upv1alpha1.Restore) (*ba
 	default:
 		return nil, fmt.Errorf("undefined restore method (-restoreType) on '%v/%v'", restore.Namespace, restore.Name)
 	}
-
-	j.Spec.Template.Spec.Containers[0].Args = args
-
-	return j, nil
+	return args, nil
 }
 
 func (r *RestoreExecutor) volumeConfig(restore *k8upv1alpha1.Restore) ([]corev1.Volume, []corev1.VolumeMount) {
