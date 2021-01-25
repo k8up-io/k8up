@@ -1,9 +1,11 @@
 package integration
 
 import (
+	"context"
 	"path/filepath"
 	"testing"
 
+	"github.com/go-logr/logr"
 	"github.com/go-logr/zapr"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -15,20 +17,29 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
-	k8upv1a1 "github.com/vshn/k8up/api/v1alpha1"
 	// +kubebuilder:scaffold:imports
+
+	k8upv1a1 "github.com/vshn/k8up/api/v1alpha1"
+	"github.com/vshn/k8up/executor"
 )
 
 type EnvTestSuite struct {
 	suite.Suite
 
-	GivenClient *client.Client
-	GivenConfig *rest.Config
-	GivenEnv    *envtest.Environment
+	Client client.Client
+	Config *rest.Config
+	Env    *envtest.Environment
+	Logger logr.Logger
+	Ctx    context.Context
 }
 
+const NS = "default"
+
 func (ts *EnvTestSuite) SetupSuite() {
-	log.SetLogger(zapr.NewLogger(zaptest.NewLogger(ts.T())))
+	ts.Logger = zapr.NewLogger(zaptest.NewLogger(ts.T()))
+	log.SetLogger(ts.Logger)
+
+	ts.Ctx = context.Background()
 
 	testEnv := &envtest.Environment{
 		ErrorIfCRDPathMissing: true,
@@ -47,9 +58,11 @@ func (ts *EnvTestSuite) SetupSuite() {
 	require.NoError(ts.T(), err)
 	require.NotNil(ts.T(), k8sClient)
 
-	ts.GivenEnv = testEnv
-	ts.GivenConfig = config
-	ts.GivenClient = &k8sClient
+	executor.GetExecutor()
+
+	ts.Env = testEnv
+	ts.Config = config
+	ts.Client = k8sClient
 }
 
 func registerCRDs(t *testing.T) {
@@ -60,6 +73,6 @@ func registerCRDs(t *testing.T) {
 }
 
 func (ts *EnvTestSuite) TearDownSuite() {
-	err := ts.GivenEnv.Stop()
+	err := ts.Env.Stop()
 	require.NoError(ts.T(), err)
 }
