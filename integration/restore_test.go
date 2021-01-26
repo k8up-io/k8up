@@ -3,6 +3,7 @@
 package integration
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -32,6 +33,20 @@ func Test_Restore(t *testing.T) {
 	suite.Run(t, new(RestoreTestSuite))
 }
 
+func (r *RestoreTestSuite) TestReconciliation() {
+	r.givenRestoreResource()
+
+	result := r.whenReconcile()
+
+	assert.GreaterOrEqual(r.T(), result.RequeueAfter, 30*time.Second)
+	r.expectAJobEventually()
+}
+
+func (r *RestoreTestSuite) TearDownTest() {
+	r.DeleteAllJobs()
+	r.deleteAllRestores()
+}
+
 func NewRestoreResource() *k8upv1a1.Restore {
 	return &k8upv1a1.Restore{
 		Spec: k8upv1a1.RestoreSpec{
@@ -49,44 +64,17 @@ func NewRestoreResource() *k8upv1a1.Restore {
 	}
 }
 
-func (r *RestoreTestSuite) TearDownTest() {
-	r.deleteAllJobs()
-	r.deleteAllRestores()
-}
-
-func (r *RestoreTestSuite) deleteAllJobs() {
-	list := new(batchv1.JobList)
-	err := r.Client.List(r.Ctx, list)
-	assert.NoError(r.T(), err)
-
-	r.T().Logf("Deleting %d batchv1.Jobs", len(list.Items))
-
-	for _, j := range list.Items {
-		err := r.Client.Delete(r.Ctx, &j) // DeleteAllOf seems not implemented in envtest
-		assert.NoError(r.T(), err)
-	}
-}
-
 func (r *RestoreTestSuite) deleteAllRestores() {
 	list := new(k8upv1a1.RestoreList)
 	err := r.Client.List(r.Ctx, list)
 	assert.NoError(r.T(), err)
 
-	r.T().Logf("Deleting %d batchv1.Restores", len(list.Items))
+	r.T().Logf("Deleting %d Restores", len(list.Items))
 
 	for _, j := range list.Items {
 		err := r.Client.Delete(r.Ctx, &j) // DeleteAllOf seems not implemented in envtest
 		assert.NoError(r.T(), err)
 	}
-}
-
-func (r *RestoreTestSuite) TestReconciliation() {
-	r.givenRestoreResource()
-
-	result := r.whenReconcile()
-
-	assert.GreaterOrEqual(r.T(), result.RequeueAfter, 30*time.Second)
-	r.expectAJobEventually()
 }
 
 func (r *RestoreTestSuite) givenRestoreResource() {
@@ -117,21 +105,19 @@ func (r *RestoreTestSuite) whenReconcile() controllerruntime.Result {
 }
 
 func (r *RestoreTestSuite) expectAJobEventually() {
-	for i := 0; i < 10; i++ {
-		if i > 0 {
-			r.T().Logf("⏱ No job after %d seconds", i)
-			time.Sleep(time.Second)
-		}
-
+	r.RepeatedAssert(3*time.Second, time.Second, "Jobs not found", func(timedCtx context.Context) (done bool, err error) {
 		jobs := new(batchv1.JobList)
-		err := r.Client.List(r.Ctx, jobs, &client.ListOptions{Namespace: NS})
+		err = r.Client.List(timedCtx, jobs, &client.ListOptions{Namespace: NS})
 		require.NoError(r.T(), err)
 
-		if len(jobs.Items) > 0 {
-			assert.Len(r.T(), jobs.Items, 1)
-			return
-		}
-	}
+		jobsLen := len(jobs.Items)
+		r.T().Logf("%d Jobs found", jobsLen)
 
-	assert.Fail(r.T(), "Job not found after 10 seconds.")
+		if jobsLen > 0 {
+			assert.Len(r.T(), jobs.Items, 1)
+			return true, err
+		}
+
+		return
+	})
 }

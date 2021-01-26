@@ -4,9 +4,11 @@ import (
 	"context"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/go-logr/logr"
 	"github.com/go-logr/zapr"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/zap/zaptest"
@@ -75,4 +77,44 @@ func registerCRDs(t *testing.T) {
 func (ts *EnvTestSuite) TearDownSuite() {
 	err := ts.Env.Stop()
 	require.NoError(ts.T(), err)
+}
+
+func (ts *EnvTestSuite) DeleteAllJobs() {
+	list := new(batchv1.JobList)
+	err := ts.Client.List(ts.Ctx, list)
+	assert.NoError(ts.T(), err)
+
+	ts.T().Logf("Deleting %d Jobs", len(list.Items))
+
+	for _, j := range list.Items {
+		err := ts.Client.Delete(ts.Ctx, &j) // DeleteAllOf seems not implemented in envtest
+		assert.NoError(ts.T(), err)
+	}
+}
+
+type AssertFunc func(timedCtx context.Context) (done bool, err error)
+
+func (ts *EnvTestSuite) RepeatedAssert(timeout time.Duration, interval time.Duration, failureMsg string, assertFunc AssertFunc) {
+	timedCtx, cancel := context.WithTimeout(ts.Ctx, timeout)
+	defer cancel()
+
+	i := 0
+	for {
+		select {
+		case <-time.After(interval):
+			i++
+			done, err := assertFunc(timedCtx)
+			require.NoError(ts.T(), err)
+			if done {
+				return
+			}
+		case <-timedCtx.Done():
+			if failureMsg == "" {
+				failureMsg = timedCtx.Err().Error()
+			}
+
+			assert.Failf(ts.T(), failureMsg, "Failed after %s (%d attempts)", timeout, i)
+			return
+		}
+	}
 }
