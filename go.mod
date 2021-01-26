@@ -3,7 +3,7 @@ module github.com/vshn/k8up
 go 1.15
 
 require (
-	github.com/go-logr/logr v0.3.0
+	github.com/go-logr/logr v0.4.0
 	github.com/imdario/mergo v0.3.11
 	github.com/knadh/koanf v0.15.0
 	github.com/prometheus/client_golang v1.9.0
