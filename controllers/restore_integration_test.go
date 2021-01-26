@@ -1,6 +1,6 @@
 // +build integration
 
-package integration
+package controllers_test
 
 import (
 	"context"
@@ -25,9 +25,8 @@ type RestoreTestSuite struct {
 	EnvTestSuite
 
 	GivenRestore *k8upv1a1.Restore
+	RestoreName  string
 }
-
-const RestoreName = "restore-integration-test"
 
 func Test_Restore(t *testing.T) {
 	suite.Run(t, new(RestoreTestSuite))
@@ -42,12 +41,11 @@ func (r *RestoreTestSuite) TestReconciliation() {
 	r.expectAJobEventually()
 }
 
-func (r *RestoreTestSuite) TearDownTest() {
-	r.DeleteAllJobs()
-	r.deleteAllRestores()
+func (r *RestoreTestSuite) SetupTest() {
+	r.RestoreName = "restore-integration-test"
 }
 
-func NewRestoreResource() *k8upv1a1.Restore {
+func NewRestoreResource(restoreName, namespace string) *k8upv1a1.Restore {
 	return &k8upv1a1.Restore{
 		Spec: k8upv1a1.RestoreSpec{
 			RestoreMethod: &k8upv1a1.RestoreMethod{
@@ -58,27 +56,14 @@ func NewRestoreResource() *k8upv1a1.Restore {
 			},
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      RestoreName,
-			Namespace: NS,
+			Name:      restoreName,
+			Namespace: namespace,
 		},
 	}
 }
 
-func (r *RestoreTestSuite) deleteAllRestores() {
-	list := new(k8upv1a1.RestoreList)
-	err := r.Client.List(r.Ctx, list)
-	assert.NoError(r.T(), err)
-
-	r.T().Logf("Deleting %d Restores", len(list.Items))
-
-	for _, j := range list.Items {
-		err := r.Client.Delete(r.Ctx, &j) // DeleteAllOf seems not implemented in envtest
-		assert.NoError(r.T(), err)
-	}
-}
-
 func (r *RestoreTestSuite) givenRestoreResource() {
-	r.GivenRestore = NewRestoreResource()
+	r.GivenRestore = NewRestoreResource(r.RestoreName, r.NS)
 	err := r.Client.Create(r.Ctx, r.GivenRestore)
 	require.NoError(r.T(), err)
 }
@@ -91,8 +76,8 @@ func (r *RestoreTestSuite) whenReconcile() controllerruntime.Result {
 	}
 
 	key := types.NamespacedName{
-		Namespace: NS,
-		Name:      RestoreName,
+		Namespace: r.NS,
+		Name:      r.RestoreName,
 	}
 	request := controllerruntime.Request{
 		NamespacedName: key,
@@ -107,7 +92,7 @@ func (r *RestoreTestSuite) whenReconcile() controllerruntime.Result {
 func (r *RestoreTestSuite) expectAJobEventually() {
 	r.RepeatedAssert(3*time.Second, time.Second, "Jobs not found", func(timedCtx context.Context) (done bool, err error) {
 		jobs := new(batchv1.JobList)
-		err = r.Client.List(timedCtx, jobs, &client.ListOptions{Namespace: NS})
+		err = r.Client.List(timedCtx, jobs, &client.ListOptions{Namespace: r.NS})
 		require.NoError(r.T(), err)
 
 		jobsLen := len(jobs.Items)
