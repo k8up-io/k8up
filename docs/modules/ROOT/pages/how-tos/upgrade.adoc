@@ -61,3 +61,12 @@ kubectl -n ${ns} logs -l "app.kubernetes.io/name=k8up"
 # Trigger a new backup by creating a new Backup object
 kubectl create -f <your-backup-file-spec>
 ----
+
+=== Known issues
+
+- PreBackups get stuck
++
+If you are using PreBackupPods and multiple `Backups` are waiting for one to complete, they may get stuck waiting for PreBackup.
+In such a case, you need to just keep the most recent `Backup` resource and delete all the older ones.
+Alternatively, you can delete all `Backup` jobs and just wait for the next schedule.
+That is make it easier to script should you encounter this problem on a large scale.
