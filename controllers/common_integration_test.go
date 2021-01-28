@@ -54,7 +54,7 @@ func (ts *EnvTestSuite) SetupSuite() {
 
 	testEnv := &envtest.Environment{
 		ErrorIfCRDPathMissing: true,
-		CRDDirectoryPaths:     []string{filepath.Join("..", "testbin", "bin", "apiextensions.k8s.io", "v1")},
+		CRDDirectoryPaths:     []string{filepath.Join("..", "config", "crd", "apiextensions.k8s.io", "v1", "base")},
 		BinaryAssetsDirectory: filepath.Join("..", "testbin", "bin"),
 	}
 

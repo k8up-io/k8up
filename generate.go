@@ -3,8 +3,8 @@
 package main
 
 //go:generate go run sigs.k8s.io/controller-tools/cmd/controller-gen object:headerFile="hack/boilerplate.go.txt" paths="./..."
-//go:generate go run sigs.k8s.io/controller-tools/cmd/controller-gen crd:trivialVersions=true rbac:roleName=manager-role webhook paths="./..." output:crd:artifacts:config=${CRD_ROOT_DIR}/v1beta1 crd:crdVersions=v1beta1
-//go:generate go run sigs.k8s.io/controller-tools/cmd/controller-gen crd:trivialVersions=true rbac:roleName=manager-role webhook paths="./..." output:crd:artifacts:config=${CRD_ROOT_DIR}/v1      crd:crdVersions=v1
+//go:generate go run sigs.k8s.io/controller-tools/cmd/controller-gen crd:trivialVersions=true rbac:roleName=manager-role webhook paths="./..." output:crd:artifacts:config=${CRD_ROOT_DIR}/v1beta1/base crd:crdVersions=v1beta1
+//go:generate go run sigs.k8s.io/controller-tools/cmd/controller-gen crd:trivialVersions=true rbac:roleName=manager-role webhook paths="./..." output:crd:artifacts:config=${CRD_ROOT_DIR}/v1/base      crd:crdVersions=v1
 /// Run this file itself
 //go:generate go run generate.go
 
@@ -15,7 +15,7 @@ import (
 	"os"
 )
 
-var patchFiles = []string{"v1beta1/backup.appuio.ch_prebackuppods.yaml", "v1/backup.appuio.ch_prebackuppods.yaml"}
+var patchFiles = []string{"v1beta1/base/backup.appuio.ch_prebackuppods.yaml", "v1/base/backup.appuio.ch_prebackuppods.yaml"}
 
 // controller-gen 0.3 creates CRDs with apiextensions.k8s.io/v1beta1, but some generated properties aren't valid for that version
 // in K8s 1.18+. We would have to switch to apiextensions.k8s.io/v1, but that would make the CRD incompatible with OpenShift 3.11.

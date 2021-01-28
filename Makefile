@@ -62,11 +62,9 @@ deploy: generate ## Deploy controller in the configured Kubernetes cluster in ~/
 	$(KUSTOMIZE) build config/default | kubectl apply -f -
 
 .PHONY: generate
-generate: $(testbin_created) ## Generate manifests e.g. CRD, RBAC etc.
+generate: ## Generate manifests e.g. CRD, RBAC etc.
 	@CRD_ROOT_DIR="$(CRD_ROOT_DIR)" go generate -tags=generate generate.go
 	@rm config/*.yaml
-	@cp -r config/crd/apiextensions.k8s.io $(TESTBIN_DIR)/
-	@rm $(TESTBIN_DIR)/apiextensions.k8s.io/{v1,v1beta1}/kustomiz*.yaml || true
 
 .PHONY: crd
 crd: generate ## Generate CRD to file
