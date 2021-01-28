@@ -1,0 +1,35 @@
+= IDE Integration
+
+We don't require or recommend any specific IDE to develop for K8up.
+Here's just some documentation to help you setting-up K8up in some specific IDEs that are in use by the K8up developers.
+
+== JetBrains GoLand
+
+You can basically just open the root directory in GoLand and you'll be mostly ready.
+Just in order to run the integration tests you will need to do some extra configuration:
+
+. Before you can run an integration test from GoLand, you need to run `make integration-test`.
+. Then try to run a specific integration test.
+  You must either run the tests of a single directory or file – or run a specific test method.
+  The execution will fail at first – that's expected.
+. Now go to _Run – Edit Configurations..._ and find the automatically created run configuration for the test.
+. Edit the _Working directory:_ field.
+  Set it to the same directory as the integration test lies which you want to test.
+. Edit the _Go tools arguments:_ field.
+  It should contain `-tags=integration`.
+
+Now try to re-run the test.
+It should now succeed.
+You will see test results in your IDE and be able to use the integrated debugger as well.
+
+[IMPORTANT]
+====
+Remember that you need to re-run `make integration-test` when you ran `make clean` or when you deleted the `./testbin` directory.
+====
+
+[NOTE]
+====
+If you're in doubt about your configuration, check whether `make clean integration-test` succeeds.
+If it does, you've broken your IDE configuration.
+Otherwise, you've broken something else.
+====

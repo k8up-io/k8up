@@ -23,10 +23,21 @@ test: fmt vet ## Run tests
 	go test ./... -coverprofile cover.out
 
 # See https://storage.googleapis.com/kubebuilder-tools/ for list of supported K8s versions
-integration-test: export ENVTEST_K8S_VERSION = 1.20.2
-integration-test: generate fmt vet $(testbin_created) ## Run integration tests with envtest
-	test -f ${ENVTEST_ASSETS_DIR}/setup-envtest.sh || curl -sSLo ${ENVTEST_ASSETS_DIR}/setup-envtest.sh https://raw.githubusercontent.com/kubernetes-sigs/controller-runtime/master/hack/setup-envtest.sh
-	source ${ENVTEST_ASSETS_DIR}/setup-envtest.sh; fetch_envtest_tools $(ENVTEST_ASSETS_DIR); setup_envtest_env $(ENVTEST_ASSETS_DIR); go test -tags=integration -v ./... -coverprofile cover.out
+#
+# A note on 1.20.2:
+# 1.20.2 is not (yet) supported, because starting the Kubernetes API controller with
+# `--insecure-port` and `--insecure-bind-address` flags is now deprecated,
+# but envtest was not updated accordingly.
+#integration-test: export ENVTEST_K8S_VERSION = 1.20.2
+integration-test: export ENVTEST_K8S_VERSION = 1.19.2
+integration-test: export KUBEBUILDER_ATTACH_CONTROL_PLANE_OUTPUT = $(INTEGRATION_TEST_DEBUG_OUTPUT)
+integration-test: generate $(testbin_created) ## Run integration tests with envtest
+	test -f ${ENVTEST_ASSETS_DIR}/setup-envtest.sh || \
+		curl -sSLo ${ENVTEST_ASSETS_DIR}/setup-envtest.sh https://raw.githubusercontent.com/kubernetes-sigs/controller-runtime/master/hack/setup-envtest.sh
+	source ${ENVTEST_ASSETS_DIR}/setup-envtest.sh; \
+		fetch_envtest_tools $(ENVTEST_ASSETS_DIR); \
+		setup_envtest_env $(ENVTEST_ASSETS_DIR); \
+		go test -tags=integration ./... -coverprofile cover.out
 
 .PHONY: build
 build: generate fmt vet $(BIN_FILENAME) ## Build manager binary
