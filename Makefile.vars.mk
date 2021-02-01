@@ -18,7 +18,8 @@ KIND_KUBECONFIG ?= $(TESTBIN_DIR)/kind-kubeconfig-$(KIND_NODE_VERSION)
 KIND_CLUSTER ?= k8up-$(KIND_NODE_VERSION)
 KIND_KUBECTL_ARGS ?= --validate=true
 
-E2E_TAG ?= e2e_$(shell sha1sum $(BIN_FILENAME) | cut -b-8)
+SHASUM ?= $(shell command -v sha1sum > /dev/null && echo "sha1sum" || echo "shasum -a1")
+E2E_TAG ?= e2e_$(shell $(SHASUM) $(BIN_FILENAME) | cut -b-8)
 E2E_REPO ?= local.dev/k8up/e2e
 E2E_IMG = $(E2E_REPO):$(E2E_TAG)
 
