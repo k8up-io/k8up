@@ -197,25 +197,16 @@ func (p *PreBackup) startOneAndWaitForReady(deployment appsv1.Deployment, client
 	return nil
 }
 
-func (p *PreBackup) kubeconfig() clientcmd.ClientConfig {
-	return clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
+func getKubeConfig() (*rest.Config, error) {
+	kubeconfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
 		clientcmd.NewDefaultClientConfigLoadingRules(),
 		&clientcmd.ConfigOverrides{},
 	)
-}
-
-func (p *PreBackup) restConfig() (*rest.Config, error) {
-	kubeconfig := p.kubeconfig()
-	restConfig, err := kubeconfig.ClientConfig()
-	if err != nil {
-		return nil, fmt.Errorf("could not create client config: %w", err)
-	}
-
-	return restConfig, nil
+	return kubeconfig.ClientConfig()
 }
 
 func (p *PreBackup) getClientset() (*kubernetes.Clientset, error) {
-	config, err := p.restConfig()
+	config, err := getKubeConfig()
 	if err != nil {
 		return nil, err
 	}
@@ -252,11 +243,11 @@ func (p *PreBackup) waitForReady(watcher watch.Interface) error {
 func (p *PreBackup) handleEvent(event watch.Event) (bool, error) {
 	deployment, ok := event.Object.(*appsv1.Deployment)
 	if !ok {
-		p.Log.V(2).Info("unexpected event during deployment watch ", "event source", event.Object, "event type", event.Type)
+		p.Log.V(1).Info("unexpected event during deployment watch ", "event source", event.Object, "event type", event.Type)
 		return false, nil
 	}
 
-	p.Log.V(2).Info("new event during deployment watch ", "deployment", fmt.Sprintf("%s/%s", deployment.Namespace, deployment.Name), "event type", event.Type)
+	p.Log.V(1).Info("new event during deployment watch ", "deployment", fmt.Sprintf("%s/%s", deployment.Namespace, deployment.Name), "event type", event.Type)
 
 	switch event.Type {
 	case watch.Modified:
