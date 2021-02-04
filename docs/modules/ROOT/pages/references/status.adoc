@@ -9,12 +9,21 @@ Each condition also contains a human-readable message that describes the status 
 |===
 | Condition | Reasons | Description
 
-.2+| `Ready`
+.5+| `Ready`
 | Ready
 | The jobs have been created and added to the cron scheduler.
 
 | Failed
 | The jobs could not be added to the cron scheduler.
+
+| CreationFailed
+| Dependent resources could not be created.
+
+| UpdateFailed
+| Dependent resources could not be updated.
+
+| DeletionFailed
+| Dependent resources could not be deleted.
 
 |===
 

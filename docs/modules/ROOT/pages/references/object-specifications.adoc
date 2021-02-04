@@ -292,8 +292,6 @@ WARNING: Please don't confuse `tags` and `keepTags` here. If you specify `keepTa
 
 == Backend
 
-Currently only S3 is supported as a backend.
-
 [source,yaml]
 ----
 backend:
@@ -327,9 +325,9 @@ Settings:
 * `accessKeyIDSecretRef`: Kubernetes secret reference containing the the Access Key ID
 * `secretAccessKeySecretRef`: Kubernetes secret reference containing the Secret Access Key
 
-== PreBackup
+== PreBackupPod
 
-PreBackup are objects that live in the namespace that should be backed up.
+PreBackupPods are objects that live in the namespace that should be backed up.
 They're completely optional though.
 Their main goal is to provide some sort of pre backup scripts.
 They can be used for various use cases though, see <<how-tos/prebackuppod.adoc#PreBackup-pods,PreBackup pods>>.
@@ -365,3 +363,23 @@ spec:
 * `backupCommand`: command that should get executed within the pod. *Attention* the command should output its data to stdout so that wrestic can pick it up correctly
 * `fileExtension`: as this leverages the stdin backup capabilities of Restic it will generate a virtual file. That file name is by default just the name of the PreBackup pod. But to make restores easier you can define a file extension, that gets appended to the filename. For example: ".sql" for a mysql dump
 * `pod`: pod is default `podTemplateSpec` of https://kubernetes.io/docs/concepts/workloads/pods/pod-overview/#pod-templates[Kubernetes].
+
+== EffectiveSchedule
+
+An `EffectiveSchedule` is a status object that persists generated schedule definitions when using xref:references/schedule-specification.adoc[K8up specific schedules] like `@daily-random`.
+They are completely controller-managed in the controller namespace.
+Users should not have the need to interact with them.
+There is an `EffectiveSchedule` for each job type a `Schedule` object can define.
+
+[source,yaml]
+----
+include::example$references/effective-schedule.yaml[]
+----
+
+`EffectiveSchedules` are being deleted when there are no more references to `Schedules`.
+
+=== Settings
+
+* `spec.generatedSchedule`: schedule definition that was translated, e.g. from `@hourly-random` to `4 * * * *`.
+* `spec.jobType`: The K8up job type this resource is applicable to.
+* `spec.scheduleRefs`: A list of `Schedules` for which the generated schedule applies to.

@@ -10,12 +10,6 @@ In addition to the standard Cron syntax (e.g. `* */12 * * *`) K8up features stab
 Enter a special `-random`-suffixed schedule to your spec in order to let K8up generate a schedule for you.
 
 A schedule of `@weekly-random` generates an effective schedule like `52 4 * * 4`.
-The effective schedule per job type can be inspected in the `.status.effectiveSchedule` field of a `Schedule` object.
-
-[source,yaml]
-----
-include::example$schedule-status.yaml[]
-----
 
 TIP: The full specification of the schedules can be found in the xref:references/schedule-specification.adoc[Schedule Specifications]
 
