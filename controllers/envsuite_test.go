@@ -14,8 +14,10 @@ import (
 	"github.com/go-logr/zapr"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/zap/zaptest"
+	appsv1 "k8s.io/api/apps/v1"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
+	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
@@ -85,9 +87,11 @@ func (ts *EnvTestSuite) SetupSuite() {
 
 func registerCRDs(ts *EnvTestSuite) {
 	ts.Scheme = runtime.NewScheme()
-	ts.Require().NoError(corev1.AddToScheme(ts.Scheme))
+	ts.Require().NoError(appsv1.AddToScheme(ts.Scheme))
 	ts.Require().NoError(batchv1.AddToScheme(ts.Scheme))
+	ts.Require().NoError(corev1.AddToScheme(ts.Scheme))
 	ts.Require().NoError(k8upv1a1.AddToScheme(ts.Scheme))
+	ts.Require().NoError(rbacv1.AddToScheme(ts.Scheme))
 
 	// +kubebuilder:scaffold:scheme
 }
@@ -135,11 +139,11 @@ func (ts *EnvTestSuite) NewNS(nsName string) *corev1.Namespace {
 	}
 }
 
-// CreateNS creates a new Namespace object using EnvTestSuite.Client.
-func (ts *EnvTestSuite) CreateNS(nsName string) error {
+// EnsureNS creates a new Namespace object using EnvTestSuite.Client.
+func (ts *EnvTestSuite) EnsureNS(nsName string) {
 	ns := ts.NewNS(nsName)
 	ts.T().Logf("creating namespace '%s'", nsName)
-	return ts.Client.Create(ts.Ctx, ns)
+	ts.Require().NoError(ts.Client.Create(ts.Ctx, ns))
 }
 
 // EnsureResources ensures that the given resources are existing in the suite. Each error will fail the test.
@@ -191,7 +195,7 @@ func (ts *EnvTestSuite) MapToRequest(object metav1.Object) ctrl.Request {
 // BeforeTest is invoked just before every test starts
 func (ts *EnvTestSuite) SetupTest() {
 	ts.NS = rand.String(8)
-	ts.Require().NoError(ts.CreateNS(ts.NS))
+	ts.EnsureNS(ts.NS)
 }
 
 // SanitizeNameForNS first converts the given name to lowercase using strings.ToLower

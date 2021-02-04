@@ -2,8 +2,8 @@ package prebackup
 
 import (
 	"fmt"
-	"os"
-	"path/filepath"
+
+	"k8s.io/apimachinery/pkg/types"
 
 	k8upv1alpha1 "github.com/vshn/k8up/api/v1alpha1"
 	"github.com/vshn/k8up/cfg"
@@ -16,7 +16,6 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
-	"k8s.io/client-go/util/homedir"
 	"k8s.io/utils/pointer"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -47,7 +46,6 @@ const (
 
 // Start will start the defined pods as deployments.
 func (p *PreBackup) Start() error {
-
 	templates, err := p.getPodTemplates()
 	if err != nil {
 		p.SetConditionFalseWithMessage(ConditionPreBackupPodsReady, k8upv1alpha1.ReasonRetrievalFailed, "error while retrieving container definitions: %v", err.Error())
@@ -59,11 +57,16 @@ func (p *PreBackup) Start() error {
 		return nil
 	}
 
-	p.SetConditionUnknownWithMessage(ConditionPreBackupPodsReady, ReasonWaiting, "ready to start %d PreBackupPods", len(templates.Items))
+	err = p.CTX.Err()
+	if err != nil {
+		p.SetConditionFalseWithMessage(ConditionPreBackupPodsReady, k8upv1alpha1.ReasonRetrievalFailed, err.Error())
+		return err
+	}
 
+	p.SetConditionUnknownWithMessage(ConditionPreBackupPodsReady, ReasonWaiting, "ready to start %d PreBackupPods", len(templates.Items))
 	deployments := p.generateDeployments(templates)
 
-	return p.startAndWaitForReady(deployments)
+	return p.startAllAndWaitForReady(deployments)
 }
 
 func (p *PreBackup) getPodTemplates() (*k8upv1alpha1.PreBackupPodList, error) {
@@ -119,41 +122,15 @@ func (p *PreBackup) generateDeployments(templates *k8upv1alpha1.PreBackupPodList
 	return deployments
 }
 
-func (p *PreBackup) startAndWaitForReady(deployments []appsv1.Deployment) error {
-
+func (p *PreBackup) startAllAndWaitForReady(deployments []appsv1.Deployment) error {
 	clientset, err := p.getClientset()
 	if err != nil {
 		return fmt.Errorf("could not create pre backup pods: %w", err)
 	}
 
 	for _, deployment := range deployments {
-		name := deployment.GetName()
-		namespace := deployment.GetNamespace()
-		p.Log.Info("starting pre backup pod", "namespace", namespace, "name", name)
-
-		// Avoid exportloopref
-		deployment := deployment
-
-		err := p.Client.Create(p.CTX, &deployment)
-		if err != nil && !errors.IsAlreadyExists(err) {
-			err := fmt.Errorf("error creating pre backup pod '%v/%v': %w", namespace, name, err)
-			p.SetConditionFalseWithMessage(ConditionPreBackupPodsReady, k8upv1alpha1.ReasonCreationFailed, err.Error())
-			return err
-		}
-
-		watcher, err := clientset.AppsV1().
-			Deployments(deployment.GetNamespace()).
-			Watch(p.CTX, metav1.SingleObject(deployment.ObjectMeta))
+		err = p.startOneAndWaitForReady(deployment, clientset)
 		if err != nil {
-			err := fmt.Errorf("could not create watcher for '%v/%v': %w", namespace, name, err)
-			p.SetConditionFalseWithMessage(ConditionPreBackupPodsReady, k8upv1alpha1.ReasonCreationFailed, err.Error())
-			return err
-		}
-
-		err = p.waitForReady(watcher)
-		if err != nil {
-			err := fmt.Errorf("error during deployment watch of '%v/%v': %w", namespace, name, err)
-			p.SetConditionFalseWithMessage(ConditionPreBackupPodsReady, k8upv1alpha1.ReasonFailed, err.Error())
 			return err
 		}
 	}
@@ -162,21 +139,85 @@ func (p *PreBackup) startAndWaitForReady(deployments []appsv1.Deployment) error 
 	return nil
 }
 
+func (p *PreBackup) startOneAndWaitForReady(deployment appsv1.Deployment, clientset *kubernetes.Clientset) error {
+	err := p.CTX.Err()
+	if err != nil {
+		p.SetConditionFalseWithMessage(ConditionPreBackupPodsReady, k8upv1alpha1.ReasonRetrievalFailed, "error before starting pre backup pod: %v", err.Error())
+		return err
+	}
+
+	name := deployment.GetName()
+	namespace := deployment.GetNamespace()
+	p.Log.Info("starting pre backup pod", "namespace", namespace, "name", name)
+
+	err = p.Client.Create(p.CTX, &deployment)
+	deploymentExists := errors.IsAlreadyExists(err)
+	if err != nil && !deploymentExists {
+		err := fmt.Errorf("error creating pre backup pod '%v/%v': %w", namespace, name, err)
+		p.SetConditionFalseWithMessage(ConditionPreBackupPodsReady, k8upv1alpha1.ReasonCreationFailed, err.Error())
+		return err
+	}
+
+	if deploymentExists {
+		err := p.Client.Get(p.CTX, types.NamespacedName{Name: deployment.Name, Namespace: deployment.Namespace}, &deployment)
+		if err != nil {
+			err := fmt.Errorf("error getting pre backup pod '%v/%v': %w", namespace, name, err)
+			p.SetConditionFalseWithMessage(ConditionPreBackupPodsReady, k8upv1alpha1.ReasonRetrievalFailed, err.Error())
+			return err
+		}
+
+		ready, err := p.isDeploymentReady(&deployment)
+		if err != nil {
+			err := fmt.Errorf("error checking the readyness of deployment '%s/%s': %s", deployment.Namespace, deployment.Name, err)
+			p.SetConditionFalseWithMessage(ConditionPreBackupPodsReady, k8upv1alpha1.ReasonRetrievalFailed, err.Error())
+			return err
+		}
+		if ready {
+			p.Log.V(2).Info("pre backup pod already in ready state", "deployment", fmt.Sprintf("%s/%s", deployment.Namespace, deployment.Name), "event type")
+			p.SetConditionTrue(ConditionPreBackupPodsReady, k8upv1alpha1.ReasonSucceeded)
+			return nil
+		}
+	}
+
+	watcher, err := clientset.AppsV1().
+		Deployments(deployment.GetNamespace()).
+		Watch(p.CTX, metav1.SingleObject(deployment.ObjectMeta))
+	if err != nil {
+		err := fmt.Errorf("could not create watcher for '%v/%v': %w", namespace, name, err)
+		p.SetConditionFalseWithMessage(ConditionPreBackupPodsReady, k8upv1alpha1.ReasonCreationFailed, err.Error())
+		return err
+	}
+
+	err = p.waitForReady(watcher)
+	if err != nil {
+		err := fmt.Errorf("error during deployment watch of '%v/%v': %w", namespace, name, err)
+		p.SetConditionFalseWithMessage(ConditionPreBackupPodsReady, k8upv1alpha1.ReasonFailed, err.Error())
+		return err
+	}
+	return nil
+}
+
+func (p *PreBackup) kubeconfig() clientcmd.ClientConfig {
+	return clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
+		clientcmd.NewDefaultClientConfigLoadingRules(),
+		&clientcmd.ConfigOverrides{},
+	)
+}
+
+func (p *PreBackup) restConfig() (*rest.Config, error) {
+	kubeconfig := p.kubeconfig()
+	restConfig, err := kubeconfig.ClientConfig()
+	if err != nil {
+		return nil, fmt.Errorf("could not create client config: %w", err)
+	}
+
+	return restConfig, nil
+}
+
 func (p *PreBackup) getClientset() (*kubernetes.Clientset, error) {
-
-	kubehome := filepath.Join(homedir.HomeDir(), ".kube", "config")
-	var config *rest.Config
-
-	if _, err := os.Stat(kubehome); !os.IsNotExist(err) {
-		config, err = clientcmd.BuildConfigFromFlags("", kubehome)
-		if err != nil {
-			return nil, fmt.Errorf("could not load configuration: %s", err)
-		}
-	} else {
-		config, err = rest.InClusterConfig()
-		if err != nil {
-			return nil, fmt.Errorf("error loading kubernetes configuration inside cluster, check app is running outside kubernetes cluster or run in development mode: %s", err)
-		}
+	config, err := p.restConfig()
+	if err != nil {
+		return nil, err
 	}
 
 	clientset, err := kubernetes.NewForConfig(config)
@@ -190,43 +231,76 @@ func (p *PreBackup) getClientset() (*kubernetes.Clientset, error) {
 func (p *PreBackup) waitForReady(watcher watch.Interface) error {
 	defer watcher.Stop()
 
-	for event := range watcher.ResultChan() {
-		deployment := event.Object.(*appsv1.Deployment)
-
-		switch event.Type {
-		case watch.Modified:
-
-			last := p.getLastDeploymentCondition(deployment)
-
-			if last != nil && isDeadlineExceeded(last) {
-				return fmt.Errorf("error starting pre backup pod %v: %v", deployment.GetName(), last.Message)
+	p.Log.V(2).Info("waiting on watcher ", "deployment", fmt.Sprintf("%s/%s", p.Obj.GetMetaObject().GetNamespace(), p.Obj.GetMetaObject().GetName()))
+	for {
+		select {
+		case event := <-watcher.ResultChan():
+			endWatch, err := p.handleEvent(event)
+			if err != nil {
+				return err
 			}
-
-			if hasAvailableReplica(deployment) {
+			if endWatch {
 				return nil
 			}
-
-			p.Log.Info("waiting for command pod to get ready", "deployment", fmt.Sprintf("%s/%s", deployment.Namespace, deployment.Name))
-
-		case watch.Error:
-
-			last := p.getLastDeploymentCondition(deployment)
-
-			if last != nil {
-				return fmt.Errorf("there was an error while starting pre backup pod '%v/%v': %v", deployment.Namespace, deployment.Name, last.Message)
-			}
-			return fmt.Errorf("there was an unknown error while starting pre backup pod '%v/%v'", deployment.Namespace, deployment.Name)
-
-		case watch.Added:
-		case watch.Bookmark:
-		case watch.Deleted:
-			p.Log.V(1).Info("ignoring event", "deployment", fmt.Sprintf("%s/%s", deployment.Namespace, deployment.Name), "event type", event.Type)
-		default:
-			p.Log.Info("unexpected event during deployment watch ", "deployment", fmt.Sprintf("%s/%s", deployment.Namespace, deployment.Name), "event type", event.Type)
+		case <-p.CTX.Done():
+			p.Log.Error(p.CTX.Err(), "unexpected end during deployment watch ", "deployment", fmt.Sprintf("%s/%s", p.Obj.GetMetaObject().GetNamespace(), p.Obj.GetMetaObject().GetName()))
+			return p.CTX.Err()
 		}
 	}
+}
 
-	return nil
+func (p *PreBackup) handleEvent(event watch.Event) (bool, error) {
+	deployment, ok := event.Object.(*appsv1.Deployment)
+	if !ok {
+		p.Log.V(2).Info("unexpected event during deployment watch ", "event source", event.Object, "event type", event.Type)
+		return false, nil
+	}
+
+	p.Log.V(2).Info("new event during deployment watch ", "deployment", fmt.Sprintf("%s/%s", deployment.Namespace, deployment.Name), "event type", event.Type)
+
+	switch event.Type {
+	case watch.Modified:
+		ready, err := p.isDeploymentReady(deployment)
+		if err != nil || ready {
+			return true, err
+		}
+
+		p.Log.Info("waiting for command pod to get ready", "deployment", fmt.Sprintf("%s/%s", deployment.Namespace, deployment.Name))
+
+	case watch.Error:
+		last := p.getLastDeploymentCondition(deployment)
+
+		var err error
+		if last != nil {
+			err = fmt.Errorf("there was an error while starting pre backup pod '%v/%v': %v", deployment.Namespace, deployment.Name, last.Message)
+		} else {
+			err = fmt.Errorf("there was an unknown error while starting pre backup pod '%v/%v'", deployment.Namespace, deployment.Name)
+		}
+		return true, err
+
+	case watch.Added:
+	case watch.Bookmark:
+	case watch.Deleted:
+		p.Log.V(1).Info("ignoring event", "deployment", fmt.Sprintf("%s/%s", deployment.Namespace, deployment.Name), "event type", event.Type)
+
+	default:
+		p.Log.Info("unexpected event during deployment watch ", "deployment", fmt.Sprintf("%s/%s", deployment.Namespace, deployment.Name), "event type", event.Type)
+	}
+	return false, nil
+}
+
+func (p *PreBackup) isDeploymentReady(deployment *appsv1.Deployment) (bool, error) {
+	last := p.getLastDeploymentCondition(deployment)
+
+	if last != nil && isDeadlineExceeded(last) {
+		return true, fmt.Errorf("error starting pre backup pod %v: %v", deployment.GetName(), last.Message)
+	}
+
+	if hasAvailableReplica(deployment) {
+		return true, nil
+	}
+
+	return false, nil
 }
 
 func isDeadlineExceeded(last *appsv1.DeploymentCondition) bool {
