@@ -19,7 +19,7 @@ ENVTEST_ASSETS_DIR=$(shell pwd)/testbin
 all: build ## Invokes the build target
 
 .PHONY: test
-test: fmt vet ## Run tests
+test: ## Run tests
 	go test ./... -coverprofile cover.out
 
 # See https://storage.googleapis.com/kubebuilder-tools/ for list of supported K8s versions
