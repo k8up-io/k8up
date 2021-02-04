@@ -1695,12 +1695,6 @@ spec:
                 - type
                 type: object
               type: array
-            effectiveSchedules:
-              additionalProperties:
-                description: ScheduleDefinition is the actual cron-type expression that defines the interval of the actions.
-                type: string
-              description: EffectiveSchedules displays the final schedule for each type (useful when using smart schedules).
-              type: object
           type: object
       type: object
   version: v1alpha1

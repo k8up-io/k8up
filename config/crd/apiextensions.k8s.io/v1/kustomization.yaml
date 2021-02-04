@@ -10,6 +10,7 @@ resources:
 - base/backup.appuio.ch_prunes.yaml
 - base/backup.appuio.ch_snapshots.yaml
 - base/backup.appuio.ch_prebackuppods.yaml
+- base/backup.appuio.ch_effectiveschedules.yaml
 # +kubebuilder:scaffold:crdkustomizeresource
 
 # the following config is for teaching kustomize how to do kustomization for CRDs.
