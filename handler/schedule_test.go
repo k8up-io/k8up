@@ -7,11 +7,9 @@ import (
 	"github.com/stretchr/testify/require"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
-	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-	"github.com/vshn/k8up/api/v1alpha1"
+	k8upv1alpha1 "github.com/vshn/k8up/api/v1alpha1"
 	"github.com/vshn/k8up/cfg"
-	"github.com/vshn/k8up/job"
 )
 
 func TestScheduleHandler_mergeResourcesWithDefaults(t *testing.T) {
@@ -102,6 +100,7 @@ func TestScheduleHandler_mergeResourcesWithDefaults(t *testing.T) {
 		},
 	}
 	cfg.Config = cfg.NewDefaultConfig()
+	cfg.Config.OperatorNamespace = "irrelevant-but-required"
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
 			cfg.Config.GlobalCPUResourceLimit = tt.globalCPUResourceLimit
@@ -109,10 +108,10 @@ func TestScheduleHandler_mergeResourcesWithDefaults(t *testing.T) {
 			cfg.Config.GlobalMemoryResourceLimit = tt.globalMemoryResourceLimit
 			cfg.Config.GlobalMemoryResourceRequest = tt.globalMemoryResourceRequest
 			require.NoError(t, cfg.Config.ValidateSyntax())
-			schedule := ScheduleHandler{schedule: &v1alpha1.Schedule{Spec: v1alpha1.ScheduleSpec{
+			schedule := ScheduleHandler{schedule: &k8upv1alpha1.Schedule{Spec: k8upv1alpha1.ScheduleSpec{
 				ResourceRequirementsTemplate: tt.givenScheduleTemplate,
 			}}}
-			res := &v1alpha1.RunnableSpec{
+			res := &k8upv1alpha1.RunnableSpec{
 				Resources: tt.givenResourceTemplate,
 			}
 			schedule.mergeResourcesWithDefaults(res)
@@ -130,9 +129,9 @@ func newCPUResourceList(amount string) v1.ResourceList {
 func TestScheduleHandler_mergeBackendWithDefaults(t *testing.T) {
 	tests := map[string]struct {
 		globalS3Bucket       string
-		givenScheduleBackend v1alpha1.Backend
-		givenResourceBackend v1alpha1.Backend
-		expectedBackend      v1alpha1.Backend
+		givenScheduleBackend k8upv1alpha1.Backend
+		givenResourceBackend k8upv1alpha1.Backend
+		expectedBackend      k8upv1alpha1.Backend
 	}{
 		"Given_NoGlobalDefaults_And_NoScheduleDefaults_When_Spec_Then_UseSpec": {
 			givenResourceBackend: newS3Backend("https://resource-url", "resource-bucket"),
@@ -170,14 +169,15 @@ func TestScheduleHandler_mergeBackendWithDefaults(t *testing.T) {
 		},
 	}
 	cfg.Config = cfg.NewDefaultConfig()
+	cfg.Config.OperatorNamespace = "irrelevant-but-required"
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
 			cfg.Config.GlobalS3Bucket = tt.globalS3Bucket
 			require.NoError(t, cfg.Config.ValidateSyntax())
-			schedule := ScheduleHandler{schedule: &v1alpha1.Schedule{Spec: v1alpha1.ScheduleSpec{
+			schedule := ScheduleHandler{schedule: &k8upv1alpha1.Schedule{Spec: k8upv1alpha1.ScheduleSpec{
 				Backend: &tt.givenScheduleBackend,
 			}}}
-			res := &v1alpha1.RunnableSpec{
+			res := &k8upv1alpha1.RunnableSpec{
 				Backend: &tt.givenResourceBackend,
 			}
 			schedule.mergeBackendWithDefaults(res)
@@ -187,59 +187,11 @@ func TestScheduleHandler_mergeBackendWithDefaults(t *testing.T) {
 	}
 }
 
-func newS3Backend(endpoint, bucket string) v1alpha1.Backend {
-	return v1alpha1.Backend{
-		S3: &v1alpha1.S3Spec{
+func newS3Backend(endpoint, bucket string) k8upv1alpha1.Backend {
+	return k8upv1alpha1.Backend{
+		S3: &k8upv1alpha1.S3Spec{
 			Endpoint: endpoint,
 			Bucket:   bucket,
 		},
-	}
-}
-
-func TestScheduleHandler_getEffectiveSchedule(t *testing.T) {
-	tests := map[string]struct {
-		schedule             *v1alpha1.Schedule
-		originalSchedule     v1alpha1.ScheduleDefinition
-		expectedStatusUpdate bool
-		expectedSchedule     v1alpha1.ScheduleDefinition
-	}{
-		"GivenScheduleWithoutStatus_WhenUsingRandomSchedule_ThenPutGeneratedScheduleInStatus": {
-			schedule: &v1alpha1.Schedule{
-				Spec: v1alpha1.ScheduleSpec{
-					Backup: &v1alpha1.BackupSchedule{},
-				},
-			},
-			originalSchedule:     "@hourly-random",
-			expectedSchedule:     "26 * * * *",
-			expectedStatusUpdate: true,
-		},
-		"GivenScheduleWithStatus_WhenUsingRandomSchedule_ThenUseGeneratedScheduleFromStatus": {
-			schedule: &v1alpha1.Schedule{
-				Spec: v1alpha1.ScheduleSpec{
-					Backup: &v1alpha1.BackupSchedule{},
-				},
-				Status: v1alpha1.ScheduleStatus{
-					EffectiveSchedules: map[v1alpha1.JobType]v1alpha1.ScheduleDefinition{
-						v1alpha1.BackupType: "26 * 3 * *",
-					},
-				},
-			},
-			originalSchedule: "@hourly-random",
-			expectedSchedule: "26 * 3 * *",
-		},
-	}
-	for name, tt := range tests {
-		t.Run(name, func(t *testing.T) {
-			s := &ScheduleHandler{
-				schedule: tt.schedule,
-				Config:   job.Config{Log: zap.New(zap.UseDevMode(true))},
-			}
-			result := s.getEffectiveSchedule(v1alpha1.BackupType, tt.originalSchedule)
-			assert.Equal(t, tt.expectedSchedule, result)
-			assert.Equal(t, tt.expectedStatusUpdate, s.requireStatusUpdate)
-			if tt.expectedStatusUpdate {
-				assert.Equal(t, tt.expectedSchedule, tt.schedule.Status.EffectiveSchedules[v1alpha1.BackupType])
-			}
-		})
 	}
 }

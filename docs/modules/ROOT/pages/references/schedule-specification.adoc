@@ -62,7 +62,10 @@ The following non-standard schedules are supported:
 |`52 * * * *` (example)
 |===
 
-NOTE: The day-of-month in the `@monthly-random` or `@yearly-random` is capped at the number 27.
-      This is because there are months that have between 27 and 31 days.
-      Cron skips a job when the day-of-month is higher than the current month has  days in it.
-      This is to prevent skipping backups and alerts from being fired.
+[NOTE]
+====
+The day-of-month in the `@monthly-random` or `@yearly-random` is capped at the number 27.
+This is because there are months that have between 27 and 31 days.
+Cron skips a job when the day-of-month is higher than the current month has  days in it.
+This is to prevent skipping backups and alerts from being fired.
+====

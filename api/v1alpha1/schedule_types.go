@@ -61,9 +61,6 @@ type PruneSchedule struct {
 
 // ScheduleStatus defines the observed state of Schedule
 type ScheduleStatus struct {
-	// EffectiveSchedules displays the final schedule for each type (useful when using smart schedules).
-	EffectiveSchedules map[JobType]ScheduleDefinition `json:"effectiveSchedules,omitempty"`
-
 	// Conditions provide a standard mechanism for higher-level status reporting from a controller.
 	// They are an extension mechanism which allows tools and other controllers to collect summary information about
 	// resources without needing to understand resource-specific status details.
@@ -90,6 +87,11 @@ type ScheduleList struct {
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []Schedule `json:"items"`
 }
+
+const (
+	// ScheduleFinalizerName is a Finalizer added to resources that need cleanup cron schedules before deleting them.
+	ScheduleFinalizerName = "k8up.syn.tools/schedule"
+)
 
 func init() {
 	SchemeBuilder.Register(&Schedule{}, &ScheduleList{})
@@ -139,4 +141,9 @@ func (s ScheduleDefinition) IsNonStandard() bool {
 // Two examples are '@daily-random' and '@weekly-random'.
 func (s ScheduleDefinition) IsRandom() bool {
 	return s.IsNonStandard() && strings.HasSuffix(string(s), "-random")
+}
+
+// IsReferencedBy returns true if the given ref matches the schedule's name and namespace.
+func (s *Schedule) IsReferencedBy(ref ScheduleRef) bool {
+	return ref.Namespace == s.Namespace && ref.Name == s.Name
 }

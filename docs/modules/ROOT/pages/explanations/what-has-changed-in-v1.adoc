@@ -9,3 +9,8 @@ It was initially built with https://github.com/spotahome/kooper[Kooper], but for
 
 The resources should stay the same and are backwards compatible.
 But the CRDs feature new properties and thus should be upgraded.
+
+Additionally, K8up comes with a new CRD `EffectiveSchedule`.
+This resource is needed for the xref:references/schedule-specification.adoc[K8up specific schedules].
+Related to this, a new environment variable `BACKUP_OPERATOR_NAMESPACE` is required.
+However this defaults to the installation namespace when using Kustomize or Helm.

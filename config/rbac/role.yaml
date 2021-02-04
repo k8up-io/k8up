@@ -81,6 +81,24 @@ rules:
 - apiGroups:
   - backup.appuio.ch
   resources:
+  - effectiveschedules
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - backup.appuio.ch
+  resources:
+  - effectiveschedules/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - backup.appuio.ch
+  resources:
   - prebackuppods
   verbs:
   - create
