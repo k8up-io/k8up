@@ -24,9 +24,6 @@ const (
 	K8uplabel = "k8upjob"
 	// K8upExclusive is needed to determine if a given job is considered exclusive or not.
 	K8upExclusive = "k8upjob/exclusive"
-
-	// K8upTypeLabel is the label key that identifies the job type.
-	K8upTypeLabel = "k8up.io/type"
 )
 
 // Config represents the whole context for a given job. It contains everything
@@ -70,8 +67,8 @@ func GenerateGenericJob(obj Object, config Config) (*batchv1.Job, error) {
 			Name:      obj.GetMetaObject().GetName(),
 			Namespace: obj.GetMetaObject().GetNamespace(),
 			Labels: map[string]string{
-				K8uplabel:     "true",
-				K8upTypeLabel: obj.GetType().String(),
+				K8uplabel:                  "true",
+				k8upv1alpha1.LabelK8upType: obj.GetType().String(),
 			},
 		},
 		Spec: batchv1.JobSpec{

@@ -122,6 +122,20 @@ func (s *Scheduler) getScheduleCallback(config job.Config, namespacedName types.
 	}
 }
 
+// HasSchedule returns true if there is a schedule that matches the given criteria, otherwise false.
+func (s *Scheduler) HasSchedule(namespacedName types.NamespacedName, schedule k8upv1alpha1.ScheduleDefinition, jobType k8upv1alpha1.JobType) bool {
+	for ns, refs := range s.registeredSchedules {
+		if ns == namespacedName.String() {
+			for _, ref := range refs {
+				if ref.Schedule == schedule && ref.JobType == jobType {
+					return true
+				}
+			}
+		}
+	}
+	return false
+}
+
 // addSchedule adds the given newJobs to the cron scheduler
 func (s *Scheduler) addSchedule(jb Job, namespacedName types.NamespacedName, cmd func()) error {
 	id, err := s.cron.AddFunc(jb.Schedule.String(), cmd)

@@ -2,6 +2,7 @@ package v1alpha1
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 )
 
 type (
@@ -45,10 +46,17 @@ const (
 	ReasonFailed ConditionReason = "Failed"
 	// ReasonCreationFailed indicates that a dependent resource could not be created
 	ReasonCreationFailed ConditionReason = "CreationFailed"
+	// ReasonCreationFailed indicates that a dependent resource could not be created
+	ReasonUpdateFailed ConditionReason = "UpdateFailed"
 	// ReasonCreationFailed indicates that a dependent resource could not be deleted
 	ReasonDeletionFailed ConditionReason = "DeletionFailed"
 	// ReasonRetrievalFailed indicates that dependent resource(s) could not be retrieved for further processing
 	ReasonRetrievalFailed ConditionReason = "RetrievalFailed"
+
+	// LabelK8upType is the label key that identifies the job type
+	LabelK8upType = "k8up.syn.tools/type"
+	// LabelManagedBy identifies the tool being used to manage the operation of a resource
+	LabelManagedBy = "app.kubernetes.io/managed-by"
 )
 
 // String casts the value to string.
@@ -67,6 +75,11 @@ func (c ConditionType) String() string {
 // "r.String()" and "string(r)" are equivalent.
 func (r ConditionReason) String() string {
 	return string(r)
+}
+
+// GetNamespacedName translates the given object meta into NamespacedName object
+func GetNamespacedName(obj metav1.Object) types.NamespacedName {
+	return types.NamespacedName{Name: obj.GetName(), Namespace: obj.GetNamespace()}
 }
 
 // Status defines the observed state of a generic K8up job. It is used for the

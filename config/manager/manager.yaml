@@ -18,6 +18,11 @@ spec:
       containers:
       - name: k8up
         image: quay.io/vshn/k8up:latest
+        env:
+          - name: BACKUP_OPERATOR_NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
         securityContext:
           allowPrivilegeEscalation: false
         resources:

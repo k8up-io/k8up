@@ -5,7 +5,6 @@ import (
 
 	"github.com/imdario/mergo"
 	"k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
 	k8upv1alpha1 "github.com/vshn/k8up/api/v1alpha1"
@@ -14,23 +13,24 @@ import (
 	"github.com/vshn/k8up/scheduler"
 )
 
-const (
-	scheduleFinalizerName = "k8up.syn.tools/schedule"
-)
-
 // ScheduleHandler handles the reconciles for the schedules. Schedules are a special
 // type of k8up objects as they will only trigger jobs indirectly.
 type ScheduleHandler struct {
-	schedule *k8upv1alpha1.Schedule
+	schedule           *k8upv1alpha1.Schedule
+	effectiveSchedules map[k8upv1alpha1.JobType]k8upv1alpha1.EffectiveSchedule
 	job.Config
 	requireStatusUpdate bool
 }
 
 // NewScheduleHandler will return a new ScheduleHandler.
-func NewScheduleHandler(config job.Config, schedule *k8upv1alpha1.Schedule) *ScheduleHandler {
+func NewScheduleHandler(
+	config job.Config, schedule *k8upv1alpha1.Schedule,
+	effectiveSchedules map[k8upv1alpha1.JobType]k8upv1alpha1.EffectiveSchedule) *ScheduleHandler {
+
 	return &ScheduleHandler{
-		schedule: schedule,
-		Config:   config,
+		schedule:           schedule,
+		effectiveSchedules: effectiveSchedules,
+		Config:             config,
 	}
 }
 
@@ -38,34 +38,32 @@ func NewScheduleHandler(config job.Config, schedule *k8upv1alpha1.Schedule) *Sch
 // jobs from the internal cron library.
 func (s *ScheduleHandler) Handle() error {
 
-	namespacedName := types.NamespacedName{Name: s.schedule.GetName(), Namespace: s.schedule.GetNamespace()}
-
 	if s.schedule.GetDeletionTimestamp() != nil {
-		controllerutil.RemoveFinalizer(s.schedule, scheduleFinalizerName)
-		scheduler.GetScheduler().RemoveSchedules(namespacedName)
-
-		return s.updateSchedule()
+		return s.finalizeSchedule()
 	}
 
 	var err error
 
 	jobList := s.createJobList()
 
-	scheduler.GetScheduler().RemoveSchedules(namespacedName)
 	err = scheduler.GetScheduler().SyncSchedules(jobList)
 	if err != nil {
 		s.SetConditionFalseWithMessage(k8upv1alpha1.ConditionReady, k8upv1alpha1.ReasonFailed, "cannot add to cron: %v", err.Error())
-		return s.updateStatus()
+		return err
+	}
+
+	if err := s.synchronizeEffectiveSchedulesResources(); err != nil {
+		// at this point, conditions are already set and updated.
+		return err
 	}
 
 	s.SetConditionTrue(k8upv1alpha1.ConditionReady, k8upv1alpha1.ReasonReady)
 
-	if !controllerutil.ContainsFinalizer(s.schedule, scheduleFinalizerName) {
-		controllerutil.AddFinalizer(s.schedule, scheduleFinalizerName)
+	if !controllerutil.ContainsFinalizer(s.schedule, k8upv1alpha1.ScheduleFinalizerName) {
+		controllerutil.AddFinalizer(s.schedule, k8upv1alpha1.ScheduleFinalizerName)
 		return s.updateSchedule()
 	}
-
-	return s.updateStatus()
+	return nil
 }
 
 func (s *ScheduleHandler) createJobList() scheduler.JobList {
@@ -83,6 +81,9 @@ func (s *ScheduleHandler) createJobList() scheduler.JobList {
 			Schedule: s.getEffectiveSchedule(jobType, jobTemplate.Schedule),
 			Object:   jobTemplate.ArchiveSpec,
 		})
+		s.cleanupEffectiveSchedules(jobType, jobTemplate.Schedule)
+	} else {
+		s.cleanupEffectiveSchedules(k8upv1alpha1.ArchiveType, "")
 	}
 	if backup := s.schedule.Spec.Backup; backup != nil {
 		backupTemplate := backup.DeepCopy()
@@ -93,6 +94,9 @@ func (s *ScheduleHandler) createJobList() scheduler.JobList {
 			Schedule: s.getEffectiveSchedule(jobType, backupTemplate.Schedule),
 			Object:   backupTemplate.BackupSpec,
 		})
+		s.cleanupEffectiveSchedules(jobType, backupTemplate.Schedule)
+	} else {
+		s.cleanupEffectiveSchedules(k8upv1alpha1.BackupType, "")
 	}
 	if check := s.schedule.Spec.Check; check != nil {
 		checkTemplate := check.DeepCopy()
@@ -103,6 +107,9 @@ func (s *ScheduleHandler) createJobList() scheduler.JobList {
 			Schedule: s.getEffectiveSchedule(jobType, checkTemplate.Schedule),
 			Object:   checkTemplate.CheckSpec,
 		})
+		s.cleanupEffectiveSchedules(jobType, checkTemplate.Schedule)
+	} else {
+		s.cleanupEffectiveSchedules(k8upv1alpha1.CheckType, "")
 	}
 	if restore := s.schedule.Spec.Restore; restore != nil {
 		restoreTemplate := restore.DeepCopy()
@@ -113,6 +120,9 @@ func (s *ScheduleHandler) createJobList() scheduler.JobList {
 			Schedule: s.getEffectiveSchedule(jobType, restoreTemplate.Schedule),
 			Object:   restoreTemplate.RestoreSpec,
 		})
+		s.cleanupEffectiveSchedules(jobType, restoreTemplate.Schedule)
+	} else {
+		s.cleanupEffectiveSchedules(k8upv1alpha1.RestoreType, "")
 	}
 	if prune := s.schedule.Spec.Prune; prune != nil {
 		pruneTemplate := prune.DeepCopy()
@@ -123,6 +133,9 @@ func (s *ScheduleHandler) createJobList() scheduler.JobList {
 			Schedule: s.getEffectiveSchedule(jobType, pruneTemplate.Schedule),
 			Object:   pruneTemplate.PruneSpec,
 		})
+		s.cleanupEffectiveSchedules(jobType, pruneTemplate.Schedule)
+	} else {
+		s.cleanupEffectiveSchedules(k8upv1alpha1.PruneType, "")
 	}
 
 	return jobList
@@ -162,39 +175,7 @@ func (s *ScheduleHandler) updateSchedule() error {
 	return nil
 }
 
-func (s *ScheduleHandler) updateStatus() error {
-	err := s.Client.Status().Update(s.CTX, s.schedule)
-	if err != nil {
-		s.Log.Error(err, "Could not update SyncConfig.", "name", s.schedule)
-		return err
-	}
-	s.Log.Info("Updated SyncConfig status.")
-	return nil
-}
-
-func (s *ScheduleHandler) getEffectiveSchedule(jobType k8upv1alpha1.JobType, originalSchedule k8upv1alpha1.ScheduleDefinition) k8upv1alpha1.ScheduleDefinition {
-	if s.schedule.Status.EffectiveSchedules == nil {
-		s.schedule.Status.EffectiveSchedules = make(map[k8upv1alpha1.JobType]k8upv1alpha1.ScheduleDefinition)
-	}
-	if existingSchedule, found := s.schedule.Status.EffectiveSchedules[jobType]; found {
-		return existingSchedule
-	}
-
-	isStandardOrNotRandom := !originalSchedule.IsNonStandard() || !originalSchedule.IsRandom()
-	if isStandardOrNotRandom {
-		return originalSchedule
-	}
-
-	randomizedSchedule, err := s.getRandomSchedule(jobType, originalSchedule)
-	if err != nil {
-		s.Log.Info("Could not randomize schedule, continuing with original schedule", "schedule", originalSchedule, "error", err.Error())
-		return originalSchedule
-	}
-	s.setEffectiveSchedule(jobType, randomizedSchedule)
-	return randomizedSchedule
-}
-
-func (s *ScheduleHandler) getRandomSchedule(jobType k8upv1alpha1.JobType, originalSchedule k8upv1alpha1.ScheduleDefinition) (k8upv1alpha1.ScheduleDefinition, error) {
+func (s *ScheduleHandler) createRandomSchedule(jobType k8upv1alpha1.JobType, originalSchedule k8upv1alpha1.ScheduleDefinition) (k8upv1alpha1.ScheduleDefinition, error) {
 	seed := s.createSeed(s.schedule, jobType)
 	randomizedSchedule, err := randomizeSchedule(seed, originalSchedule)
 	if err != nil {
@@ -205,7 +186,17 @@ func (s *ScheduleHandler) getRandomSchedule(jobType k8upv1alpha1.JobType, origin
 	return randomizedSchedule, nil
 }
 
-func (s *ScheduleHandler) setEffectiveSchedule(jobType k8upv1alpha1.JobType, schedule k8upv1alpha1.ScheduleDefinition) {
-	s.schedule.Status.EffectiveSchedules[jobType] = schedule
-	s.requireStatusUpdate = true
+// finalizeSchedule ensures that all associated resources are cleaned up.
+// It also removes the schedule definitions from internal scheduler.
+func (s *ScheduleHandler) finalizeSchedule() error {
+	namespacedName := k8upv1alpha1.GetNamespacedName(s.schedule)
+	controllerutil.RemoveFinalizer(s.schedule, k8upv1alpha1.ScheduleFinalizerName)
+	scheduler.GetScheduler().RemoveSchedules(namespacedName)
+	for jobType := range s.effectiveSchedules {
+		s.cleanupEffectiveSchedules(jobType, "")
+	}
+	if err := s.synchronizeEffectiveSchedulesResources(); err != nil {
+		return err
+	}
+	return s.updateSchedule()
 }

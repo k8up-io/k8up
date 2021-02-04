@@ -55,6 +55,7 @@ type Configuration struct {
 	// Enabling this will ensure there is only one active controller manager.
 	EnableLeaderElection bool   `koanf:"enable-leader-election"`
 	LogLevel             string `koanf:"log-level"`
+	OperatorNamespace    string `koanf:"operator-namespace"`
 }
 
 var (
@@ -92,6 +93,9 @@ func (c Configuration) ValidateSyntax() error {
 	}
 	if _, err := resource.ParseQuantity(c.GlobalCPUResourceLimit); err != nil && c.GlobalCPUResourceLimit != "" {
 		return fmt.Errorf("cannot parse global CPU limit: %v", err)
+	}
+	if c.OperatorNamespace == "" {
+		return fmt.Errorf("operator namespace cannot be empty")
 	}
 	return nil
 }
