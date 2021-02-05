@@ -4,6 +4,8 @@ package controllers_test
 
 import (
 	"context"
+	"os"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -61,6 +63,7 @@ func (r *BackupTestSuite) Test_GivenBackup_ExpectDeployment() {
 }
 
 func (r *BackupTestSuite) Test_GivenPreBackupPods_ExpectDeployment() {
+	r.skipIfNoClusterAvailable()
 	r.EnsureResources(r.BackupResource, r.newPreBackupPod())
 
 	result := r.whenReconciling(r.BackupResource)
@@ -73,6 +76,7 @@ func (r *BackupTestSuite) Test_GivenPreBackupPods_ExpectDeployment() {
 }
 
 func (r *BackupTestSuite) Test_GivenPreBackupPods_WhenRestarting() {
+	r.skipIfNoClusterAvailable()
 	r.EnsureResources(r.BackupResource, r.newPreBackupPod())
 
 	_ = r.whenReconciling(r.BackupResource)
@@ -199,4 +203,32 @@ func (r *BackupTestSuite) expectABackupContainer() {
 
 		return
 	})
+}
+
+func (r *BackupTestSuite) skipIfNoClusterAvailable() {
+	kubeconfig, ok := os.LookupEnv("KUBECONFIG")
+	if ok {
+		info, err := os.Stat(kubeconfig)
+		if err != nil {
+			r.T().Skipf("KUBECONFIG is set to '%s', but: %s", kubeconfig, err)
+			return
+		}
+		if !info.Mode().IsRegular() {
+			r.T().Skipf("KUBECONFIG is set to '%s', but this is not a file.", kubeconfig)
+			return
+		}
+		return
+	}
+
+	home := os.Getenv("HOME")
+	kubeconfig = filepath.Join(home, ".kube", "config")
+	info, err := os.Stat(kubeconfig)
+	if err != nil {
+		r.T().Skipf("KUBECONFIG is not defined. Tried '%s', but: %s", kubeconfig, err)
+		return
+	}
+	if !info.Mode().IsRegular() {
+		r.T().Skipf("KUBECONFIG is not defined. Tried '%s', but this is not a file.", kubeconfig)
+		return
+	}
 }
