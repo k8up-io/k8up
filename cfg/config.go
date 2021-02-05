@@ -83,16 +83,16 @@ func NewDefaultConfig() *Configuration {
 
 func (c Configuration) ValidateSyntax() error {
 	if _, err := resource.ParseQuantity(c.GlobalMemoryResourceRequest); err != nil && c.GlobalMemoryResourceRequest != "" {
-		return fmt.Errorf("cannot parse global memory request: %v", err)
+		return fmt.Errorf("cannot parse global memory request: %w", err)
 	}
 	if _, err := resource.ParseQuantity(c.GlobalMemoryResourceLimit); err != nil && c.GlobalMemoryResourceLimit != "" {
-		return fmt.Errorf("cannot parse global memory limit: %v", err)
+		return fmt.Errorf("cannot parse global memory limit: %w", err)
 	}
 	if _, err := resource.ParseQuantity(c.GlobalCPUResourceRequest); err != nil && c.GlobalCPUResourceRequest != "" {
-		return fmt.Errorf("cannot parse global CPU request: %v", err)
+		return fmt.Errorf("cannot parse global CPU request: %w", err)
 	}
 	if _, err := resource.ParseQuantity(c.GlobalCPUResourceLimit); err != nil && c.GlobalCPUResourceLimit != "" {
-		return fmt.Errorf("cannot parse global CPU limit: %v", err)
+		return fmt.Errorf("cannot parse global CPU limit: %w", err)
 	}
 	if c.OperatorNamespace == "" {
 		return fmt.Errorf("operator namespace cannot be empty")
