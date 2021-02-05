@@ -2,59 +2,52 @@ package v1alpha1
 
 import (
 	"fmt"
+	"reflect"
+
 	"github.com/vshn/k8up/cfg"
 
 	corev1 "k8s.io/api/core/v1"
 )
 
-type Backend struct {
-	// RepoPasswordSecretRef references a secret key to look up the restic repository password
-	RepoPasswordSecretRef *corev1.SecretKeySelector `json:"repoPasswordSecretRef,omitempty"`
-	Local                 *LocalSpec                `json:"local,omitempty"`
-	S3                    *S3Spec                   `json:"s3,omitempty"`
-	GCS                   *GCSSpec                  `json:"gcs,omitempty"`
-	Azure                 *AzureSpec                `json:"azure,omitempty"`
-	Swift                 *SwiftSpec                `json:"swift,omitempty"`
-	B2                    *B2Spec                   `json:"b2,omitempty"`
-	Rest                  *RestServerSpec           `json:"rest,omitempty"`
-}
+type (
+	// Backend allows configuring several backend implementations.
+	// It is expected that users only configure one storage type.
+	Backend struct {
+		// RepoPasswordSecretRef references a secret key to look up the restic repository password
+		RepoPasswordSecretRef *corev1.SecretKeySelector `json:"repoPasswordSecretRef,omitempty"`
+		Local                 *LocalSpec                `json:"local,omitempty"`
+		S3                    *S3Spec                   `json:"s3,omitempty"`
+		GCS                   *GCSSpec                  `json:"gcs,omitempty"`
+		Azure                 *AzureSpec                `json:"azure,omitempty"`
+		Swift                 *SwiftSpec                `json:"swift,omitempty"`
+		B2                    *B2Spec                   `json:"b2,omitempty"`
+		Rest                  *RestServerSpec           `json:"rest,omitempty"`
+	}
 
-// GetCredentialEnv will return a map containing the correct
-func (b *Backend) GetCredentialEnv() map[string]*corev1.EnvVarSource {
+	// +k8s:deepcopy-gen=false
+
+	// BackendInterface represents a Backend for internal use.
+	BackendInterface interface {
+		EnvVars(vars map[string]*corev1.EnvVarSource) map[string]*corev1.EnvVarSource
+		String() string
+	}
+)
+
+// GetCredentialEnv will return a map containing the credentials for the given backend.
+func (in *Backend) GetCredentialEnv() map[string]*corev1.EnvVarSource {
 	vars := make(map[string]*corev1.EnvVarSource)
 
-	if b.RepoPasswordSecretRef != nil {
+	if in.RepoPasswordSecretRef != nil {
 		vars[cfg.ResticPasswordEnvName] = &corev1.EnvVarSource{
-			SecretKeyRef: b.RepoPasswordSecretRef,
+			SecretKeyRef: in.RepoPasswordSecretRef,
 		}
 	}
 
-	if b.Azure != nil {
-		return b.Azure.EnvVars(vars)
-	}
-
-	if b.B2 != nil {
-		return b.B2.EnvVars(vars)
-	}
-
-	if b.GCS != nil {
-		return b.GCS.EnvVars(vars)
-	}
-
-	if b.Local != nil {
-		return b.Local.EnvVars(vars)
-	}
-
-	if b.Rest != nil {
-		return b.Rest.EnvVars(vars)
-	}
-
-	if b.S3 != nil {
-		return b.S3.EnvVars(vars)
-	}
-
-	if b.Swift != nil {
-		return b.Swift.EnvVars(vars)
+	for _, backend := range in.getSupportedBackends() {
+		if isNil(backend) {
+			continue
+		}
+		return backend.EnvVars(vars)
 	}
 
 	return nil
@@ -62,56 +55,57 @@ func (b *Backend) GetCredentialEnv() map[string]*corev1.EnvVarSource {
 
 // String returns the string representation of the repository. If no repo is
 // defined it'll return empty string.
-func (b *Backend) String() string {
+func (in *Backend) String() string {
 
-	if b.Azure != nil {
-		return fmt.Sprintf("azure:%s:/", b.Azure.Container)
-	}
-
-	if b.B2 != nil {
-		return fmt.Sprintf("b2:%s:%s", b.B2.Bucket, b.B2.Path)
-	}
-
-	if b.GCS != nil {
-		return fmt.Sprintf("gs:%s:/", b.GCS.Bucket)
-	}
-
-	if b.Local != nil {
-		return b.Local.MountPath
-	}
-
-	if b.Rest != nil {
-		return fmt.Sprintf("rest:%s", b.Rest.URL)
-	}
-
-	if b.S3 != nil {
-		endpoint := cfg.Config.GlobalS3Endpoint
-		if b.S3.Endpoint != "" {
-			endpoint = b.S3.Endpoint
+	for _, backend := range in.getSupportedBackends() {
+		if isNil(backend) {
+			continue
 		}
-
-		bucket := cfg.Config.GlobalS3Bucket
-		if b.S3.Bucket != "" {
-			bucket = b.S3.Bucket
-		}
-
-		return fmt.Sprintf("s3:%v/%v", endpoint, bucket)
+		return backend.String()
 	}
-
-	if b.Swift != nil {
-		return fmt.Sprintf("swift:%s:%s", b.Swift.Container, b.Swift.Path)
-	}
-
 	return ""
 
+}
+
+// IsBackendEqualTo returns true if the restic repository string is equal to the other's string.
+// If other is nil, it returns false.
+func (in *Backend) IsBackendEqualTo(other *Backend) bool {
+	if other == nil {
+		return false
+	}
+	return in.String() == other.String()
+}
+
+func (in *Backend) getSupportedBackends() []BackendInterface {
+	return []BackendInterface{in.Azure, in.B2, in.GCS, in.Local, in.Rest, in.S3, in.Swift}
+}
+
+// isNil returns true if the given backend is nil using reflect.
+func isNil(backend BackendInterface) bool {
+	// Unfortunately "backend == nil" doesn't work since Interfaces are tuples containing type and value.
+	return reflect.ValueOf(backend).IsNil()
+}
+
+func addEnvVarFromSecret(vars map[string]*corev1.EnvVarSource, key string, ref *corev1.SecretKeySelector) {
+	if ref != nil {
+		vars[key] = &corev1.EnvVarSource{
+			SecretKeyRef: ref,
+		}
+	}
 }
 
 type LocalSpec struct {
 	MountPath string `json:"mountPath,omitempty"`
 }
 
-func (l *LocalSpec) EnvVars(vars map[string]*corev1.EnvVarSource) map[string]*corev1.EnvVarSource {
+// EnvVars returns the env vars for this backend.
+func (in *LocalSpec) EnvVars(vars map[string]*corev1.EnvVarSource) map[string]*corev1.EnvVarSource {
 	return vars
+}
+
+// String returns the mountpath.
+func (in *LocalSpec) String() string {
+	return in.MountPath
 }
 
 type S3Spec struct {
@@ -121,28 +115,36 @@ type S3Spec struct {
 	SecretAccessKeySecretRef *corev1.SecretKeySelector `json:"secretAccessKeySecretRef,omitempty"`
 }
 
-func (s *S3Spec) EnvVars(vars map[string]*corev1.EnvVarSource) map[string]*corev1.EnvVarSource {
-	if s.AccessKeyIDSecretRef != nil {
-		vars["AWS_ACCESS_KEY_ID"] = &corev1.EnvVarSource{
-			SecretKeyRef: s.AccessKeyIDSecretRef,
-		}
-	}
-
-	if s.SecretAccessKeySecretRef != nil {
-		vars["AWS_SECRET_ACCESS_KEY"] = &corev1.EnvVarSource{
-			SecretKeyRef: s.SecretAccessKeySecretRef,
-		}
-	}
-
+// EnvVars returns the env vars for this backend.
+func (in *S3Spec) EnvVars(vars map[string]*corev1.EnvVarSource) map[string]*corev1.EnvVarSource {
+	addEnvVarFromSecret(vars, cfg.AwsAccessKeyIDEnvName, in.AccessKeyIDSecretRef)
+	addEnvVarFromSecret(vars, cfg.AwsSecretAccessKeyEnvName, in.SecretAccessKeySecretRef)
 	return vars
 }
 
-func (s *S3Spec) RestoreEnvVars() map[string]*corev1.EnvVar {
+// String returns "s3:endpoint/bucket".
+// If endpoint or bucket are empty, it uses their global setting accordingly.
+func (in *S3Spec) String() string {
+	endpoint := cfg.Config.GlobalS3Endpoint
+	if in.Endpoint != "" {
+		endpoint = in.Endpoint
+	}
+
+	bucket := cfg.Config.GlobalS3Bucket
+	if in.Bucket != "" {
+		bucket = in.Bucket
+	}
+
+	return fmt.Sprintf("s3:%v/%v", endpoint, bucket)
+}
+
+// RestoreEnvVars returns the env vars for this backend when using Restore jobs.
+func (in *S3Spec) RestoreEnvVars() map[string]*corev1.EnvVar {
 	vars := make(map[string]*corev1.EnvVar)
-	if s.AccessKeyIDSecretRef != nil {
+	if in.AccessKeyIDSecretRef != nil {
 		vars[cfg.RestoreS3AccessKeyIDEnvName] = &corev1.EnvVar{
 			ValueFrom: &corev1.EnvVarSource{
-				SecretKeyRef: s.AccessKeyIDSecretRef,
+				SecretKeyRef: in.AccessKeyIDSecretRef,
 			},
 		}
 	} else {
@@ -151,10 +153,10 @@ func (s *S3Spec) RestoreEnvVars() map[string]*corev1.EnvVar {
 		}
 	}
 
-	if s.SecretAccessKeySecretRef != nil {
+	if in.SecretAccessKeySecretRef != nil {
 		vars[cfg.RestoreS3SecretAccessKeyEnvName] = &corev1.EnvVar{
 			ValueFrom: &corev1.EnvVarSource{
-				SecretKeyRef: s.SecretAccessKeySecretRef,
+				SecretKeyRef: in.SecretAccessKeySecretRef,
 			},
 		}
 	} else {
@@ -163,8 +165,8 @@ func (s *S3Spec) RestoreEnvVars() map[string]*corev1.EnvVar {
 		}
 	}
 
-	bucket := s.Bucket
-	endpoint := s.Endpoint
+	bucket := in.Bucket
+	endpoint := in.Endpoint
 	if bucket == "" {
 		bucket = cfg.Config.GlobalRestoreS3Bucket
 	}
@@ -185,21 +187,17 @@ type GCSSpec struct {
 	AccessTokenSecretRef *corev1.SecretKeySelector `json:"accessTokenSecretRef,omitempty"`
 }
 
-func (g *GCSSpec) EnvVars(vars map[string]*corev1.EnvVarSource) map[string]*corev1.EnvVarSource {
-	if g.ProjectIDSecretRef != nil {
-		vars["GOOGLE_PROJECT_ID"] = &corev1.EnvVarSource{
-			SecretKeyRef: g.ProjectIDSecretRef,
-		}
-	}
-
-	if g.AccessTokenSecretRef != nil {
-		vars["GOOGLE_ACCESS_TOKEN"] = &corev1.EnvVarSource{
-			SecretKeyRef: g.AccessTokenSecretRef,
-		}
-	}
-
+// EnvVars returns the env vars for this backend.
+func (in *GCSSpec) EnvVars(vars map[string]*corev1.EnvVarSource) map[string]*corev1.EnvVarSource {
+	addEnvVarFromSecret(vars, cfg.GcsProjectIDEnvName, in.ProjectIDSecretRef)
+	addEnvVarFromSecret(vars, cfg.GcsAccessTokenEnvName, in.AccessTokenSecretRef)
 	return vars
 
+}
+
+// String returns "gs:bucket:/"
+func (in *GCSSpec) String() string {
+	return fmt.Sprintf("gs:%s:/", in.Bucket)
 }
 
 type AzureSpec struct {
@@ -208,20 +206,16 @@ type AzureSpec struct {
 	AccountKeySecretRef  *corev1.SecretKeySelector `json:"accountKeySecretRef,omitempty"`
 }
 
-func (a *AzureSpec) EnvVars(vars map[string]*corev1.EnvVarSource) map[string]*corev1.EnvVarSource {
-	if a.AccountKeySecretRef != nil {
-		vars["AZURE_ACCOUNT_KEY"] = &corev1.EnvVarSource{
-			SecretKeyRef: a.AccountKeySecretRef,
-		}
-	}
-
-	if a.AccountNameSecretRef != nil {
-		vars["AZURE_ACCOUNT_NAME"] = &corev1.EnvVarSource{
-			SecretKeyRef: a.AccountNameSecretRef,
-		}
-	}
-
+// EnvVars returns the env vars for this backend.
+func (in *AzureSpec) EnvVars(vars map[string]*corev1.EnvVarSource) map[string]*corev1.EnvVarSource {
+	addEnvVarFromSecret(vars, cfg.AzureAccountKeyEnvName, in.AccountKeySecretRef)
+	addEnvVarFromSecret(vars, cfg.AzureAccountEnvName, in.AccountNameSecretRef)
 	return vars
+}
+
+// String returns "azure:container:/"
+func (in *AzureSpec) String() string {
+	return fmt.Sprintf("azure:%s:/", in.Container)
 }
 
 type SwiftSpec struct {
@@ -229,8 +223,14 @@ type SwiftSpec struct {
 	Path      string `json:"path,omitempty"`
 }
 
-func (s *SwiftSpec) EnvVars(vars map[string]*corev1.EnvVarSource) map[string]*corev1.EnvVarSource {
+// EnvVars returns the env vars for this backend.
+func (in *SwiftSpec) EnvVars(vars map[string]*corev1.EnvVarSource) map[string]*corev1.EnvVarSource {
 	return vars
+}
+
+// String returns "swift:container:path"
+func (in *SwiftSpec) String() string {
+	return fmt.Sprintf("swift:%s:%s", in.Container, in.Path)
 }
 
 type B2Spec struct {
@@ -240,20 +240,16 @@ type B2Spec struct {
 	AccountKeySecretRef *corev1.SecretKeySelector `json:"accountKeySecretRef,omitempty"`
 }
 
-func (b *B2Spec) EnvVars(vars map[string]*corev1.EnvVarSource) map[string]*corev1.EnvVarSource {
-	if b.AccountIDSecretRef != nil {
-		vars["B2_ACCOUNT_ID"] = &corev1.EnvVarSource{
-			SecretKeyRef: b.AccountIDSecretRef,
-		}
-	}
-
-	if b.AccountKeySecretRef != nil {
-		vars["B2_ACCOUNT_KEY"] = &corev1.EnvVarSource{
-			SecretKeyRef: b.AccountKeySecretRef,
-		}
-	}
-
+// EnvVars returns the env vars for this backend.
+func (in *B2Spec) EnvVars(vars map[string]*corev1.EnvVarSource) map[string]*corev1.EnvVarSource {
+	addEnvVarFromSecret(vars, cfg.B2AccountIDEnvName, in.AccountIDSecretRef)
+	addEnvVarFromSecret(vars, cfg.B2AccountKeyEnvName, in.AccountKeySecretRef)
 	return vars
+}
+
+// String returns "b2:bucket:path"
+func (in *B2Spec) String() string {
+	return fmt.Sprintf("b2:%s:%s", in.Bucket, in.Path)
 }
 
 type RestServerSpec struct {
@@ -262,18 +258,14 @@ type RestServerSpec struct {
 	PasswordSecretReg *corev1.SecretKeySelector `json:"passwordSecretReg,omitempty"`
 }
 
-func (r *RestServerSpec) EnvVars(vars map[string]*corev1.EnvVarSource) map[string]*corev1.EnvVarSource {
-	if r.PasswordSecretReg != nil {
-		vars["PASSWORD"] = &corev1.EnvVarSource{
-			SecretKeyRef: r.PasswordSecretReg,
-		}
-	}
-
-	if r.UserSecretRef != nil {
-		vars["USER"] = &corev1.EnvVarSource{
-			SecretKeyRef: r.UserSecretRef,
-		}
-	}
-
+// EnvVars returns the env vars for this backend.
+func (in *RestServerSpec) EnvVars(vars map[string]*corev1.EnvVarSource) map[string]*corev1.EnvVarSource {
+	addEnvVarFromSecret(vars, cfg.RestPasswordEnvName, in.PasswordSecretReg)
+	addEnvVarFromSecret(vars, cfg.RestUserEnvName, in.UserSecretRef)
 	return vars
+}
+
+// String returns "rest:URL"
+func (in *RestServerSpec) String() string {
+	return fmt.Sprintf("rest:%s", in.URL)
 }

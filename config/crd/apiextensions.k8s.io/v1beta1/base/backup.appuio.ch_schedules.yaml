@@ -337,6 +337,7 @@ spec:
                   type: array
               type: object
             backend:
+              description: Backend allows configuring several backend implementations. It is expected that users only configure one storage type.
               properties:
                 azure:
                   properties:
