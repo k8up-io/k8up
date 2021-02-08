@@ -18,11 +18,11 @@ spec:
   versions:
   - additionalPrinterColumns:
     - description: Schedule Namespace
-      jsonPath: .spec.effectiveSchedules[0].namespace
+      jsonPath: .spec.scheduleRefs[0].namespace
       name: Schedule Namespace
       type: string
     - description: Schedule Name
-      jsonPath: .spec.effectiveSchedules[0].name
+      jsonPath: .spec.scheduleRefs[0].name
       name: Schedule Name
       type: string
     - description: Generated Schedule
