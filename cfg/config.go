@@ -11,10 +11,24 @@ const (
 	RestoreS3EndpointEnvName        = "RESTORE_S3ENDPOINT"
 	RestoreS3AccessKeyIDEnvName     = "RESTORE_ACCESSKEYID"
 	RestoreS3SecretAccessKeyEnvName = "RESTORE_SECRETACCESSKEY"
-	ResticRepositoryEnvName         = "RESTIC_REPOSITORY"
-	ResticPasswordEnvName           = "RESTIC_PASSWORD"
-	AwsAccessKeyIDEnvName           = "AWS_ACCESS_KEY_ID"
-	AwsSecretAccessKeyEnvName       = "AWS_SECRET_ACCESS_KEY"
+
+	ResticRepositoryEnvName = "RESTIC_REPOSITORY"
+	ResticPasswordEnvName   = "RESTIC_PASSWORD"
+
+	AwsAccessKeyIDEnvName     = "AWS_ACCESS_KEY_ID"
+	AwsSecretAccessKeyEnvName = "AWS_SECRET_ACCESS_KEY"
+
+	AzureAccountEnvName    = "AZURE_ACCOUNT_NAME"
+	AzureAccountKeyEnvName = "AZURE_ACCOUNT_KEY"
+
+	GcsProjectIDEnvName   = "GOOGLE_PROJECT_ID"
+	GcsAccessTokenEnvName = "GOOGLE_ACCESS_TOKEN"
+
+	B2AccountIDEnvName  = "B2_ACCOUNT_ID"
+	B2AccountKeyEnvName = "B2_ACCOUNT_KEY"
+
+	RestUserEnvName     = "USER"
+	RestPasswordEnvName = "PASSWORD"
 )
 
 // Configuration holds a strongly-typed tree of the configuration
