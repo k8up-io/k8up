@@ -104,7 +104,7 @@ func (s *Scheduler) addSchedules(jobs JobList, namespacedName types.NamespacedNa
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 	for _, schedulableJob := range jobs.Jobs {
-		config.Log.Info("registering schedule for", "type", schedulableJob.JobType, "schedule", schedulableJob.Schedule)
+		config.Log.Info("registering schedule for", "type", schedulableJob.JobType, "cron", schedulableJob.Schedule)
 		err := s.addSchedule(schedulableJob, namespacedName, s.getScheduleCallback(config, namespacedName, schedulableJob))
 		if err != nil {
 			return err
