@@ -311,12 +311,24 @@ backend:
 
 === Settings
 
-* `repoPasswordSecretRef`: Kubernetes secret reference containing the Restic encryption key. *Attention*: don't lose this key or you won't be able to access your backup data again! So keep a copy of that somewhere off the actual cluster.
+* `repoPasswordSecretRef`: Kubernetes secret reference containing the Restic encryption key.
 * `s3`: see <<S3,s3>>
+* `azure`: see <<Azure,azure>>
+* `gcs`: see <<GCS,gcs>>
+* `b2`: see <<B2,b2>>
+* `local`: see <<Local,local>>
+* `swift`: see <<Swift,swift>>
+* `rest`: see <<REST,rest>>
+
+IMPORTANT: Make sure to configure only one storage type!
+
+[WARNING]
+====
+Don't lose the encryption key or you won't be able to access your backup data again!
+Keep a copy of that somewhere outside of the actual cluster.
+====
 
 === S3
-
-This object is part of <<Backend, backend>>.
 
 Settings:
 
@@ -324,6 +336,52 @@ Settings:
 * `bucket`: name of the bucket that should be used
 * `accessKeyIDSecretRef`: Kubernetes secret reference containing the the Access Key ID
 * `secretAccessKeySecretRef`: Kubernetes secret reference containing the Secret Access Key
+
+=== Azure
+
+Settings:
+
+* `container`: name of the container that should be used
+* `accountNameSecretRef`: Kubernetes secret reference containing the account name
+* `accountKeySecretRef`: Kubernetes secret reference containing the account key
+
+=== GCS
+
+Settings:
+
+* `projectIDSecretRef`: Kubernetes secret reference containing the Google project ID
+* `accessTokenSecretRef`: Kubernetes secret reference containing the Google access token
+* `bucket`: name of the bucket that should be used
+
+=== B2
+
+Settings:
+
+* `path`: Path of the B2 instance
+* `bucket`: name of the bucket that should be used
+* `accountIDSecretRef`: Kubernetes secret reference containing the account ID
+* `accountKeySecretRef`: Kubernetes secret reference containing the account key
+
+=== Local
+
+Settings:
+
+* `mountPath`: MountPath inside wrestic
+
+=== Swift
+
+Settings:
+
+* `path`: Path of the Swift instance
+* `container`: name of the container that should be used
+
+=== REST
+
+Settings:
+
+* `url`: URL of the Rest server instance (include scheme like `https://` on your own)
+* `userSecretRef`: Kubernetes secret reference containing the basic auth user
+* `passwordSecretReg`: Kubernetes secret reference containing the basic auth password
 
 == PreBackupPod
 
