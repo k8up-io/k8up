@@ -9,11 +9,11 @@ metadata:
   name: effectiveschedules.backup.appuio.ch
 spec:
   additionalPrinterColumns:
-  - JSONPath: .spec.effectiveSchedules[0].namespace
+  - JSONPath: .spec.scheduleRefs[0].namespace
     description: Schedule Namespace
     name: Schedule Namespace
     type: string
-  - JSONPath: .spec.effectiveSchedules[0].name
+  - JSONPath: .spec.scheduleRefs[0].name
     description: Schedule Name
     name: Schedule Name
     type: string
