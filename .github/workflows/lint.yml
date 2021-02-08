@@ -23,4 +23,4 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-go-
     - name: Run linters
-      run: make lint
+      run: make generate lint
