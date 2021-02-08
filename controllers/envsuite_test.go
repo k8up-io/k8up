@@ -4,6 +4,7 @@ package controllers_test
 
 import (
 	"context"
+	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -13,8 +14,10 @@ import (
 	"github.com/go-logr/zapr"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/zap/zaptest"
+	appsv1 "k8s.io/api/apps/v1"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
+	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
@@ -25,7 +28,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
 	"sigs.k8s.io/controller-runtime/pkg/log"
-
 	// +kubebuilder:scaffold:imports
 
 	k8upv1a1 "github.com/vshn/k8up/api/v1alpha1"
@@ -52,10 +54,16 @@ func (ts *EnvTestSuite) SetupSuite() {
 
 	ts.Ctx = context.Background()
 
+	testbinDir := filepath.Join("..", "testbin", "bin")
+	info, err := os.Stat(testbinDir)
+	absTestbinDir, _ := filepath.Abs(testbinDir)
+	ts.Require().NoErrorf(err, "'%s' does not seem to exist. Make sure you run `make integration-test` before you run this test in your IDE.", absTestbinDir)
+	ts.Require().Truef(info.IsDir(), "'%s' does not seem to be a directory. Make sure you run `make integration-test` before you run this test in your IDE.", absTestbinDir)
+
 	testEnv := &envtest.Environment{
 		ErrorIfCRDPathMissing: true,
 		CRDDirectoryPaths:     []string{filepath.Join("..", "config", "crd", "apiextensions.k8s.io", "v1", "base")},
-		BinaryAssetsDirectory: filepath.Join("..", "testbin", "bin"),
+		BinaryAssetsDirectory: testbinDir,
 	}
 
 	config, err := testEnv.Start()
@@ -79,9 +87,11 @@ func (ts *EnvTestSuite) SetupSuite() {
 
 func registerCRDs(ts *EnvTestSuite) {
 	ts.Scheme = runtime.NewScheme()
-	ts.Require().NoError(corev1.AddToScheme(ts.Scheme))
+	ts.Require().NoError(appsv1.AddToScheme(ts.Scheme))
 	ts.Require().NoError(batchv1.AddToScheme(ts.Scheme))
+	ts.Require().NoError(corev1.AddToScheme(ts.Scheme))
 	ts.Require().NoError(k8upv1a1.AddToScheme(ts.Scheme))
+	ts.Require().NoError(rbacv1.AddToScheme(ts.Scheme))
 
 	// +kubebuilder:scaffold:scheme
 }
@@ -129,17 +139,17 @@ func (ts *EnvTestSuite) NewNS(nsName string) *corev1.Namespace {
 	}
 }
 
-// CreateNS creates a new Namespace object using EnvTestSuite.Client.
-func (ts *EnvTestSuite) CreateNS(nsName string) error {
+// EnsureNS creates a new Namespace object using EnvTestSuite.Client.
+func (ts *EnvTestSuite) EnsureNS(nsName string) {
 	ns := ts.NewNS(nsName)
 	ts.T().Logf("creating namespace '%s'", nsName)
-	return ts.Client.Create(ts.Ctx, ns)
+	ts.Require().NoError(ts.Client.Create(ts.Ctx, ns))
 }
 
 // EnsureResources ensures that the given resources are existing in the suite. Each error will fail the test.
 func (ts *EnvTestSuite) EnsureResources(resources ...client.Object) {
 	for _, resource := range resources {
-		ts.T().Logf("creating '%s/%s'", resource.GetNamespace(), resource.GetName())
+		ts.T().Logf("creating resource '%s/%s'", resource.GetNamespace(), resource.GetName())
 		ts.Require().NoError(ts.Client.Create(ts.Ctx, resource))
 	}
 }
@@ -147,7 +157,7 @@ func (ts *EnvTestSuite) EnsureResources(resources ...client.Object) {
 // UpdateResources ensures that the given resources are updated in the suite. Each error will fail the test.
 func (ts *EnvTestSuite) UpdateResources(resources ...client.Object) {
 	for _, resource := range resources {
-		ts.T().Logf("updating '%s/%s'", resource.GetNamespace(), resource.GetName())
+		ts.T().Logf("updating resource '%s/%s'", resource.GetNamespace(), resource.GetName())
 		ts.Require().NoError(ts.Client.Update(ts.Ctx, resource))
 	}
 }
@@ -175,14 +185,17 @@ func (ts *EnvTestSuite) FetchResources(objectList client.ObjectList, opts ...cli
 // MapToRequest maps the given object into a reconcile Request.
 func (ts *EnvTestSuite) MapToRequest(object metav1.Object) ctrl.Request {
 	return ctrl.Request{
-		NamespacedName: types.NamespacedName{Name: object.GetName(), Namespace: object.GetNamespace()},
+		NamespacedName: types.NamespacedName{
+			Name:      object.GetName(),
+			Namespace: object.GetNamespace(),
+		},
 	}
 }
 
 // BeforeTest is invoked just before every test starts
 func (ts *EnvTestSuite) SetupTest() {
 	ts.NS = rand.String(8)
-	ts.Require().NoError(ts.CreateNS(ts.NS))
+	ts.EnsureNS(ts.NS)
 }
 
 // SanitizeNameForNS first converts the given name to lowercase using strings.ToLower

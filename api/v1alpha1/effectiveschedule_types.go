@@ -6,8 +6,8 @@ import (
 
 type (
 	// +kubebuilder:object:root=true
-	// +kubebuilder:printcolumn:name="Schedule Namespace",type="string",JSONPath=`.spec.effectiveSchedules[0].namespace`,description="Schedule Namespace"
-	// +kubebuilder:printcolumn:name="Schedule Name",type="string",JSONPath=`.spec.effectiveSchedules[0].name`,description="Schedule Name"
+	// +kubebuilder:printcolumn:name="Schedule Namespace",type="string",JSONPath=`.spec.scheduleRefs[0].namespace`,description="Schedule Namespace"
+	// +kubebuilder:printcolumn:name="Schedule Name",type="string",JSONPath=`.spec.scheduleRefs[0].name`,description="Schedule Name"
 	// +kubebuilder:printcolumn:name="Generated Schedule",type="string",JSONPath=`.spec.generatedSchedule`,description="Generated Schedule"
 	// +kubebuilder:printcolumn:name="Job Type",type="string",JSONPath=`.spec.jobType`,description="Job Type"
 	// +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"

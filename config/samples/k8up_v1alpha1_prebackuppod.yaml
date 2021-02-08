@@ -6,6 +6,12 @@ spec:
   backupCommand: mysqldump -u$USER -p$PW -h $DB_HOST --all-databases
   pod:
     spec:
+      initContainers:
+      - name: init
+        image: mariadb
+        command:
+        - sleep
+        - '20s'
       containers:
         - env:
             - name: USER
