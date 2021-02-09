@@ -1,5 +1,7 @@
 = K8up - Kubernetes Backup Operator
 
+image::k8up-logo.svg[]
+
 [discrete]
 == Introduction
 
@@ -14,7 +16,7 @@ K8up (pronounced `/keɪtæpp/` or simply "ketchup") is a Kubernetes Operator dis
 * Prune old backups from a repository.
 * Based on top of https://restic.readthedocs.io/en/latest/[Restic], it can store backups in any S3-compatible storage, such as Amazon S3 or https://github.com/minio/minio#readme[Minio].
 
-K8up is written in https://golang.org/[Go] and is an Open Source project https://github.com/vshn/k8up[hosted in GitHub].
+K8up is written in https://golang.org/[Go] and is an Open Source project https://github.com/vshn/k8up[hosted at GitHub].
 
 TIP: The xref:tutorials/tutorial.adoc[tutorial] gives you a glimpse into K8up. Give it a try!
 
@@ -30,5 +32,3 @@ How-to guides:: _Problem-oriented_: step-by-step guides to achieve a goal.
 Technical reference:: _Information-oriented_: explaining the inner ongoings of K8up.
 
 Explanation:: _Understanding-oriented_: puts k8up in context.
-
-image::k8up_logo.png[]
