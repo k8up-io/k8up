@@ -64,7 +64,7 @@ deploy: generate ## Deploy controller in the configured Kubernetes cluster in ~/
 
 .PHONY: generate
 generate: ## Generate manifests e.g. CRD, RBAC etc.
-	@CRD_ROOT_DIR="$(CRD_ROOT_DIR)" go generate -tags=generate generate.go
+	@CRD_ROOT_DIR="$(CRD_ROOT_DIR)" CRD_DOCS_REF_PATH="$(CRD_DOCS_REF_PATH)" go generate -tags=generate generate.go
 	@rm config/*.yaml
 
 .PHONY: crd

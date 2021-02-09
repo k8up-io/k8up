@@ -8,6 +8,8 @@ CRD_FILE_LEGACY ?= k8up-crd-legacy.yaml
 CRD_ROOT_DIR ?= config/crd/apiextensions.k8s.io
 CRD_SPEC_VERSION ?= v1
 
+CRD_DOCS_REF_PATH ?= docs/modules/ROOT/pages/references/api-reference.adoc
+
 KIND_VERSION ?= 0.9.0
 KIND_NODE_VERSION ?= v1.20.0
 KIND ?= $(TESTBIN_DIR)/kind
