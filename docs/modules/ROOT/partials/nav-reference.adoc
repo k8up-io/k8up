@@ -2,3 +2,4 @@
 * xref:k8up:ROOT:references/object-specifications.adoc[Object Specifications]
 * xref:k8up:ROOT:references/schedule-specification.adoc[Schedule Specifications]
 * xref:k8up:ROOT:references/status.adoc[Status and Conditions]
+* xref:k8up:ROOT:references/api-reference.adoc[API Reference]

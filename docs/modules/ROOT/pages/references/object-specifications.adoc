@@ -3,6 +3,8 @@
 The K8up operator includes several Custom Resource Definitions (CRDs) which get added to the cluster by the helm chart or which have to be added manually.
 Here they are explained in more detail.
 
+TIP: A generated API documentation is available at xref:references/api-reference.adoc[API reference].
+
 == Schedule
 
 With the schedule CRD it's possible to put all other CRDs on a schedule.
