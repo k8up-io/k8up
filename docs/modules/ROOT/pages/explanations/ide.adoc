@@ -33,3 +33,32 @@ If you're in doubt about your configuration, check whether `make clean integrati
 If it does, you've broken your IDE configuration.
 Otherwise, you've broken something else.
 ====
+
+== Visual Studio Code
+
+Example VSCode run configuration:
+
+[source,json]
+----
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Launch",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "${workspaceFolder}/main.go",
+      "env": {
+        "BACKUP_IMAGE": "quay.io/vshn/wrestic:latest",
+        "BACKUP_GLOBALS3ENDPOINT": "http://somewhere.example.org",
+        "BACKUP_GLOBALS3BUCKET": "somebucket",
+        "BACKUP_GLOBALSECRETACCESSKEY": "replacewithaccesskey",
+        "BACKUP_GLOBALACCESSKEYID": "replacewithkeyid",
+        "BACKUP_GLOBALREPOPASSWORD": "somepassword"
+      },
+      "args": []
+    }
+  ]
+}
+----
