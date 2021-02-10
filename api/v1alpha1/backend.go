@@ -76,6 +76,17 @@ func (in *Backend) IsBackendEqualTo(other *Backend) bool {
 	return in.String() == other.String()
 }
 
+// GetBackendString returns backend.String() if non-nil.
+// If nil, it returns empty string.
+func GetBackendString(backend *Backend) string {
+	if backend == nil {
+		return ""
+	}
+	return backend.String()
+}
+
+
+
 func (in *Backend) getSupportedBackends() []BackendInterface {
 	return []BackendInterface{in.Azure, in.B2, in.GCS, in.Local, in.Rest, in.S3, in.Swift}
 }

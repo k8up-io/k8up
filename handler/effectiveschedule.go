@@ -50,24 +50,13 @@ func (s *ScheduleHandler) synchronizeEffectiveSchedulesResources() error {
 // If originalSchedule is standard or non-standard cron syntax, it returns itself.
 // If originalSchedule is a K8up specific smart/random schedule, then it finds the generated schedule in one of the matching EffectiveSchedules.
 // If there are none matching, a new EffectiveSchedule is added with originalSchedule translated to a generated schedule.
-func (s *ScheduleHandler) getEffectiveSchedule(jobType k8upv1alpha1.JobType, originalSchedule k8upv1alpha1.ScheduleDefinition) k8upv1alpha1.ScheduleDefinition {
-
+func (s *ScheduleHandler) getEffectiveSchedule(jobType k8upv1alpha1.JobType, originalSchedule k8upv1alpha1.ScheduleDefinition) (k8upv1alpha1.ScheduleDefinition, bool) {
 	isStandardOrNotRandom := !originalSchedule.IsNonStandard() || !originalSchedule.IsRandom()
 	if isStandardOrNotRandom {
-		return originalSchedule
+		return originalSchedule, true
 	}
 
-	if existingSchedule, found := s.findExistingSchedule(jobType, originalSchedule); found {
-		return existingSchedule
-	}
-
-	randomizedSchedule, err := s.createRandomSchedule(jobType, originalSchedule)
-	if err != nil {
-		s.Log.Info("Could not randomize schedule, continuing with original schedule", "schedule", originalSchedule, "error", err.Error())
-		return originalSchedule
-	}
-	s.setEffectiveSchedule(jobType, randomizedSchedule, originalSchedule)
-	return randomizedSchedule
+	return s.findExistingSchedule(jobType)
 }
 
 // findExistingSchedule searches in the pre-fetched EffectiveSchedules and tries to find a generated schedule definition for the given schedule object and jobType.
@@ -88,9 +77,25 @@ func (s *ScheduleHandler) findExistingSchedule(jobType k8upv1alpha1.JobType, ori
 	return "", false
 }
 
-// setEffectiveSchedule will create or update the EffectiveSchedule for the given jobType with the given schedule definition.
+func (s *ScheduleHandler) searchExistingSchedulesForDeduplication(jobType k8upv1alpha1.JobType, backendString string) bool {
+	list := &k8upv1alpha1.EffectiveScheduleList{}
+	err := s.Client.List(s.CTX, list, client.InNamespace(cfg.Config.OperatorNamespace))
+	if err != nil {
+		s.Log.Error(err, "could not fetch resources, ignoring deduplication")
+		return false
+	}
+	for _, es := range list.Items {
+		if es.Spec.JobType == jobType && es.Spec.BackendString == backendString {
+			s.effectiveSchedules[jobType] = es
+			return true
+		}
+	}
+	return false
+}
+
+// upsertEffectiveScheduleInternally will create or update the EffectiveSchedule for the given jobType with the given schedule definition.
 // The EffectiveSchedules aren't persisted or updated in this function, use synchronizeEffectiveSchedulesResources() for that.
-func (s *ScheduleHandler) setEffectiveSchedule(jobType k8upv1alpha1.JobType, schedule, originalSchedule k8upv1alpha1.ScheduleDefinition) {
+func (s *ScheduleHandler) upsertEffectiveScheduleInternally(jobType k8upv1alpha1.JobType, schedule k8upv1alpha1.ScheduleDefinition, backendString string) {
 	es, found := s.effectiveSchedules[jobType]
 	if !found {
 		es = s.newEffectiveSchedule(jobType)

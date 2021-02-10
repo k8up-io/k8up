@@ -84,10 +84,21 @@ func (s *ScheduleHandler) createJobList() scheduler.JobList {
 			continue
 		}
 		template := jb.GetDeepCopy()
-		s.mergeWithDefaults(template.GetRunnableSpec())
+		spec := template.GetRunnableSpec()
+		s.mergeWithDefaults(spec)
+		backendString := k8upv1alpha1.GetBackendString(spec.Backend)
+		schedule, found := s.getEffectiveSchedule(jobType, template.GetSchedule())
+		if !found {
+			if s.searchExistingSchedulesForDeduplication(jobType, backendString) {
+				// the schedule is deduplicated here
+				continue
+			}
+			schedule, _ = s.createRandomSchedule(jobType, template.GetSchedule())
+			s.upsertEffectiveScheduleInternally(jobType, schedule, backendString)
+		}
 		jobList.Jobs = append(jobList.Jobs, scheduler.Job{
 			JobType:  jobType,
-			Schedule: s.getEffectiveSchedule(jobType, template.GetSchedule()),
+			Schedule: schedule,
 			Object:   template.GetObjectCreator(),
 		})
 		s.cleanupEffectiveSchedules(jobType, template.GetSchedule())

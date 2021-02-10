@@ -37,6 +37,8 @@ type (
 		OriginalSchedule ScheduleDefinition `json:"originalSchedule,omitempty"`
 		// JobType defines to which job type this schedule applies
 		JobType JobType `json:"jobType,omitempty"`
+		// BackendString is a stringified representation of the backend configuration.
+		BackendString string `json:"backendString,omitempty"`
 		// ScheduleRefs holds a list of schedules for which the generated schedule applies to.
 		// The list may omit entries that aren't generated from smart schedules.
 		ScheduleRefs []ScheduleRef `json:"scheduleRefs,omitempty"`

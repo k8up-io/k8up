@@ -112,7 +112,6 @@ func (ts *ScheduleControllerTestSuite) Test_GivenEffectiveScheduleWithRandomSche
 }
 
 func (ts *ScheduleControllerTestSuite) Test_GivenJobsWithSameScheduleAndBackend_WhenReconcileSecondSchedule_ThenDeduplicateFromEffectiveSchedule() {
-	ts.T().Skip("not implemented")
 	firstSchedule := ts.givenScheduleResource("first", handler.ScheduleDailyRandom)
 	secondSchedule := ts.givenScheduleResource("second", handler.ScheduleDailyRandom)
 
@@ -133,7 +132,6 @@ func (ts *ScheduleControllerTestSuite) Test_GivenJobsWithSameScheduleAndBackend_
 }
 
 func (ts *ScheduleControllerTestSuite) Test_GivenJobsWithSameScheduleAndBackend_WhenRemovingDeduplicatedSchedule_ThenRemoveFromEffectiveSchedule() {
-	ts.T().Skip("not implemented")
 	firstSchedule := ts.givenScheduleResource("first", "* * * * *")
 	_ = ts.givenScheduleResourceWithBackend("second", handler.ScheduleDailyRandom)
 	ts.givenEffectiveScheduleResource("first", "second")
