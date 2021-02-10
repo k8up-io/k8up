@@ -39,7 +39,7 @@ func (ts *ScheduleControllerTestSuite) BeforeTest(suiteName, testName string) {
 }
 
 func (ts *ScheduleControllerTestSuite) Test_GivenScheduleWithRandomSchedules_WhenReconcile_ThenCreateEffectiveSchedule() {
-	ts.givenScheduleResource(handler.ScheduleDailyRandom)
+	ts.givenSchedule = ts.givenScheduleResource("test", handler.ScheduleDailyRandom)
 
 	ts.whenReconciling(ts.givenSchedule)
 
@@ -54,7 +54,7 @@ func (ts *ScheduleControllerTestSuite) Test_GivenScheduleWithRandomSchedules_Whe
 }
 
 func (ts *ScheduleControllerTestSuite) Test_GivenEffectiveScheduleWithRandomSchedules_WhenChangingToStandardSchedule_ThenCleanupEffectiveSchedule() {
-	ts.givenScheduleResource("* * * * *")
+	ts.givenSchedule = ts.givenScheduleResource("test", "* * * * *")
 	ts.givenEffectiveScheduleResource(ts.givenSchedule.Name)
 
 	ts.whenReconciling(ts.givenSchedule)
@@ -68,7 +68,7 @@ func (ts *ScheduleControllerTestSuite) Test_GivenEffectiveScheduleWithRandomSche
 }
 
 func (ts *ScheduleControllerTestSuite) Test_GivenEffectiveScheduleWithRandomSchedules_WhenReconcile_ThenUsePreGeneratedSchedule() {
-	ts.givenScheduleResource(handler.ScheduleHourlyRandom)
+	ts.givenSchedule = ts.givenScheduleResource("test", handler.ScheduleHourlyRandom)
 	ts.givenEffectiveScheduleResource(ts.givenSchedule.Name)
 
 	ts.whenReconciling(ts.givenSchedule)
@@ -84,7 +84,7 @@ func (ts *ScheduleControllerTestSuite) Test_GivenEffectiveScheduleWithRandomSche
 }
 
 func (ts *ScheduleControllerTestSuite) Test_GivenEffectiveScheduleWithRandomSchedules_WhenDeletingSchedule_ThenCleanupEffectiveSchedule() {
-	ts.givenScheduleResource("* * * * *")
+	ts.givenSchedule = ts.givenScheduleResource("test", "* * * * *")
 	ts.givenEffectiveScheduleResource(ts.givenSchedule.Name)
 
 	controllerutil.AddFinalizer(ts.givenSchedule, k8upv1alpha1.ScheduleFinalizerName)
@@ -109,6 +109,44 @@ func (ts *ScheduleControllerTestSuite) Test_GivenEffectiveScheduleWithRandomSche
 	actualESList := ts.whenListEffectiveSchedules()
 	ts.Assert().Len(actualESList, 1)
 	ts.thenAssertEffectiveScheduleExists(ts.givenSchedule.Name, handler.ScheduleDailyRandom)
+}
+
+func (ts *ScheduleControllerTestSuite) Test_GivenJobsWithSameScheduleAndBackend_WhenReconcileSecondSchedule_ThenDeduplicateFromEffectiveSchedule() {
+	ts.T().Skip("not implemented")
+	firstSchedule := ts.givenScheduleResource("first", handler.ScheduleDailyRandom)
+	secondSchedule := ts.givenScheduleResource("second", handler.ScheduleDailyRandom)
+
+	ts.whenReconciling(firstSchedule)
+	ts.whenReconciling(secondSchedule)
+
+	actualESList := ts.whenListEffectiveSchedules()
+	ts.Assert().Len(actualESList, 1)
+	ts.Assert().Len(actualESList[0].Spec.ScheduleRefs, 2)
+	ts.Assert().Contains(actualESList[0].Spec.ScheduleRefs, k8upv1alpha1.ScheduleRef{
+		Name:      "first",
+		Namespace: ts.NS,
+	})
+	ts.Assert().Contains(actualESList[0].Spec.ScheduleRefs, k8upv1alpha1.ScheduleRef{
+		Name:      "second",
+		Namespace: ts.NS,
+	})
+}
+
+func (ts *ScheduleControllerTestSuite) Test_GivenJobsWithSameScheduleAndBackend_WhenRemovingDeduplicatedSchedule_ThenRemoveFromEffectiveSchedule() {
+	ts.T().Skip("not implemented")
+	firstSchedule := ts.givenScheduleResource("first", "* * * * *")
+	_ = ts.givenScheduleResourceWithBackend("second", handler.ScheduleDailyRandom)
+	ts.givenEffectiveScheduleResource("first", "second")
+
+	ts.whenReconciling(firstSchedule)
+
+	actualESList := ts.whenListEffectiveSchedules()
+	ts.Assert().Len(actualESList, 1)
+	ts.Assert().Len(actualESList[0].Spec.ScheduleRefs, 1)
+	ts.Assert().Contains(actualESList[0].Spec.ScheduleRefs, k8upv1alpha1.ScheduleRef{
+		Name:      "second",
+		Namespace: ts.NS,
+	})
 }
 
 func (ts *ScheduleControllerTestSuite) whenReconciling(givenSchedule *k8upv1alpha1.Schedule) {

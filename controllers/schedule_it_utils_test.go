@@ -10,13 +10,25 @@ import (
 	"github.com/vshn/k8up/handler"
 )
 
-func (ts *ScheduleControllerTestSuite) givenScheduleResource(schedule k8upv1alpha1.ScheduleDefinition) {
-	givenSchedule := ts.newScheduleSpec("test", schedule)
+func (ts *ScheduleControllerTestSuite) givenScheduleResource(name string, schedule k8upv1alpha1.ScheduleDefinition) *k8upv1alpha1.Schedule {
+	givenSchedule := ts.newScheduleSpec(name, schedule)
 	ts.EnsureResources(givenSchedule)
-	ts.givenSchedule = givenSchedule
+	return givenSchedule
 }
 
-func (ts *ScheduleControllerTestSuite) givenEffectiveScheduleResource(scheduleName string) {
+func (ts *ScheduleControllerTestSuite) givenScheduleResourceWithBackend(name string, schedule k8upv1alpha1.ScheduleDefinition) *k8upv1alpha1.Schedule {
+	givenSchedule := ts.newScheduleSpec(name, schedule)
+	givenSchedule.Spec.Backend = &k8upv1alpha1.Backend{
+		S3: &k8upv1alpha1.S3Spec{
+			Endpoint: "https://endpoint",
+			Bucket:   "bucket",
+		},
+	}
+	ts.EnsureResources(givenSchedule)
+	return givenSchedule
+}
+
+func (ts *ScheduleControllerTestSuite) givenEffectiveScheduleResource(scheduleName string, additionalRefs ...string) {
 	givenSchedule := k8upv1alpha1.EffectiveSchedule{
 		ObjectMeta: metav1.ObjectMeta{Name: scheduleName + "-randomstring", Namespace: ts.NS},
 		Spec: k8upv1alpha1.EffectiveScheduleSpec{
@@ -28,6 +40,9 @@ func (ts *ScheduleControllerTestSuite) givenEffectiveScheduleResource(scheduleNa
 			OriginalSchedule: handler.ScheduleHourlyRandom,
 		},
 	}
+	for _, ref := range additionalRefs {
+		givenSchedule.Spec.ScheduleRefs = append(givenSchedule.Spec.ScheduleRefs, k8upv1alpha1.ScheduleRef{Name: ref, Namespace: ts.NS})
+	}
 	ts.EnsureResources(&givenSchedule)
 	ts.givenEffectiveSchedules = append(ts.givenEffectiveSchedules, givenSchedule)
 }
@@ -36,7 +51,7 @@ func (ts *ScheduleControllerTestSuite) newScheduleSpec(name string, schedule k8u
 	return &k8upv1alpha1.Schedule{
 		ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: ts.NS},
 		Spec: k8upv1alpha1.ScheduleSpec{
-			Backup: &k8upv1alpha1.BackupSchedule{
+			Check: &k8upv1alpha1.CheckSchedule{
 				ScheduleCommon: &k8upv1alpha1.ScheduleCommon{
 					Schedule: schedule,
 				},
