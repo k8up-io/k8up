@@ -90,8 +90,29 @@ func (b *Backup) SetStatus(status Status) {
 	b.Status = status
 }
 
+// GetResources returns the resource requirements
 func (b *Backup) GetResources() corev1.ResourceRequirements {
 	return b.Spec.Resources
+}
+
+// GetDeepCopy returns a deep copy
+func (in *BackupSchedule) GetDeepCopy() ScheduleSpecInterface {
+	return in.DeepCopy()
+}
+
+// GetRunnableSpec returns a pointer to RunnableSpec
+func (in *BackupSchedule) GetRunnableSpec() *RunnableSpec {
+	return &in.RunnableSpec
+}
+
+// GetSchedule returns the schedule definition
+func (in *BackupSchedule) GetSchedule() ScheduleDefinition {
+	return in.Schedule
+}
+
+// GetObjectCreator returns the ObjectCreator instance
+func (in *BackupSchedule) GetObjectCreator() ObjectCreator {
+	return in
 }
 
 func (b BackupSpec) CreateObject(name, namespace string) runtime.Object {

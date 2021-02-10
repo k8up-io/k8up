@@ -71,6 +71,27 @@ func (a *Archive) SetStatus(status Status) {
 	a.Status = status
 }
 
+// GetResources returns the resource requirements
 func (a *Archive) GetResources() corev1.ResourceRequirements {
 	return a.Spec.Resources
+}
+
+// GetDeepCopy returns a deep copy
+func (in *ArchiveSchedule) GetDeepCopy() ScheduleSpecInterface {
+	return in.DeepCopy()
+}
+
+// GetRunnableSpec returns a pointer to RunnableSpec
+func (in *ArchiveSchedule) GetRunnableSpec() *RunnableSpec {
+	return &in.RunnableSpec
+}
+
+// GetSchedule returns the schedule definition
+func (in *ArchiveSchedule) GetSchedule() ScheduleDefinition {
+	return in.Schedule
+}
+
+// GetObjectCreator returns the ObjectCreator instance
+func (in *ArchiveSchedule) GetObjectCreator() ObjectCreator {
+	return in
 }

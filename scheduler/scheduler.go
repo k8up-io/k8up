@@ -8,7 +8,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/robfig/cron/v3"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/rand"
 	"k8s.io/utils/strings"
@@ -21,11 +20,6 @@ import (
 )
 
 type (
-	// ObjectCreator defines an interface that each schedulable newJobs must implement.
-	// The simplest implementation is that the concrete object just returns itself.
-	ObjectCreator interface {
-		CreateObject(name, namespace string) runtime.Object
-	}
 	// JobList contains a slice of jobs and job.Config to actually apply the
 	// the newJobs objects.
 	JobList struct {
@@ -36,7 +30,7 @@ type (
 	Job struct {
 		JobType  k8upv1alpha1.JobType
 		Schedule k8upv1alpha1.ScheduleDefinition
-		Object   ObjectCreator
+		Object   k8upv1alpha1.ObjectCreator
 	}
 	// Scheduler handles all the schedules.
 	Scheduler struct {
@@ -165,7 +159,7 @@ func (s *Scheduler) RemoveSchedules(namespacedName types.NamespacedName) {
 	s.decRegisteredSchedulesGauge(namespacedName.Namespace)
 }
 
-func (s *Scheduler) createObject(jobType k8upv1alpha1.JobType, namespace string, obj ObjectCreator, config job.Config) {
+func (s *Scheduler) createObject(jobType k8upv1alpha1.JobType, namespace string, obj k8upv1alpha1.ObjectCreator, config job.Config) {
 
 	name := generateName(jobType, config.Obj.GetMetaObject().GetName())
 

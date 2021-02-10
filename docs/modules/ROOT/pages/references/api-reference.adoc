@@ -441,6 +441,8 @@ EffectiveScheduleSpec defines the desired state of EffectiveSchedule
 
 
 
+
+
 [id="{anchor_prefix}-github-com-vshn-k8up-api-v1alpha1-pod"]
 === Pod 
 
@@ -877,6 +879,8 @@ ScheduleSpec defines the schedules for the various job types.
 | *`keepJobs`* __integer__ | 
 | *`resourceRequirementsTemplate`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#resourcerequirements-v1-core[$$ResourceRequirements$$]__ | ResourceRequirementsTemplate describes the compute resource requirements (cpu, memory, etc.)
 |===
+
+
 
 
 

@@ -2,6 +2,7 @@ package v1alpha1
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 )
 
@@ -14,6 +15,24 @@ type (
 
 	// ConditionReason is a static/programmatic representation of the cause of a status condition.
 	ConditionReason string
+
+	// +k8s:deepcopy-gen=false
+
+	// ScheduleSpecInterface represents a Job for internal use.
+	ScheduleSpecInterface interface {
+		GetDeepCopy() ScheduleSpecInterface
+		GetRunnableSpec() *RunnableSpec
+		GetSchedule() ScheduleDefinition
+		GetObjectCreator() ObjectCreator
+	}
+
+	// +k8s:deepcopy-gen=false
+
+	// ObjectCreator defines an interface that each schedulable Job must implement.
+	// The simplest implementation is that the concrete object just returns itself.
+	ObjectCreator interface {
+		CreateObject(name, namespace string) runtime.Object
+	}
 )
 
 // The jobs types that k8up deals with

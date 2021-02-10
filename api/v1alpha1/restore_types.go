@@ -77,8 +77,29 @@ func (r *Restore) SetStatus(status Status) {
 	r.Status = status
 }
 
+// GetResources returns the resource requirements
 func (r *Restore) GetResources() corev1.ResourceRequirements {
 	return r.Spec.Resources
+}
+
+// GetDeepCopy returns a deep copy
+func (in *RestoreSchedule) GetDeepCopy() ScheduleSpecInterface {
+	return in.DeepCopy()
+}
+
+// GetRunnableSpec returns a pointer to RunnableSpec
+func (in *RestoreSchedule) GetRunnableSpec() *RunnableSpec {
+	return &in.RunnableSpec
+}
+
+// GetSchedule returns the schedule definition
+func (in *RestoreSchedule) GetSchedule() ScheduleDefinition {
+	return in.Schedule
+}
+
+// GetObjectCreator returns the ObjectCreator instance
+func (in *RestoreSchedule) GetObjectCreator() ObjectCreator {
+	return in
 }
 
 // +kubebuilder:object:root=true
