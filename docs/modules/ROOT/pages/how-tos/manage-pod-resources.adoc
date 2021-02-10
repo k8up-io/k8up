@@ -1,0 +1,114 @@
+= How to Manage pod resources
+
+There are 3 different levels how pod resources can be managed.
+Each level takes precedence over the previous one.
+
+. Global defaults
+. `resourceRequirementsTemplate` field from a `Schedule` object
+. `resources` fields in a `Backup`, `Prune`, `Check`, `Archive` or `Restore` spec within a `Schedule`.
+
+[NOTE]
+====
+Global defaults are only applied through `Schedules`.
+If you create your own `Backup` object for example, neither global default nor any specs from `resourceRequirementsTemplate` from any `Schedule` will be applied.
+====
+
+[IMPORTANT]
+====
+The computed resources resulting from the merge described above are not persisted in the `Schedules`.
+This allows cluster administrator to reconfigure global resource defaults without having to touch each `Schedule` after a change.
+====
+
+== Global default
+
+Let's assume the cluster administrator or a resource quota requires to set memory limit on a all pods spawned by K8up.
+In that case K8up needs to be started with the following environment variable:
+[source,bash]
+----
+BACKUP_GLOBAL_MEMORY_LIMIT=200M
+----
+
+TIP: See xref:references/config-reference.adoc[Config reference] to see which environment variables are supported.
+
+
+Following example is a simple `Schedule` example without further resource specs.
+[source,yaml]
+----
+apiVersion: backup.appuio.ch/v1alpha1
+kind: Schedule
+metadata:
+  name: schedule-test
+spec:
+  ...
+  prune:
+    schedule: '*/5 * * * *'
+----
+This will create a `Prune` object with the resource default applied:
+[source,yaml]
+----
+apiVersion: backup.appuio.ch/v1alpha1
+kind: Prune
+metadata:
+  name: schedule-test-prune-qbq2k
+spec:
+  ...
+  resources:
+    limits:
+      memory: 200M
+----
+This object in turn spawns a `Job` with the given resource spec.
+
+== Resources from a template
+
+Following example is a `Schedule` example that also sets CPU request for all jobs.
+[source,yaml]
+----
+apiVersion: backup.appuio.ch/v1alpha1
+kind: Schedule
+metadata:
+  name: schedule-test
+spec:
+  resourceRequirementsTemplate:
+    requests:
+      cpu: "50m"
+  ...
+  check:
+    resources:
+      requests:
+        memory: "64Mi"
+        cpu: "250m"
+    schedule: '@hourly-random'
+  prune:
+    schedule: '*/2 * * * *'
+----
+Combined with the global memory limit, the `Prune` object will have following resources:
+[source,yaml]
+----
+apiVersion: backup.appuio.ch/v1alpha1
+kind: Prune
+metadata:
+  name: schedule-test-prune-qbq2k
+spec:
+  ...
+  resources:
+    requests:
+      cpu: "50m"
+    limits:
+      memory: 200M
+----
+Whereas, the `Check` object will overwrite the CPU resource request template with its own specification:
+[source,yaml]
+----
+apiVersion: backup.appuio.ch/v1alpha1
+kind: Check
+metadata:
+  name: schedule-test-check-q5kae
+spec:
+  ...
+  resources:
+    requests:
+      memory: "64Mi"
+      cpu: "250m"
+    limits:
+      memory: 200M
+----
