@@ -51,6 +51,9 @@ spec:
         spec:
           description: EffectiveScheduleSpec defines the desired state of EffectiveSchedule
           properties:
+            backendString:
+              description: BackendString is a stringified representation of the backend configuration.
+              type: string
             generatedSchedule:
               description: GeneratedSchedule is the effective schedule that is added to Cron
               type: string

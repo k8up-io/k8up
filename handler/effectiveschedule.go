@@ -67,7 +67,7 @@ func (s *ScheduleHandler) findExistingSchedule(jobType k8upv1alpha1.JobType, ori
 		for _, ref := range es.Spec.ScheduleRefs {
 			if s.schedule.IsReferencedBy(ref) && es.Spec.OriginalSchedule == originalSchedule {
 				s.Log.V(1).Info("using generated schedule",
-					"name", k8upv1alpha1.GetNamespacedName(&es),
+					"name", k8upv1alpha1.GetNamespacedName(&es).String(),
 					"schedule", es.Spec.GeneratedSchedule,
 					"type", jobType)
 				return es.Spec.GeneratedSchedule, true
@@ -75,22 +75,6 @@ func (s *ScheduleHandler) findExistingSchedule(jobType k8upv1alpha1.JobType, ori
 		}
 	}
 	return "", false
-}
-
-func (s *ScheduleHandler) searchExistingSchedulesForDeduplication(jobType k8upv1alpha1.JobType, backendString string) bool {
-	list := &k8upv1alpha1.EffectiveScheduleList{}
-	err := s.Client.List(s.CTX, list, client.InNamespace(cfg.Config.OperatorNamespace))
-	if err != nil {
-		s.Log.Error(err, "could not fetch resources, ignoring deduplication")
-		return false
-	}
-	for _, es := range list.Items {
-		if es.Spec.JobType == jobType && es.Spec.BackendString == backendString {
-			s.effectiveSchedules[jobType] = es
-			return true
-		}
-	}
-	return false
 }
 
 // upsertEffectiveScheduleInternally will create or update the EffectiveSchedule for the given jobType with the given schedule definition.
@@ -113,7 +97,7 @@ func (s *ScheduleHandler) upsertEffectiveScheduleInternally(jobType k8upv1alpha1
 // UpsertResource updates the given object if it exists. If it fails with not existing error, it will be created.
 // If both operation failed, the error is logged and Ready condition will be set to False.
 func (s *ScheduleHandler) UpsertResource(obj client.Object) error {
-	name := k8upv1alpha1.GetNamespacedName(obj)
+	name := k8upv1alpha1.GetNamespacedName(obj).String()
 	if updateErr := s.Client.Update(s.CTX, obj); updateErr != nil {
 		if errors.IsNotFound(updateErr) {
 			if createErr := s.Client.Create(s.CTX, obj); createErr != nil {

@@ -85,8 +85,6 @@ func GetBackendString(backend *Backend) string {
 	return backend.String()
 }
 
-
-
 func (in *Backend) getSupportedBackends() []BackendInterface {
 	return []BackendInterface{in.Azure, in.B2, in.GCS, in.Local, in.Rest, in.S3, in.Swift}
 }
