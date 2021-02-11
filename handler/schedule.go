@@ -83,29 +83,33 @@ func (s *ScheduleHandler) createJobList() scheduler.JobList {
 			s.cleanupEffectiveSchedules(jobType, "")
 			continue
 		}
-		template := jb.GetDeepCopy()
-		spec := template.GetRunnableSpec()
+		jobCopy := jb.GetDeepCopy()
+		spec := jobCopy.GetRunnableSpec()
 		s.mergeWithDefaults(spec)
 		backendString := k8upv1alpha1.GetBackendString(spec.Backend)
-		if s.isDeduplicated(jobType, backendString) {
-			continue
+		dctx := &deduplicationContext{
+			jobType:           jobType,
+			backendString:     backendString,
+			originalSchedule:  jobCopy.GetSchedule(),
+			effectiveSchedule: jobCopy.GetSchedule(),
 		}
-		schedule, found := s.getEffectiveSchedule(jobType, template.GetSchedule())
-		if !found {
-			if generatedSchedule, deduplicated := s.searchExistingSchedulesForDeduplication(jobType, backendString); deduplicated {
-				// the schedule is deduplicated here
-				s.upsertEffectiveScheduleInternally(jobType, generatedSchedule, backendString)
-				continue
+		if jobCopy.GetSchedule().IsRandom() {
+			if jobCopy.IsDeduplicationSupported() {
+				if s.tryDeduplicateJob(dctx) {
+					s.Log.V(1).Info("job is being deduplicated, ignoring it.", "job", jobType, "backend", backendString)
+					continue
+				}
+			} else {
+				s.getOrGenerateEffectiveSchedule(dctx)
+				s.upsertEffectiveScheduleInternally(dctx)
 			}
-			schedule, _ = s.createRandomSchedule(jobType, template.GetSchedule())
-			s.upsertEffectiveScheduleInternally(jobType, schedule, backendString)
 		}
 		jobList.Jobs = append(jobList.Jobs, scheduler.Job{
 			JobType:  jobType,
-			Schedule: schedule,
-			Object:   template.GetObjectCreator(),
+			Schedule: dctx.effectiveSchedule,
+			Object:   jobCopy.GetObjectCreator(),
 		})
-		s.cleanupEffectiveSchedules(jobType, template.GetSchedule())
+		s.cleanupEffectiveSchedules(jobType, jobCopy.GetSchedule())
 	}
 
 	return jobList

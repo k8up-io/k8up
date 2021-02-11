@@ -97,6 +97,11 @@ func (in *RestoreSchedule) GetSchedule() ScheduleDefinition {
 	return in.Schedule
 }
 
+// IsDeduplicationSupported returns true if this job supports deduplication
+func (in *RestoreSchedule) IsDeduplicationSupported() bool {
+	return false
+}
+
 // GetObjectCreator returns the ObjectCreator instance
 func (in *RestoreSchedule) GetObjectCreator() ObjectCreator {
 	return in

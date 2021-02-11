@@ -34,10 +34,10 @@ func (ts *ScheduleControllerTestSuite) givenEffectiveScheduleResource(scheduleNa
 		Spec: k8upv1alpha1.EffectiveScheduleSpec{
 			GeneratedSchedule: "1 * * * *",
 			JobType:           k8upv1alpha1.BackupType,
+			OriginalSchedule:  handler.ScheduleHourlyRandom,
 			ScheduleRefs: []k8upv1alpha1.ScheduleRef{
 				{Name: scheduleName, Namespace: ts.NS},
 			},
-			OriginalSchedule: handler.ScheduleHourlyRandom,
 		},
 	}
 	for _, ref := range additionalRefs {
@@ -70,6 +70,8 @@ func (ts *ScheduleControllerTestSuite) thenAssertEffectiveScheduleExists(expecte
 	ts.Assert().Equal(spec.OriginalSchedule, originalSchedule)
 	ts.Assert().Equal(ts.NS, ref.Namespace)
 	ts.Assert().False(spec.GeneratedSchedule.IsRandom())
+	ts.Assert().Equal(originalSchedule, spec.OriginalSchedule)
+	ts.Assert().Equal(k8upv1alpha1.CheckType, spec.JobType)
 }
 
 func (ts *ScheduleControllerTestSuite) thenAssertCondition(resultSchedule *k8upv1alpha1.Schedule, condition k8upv1alpha1.ConditionType, reason k8upv1alpha1.ConditionReason, containsMessage string) {

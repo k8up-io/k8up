@@ -24,6 +24,7 @@ type (
 		GetRunnableSpec() *RunnableSpec
 		GetSchedule() ScheduleDefinition
 		GetObjectCreator() ObjectCreator
+		IsDeduplicationSupported() bool
 	}
 
 	// +k8s:deepcopy-gen=false

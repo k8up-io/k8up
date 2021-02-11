@@ -7,37 +7,74 @@ import (
 	"github.com/vshn/k8up/cfg"
 )
 
-// searchExistingSchedulesForDeduplication lists all EffectiveSchedules and searches for an EffectiveSchedule that has a ScheduleRef which matches the given type and backend.
-// If an element is found, it's added to the internal map of EffectiveSchedules.
-// It returns true if found along with the generatedSchedule in the spec.
-// Otherwise false with an empty string.
-func (s *ScheduleHandler) searchExistingSchedulesForDeduplication(jobType k8upv1alpha1.JobType, backendString string) (k8upv1alpha1.ScheduleDefinition, bool) {
-	list := &k8upv1alpha1.EffectiveScheduleList{}
-	err := s.Client.List(s.CTX, list, client.InNamespace(cfg.Config.OperatorNamespace))
-	if err != nil {
-		s.Log.Error(err, "could not fetch resources, ignoring deduplication")
-		return "", false
+type deduplicationContext struct {
+	jobType           k8upv1alpha1.JobType
+	backendString     string
+	originalSchedule  k8upv1alpha1.ScheduleDefinition
+	effectiveSchedule k8upv1alpha1.ScheduleDefinition
+}
+
+// tryDeduplicateJob will try to deduplicate the job given in the context.
+// It returns true if the job is successfully deduplicated, false otherwise.
+func (s *ScheduleHandler) tryDeduplicateJob(ctx *deduplicationContext) bool {
+
+	if s.isDeduplicated(ctx) {
+		return true
 	}
-	for _, es := range list.Items {
-		if es.Spec.JobType == jobType && es.Spec.BackendString == backendString {
-			s.Log.Info("deduplicated schedule", "type", jobType, "backend", backendString)
-			s.effectiveSchedules[jobType] = es
-			return es.Spec.GeneratedSchedule, true
+
+	list, err := s.fetchEffectiveSchedules()
+	if err != nil {
+		s.Log.V(1).Info("ignoring job for deduplication", "job", ctx.jobType)
+		return false
+	}
+
+	existingSchedule, found := s.searchExistingSchedulesForDeduplication(list, ctx)
+	if found {
+		ctx.effectiveSchedule = existingSchedule.Spec.GeneratedSchedule
+		s.effectiveSchedules[ctx.jobType] = existingSchedule
+	} else {
+		s.getOrGenerateEffectiveSchedule(ctx)
+	}
+
+	s.upsertEffectiveScheduleInternally(ctx)
+	return found
+}
+
+// fetchEffectiveSchedules fetches the EffectiveSchedules from the configured operator namespace.
+// Logs the error and returns an empty list on errors.
+func (s *ScheduleHandler) fetchEffectiveSchedules() ([]k8upv1alpha1.EffectiveSchedule, error) {
+	list := &k8upv1alpha1.EffectiveScheduleList{}
+	if err := s.Client.List(s.CTX, list, client.InNamespace(cfg.Config.OperatorNamespace)); err != nil {
+		s.Log.Error(err, "could not EffectiveSchedules")
+		return []k8upv1alpha1.EffectiveSchedule{}, err
+	}
+	s.Log.V(1).Info("fetched EffectiveSchedules", "count", len(list.Items))
+	return list.Items, nil
+}
+
+// searchExistingSchedulesForDeduplication searches for an EffectiveSchedule that has a ScheduleRef which matches the given criteria.
+// It returns true along with the element matching.
+// Otherwise false with an empty object.
+func (s *ScheduleHandler) searchExistingSchedulesForDeduplication(esList []k8upv1alpha1.EffectiveSchedule, ctx *deduplicationContext) (k8upv1alpha1.EffectiveSchedule, bool) {
+	for _, es := range esList {
+		if es.IsSameType(ctx.jobType, ctx.backendString, ctx.originalSchedule) {
+			s.Log.Info("deduplicated schedule", "type", ctx.jobType, "backend", ctx.backendString)
+			return es, true
 		}
 	}
-	return "", false
+	return k8upv1alpha1.EffectiveSchedule{}, false
 }
 
 // isDeduplicated returns true if any ScheduleRef with any pre-fetched EffectiveSchedule matches the given parameters.
 // If it returns true, the given job should not be added to the scheduler.
-func (s *ScheduleHandler) isDeduplicated(jobType k8upv1alpha1.JobType, backendString string) bool {
+func (s *ScheduleHandler) isDeduplicated(ctx *deduplicationContext) bool {
 	for _, es := range s.effectiveSchedules {
 		for i, ref := range es.Spec.ScheduleRefs {
 			if i == 0 {
 				// The first entry shouldn't be excluded from the internal scheduler
 				continue
 			}
-			if s.schedule.IsReferencedBy(ref) && es.IsSameType(jobType, backendString) {
+			if s.schedule.IsReferencedBy(ref) && es.IsSameType(ctx.jobType, ctx.backendString, ctx.originalSchedule) {
 				return true
 			}
 		}

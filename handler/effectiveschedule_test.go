@@ -62,7 +62,11 @@ func TestScheduleHandler_findExistingSchedule(t *testing.T) {
 				Config:             job.Config{Log: zap.New(zap.UseDevMode(true))},
 				effectiveSchedules: tt.givenEffectiveSchedules,
 			}
-			schedule, found := s.findExistingSchedule(tt.givenJobType, ScheduleDailyRandom)
+			ctx := &deduplicationContext{
+				jobType:          tt.givenJobType,
+				originalSchedule: ScheduleDailyRandom,
+			}
+			schedule, found := s.findExistingSchedule(ctx)
 
 			assert.Equal(t, tt.expectedSchedule, schedule)
 			assert.Equal(t, tt.expectFind, found)

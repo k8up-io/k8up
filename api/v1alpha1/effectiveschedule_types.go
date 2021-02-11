@@ -66,6 +66,6 @@ func init() {
 }
 
 // IsSameType returns true if the given jobType and backendString match.
-func (in EffectiveSchedule) IsSameType(jobType JobType, backendString string) bool {
-	return jobType == in.Spec.JobType && backendString == in.Spec.BackendString
+func (in EffectiveSchedule) IsSameType(jobType JobType, backendString string, originalSchedule ScheduleDefinition) bool {
+	return jobType == in.Spec.JobType && backendString == in.Spec.BackendString && in.Spec.OriginalSchedule == originalSchedule
 }

@@ -115,6 +115,11 @@ func (in *BackupSchedule) GetObjectCreator() ObjectCreator {
 	return in
 }
 
+// IsDeduplicationSupported returns true if this job supports deduplication
+func (in *BackupSchedule) IsDeduplicationSupported() bool {
+	return false
+}
+
 func (b BackupSpec) CreateObject(name, namespace string) runtime.Object {
 	return &Backup{
 		ObjectMeta: metav1.ObjectMeta{

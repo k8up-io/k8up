@@ -46,30 +46,29 @@ func (s *ScheduleHandler) synchronizeEffectiveSchedulesResources() error {
 	return nil
 }
 
-// getEffectiveSchedule tries to find the actual schedule definition for the given job type and original schedule.
-// If originalSchedule is standard or non-standard cron syntax, it returns itself.
-// If originalSchedule is a K8up specific smart/random schedule, then it finds the generated schedule in one of the matching EffectiveSchedules.
-// If there are none matching, a new EffectiveSchedule is added with originalSchedule translated to a generated schedule.
-func (s *ScheduleHandler) getEffectiveSchedule(jobType k8upv1alpha1.JobType, originalSchedule k8upv1alpha1.ScheduleDefinition) (k8upv1alpha1.ScheduleDefinition, bool) {
-	isStandardOrNotRandom := !originalSchedule.IsNonStandard() || !originalSchedule.IsRandom()
-	if isStandardOrNotRandom {
-		return originalSchedule, true
+// getOrGenerateEffectiveSchedule tries to find the actual schedule definition for the given job type and original schedule.
+// It updates the context with either the existing schedule, or generates a new random schedule.
+func (s *ScheduleHandler) getOrGenerateEffectiveSchedule(ctx *deduplicationContext) {
+	existingSchedule, found := s.findExistingSchedule(ctx)
+	if found {
+		ctx.effectiveSchedule = existingSchedule
+		return
 	}
-
-	return s.findExistingSchedule(jobType)
+	generatedSchedule, _ := s.createRandomSchedule(ctx.jobType, ctx.originalSchedule)
+	ctx.effectiveSchedule = generatedSchedule
 }
 
-// findExistingSchedule searches in the pre-fetched EffectiveSchedules and tries to find a generated schedule definition for the given schedule object and jobType.
+// findExistingSchedule searches in the cached EffectiveSchedules and tries to find a generated schedule definition for the given schedule object and jobType.
 // It returns empty string and false if none were found.
-func (s *ScheduleHandler) findExistingSchedule(jobType k8upv1alpha1.JobType, originalSchedule k8upv1alpha1.ScheduleDefinition) (k8upv1alpha1.ScheduleDefinition, bool) {
-	es, found := s.effectiveSchedules[jobType]
+func (s *ScheduleHandler) findExistingSchedule(ctx *deduplicationContext) (k8upv1alpha1.ScheduleDefinition, bool) {
+	es, found := s.effectiveSchedules[ctx.jobType]
 	if found {
 		for _, ref := range es.Spec.ScheduleRefs {
-			if s.schedule.IsReferencedBy(ref) && es.Spec.OriginalSchedule == originalSchedule {
+			if s.schedule.IsReferencedBy(ref) && es.Spec.OriginalSchedule == ctx.originalSchedule {
 				s.Log.V(1).Info("using generated schedule",
 					"name", k8upv1alpha1.GetNamespacedName(&es).String(),
 					"schedule", es.Spec.GeneratedSchedule,
-					"type", jobType)
+					"type", ctx.jobType)
 				return es.Spec.GeneratedSchedule, true
 			}
 		}
@@ -79,19 +78,20 @@ func (s *ScheduleHandler) findExistingSchedule(jobType k8upv1alpha1.JobType, ori
 
 // upsertEffectiveScheduleInternally will create or update the EffectiveSchedule for the given jobType with the given schedule definition.
 // The EffectiveSchedules aren't persisted or updated in this function, use synchronizeEffectiveSchedulesResources() for that.
-func (s *ScheduleHandler) upsertEffectiveScheduleInternally(jobType k8upv1alpha1.JobType, schedule k8upv1alpha1.ScheduleDefinition, backendString string) {
-	es, found := s.effectiveSchedules[jobType]
+func (s *ScheduleHandler) upsertEffectiveScheduleInternally(ctx *deduplicationContext) {
+	es, found := s.effectiveSchedules[ctx.jobType]
 	if !found {
-		es = s.newEffectiveSchedule(jobType)
+		es = s.newEffectiveSchedule(ctx.jobType)
 	}
-	es.Spec.GeneratedSchedule = schedule
-	es.Spec.JobType = jobType
-	es.Spec.OriginalSchedule = originalSchedule
+	es.Spec.GeneratedSchedule = ctx.effectiveSchedule
+	es.Spec.JobType = ctx.jobType
+	es.Spec.BackendString = ctx.backendString
+	es.Spec.OriginalSchedule = ctx.originalSchedule
 	es.Spec.AddScheduleRef(k8upv1alpha1.ScheduleRef{
 		Name:      s.schedule.Name,
 		Namespace: s.schedule.Namespace,
 	})
-	s.effectiveSchedules[jobType] = es
+	s.effectiveSchedules[ctx.jobType] = es
 }
 
 // UpsertResource updates the given object if it exists. If it fails with not existing error, it will be created.

@@ -112,6 +112,11 @@ func (in *PruneSchedule) GetObjectCreator() ObjectCreator {
 	return in
 }
 
+// IsDeduplicationSupported returns true if this job supports deduplication
+func (in *PruneSchedule) IsDeduplicationSupported() bool {
+	return false
+}
+
 func init() {
 	SchemeBuilder.Register(&Prune{}, &PruneList{})
 }

@@ -94,6 +94,11 @@ func (in *CheckSchedule) GetObjectCreator() ObjectCreator {
 	return in
 }
 
+// IsDeduplicationSupported returns true if this job supports deduplication
+func (in *CheckSchedule) IsDeduplicationSupported() bool {
+	return true
+}
+
 func (c CheckSpec) CreateObject(name, namespace string) runtime.Object {
 	return &Check{
 		ObjectMeta: metav1.ObjectMeta{

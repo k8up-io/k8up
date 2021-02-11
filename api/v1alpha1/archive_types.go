@@ -95,3 +95,8 @@ func (in *ArchiveSchedule) GetSchedule() ScheduleDefinition {
 func (in *ArchiveSchedule) GetObjectCreator() ObjectCreator {
 	return in
 }
+
+// IsDeduplicationSupported returns true if this job supports deduplication
+func (in *ArchiveSchedule) IsDeduplicationSupported() bool {
+	return false
+}
