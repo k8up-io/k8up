@@ -33,6 +33,8 @@ type (
 	EffectiveScheduleSpec struct {
 		// GeneratedSchedule is the effective schedule that is added to Cron
 		GeneratedSchedule ScheduleDefinition `json:"generatedSchedule,omitempty"`
+		// OriginalSchedule is the original user-defined schedule definition in the Schedule object.
+		OriginalSchedule ScheduleDefinition `json:"originalSchedule,omitempty"`
 		// JobType defines to which job type this schedule applies
 		JobType JobType `json:"jobType,omitempty"`
 		// ScheduleRefs holds a list of schedules for which the generated schedule applies to.
@@ -46,6 +48,16 @@ type (
 		Namespace string `json:"namespace,omitempty"`
 	}
 )
+
+// AddScheduleRef adds the given newRef to the existing ScheduleRefs if not already existing.
+func (in *EffectiveScheduleSpec) AddScheduleRef(newRef ScheduleRef) {
+	for _, ref := range in.ScheduleRefs {
+		if ref.Name == newRef.Name && ref.Namespace == newRef.Namespace {
+			return
+		}
+	}
+	in.ScheduleRefs = append(in.ScheduleRefs, newRef)
+}
 
 func init() {
 	SchemeBuilder.Register(&EffectiveSchedule{}, &EffectiveScheduleList{})

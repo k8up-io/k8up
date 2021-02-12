@@ -57,7 +57,7 @@ func (s *ScheduleHandler) getEffectiveSchedule(jobType k8upv1alpha1.JobType, ori
 		return originalSchedule
 	}
 
-	if existingSchedule, found := s.findExistingSchedule(jobType); found {
+	if existingSchedule, found := s.findExistingSchedule(jobType, originalSchedule); found {
 		return existingSchedule
 	}
 
@@ -66,17 +66,17 @@ func (s *ScheduleHandler) getEffectiveSchedule(jobType k8upv1alpha1.JobType, ori
 		s.Log.Info("Could not randomize schedule, continuing with original schedule", "schedule", originalSchedule, "error", err.Error())
 		return originalSchedule
 	}
-	s.setEffectiveSchedule(jobType, randomizedSchedule)
+	s.setEffectiveSchedule(jobType, randomizedSchedule, originalSchedule)
 	return randomizedSchedule
 }
 
 // findExistingSchedule searches in the pre-fetched EffectiveSchedules and tries to find a generated schedule definition for the given schedule object and jobType.
 // It returns empty string and false if none were found.
-func (s *ScheduleHandler) findExistingSchedule(jobType k8upv1alpha1.JobType) (k8upv1alpha1.ScheduleDefinition, bool) {
+func (s *ScheduleHandler) findExistingSchedule(jobType k8upv1alpha1.JobType, originalSchedule k8upv1alpha1.ScheduleDefinition) (k8upv1alpha1.ScheduleDefinition, bool) {
 	es, found := s.effectiveSchedules[jobType]
 	if found {
 		for _, ref := range es.Spec.ScheduleRefs {
-			if s.schedule.IsReferencedBy(ref) {
+			if s.schedule.IsReferencedBy(ref) && es.Spec.OriginalSchedule == originalSchedule {
 				s.Log.V(1).Info("using generated schedule",
 					"name", k8upv1alpha1.GetNamespacedName(&es),
 					"schedule", es.Spec.GeneratedSchedule,
@@ -90,19 +90,18 @@ func (s *ScheduleHandler) findExistingSchedule(jobType k8upv1alpha1.JobType) (k8
 
 // setEffectiveSchedule will create or update the EffectiveSchedule for the given jobType with the given schedule definition.
 // The EffectiveSchedules aren't persisted or updated in this function, use synchronizeEffectiveSchedulesResources() for that.
-func (s *ScheduleHandler) setEffectiveSchedule(jobType k8upv1alpha1.JobType, schedule k8upv1alpha1.ScheduleDefinition) {
+func (s *ScheduleHandler) setEffectiveSchedule(jobType k8upv1alpha1.JobType, schedule, originalSchedule k8upv1alpha1.ScheduleDefinition) {
 	es, found := s.effectiveSchedules[jobType]
 	if !found {
 		es = s.newEffectiveSchedule(jobType)
 	}
 	es.Spec.GeneratedSchedule = schedule
 	es.Spec.JobType = jobType
-	schedules := es.Spec.ScheduleRefs
-	schedules = append(schedules, k8upv1alpha1.ScheduleRef{
+	es.Spec.OriginalSchedule = originalSchedule
+	es.Spec.AddScheduleRef(k8upv1alpha1.ScheduleRef{
 		Name:      s.schedule.Name,
 		Namespace: s.schedule.Namespace,
 	})
-	es.Spec.ScheduleRefs = schedules
 	s.effectiveSchedules[jobType] = es
 }
 
@@ -140,7 +139,7 @@ func (s *ScheduleHandler) cleanupEffectiveSchedules(jobType k8upv1alpha1.JobType
 	}
 	var schedules []k8upv1alpha1.ScheduleRef
 	for _, ref := range es.Spec.ScheduleRefs {
-		if s.schedule.IsReferencedBy(ref) && !newSchedule.IsRandom() {
+		if s.schedule.IsReferencedBy(ref) && es.Spec.OriginalSchedule != newSchedule {
 			s.Log.V(1).Info("removing from effective schedule", "type", jobType, "schedule", k8upv1alpha1.GetNamespacedName(s.schedule))
 			continue
 		}

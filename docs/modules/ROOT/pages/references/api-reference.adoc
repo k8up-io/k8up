@@ -376,6 +376,7 @@ EffectiveScheduleSpec defines the desired state of EffectiveSchedule
 |===
 | Field | Description
 | *`generatedSchedule`* __xref:{anchor_prefix}-github-com-vshn-k8up-api-v1alpha1-scheduledefinition[$$ScheduleDefinition$$]__ | GeneratedSchedule is the effective schedule that is added to Cron
+| *`originalSchedule`* __xref:{anchor_prefix}-github-com-vshn-k8up-api-v1alpha1-scheduledefinition[$$ScheduleDefinition$$]__ | OriginalSchedule is the original user-defined schedule definition in the Schedule object.
 | *`jobType`* __JobType__ | JobType defines to which job type this schedule applies
 | *`scheduleRefs`* __xref:{anchor_prefix}-github-com-vshn-k8up-api-v1alpha1-scheduleref[$$ScheduleRef$$] array__ | ScheduleRefs holds a list of schedules for which the generated schedule applies to. The list may omit entries that aren't generated from smart schedules.
 |===

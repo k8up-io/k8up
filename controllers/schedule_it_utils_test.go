@@ -7,6 +7,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	k8upv1alpha1 "github.com/vshn/k8up/api/v1alpha1"
+	"github.com/vshn/k8up/handler"
 )
 
 func (ts *ScheduleControllerTestSuite) givenScheduleResource(schedule k8upv1alpha1.ScheduleDefinition) {
@@ -24,6 +25,7 @@ func (ts *ScheduleControllerTestSuite) givenEffectiveScheduleResource(scheduleNa
 			ScheduleRefs: []k8upv1alpha1.ScheduleRef{
 				{Name: scheduleName, Namespace: ts.NS},
 			},
+			OriginalSchedule: handler.ScheduleHourlyRandom,
 		},
 	}
 	ts.EnsureResources(&givenSchedule)
@@ -43,13 +45,14 @@ func (ts *ScheduleControllerTestSuite) newScheduleSpec(name string, schedule k8u
 	}
 }
 
-func (ts *ScheduleControllerTestSuite) thenAssertEffectiveScheduleExists(expectedScheduleName string) {
+func (ts *ScheduleControllerTestSuite) thenAssertEffectiveScheduleExists(expectedScheduleName string, originalSchedule k8upv1alpha1.ScheduleDefinition) {
 	list := ts.whenListEffectiveSchedules()
 	ts.Require().NotEmpty(list)
 	spec := list[0].Spec
-	ts.Require().NotEmpty(spec.ScheduleRefs)
+	ts.Require().Len(spec.ScheduleRefs, 1)
 	ref := spec.ScheduleRefs[0]
 	ts.Assert().Equal(expectedScheduleName, ref.Name)
+	ts.Assert().Equal(spec.OriginalSchedule, originalSchedule)
 	ts.Assert().Equal(ts.NS, ref.Namespace)
 	ts.Assert().False(spec.GeneratedSchedule.IsRandom())
 }
