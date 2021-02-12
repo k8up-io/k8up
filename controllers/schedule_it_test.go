@@ -33,7 +33,7 @@ func (ts *ScheduleControllerTestSuite) BeforeTest(suiteName, testName string) {
 	cfg.Config.OperatorNamespace = ts.NS
 	ts.reconciler = &controllers.ScheduleReconciler{
 		Client: ts.Client,
-		Log:    ts.Logger.WithName(suiteName),
+		Log:    ts.Logger.WithName(suiteName + "_" + testName),
 		Scheme: ts.Scheme,
 	}
 }
@@ -43,7 +43,7 @@ func (ts *ScheduleControllerTestSuite) Test_GivenScheduleWithRandomSchedules_Whe
 
 	ts.whenReconciling(ts.givenSchedule)
 
-	ts.thenAssertEffectiveScheduleExists(ts.givenSchedule.Name)
+	ts.thenAssertEffectiveScheduleExists(ts.givenSchedule.Name, handler.ScheduleDailyRandom)
 
 	actualSchedule := &k8upv1alpha1.Schedule{}
 	ts.FetchResource(k8upv1alpha1.GetNamespacedName(ts.givenSchedule), actualSchedule)
@@ -98,6 +98,17 @@ func (ts *ScheduleControllerTestSuite) Test_GivenEffectiveScheduleWithRandomSche
 
 	actualESList := ts.whenListEffectiveSchedules()
 	ts.Assert().Len(actualESList, 0)
+}
+
+func (ts *ScheduleControllerTestSuite) Test_GivenEffectiveScheduleWithRandomSchedules_WhenChangingSchedule_ThenMakeNewEffectiveSchedule() {
+	ts.givenScheduleResource(handler.ScheduleDailyRandom)
+	ts.givenEffectiveScheduleResource(ts.givenSchedule.Name)
+
+	ts.whenReconciling(ts.givenSchedule)
+
+	actualESList := ts.whenListEffectiveSchedules()
+	ts.Assert().Len(actualESList, 1)
+	ts.thenAssertEffectiveScheduleExists(ts.givenSchedule.Name, handler.ScheduleDailyRandom)
 }
 
 func (ts *ScheduleControllerTestSuite) whenReconciling(givenSchedule *k8upv1alpha1.Schedule) {

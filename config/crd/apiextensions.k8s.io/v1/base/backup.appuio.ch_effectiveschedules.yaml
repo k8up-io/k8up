@@ -58,6 +58,9 @@ spec:
               jobType:
                 description: JobType defines to which job type this schedule applies
                 type: string
+              originalSchedule:
+                description: OriginalSchedule is the original user-defined schedule definition in the Schedule object.
+                type: string
               scheduleRefs:
                 description: ScheduleRefs holds a list of schedules for which the generated schedule applies to. The list may omit entries that aren't generated from smart schedules.
                 items:

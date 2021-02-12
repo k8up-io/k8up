@@ -42,6 +42,7 @@ func TestScheduleHandler_findExistingSchedule(t *testing.T) {
 						ScheduleRefs: []k8upv1alpha1.ScheduleRef{
 							{Name: "schedule", Namespace: "default"},
 						},
+						OriginalSchedule: ScheduleDailyRandom,
 					},
 				},
 			},
@@ -61,7 +62,7 @@ func TestScheduleHandler_findExistingSchedule(t *testing.T) {
 				Config:             job.Config{Log: zap.New(zap.UseDevMode(true))},
 				effectiveSchedules: tt.givenEffectiveSchedules,
 			}
-			schedule, found := s.findExistingSchedule(tt.givenJobType)
+			schedule, found := s.findExistingSchedule(tt.givenJobType, ScheduleDailyRandom)
 
 			assert.Equal(t, tt.expectedSchedule, schedule)
 			assert.Equal(t, tt.expectFind, found)
