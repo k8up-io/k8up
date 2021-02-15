@@ -118,18 +118,22 @@ func (ts *ScheduleControllerTestSuite) Test_GivenJobsWithSameScheduleAndBackend_
 
 	ts.whenReconciling(firstSchedule)
 	ts.whenReconciling(secondSchedule)
+	ts.whenReconciling(firstSchedule) // reconcile again to make sure it doesn't deduplicate itself.
 
 	actualESList := ts.whenListEffectiveSchedules()
 	ts.Assert().Len(actualESList, 1)
 	ts.Assert().Len(actualESList[0].Spec.ScheduleRefs, 2)
-	ts.Assert().Contains(actualESList[0].Spec.ScheduleRefs, k8upv1alpha1.ScheduleRef{
+	actualESSpec := actualESList[0].Spec
+	ts.Assert().Contains(actualESSpec.ScheduleRefs, k8upv1alpha1.ScheduleRef{
 		Name:      "first",
 		Namespace: ts.NS,
 	})
-	ts.Assert().Contains(actualESList[0].Spec.ScheduleRefs, k8upv1alpha1.ScheduleRef{
+	ts.Assert().Contains(actualESSpec.ScheduleRefs, k8upv1alpha1.ScheduleRef{
 		Name:      "second",
 		Namespace: ts.NS,
 	})
+	ts.Assert().True(scheduler.GetScheduler().HasSchedule(k8upv1alpha1.GetNamespacedName(firstSchedule), actualESSpec.GeneratedSchedule, k8upv1alpha1.CheckType))
+	ts.Assert().False(scheduler.GetScheduler().HasSchedule(k8upv1alpha1.GetNamespacedName(secondSchedule), actualESSpec.GeneratedSchedule, k8upv1alpha1.CheckType))
 }
 
 func (ts *ScheduleControllerTestSuite) Test_GivenJobsWithSameScheduleAndBackend_WhenRemovingDeduplicatedSchedule_ThenRemoveFromEffectiveSchedule() {

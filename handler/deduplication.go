@@ -19,12 +19,13 @@ type deduplicationContext struct {
 func (s *ScheduleHandler) tryDeduplicateJob(ctx *deduplicationContext) bool {
 
 	if s.isDeduplicated(ctx) {
+		// Some other job is already scheduled
 		return true
 	}
 
 	list, err := s.fetchEffectiveSchedules()
 	if err != nil {
-		s.Log.V(1).Info("ignoring job for deduplication", "job", ctx.jobType)
+		s.Log.Info("ignoring job for deduplication", "job", ctx.jobType, "error", err.Error())
 		return false
 	}
 
@@ -45,7 +46,6 @@ func (s *ScheduleHandler) tryDeduplicateJob(ctx *deduplicationContext) bool {
 func (s *ScheduleHandler) fetchEffectiveSchedules() ([]k8upv1alpha1.EffectiveSchedule, error) {
 	list := &k8upv1alpha1.EffectiveScheduleList{}
 	if err := s.Client.List(s.CTX, list, client.InNamespace(cfg.Config.OperatorNamespace)); err != nil {
-		s.Log.Error(err, "could not EffectiveSchedules")
 		return []k8upv1alpha1.EffectiveSchedule{}, err
 	}
 	s.Log.V(1).Info("fetched EffectiveSchedules", "count", len(list.Items))
@@ -58,7 +58,6 @@ func (s *ScheduleHandler) fetchEffectiveSchedules() ([]k8upv1alpha1.EffectiveSch
 func (s *ScheduleHandler) searchExistingSchedulesForDeduplication(esList []k8upv1alpha1.EffectiveSchedule, ctx *deduplicationContext) (k8upv1alpha1.EffectiveSchedule, bool) {
 	for _, es := range esList {
 		if es.IsSameType(ctx.jobType, ctx.backendString, ctx.originalSchedule) {
-			s.Log.Info("deduplicated schedule", "type", ctx.jobType, "backend", ctx.backendString)
 			return es, true
 		}
 	}
@@ -77,6 +76,17 @@ func (s *ScheduleHandler) isDeduplicated(ctx *deduplicationContext) bool {
 			if s.schedule.IsReferencedBy(ref) && es.IsSameType(ctx.jobType, ctx.backendString, ctx.originalSchedule) {
 				return true
 			}
+		}
+	}
+	return false
+}
+
+// isFirstSchedule returns true if the first ScheduleRef from the pre-fetched EffectiveSchedule matches the given parameters.
+// Returns false if there are no ScheduleRefs.
+func (s *ScheduleHandler) isFirstSchedule(ctx *deduplicationContext) bool {
+	for _, es := range s.effectiveSchedules {
+		if len(es.Spec.ScheduleRefs) > 0 && s.schedule.IsReferencedBy(es.Spec.ScheduleRefs[0]) && es.IsSameType(ctx.jobType, ctx.backendString, ctx.originalSchedule) {
+			return true
 		}
 	}
 	return false

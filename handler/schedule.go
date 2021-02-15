@@ -95,8 +95,8 @@ func (s *ScheduleHandler) createJobList() scheduler.JobList {
 		}
 		if jobCopy.GetSchedule().IsRandom() {
 			if jobCopy.IsDeduplicationSupported() {
-				if s.tryDeduplicateJob(dctx) {
-					s.Log.V(1).Info("job is being deduplicated, ignoring it.", "job", jobType, "backend", backendString)
+				if s.tryDeduplicateJob(dctx) && !s.isFirstSchedule(dctx) {
+					s.Log.Info("job deduplicated", "job", jobType, "backend", backendString, "schedule", dctx.originalSchedule)
 					continue
 				}
 			} else {

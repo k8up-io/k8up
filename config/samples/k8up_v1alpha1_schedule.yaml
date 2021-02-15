@@ -2,7 +2,7 @@
 apiVersion: backup.appuio.ch/v1alpha1
 kind: Schedule
 metadata:
-  name: schedule-test
+  name: schedule-deduplication
 spec:
   resourceRequirementsTemplate:
     requests:
