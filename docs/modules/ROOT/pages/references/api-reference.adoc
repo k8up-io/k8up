@@ -809,7 +809,7 @@ ScheduleCommon contains fields every schedule needs
 [id="{anchor_prefix}-github-com-vshn-k8up-api-v1alpha1-scheduledefinition"]
 === ScheduleDefinition (string) 
 
-
+ScheduleDefinition is the actual cron-type expression that defines the interval of the actions.
 
 .Appears In:
 ****
