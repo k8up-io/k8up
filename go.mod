@@ -3,7 +3,7 @@ module github.com/vshn/k8up
 go 1.15
 
 require (
-	github.com/elastic/crd-ref-docs v0.0.6
+	github.com/elastic/crd-ref-docs v0.0.7
 	github.com/go-logr/logr v0.4.0
 	github.com/go-logr/zapr v0.4.0
 	github.com/imdario/mergo v0.3.11
