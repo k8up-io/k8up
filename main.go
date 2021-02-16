@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"strings"
 
@@ -136,19 +137,19 @@ func loadEnvironmentVariables() {
 	prefix := "BACKUP_"
 	// Load environment variables
 	err := koanfInstance.Load(env.Provider(prefix, ".", func(s string) string {
-		s = strings.TrimLeft(s, prefix)
+		s = strings.TrimPrefix(s, prefix)
 		s = strings.Replace(strings.ToLower(s), "_", "-", -1)
 		return s
 	}), nil)
 	if err != nil {
-		setupLog.Error(err, "could not load environment variables")
+		_, _ = fmt.Fprintf(os.Stderr, "could not load environment variables: %v\n", err)
 	}
 
 	if err := koanfInstance.UnmarshalWithConf("", &cfg.Config, koanf.UnmarshalConf{Tag: "koanf", FlatPaths: true}); err != nil {
-		setupLog.Error(err, "could not merge defaults with settings from environment variables")
+		_, _ = fmt.Fprintf(os.Stderr, "could not merge defaults with settings from environment variables: %v\n", err)
 	}
 	if err := cfg.Config.ValidateSyntax(); err != nil {
-		setupLog.Error(err, "settings invalid")
+		_, _ = fmt.Fprintf(os.Stderr, "settings invalid: %v\n", err)
 		os.Exit(2)
 	}
 }
