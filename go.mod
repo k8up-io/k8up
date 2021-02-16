@@ -3,6 +3,7 @@ module github.com/vshn/k8up
 go 1.15
 
 require (
+    // When updating crd-ref-docs, verify that there were no changes from Elastic to hostile licenses.
 	github.com/elastic/crd-ref-docs v0.0.7
 	github.com/go-logr/logr v0.4.0
 	github.com/go-logr/zapr v0.4.0
