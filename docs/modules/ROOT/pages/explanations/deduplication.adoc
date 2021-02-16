@@ -1,0 +1,44 @@
+= Deduplication
+
+Deduplication is the removal of jobs that match certain criteria in order to optimze backups and cleanups.
+
+To benefit from deduplication, following criteria must match:
+
+. Same backend
+. Same randomized schedule
+. Same type of job
+
+A backend is considered the same when the restic repository string is equal.
+For example, jobs that share the same S3 backend, but use different credentials, the string would still be `s3:https://endpoint/bucket`.
+
+A randomized schedule is considered equal when the exact same schedule is used , e.g. `@daily-random`.
+`@hourly-random` and `@daily-random` are not.
+
+The job type has to be the same too.
+Only `Check` and `Prune` are supported for deduplication.
+
+[NOTE]
+====
+* The jobs have to be specified in a `Schedule`.
+  `Check` or `Prune` objects created manually do not get deduplicated.
+* Deduplication works across multiple namespaces.
+* When the cron schedule or the backend of one of the `Schedule` gets changed, the deduplication is removed and both jobs run separately again.
+====
+
+.Example of deduplication
+[example]
+====
+
+[source,yaml]
+----
+include::example$explanation/deduplication.yaml[]
+----
+
+K8up will then maintain 1 `EffectiveSchedule` with references to both `Schedules`, since they match the deduplication criteria.
+The first reference in the `ScheduleRef` spec is the one that will be triggered from the scheduler, every other element will be ignored.
+
+image::explanation/deduplication.svg[]
+
+As can be seen in the diagram, the `Check` job in `app2-backup-schedule` has been deduplicated and will not be running.
+The example `Check` job now runs once every day at 04:43 AM.
+====

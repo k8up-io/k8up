@@ -1,4 +1,5 @@
 * xref:k8up:ROOT:explanations/architecture.adoc[Architecture]
+* xref:k8up:ROOT:explanations/deduplication.adoc[Deduplication]
 * xref:k8up:ROOT:explanations/ide.adoc[IDE Integration]
 * xref:k8up:ROOT:explanations/missing-docs.adoc[Missing Documentation]
 * xref:k8up:ROOT:explanations/supported-k8s-versions.adoc[Supported Kubernetes Versions]

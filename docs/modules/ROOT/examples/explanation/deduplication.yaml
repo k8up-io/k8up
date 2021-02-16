@@ -1,0 +1,26 @@
+---
+apiVersion: backup.appuio.ch/v1alpha1
+kind: Schedule
+metadata:
+  name: app1-backup-schedule
+  namespace: app1
+spec:
+  backend:
+    s3:
+      endpoint: https://same-endpoint
+      bucket: same-bucket
+  check:
+    schedule: '@daily-random'
+---
+apiVersion: backup.appuio.ch/v1alpha1
+kind: Schedule
+metadata:
+  name: app2-backup-schedule
+  namespace: app2
+spec:
+  backend:
+    s3:
+      endpoint: https://same-endpoint
+      bucket: same-bucket
+  check:
+    schedule: '@daily-random'

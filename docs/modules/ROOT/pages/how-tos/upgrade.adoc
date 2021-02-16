@@ -61,3 +61,13 @@ kubectl -n ${ns} logs -l "app.kubernetes.io/name=k8up"
 # Trigger a new backup by creating a new Backup object
 kubectl create -f <your-backup-file-spec>
 ----
+
+== Upgrade K8up from 1.0 to 1.1
+
+K8up v1.0 introduced  xref:references/schdule-specification.adoc[new special randomized Schedules] and their counterpart, the `EffectiveSchedule` CRD in which randomized schedules are persisted.
+
+v1.1 extends this functionality with Deduplication using `EffectiveSchedules`.
+However, `Schedules` using randomized cron schedules may not benefit from this deduplication prior to v1.1.
+
+To activate deduplication for those `Schedules`, delete all affected `EffectiveSchedules` in the cluster and restart K8up.
+This will generate new `EffectiveSchedules` objects, but with deduplication if the jobs match the deduplication criteria.

@@ -1,230 +1,140 @@
-<svg host="65bd71144e" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="701px" height="354px" viewBox="-0.5 -0.5 701 354" content="&lt;mxfile host=&quot;423265b3-1171-4e7c-b1b7-043b5e3b6efd&quot; modified=&quot;2021-02-11T16:29:04.727Z&quot; agent=&quot;5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Code/1.52.1 Chrome/83.0.4103.122 Electron/9.3.5 Safari/537.36&quot; version=&quot;14.2.4&quot; etag=&quot;5sMKL2QLfr_2lE7QrP1S&quot; type=&quot;embed&quot;&gt;&lt;diagram id=&quot;CtDX-dEXq_ZpgeeJlkNN&quot; name=&quot;Page-1&quot;&gt;7ZvRbuI4FIafhpuVtkriEOjlQNvdi452NKy0O5duYhJvTYwcM8A8/R4nNkkwMCnQFGmMaBWf2I7tz8l/fBwGaLrY/CHwMvvME8IGgZdsBuhhEATjKIL/yrCtDJGvDamgSWXya8OM/iDa6GnriiakaGWUnDNJl21jzPOcxLJlw0LwdTvbnLP2VZc4JZZhFmNmW/+hicx0t4Zebf+T0DQzV/Y9fWaBTWZtKDKc8HXDhB4HaCo4l9XRYjMlTI2dGZeq3NORs7uGCZLLLgWCqsB3zFa6b7M4I8kKehp4urZCbk3HizVdMJxDajLnuZzpMx6k44yy5Blv+UpduJA4fjWpScYF/QH5MYNTPhjgtJCaaxCp2ihjU864AEPOywvUhWaqMn0ZQQoo9sV00N8zfcabVsZnXEjTQM4YXhb0pWyyKrjAIqX5hEvJFzqTHg4iJNkcHVJ/BwomOOELIsUWspjZrdFud/Cr9LqeKX6obVlzlnihnqF6dqa7qmuAcKAZHuaJLJ7TjMDg7YOE7smSg+CvZG/gD7DAjKY5JBmZq2JqfCjcDp+0WfKlqmyJY5qnz2Weh7C2fNWdVCYOZeesnPIZTRKSK1RcYolfdlNpyWkuy0EYTuALYzX17oaDITR8Cmm/TsNXZRdyynPoC6YlIgLQ10SB78YzOMxTAwyibvxMvkvwhRa+QehlfCXY9neB8wTmqSN5Nslh0B/JoUWyQAP0ieRJOSZw+LKKX4l0PM/nORr3xzM6JZSBE8ozhBIFH6mUIwvoBAZvtXQ35Cmi0c1I5fiQVCaYOqW8Asg+lfLeKeW78+xTKc1T/LBUIieVZ0jlcPSRUun7FlG3qvw5Ue8w0g/QSt8O87h15RVZ9imXvh3icXp5daJ9CqaJFTRQkSQlRgg1DsFXeUISPVzQ/YynPMfsmSsQpfb8R6TcagXEK8mV4MmF0UeyofJfVRyGsUp905Wp44dNM7FtSZdqzWnhgsbDwyQ2ubTmgCCn5PRKXhCGJf3erv6i28MOoT3OIH1YsJzv8XPfw99bpiPU1fcwGS/iaQfS/t4uyVGi7iHXBBvejgtiB9D+EhSmK1a52t5I7NyRi7j26o7YcbSU5ERgCVoVeCF4K95v7T9H9myyva7j7QibczSvTnS3QO/F0wx79TTN8beW13lVTzM64GkeCYV1djV10S/lJK93K1BwF429URCM7/1hFKFhyysKotHdfeMzbtdfNVBXuQds18ZuDG0h/UrmhXNtz3Btg/s2RDTq6NqOxsenT+eb0VbOk+/euKdqc2P4djaiDuxEnYx3/yoc1VPH9GUQoKcnDz5X4tunh4v6Fc23hGdOD/FbxdTsxDXF9FIt7XwT2buALmxzkbaFe+8hIr/j2uEqYRtThwvbnCNu9zcjbsje+nNhm3fi2quoBRZXF7Z5N7J9hm2Q2x/sgWivYRtk74G4Jf+ZblEU7rlFXZf85ul8Ecg3vkXs7sgG1+ouuA2vaGyhupU46nWXhMb9ay4Jj3G4dE0Iyfp3b1VgtP7xIHr8Hw==&lt;/diagram&gt;&lt;/mxfile&gt;">
+<svg host="65bd71144e" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="472px" height="338px" viewBox="-0.5 -0.5 472 338" content="&lt;mxfile host=&quot;423265b3-1171-4e7c-b1b7-043b5e3b6efd&quot; modified=&quot;2021-02-18T09:18:01.018Z&quot; agent=&quot;5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Code/1.52.1 Chrome/83.0.4103.122 Electron/9.3.5 Safari/537.36&quot; etag=&quot;NkaVrBXqtC5hY1yXRjEi&quot; version=&quot;14.2.4&quot; type=&quot;embed&quot;&gt;&lt;diagram id=&quot;CtDX-dEXq_ZpgeeJlkNN&quot; name=&quot;Page-1&quot;&gt;7Zptb6M4EIB/TbTSSa3AQJJ+bNOX+9DVrTYn3e5HFxzw1tjImCbsr78x2CHEyTXXpOlKS5SqzODXecb2DGQUzPLVg8RF9lkkhI2Ql6xGwe0IId8LJ/BPa+pWMwnDVpFKmphCnWJOfxJb02grmpCyV1AJwRQt+spYcE5i1dNhKcWyX2whWL/XAqfEUcxjzFztPzRRWaudRl6n/5PQNLM9+565k2Nb2CjKDCdiuaEK7kbBTAqh2qt8NSNMG8/apa13v+fuemCScHVIBdRWeMGsMnPDReFfPOH4uSouyjgjSQWzbseqamuAcklzhjlINwvB1dzc8UCOM8qSR1yLSg+gVNCSlW4yIelPKI8Z3PJBAbelMnzRWLdGGZsJJiQouGg66CrNdWOmG0lKqPbFTtTfUn3Gq17BR1wqO0DBGC5K+tQMWVfMsUwpvxFKidwUcu1oTPtCpCKrDZWx6wMROVGyhiKrvrPWfXHZOQwKjC7bdBbPrAVsnDRdt9xxhAuDcjfWwMH6d13A1TUoZxkBK24ThUmpBogUz2SLwA4omNGUg8jIQlfTVqGwPq6NWolCN1bgmPL0sSlzG3aar2a6WiWg7oI1ayCjSUK4ZiYUVvhp7VOFoFw15ohu4AtWm3mX0SiCgc9A9jsZvrq4VDPBYS6YNvgI0F8S7QE7wKKDwRqS4KgHkbTljgEZOiDndk02MEehl2DK6guJeQLeO2B9M9YInQ9r5GAtAwCaKaVPsGvdDrovcU4uCE8aM1n5qYqfiRo4v53zZHo+zhb0BimSQChhRENDioonJDHWgtlnIhUcs0ehOTRH1A+iVG0OSlwpoc9FldtjlKyo+qargxVb6btpTF/frjaF+rUTrhSVjEnfBnBMp6RvcD2P/zS3JAwr+tIPmY4xpu9uhneLBcR30Ml8iFROFqmsDf1qqGKVR1F198IhVtm32a2XwC8ZrPhjB+VfkoLD6lU0RCunBXvOcMWfOGAfCCcSK31qabKfQkg5dObi/WH/Pg14j8B7zijFnw7h6MeRXif8ZwlIw7MGpPb6ey84PSIg9XcFpONTR6Sm6pfW022YhMbocjz1JghNr/xoPA6iXtjkjyeXVxufyaTfQTtk0+YWsfUgD3soEDgQPzCF2DL7m3KK4OpIYgf7vxui2NThK1mUjl2H9OH19AFNt/KH0H3U6Yc7NjR7xh0F1A1NDnqC/fueUOslcEwOsZPnSQ4oNxYBnmjgaXjqXcjOZYSC+3sPPifivCOleDfO7Y7//zn/JhuyA23HHr1/Q44+8NWTdZjhec6evfgVtPtCoY94+eQ7KIe3T+8F9pzPc0LkgB0S/rORfsdHOyB2vx1pM8vuFzjB3b8=&lt;/diagram&gt;&lt;/mxfile&gt;">
     <defs>
-        <clipPath id="mx-clip-4-31-132-26-0">
-            <rect x="4" y="31" width="132" height="26"/>
+        <clipPath id="mx-clip-4-31-222-26-0">
+            <rect x="4" y="31" width="222" height="26"/>
         </clipPath>
-        <clipPath id="mx-clip-4-57-132-26-0">
-            <rect x="4" y="57" width="132" height="26"/>
+        <clipPath id="mx-clip-4-57-222-26-0">
+            <rect x="4" y="57" width="222" height="26"/>
         </clipPath>
-        <clipPath id="mx-clip-4-83-132-26-0">
-            <rect x="4" y="83" width="132" height="26"/>
+        <clipPath id="mx-clip-4-83-222-26-0">
+            <rect x="4" y="83" width="222" height="26"/>
         </clipPath>
-        <clipPath id="mx-clip-244-31-132-26-0">
-            <rect x="244" y="31" width="132" height="26"/>
+        <clipPath id="mx-clip-4-235-222-26-0">
+            <rect x="4" y="235" width="222" height="26"/>
         </clipPath>
-        <clipPath id="mx-clip-244-57-132-26-0">
-            <rect x="244" y="57" width="132" height="26"/>
+        <clipPath id="mx-clip-4-261-222-26-0">
+            <rect x="4" y="261" width="222" height="26"/>
         </clipPath>
-        <clipPath id="mx-clip-244-83-132-26-0">
-            <rect x="244" y="83" width="132" height="26"/>
+        <clipPath id="mx-clip-4-287-222-26-0">
+            <rect x="4" y="287" width="222" height="26"/>
         </clipPath>
-        <clipPath id="mx-clip-494-31-132-26-0">
-            <rect x="494" y="31" width="132" height="26"/>
+        <clipPath id="mx-clip-4-313-222-26-0">
+            <rect x="4" y="313" width="222" height="26"/>
         </clipPath>
-        <clipPath id="mx-clip-494-57-132-26-0">
-            <rect x="494" y="57" width="132" height="26"/>
+        <clipPath id="mx-clip-274-261-132-26-0">
+            <rect x="274" y="261" width="132" height="26"/>
         </clipPath>
-        <clipPath id="mx-clip-494-83-132-26-0">
-            <rect x="494" y="83" width="132" height="26"/>
+        <clipPath id="mx-clip-274-287-132-26-0">
+            <rect x="274" y="287" width="132" height="26"/>
         </clipPath>
-        <clipPath id="mx-clip-44-251-132-26-0">
-            <rect x="44" y="251" width="132" height="26"/>
+        <clipPath id="mx-clip-244-31-222-26-0">
+            <rect x="244" y="31" width="222" height="26"/>
         </clipPath>
-        <clipPath id="mx-clip-44-277-132-26-0">
-            <rect x="44" y="277" width="132" height="26"/>
+        <clipPath id="mx-clip-244-57-222-26-0">
+            <rect x="244" y="57" width="222" height="26"/>
         </clipPath>
-        <clipPath id="mx-clip-44-303-132-26-0">
-            <rect x="44" y="303" width="132" height="26"/>
-        </clipPath>
-        <clipPath id="mx-clip-44-329-132-26-0">
-            <rect x="44" y="329" width="132" height="26"/>
-        </clipPath>
-        <clipPath id="mx-clip-219-291-132-26-0">
-            <rect x="219" y="291" width="132" height="26"/>
-        </clipPath>
-        <clipPath id="mx-clip-219-317-132-26-0">
-            <rect x="219" y="317" width="132" height="26"/>
-        </clipPath>
-        <clipPath id="mx-clip-404-239-132-26-0">
-            <rect x="404" y="239" width="132" height="26"/>
-        </clipPath>
-        <clipPath id="mx-clip-404-265-132-26-0">
-            <rect x="404" y="265" width="132" height="26"/>
-        </clipPath>
-        <clipPath id="mx-clip-404-291-132-26-0">
-            <rect x="404" y="291" width="132" height="26"/>
-        </clipPath>
-        <clipPath id="mx-clip-404-317-132-26-0">
-            <rect x="404" y="317" width="132" height="26"/>
-        </clipPath>
-        <clipPath id="mx-clip-564-291-132-26-0">
-            <rect x="564" y="291" width="132" height="26"/>
+        <clipPath id="mx-clip-244-83-222-26-0">
+            <rect x="244" y="83" width="222" height="26"/>
         </clipPath>
     </defs>
     <g>
-        <path d="M 0 26 L 0 0 L 140 0 L 140 26" fill="none" stroke="#000000" stroke-miterlimit="10" pointer-events="all"/>
-        <path d="M 0 26 L 0 104 L 140 104 L 140 26" fill="none" stroke="#000000" stroke-miterlimit="10" pointer-events="none"/>
-        <path d="M 0 26 L 140 26" fill="none" stroke="#000000" stroke-miterlimit="10" pointer-events="none"/>
+        <path d="M 0 26 L 0 0 L 230 0 L 230 26" fill="none" stroke="#000000" stroke-miterlimit="10" pointer-events="all"/>
+        <path d="M 0 26 L 0 104 L 230 104 L 230 26" fill="none" stroke="#000000" stroke-miterlimit="10" pointer-events="none"/>
+        <path d="M 0 26 L 230 26" fill="none" stroke="#000000" stroke-miterlimit="10" pointer-events="none"/>
         <g fill="#000000" font-family="Helvetica" pointer-events="none" text-anchor="middle" font-size="12px">
-            <text x="69.5" y="17.5">
-                Schedule 1
+            <text x="114.5" y="17.5">
+                app1-backup-schedule
             </text>
         </g>
-        <g fill="#000000" font-family="Helvetica" pointer-events="none" clip-path="url(#mx-clip-4-31-132-26-0)" font-size="12px">
+        <g fill="#000000" font-family="Helvetica" pointer-events="none" clip-path="url(#mx-clip-4-31-222-26-0)" font-size="12px">
             <text x="5.5" y="43.5">
-                Check
+                Type: Check
             </text>
         </g>
-        <g fill="#000000" font-family="Helvetica" pointer-events="none" clip-path="url(#mx-clip-4-57-132-26-0)" font-size="12px">
+        <g fill="#000000" font-family="Helvetica" pointer-events="none" clip-path="url(#mx-clip-4-57-222-26-0)" font-size="12px">
             <text x="5.5" y="69.5">
-                @hourly-random
+                Schedule: @daily-random
             </text>
         </g>
-        <g fill="#000000" font-family="Helvetica" pointer-events="none" clip-path="url(#mx-clip-4-83-132-26-0)" font-size="12px">
+        <g fill="#000000" font-family="Helvetica" pointer-events="none" clip-path="url(#mx-clip-4-83-222-26-0)" font-size="12px">
             <text x="5.5" y="95.5">
-                s3:endpoint:bucket
+                s3:https://same-endpoint/same-bucket
             </text>
         </g>
-        <path d="M 240 26 L 240 0 L 380 0 L 380 26" fill="none" stroke="#000000" stroke-miterlimit="10" pointer-events="none"/>
-        <path d="M 240 26 L 240 104 L 380 104 L 380 26" fill="none" stroke="#000000" stroke-miterlimit="10" pointer-events="none"/>
-        <path d="M 240 26 L 380 26" fill="none" stroke="#000000" stroke-miterlimit="10" pointer-events="none"/>
+        <path d="M 340 230 L 185.72 107.95" fill="none" stroke="#000000" stroke-miterlimit="10" pointer-events="none"/>
+        <path d="M 181.61 104.69 L 189.27 106.29 L 185.72 107.95 L 184.93 111.78 Z" fill="#000000" stroke="#000000" stroke-miterlimit="10" pointer-events="none"/>
+        <path d="M 0 230 L 0 204 L 230 204 L 230 230" fill="none" stroke="#000000" stroke-miterlimit="10" pointer-events="none"/>
+        <path d="M 0 230 L 0 334 L 230 334 L 230 230" fill="none" stroke="#000000" stroke-miterlimit="10" pointer-events="none"/>
+        <path d="M 0 230 L 230 230" fill="none" stroke="#000000" stroke-miterlimit="10" pointer-events="none"/>
         <g fill="#000000" font-family="Helvetica" pointer-events="none" text-anchor="middle" font-size="12px">
-            <text x="309.5" y="17.5">
-                Schedule 2
+            <text x="114.5" y="221.5">
+                EffectiveSchedule
             </text>
         </g>
-        <g fill="#000000" font-family="Helvetica" pointer-events="none" clip-path="url(#mx-clip-244-31-132-26-0)" font-size="12px">
+        <g fill="#000000" font-family="Helvetica" pointer-events="none" clip-path="url(#mx-clip-4-235-222-26-0)" font-size="12px">
+            <text x="5.5" y="247.5">
+                Type: Check
+            </text>
+        </g>
+        <g fill="#000000" font-family="Helvetica" pointer-events="none" clip-path="url(#mx-clip-4-261-222-26-0)" font-size="12px">
+            <text x="5.5" y="273.5">
+                Original: @daily-random
+            </text>
+        </g>
+        <g fill="#000000" font-family="Helvetica" pointer-events="none" clip-path="url(#mx-clip-4-287-222-26-0)" font-size="12px">
+            <text x="5.5" y="299.5">
+                Generated: '43 4 * * *'
+            </text>
+        </g>
+        <g fill="#000000" font-family="Helvetica" pointer-events="none" clip-path="url(#mx-clip-4-313-222-26-0)" font-size="12px">
+            <text x="5.5" y="325.5">
+                s3:https://same-endpoint/same-bucket
+            </text>
+        </g>
+        <path d="M 230 269 L 263.63 269" fill="none" stroke="#000000" stroke-miterlimit="10" pointer-events="none"/>
+        <path d="M 268.88 269 L 261.88 272.5 L 263.63 269 L 261.88 265.5 Z" fill="#000000" stroke="#000000" stroke-miterlimit="10" pointer-events="none"/>
+        <path d="M 340 230 L 350.08 110.35" fill="none" stroke="#000000" stroke-miterlimit="10" pointer-events="none"/>
+        <path d="M 350.52 105.11 L 353.42 112.38 L 350.08 110.35 L 346.45 111.8 Z" fill="#000000" stroke="#000000" stroke-miterlimit="10" pointer-events="none"/>
+        <path d="M 270 256 L 270 230 L 410 230 L 410 256" fill="none" stroke="#000000" stroke-miterlimit="10" pointer-events="none"/>
+        <path d="M 270 256 L 270 308 L 410 308 L 410 256" fill="none" stroke="#000000" stroke-miterlimit="10" pointer-events="none"/>
+        <path d="M 270 256 L 410 256" fill="none" stroke="#000000" stroke-miterlimit="10" pointer-events="none"/>
+        <g fill="#000000" font-family="Helvetica" pointer-events="none" text-anchor="middle" font-size="12px">
+            <text x="339.5" y="247.5">
+                ScheduleRefs
+            </text>
+        </g>
+        <g fill="#000000" font-family="Helvetica" pointer-events="none" clip-path="url(#mx-clip-274-261-132-26-0)" font-size="12px">
+            <text x="275.5" y="273.5">
+                app1-backup-schedule
+            </text>
+        </g>
+        <g fill="#FF0000" font-family="Helvetica" pointer-events="none" clip-path="url(#mx-clip-274-287-132-26-0)" font-size="12px">
+            <text x="275.5" y="299.5">
+                app2-backup-schedule
+            </text>
+        </g>
+        <path d="M 240 26 L 240 0 L 470 0 L 470 26" fill="none" stroke="#000000" stroke-miterlimit="10" pointer-events="none"/>
+        <path d="M 240 26 L 240 104 L 470 104 L 470 26" fill="none" stroke="#000000" stroke-miterlimit="10" pointer-events="none"/>
+        <path d="M 240 26 L 470 26" fill="none" stroke="#000000" stroke-miterlimit="10" pointer-events="none"/>
+        <g fill="#000000" font-family="Helvetica" pointer-events="none" text-anchor="middle" font-size="12px">
+            <text x="354.5" y="17.5">
+                app2-backup-schedule
+            </text>
+        </g>
+        <g fill="#000000" font-family="Helvetica" pointer-events="none" clip-path="url(#mx-clip-244-31-222-26-0)" font-size="12px">
             <text x="245.5" y="43.5">
-                Backup
+                Type: Check
             </text>
         </g>
-        <g fill="#000000" font-family="Helvetica" pointer-events="none" clip-path="url(#mx-clip-244-57-132-26-0)" font-size="12px">
+        <g fill="#000000" font-family="Helvetica" pointer-events="none" clip-path="url(#mx-clip-244-57-222-26-0)" font-size="12px">
             <text x="245.5" y="69.5">
-                @daily-random
+                Schedule: @daily-random
             </text>
         </g>
-        <g fill="#000000" font-family="Helvetica" pointer-events="none" clip-path="url(#mx-clip-244-83-132-26-0)" font-size="12px">
+        <g fill="#000000" font-family="Helvetica" pointer-events="none" clip-path="url(#mx-clip-244-83-222-26-0)" font-size="12px">
             <text x="245.5" y="95.5">
-                s3:endpoint:bucket
+                s3:https://same-endpoint/same-bucket
             </text>
         </g>
-        <path d="M 490 26 L 490 0 L 630 0 L 630 26" fill="none" stroke="#000000" stroke-miterlimit="10" pointer-events="none"/>
-        <path d="M 490 26 L 490 104 L 630 104 L 630 26" fill="none" stroke="#000000" stroke-miterlimit="10" pointer-events="none"/>
-        <path d="M 490 26 L 630 26" fill="none" stroke="#000000" stroke-miterlimit="10" pointer-events="none"/>
-        <g fill="#000000" font-family="Helvetica" pointer-events="none" text-anchor="middle" font-size="12px">
-            <text x="559.5" y="17.5">
-                Schedule 3
-            </text>
-        </g>
-        <g fill="#000000" font-family="Helvetica" pointer-events="none" clip-path="url(#mx-clip-494-31-132-26-0)" font-size="12px">
-            <text x="495.5" y="43.5">
-                Check
-            </text>
-        </g>
-        <g fill="#000000" font-family="Helvetica" pointer-events="none" clip-path="url(#mx-clip-494-57-132-26-0)" font-size="12px">
-            <text x="495.5" y="69.5">
-                @hourly-random
-            </text>
-        </g>
-        <g fill="#000000" font-family="Helvetica" pointer-events="none" clip-path="url(#mx-clip-494-83-132-26-0)" font-size="12px">
-            <text x="495.5" y="95.5">
-                s3:endpoint:bucket
-            </text>
-        </g>
-        <path d="M 110 220 L 83.86 110.19" fill="none" stroke="#000000" stroke-miterlimit="10" pointer-events="none"/>
-        <path d="M 82.64 105.09 L 87.67 111.09 L 83.86 110.19 L 80.86 112.71 Z" fill="#000000" stroke="#000000" stroke-miterlimit="10" pointer-events="none"/>
-        <path d="M 40 246 L 40 220 L 180 220 L 180 246" fill="none" stroke="#000000" stroke-miterlimit="10" pointer-events="none"/>
-        <path d="M 40 246 L 40 350 L 180 350 L 180 246" fill="none" stroke="#000000" stroke-miterlimit="10" pointer-events="none"/>
-        <path d="M 40 246 L 180 246" fill="none" stroke="#000000" stroke-miterlimit="10" pointer-events="none"/>
-        <g fill="#000000" font-family="Helvetica" pointer-events="none" text-anchor="middle" font-size="12px">
-            <text x="109.5" y="237.5">
-                ES Check
-            </text>
-        </g>
-        <g fill="#000000" font-family="Helvetica" pointer-events="none" clip-path="url(#mx-clip-44-251-132-26-0)" font-size="12px">
-            <text x="45.5" y="263.5">
-                Type Check
-            </text>
-        </g>
-        <g fill="#000000" font-family="Helvetica" pointer-events="none" clip-path="url(#mx-clip-44-277-132-26-0)" font-size="12px">
-            <text x="45.5" y="289.5">
-                Original @hourly-randcom
-            </text>
-        </g>
-        <g fill="#000000" font-family="Helvetica" pointer-events="none" clip-path="url(#mx-clip-44-303-132-26-0)" font-size="12px">
-            <text x="45.5" y="315.5">
-                generated 43 * * * *
-            </text>
-        </g>
-        <g fill="#000000" font-family="Helvetica" pointer-events="none" clip-path="url(#mx-clip-44-329-132-26-0)" font-size="12px">
-            <text x="45.5" y="341.5">
-                s3:endpoint:bucket
-            </text>
-        </g>
-        <path d="M 180 285 L 208.69 288.83" fill="none" stroke="#000000" stroke-miterlimit="10" pointer-events="none"/>
-        <path d="M 213.89 289.52 L 206.49 292.06 L 208.69 288.83 L 207.42 285.12 Z" fill="#000000" stroke="#000000" stroke-miterlimit="10" pointer-events="none"/>
-        <path d="M 215 286 L 215 260 L 355 260 L 355 286" fill="none" stroke="#000000" stroke-miterlimit="10" pointer-events="none"/>
-        <path d="M 215 286 L 215 338 L 355 338 L 355 286" fill="none" stroke="#000000" stroke-miterlimit="10" pointer-events="none"/>
-        <path d="M 215 286 L 355 286" fill="none" stroke="#000000" stroke-miterlimit="10" pointer-events="none"/>
-        <g fill="#000000" font-family="Helvetica" pointer-events="none" text-anchor="middle" font-size="12px">
-            <text x="284.5" y="277.5">
-                Refs
-            </text>
-        </g>
-        <g fill="#000000" font-family="Helvetica" pointer-events="none" clip-path="url(#mx-clip-219-291-132-26-0)" font-size="12px">
-            <text x="220.5" y="303.5">
-                Schedule 1
-            </text>
-        </g>
-        <g fill="#FF0000" font-family="Helvetica" pointer-events="none" clip-path="url(#mx-clip-219-317-132-26-0)" font-size="12px">
-            <text x="220.5" y="329.5">
-                Schedule 3
-            </text>
-        </g>
-        <path d="M 470 208 L 367.89 108.45" fill="none" stroke="#000000" stroke-miterlimit="10" pointer-events="none"/>
-        <path d="M 364.13 104.78 L 371.59 107.16 L 367.89 108.45 L 366.7 112.17 Z" fill="#000000" stroke="#000000" stroke-miterlimit="10" pointer-events="none"/>
-        <path d="M 400 234 L 400 208 L 540 208 L 540 234" fill="none" stroke="#000000" stroke-miterlimit="10" pointer-events="none"/>
-        <path d="M 400 234 L 400 338 L 540 338 L 540 234" fill="none" stroke="#000000" stroke-miterlimit="10" pointer-events="none"/>
-        <path d="M 400 234 L 540 234" fill="none" stroke="#000000" stroke-miterlimit="10" pointer-events="none"/>
-        <g fill="#000000" font-family="Helvetica" pointer-events="none" text-anchor="middle" font-size="12px">
-            <text x="469.5" y="225.5">
-                ES Check
-            </text>
-        </g>
-        <g fill="#000000" font-family="Helvetica" pointer-events="none" clip-path="url(#mx-clip-404-239-132-26-0)" font-size="12px">
-            <text x="405.5" y="251.5">
-                Type Check
-            </text>
-        </g>
-        <g fill="#000000" font-family="Helvetica" pointer-events="none" clip-path="url(#mx-clip-404-265-132-26-0)" font-size="12px">
-            <text x="405.5" y="277.5">
-                Original @hourly-randcom
-            </text>
-        </g>
-        <g fill="#000000" font-family="Helvetica" pointer-events="none" clip-path="url(#mx-clip-404-291-132-26-0)" font-size="12px">
-            <text x="405.5" y="303.5">
-                generated 43 * * * *
-            </text>
-        </g>
-        <g fill="#000000" font-family="Helvetica" pointer-events="none" clip-path="url(#mx-clip-404-317-132-26-0)" font-size="12px">
-            <text x="405.5" y="329.5">
-                s3:endpoint:bucket
-            </text>
-        </g>
-        <path d="M 560 286 L 560 260 L 700 260 L 700 286" fill="none" stroke="#000000" stroke-miterlimit="10" pointer-events="none"/>
-        <path d="M 560 286 L 560 312 L 700 312 L 700 286" fill="none" stroke="#000000" stroke-miterlimit="10" pointer-events="none"/>
-        <path d="M 560 286 L 700 286" fill="none" stroke="#000000" stroke-miterlimit="10" pointer-events="none"/>
-        <g fill="#000000" font-family="Helvetica" pointer-events="none" text-anchor="middle" font-size="12px">
-            <text x="629.5" y="277.5">
-                Refs
-            </text>
-        </g>
-        <g fill="#000000" font-family="Helvetica" pointer-events="none" clip-path="url(#mx-clip-564-291-132-26-0)" font-size="12px">
-            <text x="565.5" y="303.5">
-                Schedule 2
-            </text>
-        </g>
-        <path d="M 540 273 L 553.7 274.98" fill="none" stroke="#000000" stroke-miterlimit="10" pointer-events="none"/>
-        <path d="M 558.89 275.73 L 551.47 278.19 L 553.7 274.98 L 552.47 271.26 Z" fill="#000000" stroke="#000000" stroke-miterlimit="10" pointer-events="none"/>
     </g>
 </svg>
