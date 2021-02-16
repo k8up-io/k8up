@@ -53,7 +53,11 @@ func (r *CheckReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	return ctrl.Result{RequeueAfter: time.Second * 30}, checkHandler.Handle()
 }
 
-func (r *CheckReconciler) SetupWithManager(mgr ctrl.Manager) error {
+// SetupWithManager configures the reconciler.
+func (r *CheckReconciler) SetupWithManager(mgr ctrl.Manager, l logr.Logger) error {
+	r.Client = mgr.GetClient()
+	r.Scheme = mgr.GetScheme()
+	r.Log = l
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&k8upv1alpha1.Check{}).
 		WithEventFilter(predicate.GenerationChangedPredicate{}).

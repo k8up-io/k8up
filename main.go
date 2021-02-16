@@ -69,61 +69,19 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err = (&controllers.ScheduleReconciler{
-		Client: mgr.GetClient(),
-		Log:    ctrl.Log.WithName("controllers").WithName("Schedule"),
-		Scheme: mgr.GetScheme(),
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "Schedule")
-		os.Exit(1)
-	}
-	if err = (&controllers.BackupReconciler{
-		Client: mgr.GetClient(),
-		Log:    ctrl.Log.WithName("controllers").WithName("Backup"),
-		Scheme: mgr.GetScheme(),
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "Backup")
-		os.Exit(1)
-	}
-	if err = (&controllers.RestoreReconciler{
-		Client: mgr.GetClient(),
-		Log:    ctrl.Log.WithName("controllers").WithName("Restore"),
-		Scheme: mgr.GetScheme(),
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "Restore")
-		os.Exit(1)
-	}
-	if err = (&controllers.ArchiveReconciler{
-		Client: mgr.GetClient(),
-		Log:    ctrl.Log.WithName("controllers").WithName("Archive"),
-		Scheme: mgr.GetScheme(),
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "Archive")
-		os.Exit(1)
-	}
-	if err = (&controllers.CheckReconciler{
-		Client: mgr.GetClient(),
-		Log:    ctrl.Log.WithName("controllers").WithName("Check"),
-		Scheme: mgr.GetScheme(),
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "Check")
-		os.Exit(1)
-	}
-	if err = (&controllers.PruneReconciler{
-		Client: mgr.GetClient(),
-		Log:    ctrl.Log.WithName("controllers").WithName("Prune"),
-		Scheme: mgr.GetScheme(),
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "Prune")
-		os.Exit(1)
-	}
-	if err = (&controllers.JobReconciler{
-		Client: mgr.GetClient(),
-		Log:    ctrl.Log.WithName("controllers").WithName("Job"),
-		Scheme: mgr.GetScheme(),
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "Job")
-		os.Exit(1)
+	for name, reconciler := range map[string]controllers.ReconcilerSetup{
+		"Schedule": &controllers.ScheduleReconciler{},
+		"Backup":   &controllers.BackupReconciler{},
+		"Restore":  &controllers.RestoreReconciler{},
+		"Archive":  &controllers.ArchiveReconciler{},
+		"Check":    &controllers.CheckReconciler{},
+		"Prune":    &controllers.PruneReconciler{},
+		"Job":      &controllers.JobReconciler{},
+	} {
+		if err := reconciler.SetupWithManager(mgr, ctrl.Log.WithName("controllers").WithName(name)); err != nil {
+			setupLog.Error(err, "unable to create controller", "controller", name)
+			os.Exit(1)
+		}
 	}
 	// +kubebuilder:scaffold:builder
 

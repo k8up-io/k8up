@@ -45,7 +45,11 @@ func (r *JobReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.R
 	return ctrl.Result{}, handler.NewJobHandler(config, jobObj).Handle()
 }
 
-func (r *JobReconciler) SetupWithManager(mgr ctrl.Manager) error {
+// SetupWithManager configures the reconciler.
+func (r *JobReconciler) SetupWithManager(mgr ctrl.Manager, l logr.Logger) error {
+	r.Client = mgr.GetClient()
+	r.Scheme = mgr.GetScheme()
+	r.Log = l
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&batchv1.Job{}).
 		Complete(r)
