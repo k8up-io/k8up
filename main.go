@@ -136,7 +136,7 @@ func loadEnvironmentVariables() {
 	prefix := "BACKUP_"
 	// Load environment variables
 	err := koanfInstance.Load(env.Provider(prefix, ".", func(s string) string {
-		s = strings.TrimLeft(s, prefix)
+		s = strings.TrimPrefix(s, prefix)
 		s = strings.Replace(strings.ToLower(s), "_", "-", -1)
 		return s
 	}), nil)
