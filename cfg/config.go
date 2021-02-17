@@ -96,20 +96,25 @@ func NewDefaultConfig() *Configuration {
 }
 
 func (c Configuration) ValidateSyntax() error {
-	if _, err := resource.ParseQuantity(c.GlobalMemoryResourceRequest); err != nil && c.GlobalMemoryResourceRequest != "" {
-		return fmt.Errorf("cannot parse global memory request: %w", err)
-	}
-	if _, err := resource.ParseQuantity(c.GlobalMemoryResourceLimit); err != nil && c.GlobalMemoryResourceLimit != "" {
-		return fmt.Errorf("cannot parse global memory limit: %w", err)
-	}
-	if _, err := resource.ParseQuantity(c.GlobalCPUResourceRequest); err != nil && c.GlobalCPUResourceRequest != "" {
-		return fmt.Errorf("cannot parse global CPU request: %w", err)
-	}
-	if _, err := resource.ParseQuantity(c.GlobalCPUResourceLimit); err != nil && c.GlobalCPUResourceLimit != "" {
-		return fmt.Errorf("cannot parse global CPU limit: %w", err)
+	if err := c.validateQuantities(map[string]string{
+		"memory request": c.GlobalMemoryResourceRequest,
+		"memory limit":   c.GlobalMemoryResourceLimit,
+		"cpu request":    c.GlobalCPUResourceRequest,
+		"cpu limit":      c.GlobalCPUResourceLimit,
+	}); err != nil {
+		return err
 	}
 	if c.OperatorNamespace == "" {
 		return fmt.Errorf("operator namespace cannot be empty")
+	}
+	return nil
+}
+
+func (c Configuration) validateQuantities(q map[string]string) error {
+	for k, v := range q {
+		if _, err := resource.ParseQuantity(v); err != nil && v != "" {
+			return fmt.Errorf("cannot parse global %s: %w", k, err)
+		}
 	}
 	return nil
 }

@@ -61,7 +61,10 @@ func (r *ScheduleReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 }
 
 // SetupWithManager configures the reconciler.
-func (r *ScheduleReconciler) SetupWithManager(mgr ctrl.Manager) error {
+func (r *ScheduleReconciler) SetupWithManager(mgr ctrl.Manager, l logr.Logger) error {
+	r.Client = mgr.GetClient()
+	r.Scheme = mgr.GetScheme()
+	r.Log = l
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&k8upv1alpha1.Schedule{}).
 		WithEventFilter(predicate.GenerationChangedPredicate{}).

@@ -7,10 +7,8 @@ import (
 )
 
 func Test_Configuration_ValidateSyntax(t *testing.T) {
-	type assertConfig = func(t *testing.T, c *Configuration)
 	tests := map[string]struct {
 		givenConfig       *Configuration
-		assertConfig      assertConfig
 		expectErr         bool
 		containErrMessage string
 	}{
@@ -18,6 +16,20 @@ func Test_Configuration_ValidateSyntax(t *testing.T) {
 			givenConfig:       NewDefaultConfig(),
 			expectErr:         true,
 			containErrMessage: "operator namespace",
+		},
+		"GivenConfig_WhenResourceInvalid_ThenExpectError": {
+			givenConfig: NewDefaultConfig().WithOptions(func(c *Configuration) {
+				c.GlobalCPUResourceLimit = "invalid"
+			}),
+			expectErr:         true,
+			containErrMessage: "cpu limit",
+		},
+		"GivenConfig_WhenResourceValid_ThenExpectError": {
+			givenConfig: NewDefaultConfig().WithOptions(func(c *Configuration) {
+				c.GlobalCPUResourceLimit = "20m"
+				c.OperatorNamespace = "something-to-not-trigger-error"
+			}),
+			expectErr: false,
 		},
 	}
 	for name, tt := range tests {
@@ -29,7 +41,6 @@ func Test_Configuration_ValidateSyntax(t *testing.T) {
 				return
 			}
 			assert.NoError(t, err)
-			tt.assertConfig(t, tt.givenConfig)
 		})
 	}
 }
@@ -39,4 +50,9 @@ func Test_Configuration_DefaultConfig(t *testing.T) {
 	err := c.ValidateSyntax()
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "operator namespace")
+}
+
+func (c *Configuration) WithOptions(f func(c *Configuration)) *Configuration {
+	f(c)
+	return c
 }

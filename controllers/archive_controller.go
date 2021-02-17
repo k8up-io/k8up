@@ -51,7 +51,11 @@ func (r *ArchiveReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	return ctrl.Result{RequeueAfter: time.Second * 30}, archiveHandler.Handle()
 }
 
-func (r *ArchiveReconciler) SetupWithManager(mgr ctrl.Manager) error {
+// SetupWithManager configures the reconciler.
+func (r *ArchiveReconciler) SetupWithManager(mgr ctrl.Manager, l logr.Logger) error {
+	r.Client = mgr.GetClient()
+	r.Scheme = mgr.GetScheme()
+	r.Log = l
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&k8upv1alpha1.Archive{}).
 		WithEventFilter(predicate.GenerationChangedPredicate{}).
