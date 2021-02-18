@@ -11,6 +11,7 @@ import (
 	"github.com/vshn/k8up/api/v1alpha1"
 	"github.com/vshn/k8up/job"
 	"github.com/vshn/k8up/observer"
+	"github.com/vshn/k8up/prebackup"
 )
 
 const (
@@ -41,6 +42,8 @@ func (j *JobHandler) Handle() error {
 
 	if _, exists := j.job.GetLabels()[job.K8uplabel]; !exists {
 		return nil
+	} else if _, exists := j.job.GetLabels()[prebackup.PrebackupJobLabel]; exists {
+		return j.handlePreBackup()
 	}
 
 	if j.job.GetDeletionTimestamp() != nil && contains(j.job.GetFinalizers(), jobFinalizerName) {
@@ -87,6 +90,16 @@ func (j *JobHandler) Handle() error {
 		}
 	}
 	observer.GetObserver().GetUpdateChannel() <- oj
+	return nil
+}
+
+func (j *JobHandler) handlePreBackup() error {
+	if j.job.Status.Active > 0 {
+		// TODO: trigger backup
+	} else {
+		// TODO: timeout check and delete owner if necessary
+	}
+	// let's wait for another reconcile then
 	return nil
 }
 

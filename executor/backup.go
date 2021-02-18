@@ -2,6 +2,7 @@ package executor
 
 import (
 	stderrors "errors"
+	"fmt"
 	"path"
 	"strconv"
 
@@ -65,11 +66,7 @@ func (b *BackupExecutor) Execute() error {
 		return err
 	}
 
-	go func() {
-		b.startBackup(genericJob)
-	}()
-
-	return nil
+	return b.startBackup(genericJob)
 }
 
 func (b *BackupExecutor) listPVCs(annotation string) []corev1.Volume {
@@ -140,15 +137,25 @@ func (b *BackupExecutor) containsAccessMode(s []corev1.PersistentVolumeAccessMod
 	return false
 }
 
-func (b *BackupExecutor) startBackup(backupJob *batchv1.Job) {
+func (b *BackupExecutor) startBackup(backupJob *batchv1.Job) error {
+
+	// Check for prebackup pods
+	// if they exist trigger them as jobs.
 	preBackup := prebackup.NewPrebackup(b.Config)
-	err := preBackup.Start()
+	templates, err := preBackup.GetPodTemplates()
 	if err != nil {
-		b.Config.Log.Error(err, "error while handling pre backup pods")
-		return
+		err = fmt.Errorf("error getting the prebackup jobs: %w", err)
+		return err
+	}
+	if len(templates.Items) > 0 {
+		err := preBackup.Start()
+		if err != nil {
+			err = fmt.Errorf("error starting the prebackup jobs: %w", err)
+		}
+		return err
 	}
 
-	b.registerBackupCallback(preBackup)
+	b.registerBackupCallback()
 	b.RegisterJobSucceededConditionCallback()
 
 	volumes := b.listPVCs(cfg.Config.BackupAnnotation)
@@ -160,16 +167,16 @@ func (b *BackupExecutor) startBackup(backupJob *batchv1.Job) {
 
 	err = b.CreateObjectIfNotExisting(backupJob)
 	if err != nil {
-		return
+		return err
 	}
 
 	b.SetStarted("the job '%v/%v' was created", backupJob.Namespace, backupJob.Name)
+	return nil
 }
 
-func (b *BackupExecutor) registerBackupCallback(preBackup *prebackup.PreBackup) {
+func (b *BackupExecutor) registerBackupCallback() {
 	name := b.GetJobNamespacedName()
 	observer.GetObserver().RegisterCallback(name.String(), func(_ observer.ObservableJob) {
-		preBackup.Stop()
 		b.cleanupOldBackups(name)
 	})
 }

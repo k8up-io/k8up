@@ -47,7 +47,7 @@ func TestPreBackup_getPodTemplates(t *testing.T) {
 				},
 			}
 			p.Config.Client = fakeClient
-			list, err := p.getPodTemplates()
+			list, err := p.GetPodTemplates()
 			assert.NoError(t, err)
 			assert.Len(t, list.Items, len(tt.expectPodTemplateNames))
 			for _, template := range list.Items {
