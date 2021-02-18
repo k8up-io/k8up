@@ -5,6 +5,9 @@ metadata:
 spec:
   keepJobs: 4
   backend:
+    repoPasswordSecretRef:
+      name: backup-repo
+      key: password
     s3:
       endpoint: http://10.144.1.224:9000
       bucket: k8up
@@ -15,6 +18,3 @@ spec:
         name: backup-credentials
         key: password
   promURL: http://10.144.1.224:9000
-  repoPasswordSecretRef:
-    name: backup-repo
-    key: password

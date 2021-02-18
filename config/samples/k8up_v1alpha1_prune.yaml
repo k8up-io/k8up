@@ -7,6 +7,9 @@ spec:
     keepLast: 5
     keepDaily: 14
   backend:
+    repoPasswordSecretRef:
+      name: backup-repo
+      key: password
     s3:
       endpoint: http://10.144.1.224:9000
       bucket: k8up
@@ -16,7 +19,3 @@ spec:
       secretAccessKeySecretRef:
         name: backup-credentials
         key: password
-      repoPasswordSecretRef:
-        name: backup-repo
-        key: password
-  promURL: http://10.144.1.224:9000
