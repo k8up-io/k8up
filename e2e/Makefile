@@ -18,7 +18,7 @@ else
 	xargs := xargs
 endif
 
-bats := node_modules/.bin/bats
+bats := node_modules/bats/bin/bats
 bats_args ?=
 
 .DEFAULT_GOAL := help
@@ -27,7 +27,6 @@ bats_args ?=
 test: export KUBECONFIG = $(KIND_KUBECONFIG)
 test: export E2E_IMAGE = $(E2E_IMG)
 test: setup kind-e2e-image ## Run the E2E tests
-	@mkdir -p debug
 	@$(bats) . $(bats_args)
 
 kind-e2e-image: kind-setup ## Load the e2e container image onto e2e cluster

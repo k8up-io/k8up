@@ -25,7 +25,11 @@ $(KIND): $(testbin_created)
 
 $(KIND_KUBECONFIG): export KUBECONFIG = $(KIND_KUBECONFIG)
 $(KIND_KUBECONFIG): $(KIND)
-	$(KIND) create cluster --name $(KIND_CLUSTER) --image kindest/node:$(KIND_NODE_VERSION)
+	@mkdir -p debug/data
+	$(KIND) create cluster \
+		--name $(KIND_CLUSTER) \
+		--image kindest/node:$(KIND_NODE_VERSION) \
+		--config definitions/kind/config.yaml
 	@kubectl version
 	@kubectl cluster-info
 

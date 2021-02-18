@@ -40,7 +40,7 @@ bin/
 dist/
 .github/release-notes.md
 k8up-crd*.yaml
-k8up
+/k8up
 testbin/
 node_modules/
 e2e/debug

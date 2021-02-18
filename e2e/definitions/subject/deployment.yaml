@@ -1,0 +1,29 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: subject-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: subject
+  template:
+    metadata:
+      labels:
+        app: subject
+    spec:
+      containers:
+      - name: subject-container
+        image: quay.io/bitnami/redis:latest
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: REDIS_PASSWORD
+          value: ThePassword
+        volumeMounts:
+        - name: volume
+          mountPath: /bitnami/redis/data
+      volumes:
+      - name: volume
+        persistentVolumeClaim:
+          claimName: subject-pvc

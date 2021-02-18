@@ -1,0 +1,16 @@
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: subject-pvc
+spec:
+  accessModes:
+  - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: hostpath
+  volumeMode: Filesystem
+  selector:
+    matchLabels:
+      pv.kubernetes.io/type: e2e-test
