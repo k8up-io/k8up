@@ -4,8 +4,10 @@ load "lib/linter"
 
 @test "lint assertions" {
 
-	run lint "test1.bats"
-	# echo -e "$output" > /tmp/errors.txt
-	[ "$status" -eq 0 ]
+	for file in test*.bats; do
+		run lint "${file}"
+		# echo -e "$output" > /tmp/errors.txt
+		[ "$status" -eq 0 ]
+	done
 
 }
