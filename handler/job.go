@@ -6,6 +6,7 @@ import (
 
 	batchv1 "k8s.io/api/batch/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
 	"github.com/vshn/k8up/api/v1alpha1"
@@ -96,11 +97,36 @@ func (j *JobHandler) Handle() error {
 func (j *JobHandler) handlePreBackup() error {
 	if j.job.Status.Active > 0 {
 		// TODO: trigger backup
+
+		backup, found := j.findBackup()
+		if !found {
+			return nil
+		}
+
+		backup.Status.Conditions
 	} else {
 		// TODO: timeout check and delete owner if necessary
 	}
 	// let's wait for another reconcile then
 	return nil
+}
+
+func (j *JobHandler) findBackup() (*v1alpha1.Backup, bool) {
+	for _, ref := range j.job.OwnerReferences {
+		backup := &v1alpha1.Backup{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      ref.Name,
+				Namespace: j.job.Namespace,
+			},
+		}
+		err := j.Client.Get(j.CTX, v1alpha1.GetNamespacedName(backup), backup)
+		if err != nil {
+			j.Log.Info("unexpected owner reference", "name", ref.Name, "kind", ref.Kind, "error", err)
+			continue
+		}
+		return backup, true
+	}
+	return nil, false
 }
 
 func contains(list []string, s string) bool {
