@@ -69,8 +69,29 @@ func (c *Check) SetStatus(status Status) {
 	c.Status = status
 }
 
+// GetResources returns the resource requirements
 func (c *Check) GetResources() corev1.ResourceRequirements {
 	return c.Spec.Resources
+}
+
+// GetDeepCopy returns a deep copy
+func (in *CheckSchedule) GetDeepCopy() ScheduleSpecInterface {
+	return in.DeepCopy()
+}
+
+// GetRunnableSpec returns a pointer to RunnableSpec
+func (in *CheckSchedule) GetRunnableSpec() *RunnableSpec {
+	return &in.RunnableSpec
+}
+
+// GetSchedule returns the schedule definition
+func (in *CheckSchedule) GetSchedule() ScheduleDefinition {
+	return in.Schedule
+}
+
+// GetObjectCreator returns the ObjectCreator instance
+func (in *CheckSchedule) GetObjectCreator() ObjectCreator {
+	return in
 }
 
 func (c CheckSpec) CreateObject(name, namespace string) runtime.Object {

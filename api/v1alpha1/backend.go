@@ -44,7 +44,7 @@ func (in *Backend) GetCredentialEnv() map[string]*corev1.EnvVarSource {
 	}
 
 	for _, backend := range in.getSupportedBackends() {
-		if isNil(backend) {
+		if IsNil(backend) {
 			continue
 		}
 		return backend.EnvVars(vars)
@@ -58,7 +58,7 @@ func (in *Backend) GetCredentialEnv() map[string]*corev1.EnvVarSource {
 func (in *Backend) String() string {
 
 	for _, backend := range in.getSupportedBackends() {
-		if isNil(backend) {
+		if IsNil(backend) {
 			continue
 		}
 		return backend.String()
@@ -80,10 +80,10 @@ func (in *Backend) getSupportedBackends() []BackendInterface {
 	return []BackendInterface{in.Azure, in.B2, in.GCS, in.Local, in.Rest, in.S3, in.Swift}
 }
 
-// isNil returns true if the given backend is nil using reflect.
-func isNil(backend BackendInterface) bool {
-	// Unfortunately "backend == nil" doesn't work since Interfaces are tuples containing type and value.
-	return reflect.ValueOf(backend).IsNil()
+// IsNil returns true if the given value is nil using reflect.
+func IsNil(v interface{}) bool {
+	// Unfortunately "v == nil" doesn't work with Interfaces, since they are tuples containing type and value.
+	return v == nil || (reflect.ValueOf(v).Kind() == reflect.Ptr && reflect.ValueOf(v).IsNil())
 }
 
 func addEnvVarFromSecret(vars map[string]*corev1.EnvVarSource, key string, ref *corev1.SecretKeySelector) {

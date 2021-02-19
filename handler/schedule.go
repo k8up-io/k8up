@@ -72,70 +72,25 @@ func (s *ScheduleHandler) createJobList() scheduler.JobList {
 		Jobs:   make([]scheduler.Job, 0),
 	}
 
-	if archive := s.schedule.Spec.Archive; archive != nil {
-		jobTemplate := archive.DeepCopy()
-		s.mergeWithDefaults(&jobTemplate.RunnableSpec)
-		jobType := k8upv1alpha1.ArchiveType
+	for jobType, jb := range map[k8upv1alpha1.JobType]k8upv1alpha1.ScheduleSpecInterface{
+		k8upv1alpha1.PruneType:   s.schedule.Spec.Prune,
+		k8upv1alpha1.BackupType:  s.schedule.Spec.Backup,
+		k8upv1alpha1.CheckType:   s.schedule.Spec.Check,
+		k8upv1alpha1.RestoreType: s.schedule.Spec.Restore,
+		k8upv1alpha1.ArchiveType: s.schedule.Spec.Archive,
+	} {
+		if k8upv1alpha1.IsNil(jb) {
+			s.cleanupEffectiveSchedules(jobType, "")
+			continue
+		}
+		template := jb.GetDeepCopy()
+		s.mergeWithDefaults(template.GetRunnableSpec())
 		jobList.Jobs = append(jobList.Jobs, scheduler.Job{
 			JobType:  jobType,
-			Schedule: s.getEffectiveSchedule(jobType, jobTemplate.Schedule),
-			Object:   jobTemplate.ArchiveSpec,
+			Schedule: s.getEffectiveSchedule(jobType, template.GetSchedule()),
+			Object:   template.GetObjectCreator(),
 		})
-		s.cleanupEffectiveSchedules(jobType, jobTemplate.Schedule)
-	} else {
-		s.cleanupEffectiveSchedules(k8upv1alpha1.ArchiveType, "")
-	}
-	if backup := s.schedule.Spec.Backup; backup != nil {
-		backupTemplate := backup.DeepCopy()
-		s.mergeWithDefaults(&backupTemplate.RunnableSpec)
-		jobType := k8upv1alpha1.BackupType
-		jobList.Jobs = append(jobList.Jobs, scheduler.Job{
-			JobType:  jobType,
-			Schedule: s.getEffectiveSchedule(jobType, backupTemplate.Schedule),
-			Object:   backupTemplate.BackupSpec,
-		})
-		s.cleanupEffectiveSchedules(jobType, backupTemplate.Schedule)
-	} else {
-		s.cleanupEffectiveSchedules(k8upv1alpha1.BackupType, "")
-	}
-	if check := s.schedule.Spec.Check; check != nil {
-		checkTemplate := check.DeepCopy()
-		s.mergeWithDefaults(&checkTemplate.RunnableSpec)
-		jobType := k8upv1alpha1.CheckType
-		jobList.Jobs = append(jobList.Jobs, scheduler.Job{
-			JobType:  jobType,
-			Schedule: s.getEffectiveSchedule(jobType, checkTemplate.Schedule),
-			Object:   checkTemplate.CheckSpec,
-		})
-		s.cleanupEffectiveSchedules(jobType, checkTemplate.Schedule)
-	} else {
-		s.cleanupEffectiveSchedules(k8upv1alpha1.CheckType, "")
-	}
-	if restore := s.schedule.Spec.Restore; restore != nil {
-		restoreTemplate := restore.DeepCopy()
-		s.mergeWithDefaults(&restoreTemplate.RunnableSpec)
-		jobType := k8upv1alpha1.RestoreType
-		jobList.Jobs = append(jobList.Jobs, scheduler.Job{
-			JobType:  jobType,
-			Schedule: s.getEffectiveSchedule(jobType, restoreTemplate.Schedule),
-			Object:   restoreTemplate.RestoreSpec,
-		})
-		s.cleanupEffectiveSchedules(jobType, restoreTemplate.Schedule)
-	} else {
-		s.cleanupEffectiveSchedules(k8upv1alpha1.RestoreType, "")
-	}
-	if prune := s.schedule.Spec.Prune; prune != nil {
-		pruneTemplate := prune.DeepCopy()
-		s.mergeWithDefaults(&pruneTemplate.RunnableSpec)
-		jobType := k8upv1alpha1.PruneType
-		jobList.Jobs = append(jobList.Jobs, scheduler.Job{
-			JobType:  jobType,
-			Schedule: s.getEffectiveSchedule(jobType, pruneTemplate.Schedule),
-			Object:   pruneTemplate.PruneSpec,
-		})
-		s.cleanupEffectiveSchedules(jobType, pruneTemplate.Schedule)
-	} else {
-		s.cleanupEffectiveSchedules(k8upv1alpha1.PruneType, "")
+		s.cleanupEffectiveSchedules(jobType, template.GetSchedule())
 	}
 
 	return jobList

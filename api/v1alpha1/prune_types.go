@@ -56,6 +56,15 @@ type Prune struct {
 	Status Status    `json:"status,omitempty"`
 }
 
+// +kubebuilder:object:root=true
+
+// PruneList contains a list of Prune
+type PruneList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
+	Items           []Prune `json:"items"`
+}
+
 func (p *Prune) GetRuntimeObject() runtime.Object {
 	return p
 }
@@ -78,17 +87,29 @@ func (p *Prune) SetStatus(status Status) {
 	p.Status = status
 }
 
+// GetResources returns the resource requirements
 func (p *Prune) GetResources() corev1.ResourceRequirements {
 	return p.Spec.Resources
 }
 
-// +kubebuilder:object:root=true
+// GetDeepCopy returns a deep copy
+func (in *PruneSchedule) GetDeepCopy() ScheduleSpecInterface {
+	return in.DeepCopy()
+}
 
-// PruneList contains a list of Prune
-type PruneList struct {
-	metav1.TypeMeta `json:",inline"`
-	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []Prune `json:"items"`
+// GetRunnableSpec returns a pointer to RunnableSpec
+func (in *PruneSchedule) GetRunnableSpec() *RunnableSpec {
+	return &in.RunnableSpec
+}
+
+// GetSchedule returns the schedule definition
+func (in *PruneSchedule) GetSchedule() ScheduleDefinition {
+	return in.Schedule
+}
+
+// GetObjectCreator returns the ObjectCreator instance
+func (in *PruneSchedule) GetObjectCreator() ObjectCreator {
+	return in
 }
 
 func init() {
