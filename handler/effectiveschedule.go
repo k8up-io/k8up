@@ -53,6 +53,9 @@ func (s *ScheduleHandler) getOrGenerateEffectiveSchedule(ctx *deduplicationConte
 	if found {
 		ctx.effectiveSchedule = existingSchedule
 		return
+	} else {
+		s.cleanupEffectiveSchedules(ctx.jobType, ctx.originalSchedule)
+		delete(s.effectiveSchedules, ctx.jobType)
 	}
 	generatedSchedule, _ := s.createRandomSchedule(ctx.jobType, ctx.originalSchedule)
 	ctx.effectiveSchedule = generatedSchedule
@@ -64,7 +67,7 @@ func (s *ScheduleHandler) findExistingSchedule(ctx *deduplicationContext) (k8upv
 	es, found := s.effectiveSchedules[ctx.jobType]
 	if found {
 		for _, ref := range es.Spec.ScheduleRefs {
-			if s.schedule.IsReferencedBy(ref) && es.Spec.OriginalSchedule == ctx.originalSchedule {
+			if s.schedule.IsReferencedBy(ref) && es.Spec.OriginalSchedule == ctx.originalSchedule && es.Spec.BackendString == ctx.backendString {
 				s.Log.V(1).Info("using generated schedule",
 					"name", k8upv1alpha1.GetNamespacedName(&es).String(),
 					"schedule", es.Spec.GeneratedSchedule,
