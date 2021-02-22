@@ -1,6 +1,6 @@
 module github.com/vshn/k8up
 
-go 1.15
+go 1.16
 
 require (
 	// When updating crd-ref-docs, verify that there were no changes from Elastic to hostile licenses.

@@ -11,7 +11,7 @@ PROJECT_ROOT_DIR = .
 include Makefile.vars.mk
 
 e2e_make := $(MAKE) -C e2e
-go_build ?= CGO_ENABLED=0 go build -o $(BIN_FILENAME) main.go
+go_build ?= go build -o $(BIN_FILENAME) main.go
 
 # Run tests (see https://sdk.operatorframework.io/docs/building-operators/golang/references/envtest-setup)
 ENVTEST_ASSETS_DIR=$(shell pwd)/testbin
@@ -116,6 +116,7 @@ $(testbin_created):
 
 # Build the binary without running generators
 .PHONY: $(BIN_FILENAME)
+$(BIN_FILENAME): export CGO_ENABLED = 0
 $(BIN_FILENAME):
 	$(go_build)
 
