@@ -25,7 +25,7 @@ type ArchiveReconciler struct {
 }
 
 // +kubebuilder:rbac:groups=backup.appuio.ch,resources=archives,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=backup.appuio.ch,resources=archives/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=backup.appuio.ch,resources=archives/status;archives/finalizers,verbs=get;update;patch
 
 // Reconcile is the entrypoint to manage the given resource.
 func (r *ArchiveReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
