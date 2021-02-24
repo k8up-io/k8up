@@ -16,12 +16,25 @@ K8up is a Kubernetes backup operator based on [Restic](https://restic.readthedoc
 Just create a `schedule` and a `credentials` object in the namespace you’d like to backup.
 It’s that easy. K8up takes care of the rest. It also provides a Prometheus endpoint for monitoring.
 
-# Documentation
+## Documentation
 
-The documentation is written in AsciiDoc and published with Antora to [k8up.io](https://k8up.io/).
-It's source is available in the `docs/` directory.
+The documentation of this project is stored in the `docs` project and is built and deployed to https://k8up.io/[K8up.io] using https://antora.org/[Antora].
 
-# Contributing
+All documentation source files are written in https://asciidoctor.org/[Asciidoc] format, and organized following https://documentation.divio.com/[Divio's documentation structure].
+
+### New Release Process
+
+When releasing a new version of K8up, please follow these steps:
+
+1. Make sure that the documentation describes the changes since the last release.
+2. Update the `docs/antora.yml` file with the same version number that will be used later for the `git tag` command.
+   * The `docs/antora.yml` on `master` must have a `version` key that has the same number as the tag.
+3. The `display_version` entry in `docs/antora.yml` is not mandatory, and must be a human-readable string that shows up in the final website. It can be something like `Version 1.0 BETA final` with spaces and other URL-incompatible characters; as the name suggests, it's used for display purposes only.
+4. The `prerelease` entry in `docs/antora.yml` is not mandatory, and can be used to specify release candidates, alpha or beta versions, as required.
+5. Commit the changes to `docs/antora.yml` and `git tag` to create your new release.
+6. On the `playbook.yml` used to build this project, add the new tag to the `content:sources[0]:tags` array every time there's a new release. The `content:sources[0]:branches` key must be `~` so that the default branch is not built as well, which is the default behavior in Antora.
+
+## Contributing
 
 K8up is written using the [Operator SDK](https://sdk.operatorframework.io/docs).
 
@@ -37,7 +50,7 @@ You'll need:
 These are the most common make targets: `build`, `test`, `docker-build`, `run`, `kind-run`.
 Run `make help` to get an overview over the relevant targets and their intentions.
 
-## Generate Kubernetes code
+### Generate Kubernetes code
 
 If you make changes to the CRD structs you'll need to run code generation.
 This can be done with make:
@@ -46,14 +59,14 @@ This can be done with make:
 make generate
 ```
 
-## Install CRDs
+### Install CRDs
 
 CRDs can be either installed on the cluster by running `make install` or using `kubectl apply -k config/crd/apiextensions.k8s.io/v1`.
 
 Currently there's an issue using [`make install`](https://github.com/kubernetes-sigs/kubebuilder/issues/1544) related to how the CRDs are specified.
 Therefore settle to the second approach for now.
 
-## Run the operator
+### Run the operator
 
 You can run the operator in different ways:
 
@@ -64,7 +77,7 @@ You can run the operator in different ways:
 
 Best is if you have [minio](https://min.io/download) installed somewhere to be able to setup the needed env values. It needs to be reachable from within your dev cluster.
 
-## Run E2E tests
+### Run E2E tests
 
 K8up supports both OpenShift 3.11 clusters and newer Kubernetes clusters 1.16+.
 However, to support OpenShift 3.11 a legacy CRD definition with `apiextensions.k8s.io/v1beta1` is needed, while K8s 1.22+ only supports `apiextensions.k8s.io/v1`.
@@ -88,7 +101,7 @@ To remove the local KIND cluster and other resources, run
 make clean
 ```
 
-## Example configurations
+### Example configurations
 
 There are a number of example configurations in [`config/samples`](config/samples).
 Apply them using `kubectl apply -f config/samples/somesample.yaml`
