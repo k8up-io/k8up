@@ -26,7 +26,7 @@ type ScheduleReconciler struct {
 }
 
 // +kubebuilder:rbac:groups=backup.appuio.ch,resources=schedules,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=backup.appuio.ch,resources=schedules/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=backup.appuio.ch,resources=schedules/status;schedules/finalizers,verbs=get;update;patch
 // +kubebuilder:rbac:groups=backup.appuio.ch,resources=effectiveschedules,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=backup.appuio.ch,resources=effectiveschedules/finalizers,verbs=update
 

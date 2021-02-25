@@ -25,7 +25,7 @@ type PruneReconciler struct {
 }
 
 // +kubebuilder:rbac:groups=backup.appuio.ch,resources=prunes,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=backup.appuio.ch,resources=prunes/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=backup.appuio.ch,resources=prunes/status;prunes/finalizers,verbs=get;update;patch
 
 // Reconcile is the entrypoint to manage the given resource.
 func (r *PruneReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {

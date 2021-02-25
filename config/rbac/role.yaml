@@ -33,6 +33,7 @@ rules:
 - apiGroups:
   - backup.appuio.ch
   resources:
+  - archives/finalizers
   - archives/status
   verbs:
   - get
@@ -53,6 +54,7 @@ rules:
 - apiGroups:
   - backup.appuio.ch
   resources:
+  - backups/finalizers
   - backups/status
   verbs:
   - get
@@ -73,6 +75,7 @@ rules:
 - apiGroups:
   - backup.appuio.ch
   resources:
+  - checks/finalizers
   - checks/status
   verbs:
   - get
@@ -111,6 +114,7 @@ rules:
 - apiGroups:
   - backup.appuio.ch
   resources:
+  - prebackuppods/finalizers
   - prebackuppods/status
   verbs:
   - get
@@ -131,6 +135,7 @@ rules:
 - apiGroups:
   - backup.appuio.ch
   resources:
+  - prunes/finalizers
   - prunes/status
   verbs:
   - get
@@ -151,6 +156,7 @@ rules:
 - apiGroups:
   - backup.appuio.ch
   resources:
+  - restores/finalizers
   - restores/status
   verbs:
   - get
@@ -171,6 +177,7 @@ rules:
 - apiGroups:
   - backup.appuio.ch
   resources:
+  - schedules/finalizers
   - schedules/status
   verbs:
   - get
@@ -191,6 +198,7 @@ rules:
 - apiGroups:
   - batch
   resources:
+  - jobs/finalizers
   - jobs/status
   verbs:
   - get
