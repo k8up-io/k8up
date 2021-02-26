@@ -17,12 +17,14 @@ spec:
       - name: subject-container
         image: quay.io/bitnami/redis:latest
         imagePullPolicy: IfNotPresent
+        securityContext:
+          runAsUser: $ID
         env:
         - name: REDIS_PASSWORD
           value: ThePassword
         volumeMounts:
         - name: volume
-          mountPath: /bitnami/redis/data
+          mountPath: /bitnami/redis
       volumes:
       - name: volume
         persistentVolumeClaim:

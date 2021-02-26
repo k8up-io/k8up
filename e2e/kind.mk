@@ -25,7 +25,7 @@ $(KIND): $(testbin_created)
 
 $(KIND_KUBECONFIG): export KUBECONFIG = $(KIND_KUBECONFIG)
 $(KIND_KUBECONFIG): $(KIND)
-	@mkdir -p debug/data
+	@mkdir -p debug/data/pvc-subject
 	$(KIND) create cluster \
 		--name $(KIND_CLUSTER) \
 		--image kindest/node:$(KIND_NODE_VERSION) \

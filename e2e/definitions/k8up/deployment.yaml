@@ -15,3 +15,5 @@ spec:
           value: debug
         - name: BACKUP_IMAGE
           value: $WRESTIC_IMAGE
+        - name: BACKUP_ENABLE_LEADER_ELECTION
+          value: "false"

@@ -33,6 +33,14 @@ You'll need:
 - Your favorite IDE (with a Go plugin)
 - Docker
 - make
+  
+To run the end-to-end test (e.g. `make e2e-test`), you additionally need:
+
+- node / npm
+- bash (installed, doesn't have to be your default shell)
+- shasum / sha1sum
+- helm 3
+- jq
 
 These are the most common make targets: `build`, `test`, `docker-build`, `run`, `kind-run`.
 Run `make help` to get an overview over the relevant targets and their intentions.

@@ -58,7 +58,8 @@ prepare() {
 		"debug/${1}/main.yml"
 	sed -i \
 		-e "s|\$WRESTIC_IMAGE|'${WRESTIC_IMAGE}'|" \
-		"debug/${1}/main.yml"
+		-e "s|\$ID|$(id -u)|" \
+		debug/"${1}"/*.yml
 }
 
 apply() {
@@ -72,8 +73,9 @@ given_a_subject() {
 }
 
 given_s3_storage() {
-	# TODO HELM REPO
-	helm install minio \
+	helm repo add minio https://helm.min.io/
+	helm repo update
+	helm upgrade --install minio \
 		--values definitions/minio/helm.yaml \
 		--create-namespace \
 		--namespace minio \
