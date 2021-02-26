@@ -87,7 +87,7 @@ make e2e-test
 To test compatibility of k8up with OpenShift 3.11 (or any other specific K8s version), you can run end-to-end tests like this:
 
 ```bash
-make e2e-test -e CRD_SPEC_VERSION=v1beta1 -e KIND_NODE_VERSION=v1.13.12 -e KIND_KUBECTL_ARGS=--validate=false
+make e2e-test -e CRD_SPEC_VERSION=v1beta1 -e KIND_NODE_VERSION=v1.13.12 -e KIND_KUBECTL_ARGS=--validate=false -e BACKUP_ENABLE_LEADER_ELECTION=false
 ```
 
 To remove the local KIND cluster and other resources, run

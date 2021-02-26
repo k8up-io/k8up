@@ -24,7 +24,7 @@ spec:
           value: ThePassword
         volumeMounts:
         - name: volume
-          mountPath: /bitnami/redis
+          mountPath: /bitnami/redis/data
       volumes:
       - name: volume
         persistentVolumeClaim:

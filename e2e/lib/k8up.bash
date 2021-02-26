@@ -50,16 +50,25 @@ restic() {
 			--json
 }
 
+replace_in_file() {
+	VAR_NAME=${1}
+	VAR_VALUE=${2}
+	FILE=${3}
+
+	sed -i \
+		-e "s|\$${VAR_NAME}|${VAR_VALUE}|" \
+		"${FILE}"
+}
+
 prepare() {
-	mkdir -p "debug/${1}"
-	kustomize build "${1}" -o "debug/${1}/main.yml"
-	sed -i \
-		-e "s|\$E2E_IMAGE|'${E2E_IMAGE}'|" \
-		"debug/${1}/main.yml"
-	sed -i \
-		-e "s|\$WRESTIC_IMAGE|'${WRESTIC_IMAGE}'|" \
-		-e "s|\$ID|$(id -u)|" \
-		debug/"${1}"/*.yml
+	DEFINITION_DIR=${1}
+	mkdir -p "debug/${DEFINITION_DIR}"
+	kustomize build "${DEFINITION_DIR}" -o "debug/${DEFINITION_DIR}/main.yml"
+
+	replace_in_file E2E_IMAGE "'${E2E_IMAGE}'" "debug/${DEFINITION_DIR}/main.yml"
+	replace_in_file WRESTIC_IMAGE "'${WRESTIC_IMAGE}'" "debug/${DEFINITION_DIR}/main.yml"
+	replace_in_file ID "$(id -u)" "debug/${DEFINITION_DIR}/main.yml"
+	replace_in_file BACKUP_ENABLE_LEADER_ELECTION "'${BACKUP_ENABLE_LEADER_ELECTION}'" "debug/${DEFINITION_DIR}/main.yml"
 }
 
 apply() {
@@ -68,6 +77,8 @@ apply() {
 }
 
 given_a_subject() {
+	kubectl delete namespace k8up-e2e-subject --ignore-not-found
+	kubectl delete pv subject-pv --ignore-not-found
 	kubectl create namespace k8up-e2e-subject || true
 	apply definitions/subject
 }

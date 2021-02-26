@@ -1,7 +1,7 @@
 apiVersion: backup.appuio.ch/v1alpha1
 kind: Backup
 metadata:
-  name: k8up-test
+  name: k8up-backup
 spec:
   keepJobs: 1
   backend:
