@@ -144,7 +144,7 @@ func (s *ScheduleHandler) createRandomSchedule(jobType k8upv1alpha1.JobType, ori
 // finalizeSchedule ensures that all associated resources are cleaned up.
 // It also removes the schedule definitions from internal scheduler.
 func (s *ScheduleHandler) finalizeSchedule() error {
-	namespacedName := k8upv1alpha1.GetNamespacedName(s.schedule)
+	namespacedName := k8upv1alpha1.MapToNamespacedName(s.schedule)
 	controllerutil.RemoveFinalizer(s.schedule, k8upv1alpha1.ScheduleFinalizerName)
 	scheduler.GetScheduler().RemoveSchedules(namespacedName)
 	for jobType := range s.effectiveSchedules {

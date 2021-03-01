@@ -96,8 +96,8 @@ func (r ConditionReason) String() string {
 	return string(r)
 }
 
-// GetNamespacedName translates the given object meta into NamespacedName object
-func GetNamespacedName(obj metav1.Object) types.NamespacedName {
+// MapToNamespacedName translates the given object meta into NamespacedName object
+func MapToNamespacedName(obj metav1.Object) types.NamespacedName {
 	return types.NamespacedName{Name: obj.GetName(), Namespace: obj.GetNamespace()}
 }
 
