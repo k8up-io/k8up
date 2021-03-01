@@ -135,7 +135,7 @@ func (p *PreBackup) startAllAndWaitForReady(deployments []appsv1.Deployment) err
 		}
 	}
 
-	p.SetConditionTrue(ConditionPreBackupPodsReady, k8upv1alpha1.ReasonSucceeded)
+	p.SetConditionTrue(ConditionPreBackupPodsReady, k8upv1alpha1.ReasonReady)
 	return nil
 }
 
@@ -174,7 +174,7 @@ func (p *PreBackup) startOneAndWaitForReady(deployment appsv1.Deployment, client
 		}
 		if ready {
 			p.Log.V(2).Info("pre backup pod already in ready state", "deployment", fmt.Sprintf("%s/%s", deployment.Namespace, deployment.Name), "event type")
-			p.SetConditionTrue(ConditionPreBackupPodsReady, k8upv1alpha1.ReasonSucceeded)
+			p.SetConditionTrue(ConditionPreBackupPodsReady, k8upv1alpha1.ReasonReady)
 			return nil
 		}
 	}
@@ -343,5 +343,5 @@ func (p *PreBackup) Stop() {
 		}
 	}
 
-	p.SetConditionTrue(ConditionPreBackupPodsReady, k8upv1alpha1.ReasonSucceeded)
+	p.SetConditionTrue(ConditionPreBackupPodsReady, k8upv1alpha1.ReasonReady)
 }
