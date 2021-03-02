@@ -96,3 +96,9 @@ given_s3_storage() {
 given_running_operator() {
 	apply definitions/k8up
 }
+
+wait_until() {
+	object=${1}
+	condition=${2}
+	kubectl -n "${DETIK_CLIENT_NAMESPACE}" wait --timeout 1m --for "condition=${condition}" "${object}"
+}
