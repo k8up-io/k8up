@@ -76,7 +76,7 @@ Each condition also contains a human-readable message that describes the status 
 | `PreBackupPod` definitions could not be retrieved from Kubernetes
 
 | Waiting
-| The `Backup` is waiting for `PreBackupPods` to finish.
+| The `Backup` is waiting for `PreBackupPod` deployments to become ready.
 
 | CreationFailed
 | `PreBackupPod` deployments could not be created.
@@ -84,7 +84,7 @@ Each condition also contains a human-readable message that describes the status 
 | Failed
 | `PreBackupPod` deployments failed with an unknown error.
 
-| Succeeded
-| `PreBackupPod` deployments successfully finished.
+| Ready
+| `PreBackupPod` deployments ready.
 
 |===
