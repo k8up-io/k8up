@@ -18,17 +18,13 @@ func NewHandler(config job.Config) *Handler {
 	}
 }
 
-// Handle checks if that job is started and will add it to the queue, if not.
+// Handle will add it to the queue.
 func (h *Handler) Handle() error {
-	if !h.Obj.GetStatus().Started {
-		return h.queueJob()
-	}
-
-	return nil
+	return h.queueJob()
 }
 
 func (h *Handler) queueJob() error {
-	h.Log.Info("adding job to the queue")
+	h.Log.V(1).Info("adding job to the queue")
 
 	e := executor.NewExecutor(h.Config)
 
