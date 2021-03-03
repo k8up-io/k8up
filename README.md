@@ -33,6 +33,14 @@ You'll need:
 - Your favorite IDE (with a Go plugin)
 - Docker
 - make
+  
+To run the end-to-end test (e.g. `make e2e-test`), you additionally need:
+
+- node / npm
+- bash (installed, doesn't have to be your default shell)
+- shasum / sha1sum
+- helm 3
+- jq
 
 These are the most common make targets: `build`, `test`, `docker-build`, `run`, `kind-run`.
 Run `make help` to get an overview over the relevant targets and their intentions.
@@ -79,7 +87,7 @@ make e2e-test
 To test compatibility of k8up with OpenShift 3.11 (or any other specific K8s version), you can run end-to-end tests like this:
 
 ```bash
-make e2e-test -e CRD_SPEC_VERSION=v1beta1 -e KIND_NODE_VERSION=v1.13.12 -e KIND_KUBECTL_ARGS=--validate=false
+make e2e-test -e CRD_SPEC_VERSION=v1beta1 -e KIND_NODE_VERSION=v1.13.12 -e KIND_KUBECTL_ARGS=--validate=false -e BACKUP_ENABLE_LEADER_ELECTION=false
 ```
 
 To remove the local KIND cluster and other resources, run

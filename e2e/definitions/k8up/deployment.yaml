@@ -13,3 +13,7 @@ spec:
         env:
         - name: BACKUP_LOG_LEVEL
           value: debug
+        - name: BACKUP_IMAGE
+          value: $WRESTIC_IMAGE
+        - name: BACKUP_ENABLE_LEADER_ELECTION
+          value: $BACKUP_ENABLE_LEADER_ELECTION

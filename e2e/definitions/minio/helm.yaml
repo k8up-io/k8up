@@ -1,0 +1,12 @@
+accessKey: myaccesskey
+secretKey: mysecretkey
+replicas: 1
+resources:
+  requests:
+    memory: 250M
+persistence:
+  size: 1Gi
+buckets:
+  - name: backup
+    policy: none
+    purge: false
