@@ -40,7 +40,7 @@ func (r *RestoreReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		return ctrl.Result{}, err
 	}
 
-	if restore.Status.Started {
+	if restore.Status.HasFinished() || restore.Status.HasStarted() {
 		return ctrl.Result{}, nil
 	}
 
@@ -51,7 +51,6 @@ func (r *RestoreReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	config := job.NewConfig(ctx, r.Client, log, restore, r.Scheme, repository)
 
 	restoreHandler := handler.NewHandler(config)
-
 	return ctrl.Result{RequeueAfter: time.Second * 30}, restoreHandler.Handle()
 }
 

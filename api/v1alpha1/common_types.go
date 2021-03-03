@@ -52,6 +52,8 @@ const (
 	ConditionScrubbed ConditionType = "Scrubbed"
 	// ConditionProgressing is given when the resource is in the process of doing its main function.
 	ConditionProgressing ConditionType = "Progressing"
+	// ConditionPreBackupPodReady is True if Deployments for all Container definitions were created and are ready
+	ConditionPreBackupPodReady ConditionType = "PreBackupPodReady"
 
 	// ReasonReady indicates the condition is ready for work
 	ReasonReady ConditionReason = "Ready"
@@ -71,6 +73,11 @@ const (
 	ReasonDeletionFailed ConditionReason = "DeletionFailed"
 	// ReasonRetrievalFailed indicates that dependent resource(s) could not be retrieved for further processing
 	ReasonRetrievalFailed ConditionReason = "RetrievalFailed"
+
+	// ReasonNoPreBackupPodsFound is given when no PreBackupPods are found in the same namespace
+	ReasonNoPreBackupPodsFound ConditionReason = "NoPreBackupPodsFound"
+	// ReasonWaiting is given when PreBackupPods are waiting to be started
+	ReasonWaiting ConditionReason = "Waiting"
 
 	// LabelK8upType is the label key that identifies the job type
 	LabelK8upType = "k8up.syn.tools/type"
@@ -99,17 +106,4 @@ func (r ConditionReason) String() string {
 // MapToNamespacedName translates the given object meta into NamespacedName object
 func MapToNamespacedName(obj metav1.Object) types.NamespacedName {
 	return types.NamespacedName{Name: obj.GetName(), Namespace: obj.GetNamespace()}
-}
-
-// Status defines the observed state of a generic K8up job. It is used for the
-// operator to determine what to do.
-type Status struct {
-	Started   bool `json:"started,omitempty"`
-	Finished  bool `json:"finished,omitempty"`
-	Exclusive bool `json:"exclusive,omitempty"`
-
-	// Conditions provide a standard mechanism for higher-level status reporting from a controller.
-	// They are an extension mechanism which allows tools and other controllers to collect summary information about
-	// resources without needing to understand resource-specific status details.
-	Conditions []metav1.Condition `json:"conditions,omitempty"`
 }
