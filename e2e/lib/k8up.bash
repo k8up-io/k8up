@@ -1,5 +1,7 @@
 #!/bin/bash
 
+export MINIO_NAMESPACE=${MINIO_NAMESPACE-minio}
+
 errcho() {
 	>&2 echo "${@}"
 }
@@ -48,6 +50,25 @@ restic() {
 			--json
 }
 
+mc() {
+	minio_access_key=$(kubectl -n "${MINIO_NAMESPACE}" get secret minio -o jsonpath="{.data.accesskey}" | base64 --decode)
+	minio_secret_key=$(kubectl -n "${MINIO_NAMESPACE}" get secret minio -o jsonpath="{.data.secretkey}" | base64 --decode)
+	minio_url=http://${minio_access_key}:${minio_secret_key}@minio.minio.svc.cluster.local:9000
+	kubectl run minio \
+		--rm \
+		--attach \
+		--stdin \
+		--restart Never \
+		--namespace "${DETIK_CLIENT_NAMESPACE-"k8up-system"}" \
+		--image "${MINIO_IMAGE-minio/mc:latest}" \
+		--env "MC_HOST_s3=${minio_url}" \
+		--pod-running-timeout 10s \
+		--quiet=true \
+		--command -- \
+			mc \
+			"${@}"
+}
+
 replace_in_file() {
 	VAR_NAME=${1}
 	VAR_VALUE=${2}
@@ -87,7 +108,7 @@ given_s3_storage() {
 	helm upgrade --install minio \
 		--values definitions/minio/helm.yaml \
 		--create-namespace \
-		--namespace minio \
+		--namespace "${MINIO_NAMESPACE}" \
 		minio/minio
 }
 

@@ -36,11 +36,12 @@ You'll need:
   
 To run the end-to-end test (e.g. `make e2e-test`), you additionally need:
 
-- node / npm
-- bash (installed, doesn't have to be your default shell)
-- shasum / sha1sum
-- helm 3
-- jq
+- `helm` (version 3)
+- `jq`
+- `node` and `npm`
+- `bash` (installed, doesn't have to be your default shell)
+- `shasum` or `sha1sum`
+- `base64`
 
 These are the most common make targets: `build`, `test`, `docker-build`, `run`, `kind-run`.
 Run `make help` to get an overview over the relevant targets and their intentions.
