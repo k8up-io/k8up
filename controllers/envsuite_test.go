@@ -18,6 +18,8 @@ import (
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
@@ -162,6 +164,32 @@ func (ts *EnvTestSuite) UpdateResources(resources ...client.Object) {
 	}
 }
 
+// UpdateStatus ensures that the Status property of the given resources are updated in the suite. Each error will fail the test.
+func (ts *EnvTestSuite) UpdateStatus(resources ...client.Object) {
+	for _, resource := range resources {
+		ts.T().Logf("updating status '%s/%s'", resource.GetNamespace(), resource.GetName())
+		ts.Require().NoError(ts.Client.Status().Update(ts.Ctx, resource))
+	}
+}
+
+// SetCondition sets the given condition and updates the status.
+// Errors will fail the test.
+func (ts *EnvTestSuite) SetCondition(
+	resource client.Object,
+	conditions *[]metav1.Condition,
+	cType k8upv1a1.ConditionType,
+	status metav1.ConditionStatus,
+	reason k8upv1a1.ConditionReason) {
+
+	meta.SetStatusCondition(conditions, metav1.Condition{
+		Type:    cType.String(),
+		Status:  status,
+		Reason:  reason.String(),
+		Message: reason.String(),
+	})
+	ts.UpdateStatus(resource)
+}
+
 // DeleteResources deletes the given resources are updated from the suite. Each error will fail the test.
 func (ts *EnvTestSuite) DeleteResources(resources ...client.Object) {
 	for _, resource := range resources {
@@ -202,4 +230,16 @@ func (ts *EnvTestSuite) SetupTest() {
 // and then remove all characters but `a-z` (only lower case), `0-9` and the `-` (dash).
 func (ts *EnvTestSuite) SanitizeNameForNS(name string) string {
 	return InvalidNSNameCharacters.ReplaceAllString(strings.ToLower(name), "")
+}
+
+// IsResourceExisting tries to fetch the given resource and returns true if it exists.
+// It will consider still-existing object with a deletion timestamp as not existing.
+// Any other errors will fail the test.
+func (ts *EnvTestSuite) IsResourceExisting(ctx context.Context, obj client.Object) bool {
+	err := ts.Client.Get(ctx, k8upv1a1.MapToNamespacedName(obj), obj)
+	if apierrors.IsNotFound(err) {
+		return false
+	}
+	ts.Assert().NoError(err)
+	return obj.GetDeletionTimestamp() == nil
 }
