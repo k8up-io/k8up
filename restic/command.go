@@ -39,7 +39,7 @@ func NewCommand(ctx context.Context, log logr.Logger, commandOptions CommandOpti
 	}
 }
 
-// Run will run the currently configured command
+// Run will run the currently configured command and wait for its completion.
 func (c *Command) Run() {
 
 	c.Configure()
@@ -50,6 +50,8 @@ func (c *Command) Run() {
 
 }
 
+// Configure will setup the command object.
+// Mainly set the env vars and wire the right stdins/outs.
 func (c *Command) Configure() {
 	c.cmd = exec.CommandContext(c.ctx, c.options.Path, c.options.Args...)
 	c.cmd.Env = os.Environ()
@@ -67,6 +69,7 @@ func (c *Command) Configure() {
 	}
 }
 
+// Start starts the specified command but does not wait for it to complete.
 func (c *Command) Start() {
 	if c.cmd == nil {
 		c.FatalError = fmt.Errorf("command not configured")
@@ -74,11 +77,12 @@ func (c *Command) Start() {
 	}
 	err := c.cmd.Start()
 	if err != nil {
-		c.FatalError = fmt.Errorf("cmd.Start() err: %v", err)
+		c.FatalError = fmt.Errorf("cmd.Start() err: %w", err)
 		return
 	}
 }
 
+// Wait waits for the command to exit and waits for any copying to stdin or copying from stdout or stderr to complete.
 func (c *Command) Wait() {
 	if c.cmd == nil {
 		c.FatalError = fmt.Errorf("command not configured")
@@ -86,10 +90,22 @@ func (c *Command) Wait() {
 	}
 	err := c.cmd.Wait()
 	if err != nil {
+		// The error could contain an IO error...
+		// io.EOF is ignored as this will be sent if we close the pipes somewhere, which is expected.
 		if err == io.EOF {
 			return
 		}
-		c.FatalError = fmt.Errorf("cmd.Wait() err: %v", err)
+		// ...as well as an exiterror
+		if exiterr, ok := err.(*exec.ExitError); ok {
+			// We ignore exit code 3 as this will be set if the snapshot was created but some files failed to read.
+			// This is handled by the backup summary parsing.
+			// See https://restic.readthedocs.io/en/stable/040_backup.html?highlight=exit%20code#exit-status-codes
+			if exiterr.ExitCode() != 3 {
+				c.FatalError = fmt.Errorf("cmd.Wait() err: %d", exiterr.ExitCode())
+			}
+		} else { // if it's some other error we'd need to catch it, too
+			c.FatalError = fmt.Errorf("cmd.Wait() err: %w", err)
+		}
 		return
 	}
 }
