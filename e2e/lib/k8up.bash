@@ -31,10 +31,11 @@ kustomize() {
 }
 
 restic() {
-	kubectl run wrestic \
+	kubectl run "wrestic" \
 		--rm \
 		--attach \
 		--restart Never \
+		--wait \
 		--namespace "${DETIK_CLIENT_NAMESPACE-"k8up-system"}" \
 		--image "${WRESTIC_IMAGE}" \
 		--env "AWS_ACCESS_KEY_ID=myaccesskey" \
@@ -54,11 +55,12 @@ mc() {
 	minio_access_key=$(kubectl -n "${MINIO_NAMESPACE}" get secret minio -o jsonpath="{.data.accesskey}" | base64 --decode)
 	minio_secret_key=$(kubectl -n "${MINIO_NAMESPACE}" get secret minio -o jsonpath="{.data.secretkey}" | base64 --decode)
 	minio_url=http://${minio_access_key}:${minio_secret_key}@minio.minio.svc.cluster.local:9000
-	kubectl run minio \
+	kubectl run "minio" \
 		--rm \
 		--attach \
 		--stdin \
 		--restart Never \
+		--wait \
 		--namespace "${DETIK_CLIENT_NAMESPACE-"k8up-system"}" \
 		--image "${MINIO_IMAGE-minio/mc:latest}" \
 		--env "MC_HOST_s3=${minio_url}" \
@@ -98,7 +100,7 @@ apply() {
 given_a_clean_ns() {
 	kubectl delete namespace "${DETIK_CLIENT_NAMESPACE}" --ignore-not-found
 	kubectl delete pv subject-pv --ignore-not-found
-	kubectl create namespace "${DETIK_CLIENT_NAMESPACE}" || true
+	kubectl create namespace "${DETIK_CLIENT_NAMESPACE}"
 	echo "✅  The namespace '${DETIK_CLIENT_NAMESPACE}' is ready."
 }
 
