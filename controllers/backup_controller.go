@@ -50,6 +50,10 @@ func (r *BackupReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 		return ctrl.Result{}, err
 	}
 
+	if backup.Status.HasFinished() {
+		return ctrl.Result{}, nil
+	}
+
 	repository := cfg.GetGlobalRepository()
 	if backup.Spec.Backend != nil {
 		repository = backup.Spec.Backend.String()
@@ -57,7 +61,6 @@ func (r *BackupReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 	config := job.NewConfig(ctx, r.Client, log, backup, r.Scheme, repository)
 
 	backupHandler := handler.NewHandler(config)
-
 	return ctrl.Result{RequeueAfter: time.Second * 30}, backupHandler.Handle()
 }
 

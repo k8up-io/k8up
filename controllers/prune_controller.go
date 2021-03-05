@@ -40,7 +40,7 @@ func (r *PruneReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		return ctrl.Result{}, err
 	}
 
-	if prune.Status.Started {
+	if prune.Status.HasFinished() || prune.Status.HasStarted() {
 		return ctrl.Result{}, nil
 	}
 
@@ -51,7 +51,6 @@ func (r *PruneReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	config := job.NewConfig(ctx, r.Client, log, prune, r.Scheme, repository)
 
 	pruneHandler := handler.NewHandler(config)
-
 	return ctrl.Result{RequeueAfter: time.Second * 30}, pruneHandler.Handle()
 }
 

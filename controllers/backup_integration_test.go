@@ -4,21 +4,11 @@ package controllers_test
 
 import (
 	"context"
-	"os"
-	"path/filepath"
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-	appsv1 "k8s.io/api/apps/v1"
-	batchv1 "k8s.io/api/batch/v1"
-	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/types"
-	controllerruntime "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	k8upv1a1 "github.com/vshn/k8up/api/v1alpha1"
 	"github.com/vshn/k8up/controllers"
@@ -27,208 +17,95 @@ import (
 type BackupTestSuite struct {
 	EnvTestSuite
 
-	BackupName              string
-	DeploymentPodName       string
-	DeploymentContainerName string
-	PreBackupPodName        string
-	CancelCtx               context.CancelFunc
-	BackupResource          *k8upv1a1.Backup
-	Controller              controllers.BackupReconciler
+	PreBackupPodName string
+	CancelCtx        context.CancelFunc
+	BackupResource   *k8upv1a1.Backup
+	Controller       controllers.BackupReconciler
 }
 
 func Test_Backup(t *testing.T) {
 	suite.Run(t, new(BackupTestSuite))
 }
 
-func (r *BackupTestSuite) BeforeTest(_, _ string) {
-	r.Controller = controllers.BackupReconciler{
-		Client: r.Client,
-		Log:    r.Logger,
-		Scheme: r.Scheme,
+func (ts *BackupTestSuite) BeforeTest(_, _ string) {
+	ts.Controller = controllers.BackupReconciler{
+		Client: ts.Client,
+		Log:    ts.Logger,
+		Scheme: ts.Scheme,
 	}
-	r.BackupName = "backup"
-	r.DeploymentPodName = "pre-backup-deployment-pod"
-	r.DeploymentContainerName = "pre-backup-deployment-pod-container"
-	r.PreBackupPodName = "pre-backup-pod"
-	r.Ctx, r.CancelCtx = context.WithCancel(context.Background())
-	r.BackupResource = r.newBackup()
+	ts.PreBackupPodName = "pre-backup-pod"
+	ts.Ctx, ts.CancelCtx = context.WithCancel(context.Background())
+	ts.BackupResource = ts.newBackup()
 }
 
-func (r *BackupTestSuite) Test_GivenBackup_ExpectDeployment() {
-	r.EnsureResources(r.BackupResource)
-	result := r.whenReconciling(r.BackupResource)
-	assert.GreaterOrEqual(r.T(), result.RequeueAfter, 30*time.Second)
+func (ts *BackupTestSuite) Test_GivenBackup_ExpectBackupJob() {
+	ts.EnsureResources(ts.BackupResource)
+	result := ts.whenReconciling(ts.BackupResource)
+	ts.Assert().GreaterOrEqual(result.RequeueAfter, 30*time.Second)
 
-	r.expectABackupJobEventually()
+	ts.expectABackupJobEventually()
 }
 
-func (r *BackupTestSuite) Test_GivenPreBackupPods_ExpectDeployment() {
-	r.skipIfNoClusterAvailable()
-	r.EnsureResources(r.BackupResource, r.newPreBackupPod())
+func (ts *BackupTestSuite) Test_GivenPreBackupPods_ExpectPreBackupDeployment() {
+	ts.EnsureResources(ts.BackupResource, ts.newPreBackupPod())
 
-	result := r.whenReconciling(r.BackupResource)
-	assert.GreaterOrEqual(r.T(), result.RequeueAfter, 30*time.Second)
-	r.expectADeploymentEventually()
+	result := ts.whenReconciling(ts.BackupResource)
+	ts.Assert().GreaterOrEqual(result.RequeueAfter, 30*time.Second)
+	ts.expectAPreBackupDeploymentEventually()
+	ts.assertConditionWaitingForPreBackup(ts.BackupResource)
 
-	r.afterDeploymentStarted()
-	_ = r.whenReconciling(r.BackupResource)
-	r.expectABackupContainer()
+	ts.afterDeploymentStarted()
+	_ = ts.whenReconciling(ts.BackupResource)
+	ts.assertConditionReadyForPreBackup(ts.BackupResource)
+	ts.expectABackupContainer()
 }
 
-func (r *BackupTestSuite) Test_GivenPreBackupPods_WhenRestarting() {
-	r.skipIfNoClusterAvailable()
-	r.EnsureResources(r.BackupResource, r.newPreBackupPod())
+func (ts *BackupTestSuite) Test_GivenPreBackupDeployment_WhenDeploymentStartsUp_ThenExpectBackupToBeWaiting() {
+	deployment := ts.newPreBackupDeployment()
+	ts.EnsureResources(ts.BackupResource, ts.newPreBackupPod(), deployment)
 
-	_ = r.whenReconciling(r.BackupResource)
-	r.expectADeploymentEventually()
-
-	r.whenCancellingTheContext()
-	r.afterDeploymentStarted()
-	_ = r.whenReconciling(r.BackupResource)
-	r.expectABackupContainer()
+	result := ts.whenReconciling(ts.BackupResource)
+	ts.Assert().GreaterOrEqual(result.RequeueAfter, 30*time.Second)
+	ts.assertConditionWaitingForPreBackup(ts.BackupResource)
 }
 
-func (r *BackupTestSuite) newPreBackupPod() *k8upv1a1.PreBackupPod {
-	return &k8upv1a1.PreBackupPod{
-		Spec: k8upv1a1.PreBackupPodSpec{
-			BackupCommand: "/bin/true",
-			Pod: &k8upv1a1.Pod{
-				PodTemplateSpec: corev1.PodTemplateSpec{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      r.DeploymentPodName,
-						Namespace: r.NS,
-					},
-					Spec: corev1.PodSpec{
-						Containers: []corev1.Container{
-							{
-								Name:    r.DeploymentContainerName,
-								Image:   "alpine",
-								Command: []string{"/bin/true"},
-							},
-						},
-					},
-				},
-			},
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      r.PreBackupPodName,
-			Namespace: r.NS,
-		},
-	}
+func (ts *BackupTestSuite) Test_GivenFailedPreBackupDeployment_WhenCreatingNewBackup_ThenExpectPreBackupToBeRemoved() {
+	failedDeployment := ts.newPreBackupDeployment()
+	ts.EnsureResources(failedDeployment, ts.newPreBackupPod(), ts.BackupResource)
+	ts.markDeploymentAsFailed(failedDeployment)
+
+	result := ts.whenReconciling(ts.BackupResource)
+	ts.Assert().GreaterOrEqual(result.RequeueAfter, 30*time.Second)
+	ts.assertDeploymentIsDeleted(failedDeployment)
+	ts.assertConditionFailedBackup(ts.BackupResource)
 }
 
-func (r *BackupTestSuite) newBackup() *k8upv1a1.Backup {
-	return &k8upv1a1.Backup{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      r.BackupName,
-			Namespace: r.NS,
-		},
-		Spec: k8upv1a1.BackupSpec{
-			RunnableSpec: k8upv1a1.RunnableSpec{},
-		},
-	}
+func (ts *BackupTestSuite) Test_GivenPreBackupPods_WhenRestartingK8up_ThenExpectToContinueWhereItLeftOff() {
+	ts.EnsureResources(ts.BackupResource, ts.newPreBackupPod())
+
+	_ = ts.whenReconciling(ts.BackupResource)
+	ts.expectAPreBackupDeploymentEventually()
+
+	ts.whenCancellingTheContext()
+	ts.afterDeploymentStarted()
+	_ = ts.whenReconciling(ts.BackupResource)
+	ts.expectABackupContainer()
 }
 
-func (r *BackupTestSuite) whenReconciling(object metav1.Object) controllerruntime.Result {
-	result, err := r.Controller.Reconcile(r.Ctx, r.MapToRequest(object))
-	require.NoError(r.T(), err)
+func (ts *BackupTestSuite) Test_GivenFinishedBackup_WhenReconciling_ThenIgnore() {
+	ts.EnsureResources(ts.BackupResource)
+	ts.SetCondition(ts.BackupResource, &ts.BackupResource.Status.Conditions,
+		k8upv1a1.ConditionProgressing, metav1.ConditionFalse, k8upv1a1.ReasonFinished)
 
-	return result
+	result := ts.whenReconciling(ts.BackupResource)
+	ts.Assert().Equal(float64(0), result.RequeueAfter.Seconds())
 }
 
-func (r *BackupTestSuite) expectABackupJobEventually() {
-	r.RepeatedAssert(3*time.Second, time.Second, "Jobs not found", func(timedCtx context.Context) (done bool, err error) {
-		jobs := new(batchv1.JobList)
-		err = r.Client.List(timedCtx, jobs, &client.ListOptions{Namespace: r.NS})
-		require.NoError(r.T(), err)
+func (ts *BackupTestSuite) Test_GivenFailedBackup_WhenReconciling_ThenIgnore() {
+	ts.EnsureResources(ts.BackupResource)
+	ts.SetCondition(ts.BackupResource, &ts.BackupResource.Status.Conditions,
+		k8upv1a1.ConditionPreBackupPodReady, metav1.ConditionFalse, k8upv1a1.ReasonFailed)
 
-		jobsLen := len(jobs.Items)
-		r.T().Logf("%d Jobs found", jobsLen)
-
-		if jobsLen > 0 {
-			assert.Len(r.T(), jobs.Items, 1)
-			return true, err
-		}
-
-		return
-	})
-}
-
-func (r *BackupTestSuite) expectADeploymentEventually() {
-	r.RepeatedAssert(5*time.Second, time.Second, "Deployments not found", func(timedCtx context.Context) (done bool, err error) {
-		deployments := new(appsv1.DeploymentList)
-		err = r.Client.List(timedCtx, deployments, &client.ListOptions{Namespace: r.NS})
-		require.NoError(r.T(), err)
-
-		jobsLen := len(deployments.Items)
-		r.T().Logf("%d Deployments found", jobsLen)
-
-		if jobsLen > 0 {
-			assert.Equal(r.T(), jobsLen, 1)
-			return true, err
-		}
-
-		return
-	})
-}
-
-func (r *BackupTestSuite) whenCancellingTheContext() {
-	r.CancelCtx()
-	r.Ctx, r.CancelCtx = context.WithCancel(context.Background())
-}
-
-func (r *BackupTestSuite) afterDeploymentStarted() {
-	deployment := new(appsv1.Deployment)
-	deploymentIdentifier := types.NamespacedName{Namespace: r.NS, Name: r.PreBackupPodName}
-	r.FetchResource(deploymentIdentifier, deployment)
-
-	deployment.Status.AvailableReplicas = 1
-
-	r.UpdateResources(deployment)
-}
-
-func (r *BackupTestSuite) expectABackupContainer() {
-	r.RepeatedAssert(5*time.Second, time.Second, "Backup not found", func(timedCtx context.Context) (done bool, err error) {
-		backups := new(k8upv1a1.BackupList)
-		err = r.Client.List(timedCtx, backups, &client.ListOptions{Namespace: r.NS})
-		require.NoError(r.T(), err)
-
-		backupsLen := len(backups.Items)
-		r.T().Logf("%d Backups found", backupsLen)
-
-		if backupsLen > 0 {
-			assert.Equal(r.T(), backupsLen, 1)
-			return true, err
-		}
-
-		return
-	})
-}
-
-func (r *BackupTestSuite) skipIfNoClusterAvailable() {
-	kubeconfig, ok := os.LookupEnv("KUBECONFIG")
-	if ok {
-		info, err := os.Stat(kubeconfig)
-		if err != nil {
-			r.T().Skipf("KUBECONFIG is set to '%s', but: %s", kubeconfig, err)
-			return
-		}
-		if !info.Mode().IsRegular() {
-			r.T().Skipf("KUBECONFIG is set to '%s', but this is not a file.", kubeconfig)
-			return
-		}
-		return
-	}
-
-	home := os.Getenv("HOME")
-	kubeconfig = filepath.Join(home, ".kube", "config")
-	info, err := os.Stat(kubeconfig)
-	if err != nil {
-		r.T().Skipf("KUBECONFIG is not defined. Tried '%s', but: %s", kubeconfig, err)
-		return
-	}
-	if !info.Mode().IsRegular() {
-		r.T().Skipf("KUBECONFIG is not defined. Tried '%s', but this is not a file.", kubeconfig)
-		return
-	}
+	result := ts.whenReconciling(ts.BackupResource)
+	ts.Assert().Equal(float64(0), result.RequeueAfter.Seconds())
 }

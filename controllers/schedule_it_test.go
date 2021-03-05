@@ -46,7 +46,7 @@ func (ts *ScheduleControllerTestSuite) Test_GivenScheduleWithRandomSchedules_Whe
 	ts.thenAssertEffectiveScheduleExists(ts.givenSchedule.Name, handler.ScheduleDailyRandom)
 
 	actualSchedule := &k8upv1alpha1.Schedule{}
-	ts.FetchResource(k8upv1alpha1.GetNamespacedName(ts.givenSchedule), actualSchedule)
+	ts.FetchResource(k8upv1alpha1.MapToNamespacedName(ts.givenSchedule), actualSchedule)
 	ts.thenAssertCondition(actualSchedule, k8upv1alpha1.ConditionReady, k8upv1alpha1.ReasonReady, "resource is ready")
 
 	actualESList := ts.whenListEffectiveSchedules()
@@ -60,7 +60,7 @@ func (ts *ScheduleControllerTestSuite) Test_GivenEffectiveScheduleWithRandomSche
 	ts.whenReconciling(ts.givenSchedule)
 
 	actualSchedule := &k8upv1alpha1.Schedule{}
-	ts.FetchResource(k8upv1alpha1.GetNamespacedName(ts.givenSchedule), actualSchedule)
+	ts.FetchResource(k8upv1alpha1.MapToNamespacedName(ts.givenSchedule), actualSchedule)
 	ts.thenAssertCondition(actualSchedule, k8upv1alpha1.ConditionReady, k8upv1alpha1.ReasonReady, "resource is ready")
 
 	actualESList := ts.whenListEffectiveSchedules()
@@ -74,7 +74,7 @@ func (ts *ScheduleControllerTestSuite) Test_GivenEffectiveScheduleWithRandomSche
 	ts.whenReconciling(ts.givenSchedule)
 
 	actualSchedule := &k8upv1alpha1.Schedule{}
-	name := k8upv1alpha1.GetNamespacedName(ts.givenSchedule)
+	name := k8upv1alpha1.MapToNamespacedName(ts.givenSchedule)
 	ts.FetchResource(name, actualSchedule)
 	ts.thenAssertCondition(actualSchedule, k8upv1alpha1.ConditionReady, k8upv1alpha1.ReasonReady, "resource is ready")
 	scheduler.GetScheduler().HasSchedule(name, "1 * * * *", k8upv1alpha1.BackupType)

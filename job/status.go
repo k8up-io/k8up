@@ -61,27 +61,13 @@ func (c *Config) patchConditions(conditionStatus metav1.ConditionStatus, reason 
 	}
 }
 
-// SetStarted sets the `c.Obj.GetStatus().Started` property to `true`.
-// In the same call to the k8s API it also sets the Ready and Progressing conditions to "True"
+// SetStarted marks the job as started and updates the status.
 // The arguments `message` and `args` follow the fmt.Sprintf() syntax.
 func (c *Config) SetStarted(message string, args ...interface{}) {
 	status := c.Obj.GetStatus()
-	status.Started = true
-
-	meta.SetStatusCondition(&status.Conditions, metav1.Condition{
-		Type:    k8upv1alpha1.ConditionReady.String(),
-		Status:  metav1.ConditionTrue,
-		Reason:  k8upv1alpha1.ReasonReady.String(),
-		Message: fmt.Sprintf(message, args...),
-	})
-	meta.SetStatusCondition(&status.Conditions, metav1.Condition{
-		Type:    k8upv1alpha1.ConditionProgressing.String(),
-		Status:  metav1.ConditionTrue,
-		Reason:  k8upv1alpha1.ReasonStarted.String(),
-		Message: "The job is progressing",
-	})
-
+	status.SetStarted(fmt.Sprintf(message, args...))
 	c.Obj.SetStatus(status)
+
 	err := c.Client.Status().Update(c.CTX, c.Obj.GetRuntimeObject().(client.Object))
 	if err != nil {
 		if errors.IsNotFound(err) {
@@ -91,20 +77,12 @@ func (c *Config) SetStarted(message string, args ...interface{}) {
 	}
 }
 
-// SetFinished sets the `c.Obj.GetStatus().Finished` property to `true`.
-// In the same call to the k8s API it also sets the Progressing condition to "False" with reason Finished.
+// SetFinished marks the job as finished and updates the status.
 func (c *Config) SetFinished(namespace, name string) {
 	status := c.Obj.GetStatus()
-	status.Finished = true
-
-	meta.SetStatusCondition(&status.Conditions, metav1.Condition{
-		Type:    k8upv1alpha1.ConditionProgressing.String(),
-		Status:  metav1.ConditionFalse,
-		Reason:  k8upv1alpha1.ReasonFinished.String(),
-		Message: fmt.Sprintf("the Job '%s/%s' ended", namespace, name),
-	})
-
+	status.SetFinished(fmt.Sprintf("the Job '%s/%s' ended", namespace, name))
 	c.Obj.SetStatus(status)
+
 	err := c.Client.Status().Update(c.CTX, c.Obj.GetRuntimeObject().(client.Object))
 	if err != nil {
 		if errors.IsNotFound(err) {

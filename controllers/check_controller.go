@@ -41,6 +41,10 @@ func (r *CheckReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		return ctrl.Result{}, err
 	}
 
+	if check.Status.HasFinished() {
+		return ctrl.Result{}, nil
+	}
+
 	repository := cfg.GetGlobalRepository()
 	if check.Spec.Backend != nil {
 		repository = check.Spec.Backend.String()
@@ -49,7 +53,6 @@ func (r *CheckReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	config := job.NewConfig(ctx, r.Client, logger, check, r.Scheme, repository)
 
 	checkHandler := handler.NewHandler(config)
-
 	return ctrl.Result{RequeueAfter: time.Second * 30}, checkHandler.Handle()
 }
 
