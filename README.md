@@ -42,6 +42,7 @@ To run the end-to-end test (e.g. `make e2e-test`), you additionally need:
 - `bash` (installed, doesn't have to be your default shell)
 - `shasum` or `sha1sum`
 - `base64`
+- `find`
 
 These are the most common make targets: `build`, `test`, `docker-build`, `run`, `kind-run`.
 Run `make help` to get an overview over the relevant targets and their intentions.
@@ -79,7 +80,7 @@ K8up supports both OpenShift 3.11 clusters and newer Kubernetes clusters 1.16+.
 However, to support OpenShift 3.11 a legacy CRD definition with `apiextensions.k8s.io/v1beta1` is needed, while K8s 1.22+ only supports `apiextensions.k8s.io/v1`.
 You need `node` and `npm` to run the tests, as it runs with [DETIK][detik].
 
-To run e2e tests run:
+To run e2e tests, execute:
 
 ```bash
 make e2e-test
@@ -91,7 +92,19 @@ To test compatibility of k8up with OpenShift 3.11 (or any other specific K8s ver
 make e2e-test -e CRD_SPEC_VERSION=v1beta1 -e KIND_NODE_VERSION=v1.13.12 -e KIND_KUBECTL_ARGS=--validate=false -e BACKUP_ENABLE_LEADER_ELECTION=false
 ```
 
-To remove the local KIND cluster and other resources, run
+To test just a specific e2e test, run:
+
+```bash
+make e2e-test -e BATS_FILES=test-00-deployment.bats
+```
+
+To remove the local KIND cluster and other e2e resources, run:
+
+```bash
+make e2e-clean
+```
+
+To cleanup all created artifacts, there's always:
 
 ```bash
 make clean

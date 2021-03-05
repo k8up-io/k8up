@@ -1,7 +1,8 @@
 IMG_TAG ?= latest
 
-BIN_FILENAME ?= $(PROJECT_ROOT_DIR)/k8up
-TESTBIN_DIR ?= $(PROJECT_ROOT_DIR)/testbin/bin
+CURDIR ?= $(shell pwd)
+BIN_FILENAME ?= $(CURDIR)/$(PROJECT_ROOT_DIR)/k8up
+TESTBIN_DIR ?= $(CURDIR)/$(PROJECT_ROOT_DIR)/testbin/bin
 
 CRD_FILE ?= k8up-crd.yaml
 CRD_FILE_LEGACY ?= k8up-crd-legacy.yaml
@@ -24,6 +25,7 @@ SHASUM ?= $(shell command -v sha1sum > /dev/null && echo "sha1sum" || echo "shas
 E2E_TAG ?= e2e_$(shell $(SHASUM) $(BIN_FILENAME) | cut -b-8)
 E2E_REPO ?= local.dev/k8up/e2e
 E2E_IMG = $(E2E_REPO):$(E2E_TAG)
+BATS_FILES ?= .
 
 INTEGRATION_TEST_DEBUG_OUTPUT ?= false
 

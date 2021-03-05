@@ -145,6 +145,7 @@ kind-e2e-image: docker-build
 
 .PHONY: e2e-test
 e2e-test: export KUBECONFIG = $(KIND_KUBECONFIG)
+e2e-test: export BATS_FILES := $(BATS_FILES)
 e2e-test: e2e-setup docker-build install ## Run the e2e tests
 	@$(e2e_make) test
 
