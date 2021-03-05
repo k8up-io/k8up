@@ -88,6 +88,12 @@ func (c *Command) Wait() {
 		c.FatalError = fmt.Errorf("command not configured")
 		return
 	}
+
+	if c.cmd.Process == nil {
+		c.FatalError = fmt.Errorf("the process did not start, please check if execution bit is set")
+		return
+	}
+
 	err := c.cmd.Wait()
 	if err != nil {
 		// The error could contain an IO error...
