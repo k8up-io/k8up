@@ -1,7 +1,5 @@
 #!/bin/bash
 
-export WRESTIC_IMAGE=${WRESTIC_IMAGE-quay.io/vshn/wrestic}
-
 errcho() {
 	>&2 echo "${@}"
 }
@@ -36,7 +34,7 @@ restic() {
 		--attach \
 		--restart Never \
 		--namespace "${DETIK_CLIENT_NAMESPACE-"k8up-system"}" \
-		--image "${WRESTIC_IMAGE-quay.io/vshn/wrestic}" \
+		--image "${WRESTIC_IMAGE}" \
 		--env "AWS_ACCESS_KEY_ID=myaccesskey" \
 		--env "AWS_SECRET_KEY=mysecretkey" \
 		--env "RESTIC_PASSWORD=myreposecret" \
