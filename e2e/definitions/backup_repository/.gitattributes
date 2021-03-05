@@ -1,0 +1,4 @@
+config binary
+data/* binary
+index/* binary
+snapshots/* binary

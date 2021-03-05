@@ -1,0 +1,10 @@
+resources:
+- ../secrets
+- restore.yaml
+
+namespace: k8up-e2e-subject
+namePrefix: k8up-
+
+commonLabels:
+  app.kubernetes.io/name: e2e
+  app.kubernetes.io/managed-by: kustomize

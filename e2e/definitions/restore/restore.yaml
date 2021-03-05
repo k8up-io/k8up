@@ -1,0 +1,22 @@
+apiVersion: backup.appuio.ch/v1alpha1
+kind: Restore
+metadata:
+  name: k8up-restore
+spec:
+  keepJobs: 1
+  restoreMethod:
+    folder:
+      claimName: subject-pvc
+  backend:
+    repoPasswordSecretRef:
+      name: k8up-backup-repo
+      key: password
+    s3:
+      endpoint: http://minio.minio.svc.cluster.local:9000
+      bucket: backup
+      accessKeyIDSecretRef:
+        name: k8up-backup-credentials
+        key: username
+      secretAccessKeySecretRef:
+        name: k8up-backup-credentials
+        key: password

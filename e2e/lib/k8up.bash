@@ -129,6 +129,21 @@ given_a_running_operator() {
 	echo "✅  A running operator is ready"
 }
 
+given_an_existing_backup() {
+	mc rb --force s3/backup || true
+	mc mb s3/backup
+	(
+		cd definitions/backup_repository || exit 1
+		for f in * **/* **/**/*; do
+			test -f "${f}" || continue
+			echo "Copying '${f}' to 's3/backup/${f}'"
+			mc pipe "s3/backup/${f}" <"${f}"
+		done
+	)
+
+	echo "✅  An existing backup is ready"
+}
+
 wait_until() {
 	object=${1}
 	condition=${2}
