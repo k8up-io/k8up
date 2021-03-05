@@ -12,7 +12,8 @@ DETIK_CLIENT_NAMESPACE="k8up-e2e-subject"
 DEBUG_DETIK="true"
 
 @test "verify a backup" {
-	given_running_operator
+	given_a_running_operator
+	given_a_clean_ns
 	given_s3_storage
 	given_a_subject
 

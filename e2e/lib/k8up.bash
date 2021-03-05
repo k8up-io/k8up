@@ -95,11 +95,16 @@ apply() {
 	kubectl apply -f "debug/${1}/main.yml"
 }
 
-given_a_subject() {
-	kubectl delete namespace k8up-e2e-subject --ignore-not-found
+given_a_clean_ns() {
+	kubectl delete namespace "${DETIK_CLIENT_NAMESPACE}" --ignore-not-found
 	kubectl delete pv subject-pv --ignore-not-found
-	kubectl create namespace k8up-e2e-subject || true
+	kubectl create namespace "${DETIK_CLIENT_NAMESPACE}" || true
+	echo "✅  The namespace '${DETIK_CLIENT_NAMESPACE}' is ready."
+}
+
+given_a_subject() {
 	apply definitions/subject
+	echo "✅  The subject is ready"
 }
 
 given_s3_storage() {
@@ -110,14 +115,22 @@ given_s3_storage() {
 		--create-namespace \
 		--namespace "${MINIO_NAMESPACE}" \
 		minio/minio
+
+	echo "✅  S3 Storage is ready"
 }
 
-given_running_operator() {
+given_a_running_operator() {
 	apply definitions/k8up
+
+	NAMESPACE=k8up-system \
+		wait_until deployment/k8up-operator available
+	echo "✅  A running operator is ready"
 }
 
 wait_until() {
 	object=${1}
 	condition=${2}
-	kubectl -n "${DETIK_CLIENT_NAMESPACE}" wait --timeout 1m --for "condition=${condition}" "${object}"
+	ns=${NAMESPACE=${DETIK_CLIENT_NAMESPACE}}
+	echo "Waiting for '${object}' in namespace '${ns}' to become '${condition}' ..."
+	kubectl -n "${ns}" wait --timeout 1m --for "condition=${condition}" "${object}"
 }
