@@ -1,5 +1,7 @@
 #!/bin/bash
 
+export MINIO_NAMESPACE=${MINIO_NAMESPACE-minio}
+
 errcho() {
 	>&2 echo "${@}"
 }
@@ -29,10 +31,11 @@ kustomize() {
 }
 
 restic() {
-	kubectl run wrestic \
+	kubectl run "wrestic" \
 		--rm \
 		--attach \
 		--restart Never \
+		--wait \
 		--namespace "${DETIK_CLIENT_NAMESPACE-"k8up-system"}" \
 		--image "${WRESTIC_IMAGE}" \
 		--env "AWS_ACCESS_KEY_ID=myaccesskey" \
@@ -46,6 +49,26 @@ restic() {
 			-r "s3:http://minio.minio.svc.cluster.local:9000/backup" \
 			"${@}" \
 			--json
+}
+
+mc() {
+	minio_access_key=$(kubectl -n "${MINIO_NAMESPACE}" get secret minio -o jsonpath="{.data.accesskey}" | base64 --decode)
+	minio_secret_key=$(kubectl -n "${MINIO_NAMESPACE}" get secret minio -o jsonpath="{.data.secretkey}" | base64 --decode)
+	minio_url=http://${minio_access_key}:${minio_secret_key}@minio.minio.svc.cluster.local:9000
+	kubectl run "minio" \
+		--rm \
+		--attach \
+		--stdin \
+		--restart Never \
+		--wait \
+		--namespace "${DETIK_CLIENT_NAMESPACE-"k8up-system"}" \
+		--image "${MINIO_IMAGE-minio/mc:latest}" \
+		--env "MC_HOST_s3=${minio_url}" \
+		--pod-running-timeout 10s \
+		--quiet=true \
+		--command -- \
+			mc \
+			"${@}"
 }
 
 replace_in_file() {
@@ -74,11 +97,16 @@ apply() {
 	kubectl apply -f "debug/${1}/main.yml"
 }
 
-given_a_subject() {
-	kubectl delete namespace k8up-e2e-subject --ignore-not-found
+given_a_clean_ns() {
+	kubectl delete namespace "${DETIK_CLIENT_NAMESPACE}" --ignore-not-found
 	kubectl delete pv subject-pv --ignore-not-found
-	kubectl create namespace k8up-e2e-subject || true
+	kubectl create namespace "${DETIK_CLIENT_NAMESPACE}"
+	echo "✅  The namespace '${DETIK_CLIENT_NAMESPACE}' is ready."
+}
+
+given_a_subject() {
 	apply definitions/subject
+	echo "✅  The subject is ready"
 }
 
 given_s3_storage() {
@@ -87,16 +115,24 @@ given_s3_storage() {
 	helm upgrade --install minio \
 		--values definitions/minio/helm.yaml \
 		--create-namespace \
-		--namespace minio \
+		--namespace "${MINIO_NAMESPACE}" \
 		minio/minio
+
+	echo "✅  S3 Storage is ready"
 }
 
-given_running_operator() {
+given_a_running_operator() {
 	apply definitions/k8up
+
+	NAMESPACE=k8up-system \
+		wait_until deployment/k8up-operator available
+	echo "✅  A running operator is ready"
 }
 
 wait_until() {
 	object=${1}
 	condition=${2}
-	kubectl -n "${DETIK_CLIENT_NAMESPACE}" wait --timeout 1m --for "condition=${condition}" "${object}"
+	ns=${NAMESPACE=${DETIK_CLIENT_NAMESPACE}}
+	echo "Waiting for '${object}' in namespace '${ns}' to become '${condition}' ..."
+	kubectl -n "${ns}" wait --timeout 1m --for "condition=${condition}" "${object}"
 }

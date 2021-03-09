@@ -28,7 +28,7 @@ test: export KUBECONFIG = $(KIND_KUBECONFIG)
 test: export E2E_IMAGE = $(E2E_IMG)
 test: export WRESTIC_IMAGE = $(WRESTIC_IMG)
 test: setup kind-e2e-image ## Run the E2E tests
-	@$(bats) . $(bats_args)
+	@$(bats) $(bats_args) $(BATS_FILES)
 
 kind-e2e-image: kind-setup ## Load the e2e container image onto e2e cluster
 	@$(KIND) load docker-image --name $(KIND_CLUSTER) $(E2E_IMG)

@@ -108,7 +108,7 @@ This will restore the latest snapshot from `\http://10.144.1.224:9000` to the PV
 
 * `backend`: see <<Backend, backend>> for further explanation
 * `restoreMethod`: is either `s3` or `folder`. For s3 please see `backend` for `folder` you just need to provide a valid claim name as shown in the example above
-* `restoreFiler`: a filter passed to the underlying Restic, which will be used. Please consult the https://restic.readthedocs.io/en/latest/050_restore.html[Restic docs] for valid path filters.
+* `restoreFilter`: a filter passed to the underlying Restic, which will be used. Please consult the https://restic.readthedocs.io/en/latest/050_restore.html[Restic docs] for valid path filters.
 * `snapshot`: valid snapshot ID that should get restored. If not provided, the most recent one will be restored.
 * `keepJobs`: amount of jobs that should be left after cleanup, for example how many job/pod objects should be left after they finished. Defaults to 6. Only applicable when used within a <<Schedule, schedule>>.
 * `tags`: list of tags to be considered for the restore. They're ignored if a snapshot ID is provided.
