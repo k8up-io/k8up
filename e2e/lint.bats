@@ -5,9 +5,12 @@ load "lib/linter"
 @test "lint assertions" {
 
 	for file in test*.bats; do
+		echo "Linting '${file}'..."
 		run lint "${file}"
-		# echo -e "$output" > /tmp/errors.txt
-		[ "$status" -eq 0 ]
-	done
 
+		if [ $status -ne 0 ]; then
+			echo "$output";
+			return $status;
+		fi
+	done
 }
