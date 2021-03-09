@@ -6,6 +6,10 @@ errcho() {
 	>&2 echo "${@}"
 }
 
+timestamp() {
+	date +%s
+}
+
 if [ -z "${E2E_IMAGE}" ]; then
 	errcho "The environment variable 'E2E_IMAGE' is undefined or empty."
 	exit 1
@@ -31,7 +35,7 @@ kustomize() {
 }
 
 restic() {
-	kubectl run "wrestic" \
+	kubectl run "wrestic-$(timestamp)" \
 		--rm \
 		--attach \
 		--restart Never \
@@ -55,12 +59,12 @@ mc() {
 	minio_access_key=$(kubectl -n "${MINIO_NAMESPACE}" get secret minio -o jsonpath="{.data.accesskey}" | base64 --decode)
 	minio_secret_key=$(kubectl -n "${MINIO_NAMESPACE}" get secret minio -o jsonpath="{.data.secretkey}" | base64 --decode)
 	minio_url=http://${minio_access_key}:${minio_secret_key}@minio.minio.svc.cluster.local:9000
-	kubectl run "minio" \
+	kubectl run "minio-$(timestamp)" \
 		--rm \
 		--attach \
 		--stdin \
 		--restart Never \
-		--wait \
+		--wait=true \
 		--namespace "${DETIK_CLIENT_NAMESPACE-"k8up-system"}" \
 		--image "${MINIO_IMAGE-minio/mc:latest}" \
 		--env "MC_HOST_s3=${minio_url}" \
@@ -88,6 +92,7 @@ prepare() {
 
 	replace_in_file E2E_IMAGE "'${E2E_IMAGE}'" "debug/${DEFINITION_DIR}/main.yml"
 	replace_in_file WRESTIC_IMAGE "'${WRESTIC_IMAGE}'" "debug/${DEFINITION_DIR}/main.yml"
+	replace_in_file BUSYBOX_IMAGE "'${BUSYBOX_IMAGE}'" "debug/${DEFINITION_DIR}/main.yml"
 	replace_in_file ID "$(id -u)" "debug/${DEFINITION_DIR}/main.yml"
 	replace_in_file BACKUP_ENABLE_LEADER_ELECTION "'${BACKUP_ENABLE_LEADER_ELECTION}'" "debug/${DEFINITION_DIR}/main.yml"
 }
@@ -130,8 +135,10 @@ given_a_running_operator() {
 }
 
 given_an_existing_backup() {
-	mc rb --force s3/backup || true
-	mc mb s3/backup
+	if mc rb --force s3/backup; then
+		mc mb s3/backup
+	fi
+
 	(
 		cd definitions/backup_repository || exit 1
 		for f in * **/* **/**/*; do

@@ -37,5 +37,5 @@ DEBUG_DETIK="true"
 	echo "${output}"
 	echo "---END---"
 
-	[ "${output}" == "$(< debug/data/pvc-subject/expectation.txt)" ]
+	[ "${output}" = "$(< debug/data/pvc-subject/expectation.txt)" ]
 }

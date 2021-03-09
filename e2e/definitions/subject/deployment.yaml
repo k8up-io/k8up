@@ -15,12 +15,16 @@ spec:
     spec:
       containers:
       - name: subject-container
-        image: quay.io/prometheus/busybox:latest
+        image: $BUSYBOX_IMAGE
         imagePullPolicy: IfNotPresent
         args:
         - sh
         - -c
-        - "echo MagicString > /data/expectation.txt && echo 'test file written, sleeping now' && sleep infinity"
+        - |
+          date +%s | tee /data/expectation.txt && \
+          ls -la /data && \
+          echo 'test file written, sleeping now' && \
+          sleep infinity
         securityContext:
           runAsUser: $ID
         volumeMounts:
