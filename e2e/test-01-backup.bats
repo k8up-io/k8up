@@ -30,4 +30,12 @@ DEBUG_DETIK="true"
 
 	echo -n "Number of Snapshots >= 1? "
 	jq -e 'length >= 1' <<< "${output}"          # Ensure that there was actually a backup created
+
+	run restic dump latest '/data/subject-pvc/expectation.txt'
+
+	echo "---BEGIN actual expectation.txt---"
+	echo "${output}"
+	echo "---END---"
+
+	[ "${output}" == "$(< debug/data/pvc-subject/expectation.txt)" ]
 }
