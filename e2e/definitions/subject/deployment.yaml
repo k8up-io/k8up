@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: subject-container
-        image: $BUSYBOX_IMAGE
+        image: quay.io/prometheus/busybox:latest
         imagePullPolicy: IfNotPresent
         args:
         - sh

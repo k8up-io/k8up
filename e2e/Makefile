@@ -27,7 +27,6 @@ bats_args ?=
 test: export KUBECONFIG = $(KIND_KUBECONFIG)
 test: export E2E_IMAGE = $(E2E_IMG)
 test: export WRESTIC_IMAGE = $(WRESTIC_IMG)
-test: export BUSYBOX_IMAGE = $(BUSYBOX_IMG)
 test: setup kind-e2e-image ## Run the E2E tests
 	@$(bats) $(bats_args) $(BATS_FILES)
 

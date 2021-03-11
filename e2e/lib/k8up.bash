@@ -92,7 +92,6 @@ prepare() {
 
 	replace_in_file E2E_IMAGE "'${E2E_IMAGE}'" "debug/${DEFINITION_DIR}/main.yml"
 	replace_in_file WRESTIC_IMAGE "'${WRESTIC_IMAGE}'" "debug/${DEFINITION_DIR}/main.yml"
-	replace_in_file BUSYBOX_IMAGE "'${BUSYBOX_IMAGE}'" "debug/${DEFINITION_DIR}/main.yml"
 	replace_in_file ID "$(id -u)" "debug/${DEFINITION_DIR}/main.yml"
 	replace_in_file BACKUP_ENABLE_LEADER_ELECTION "'${BACKUP_ENABLE_LEADER_ELECTION}'" "debug/${DEFINITION_DIR}/main.yml"
 }

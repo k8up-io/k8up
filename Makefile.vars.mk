@@ -35,6 +35,5 @@ KUSTOMIZE ?= go run sigs.k8s.io/kustomize/kustomize/v3
 DOCKER_IMG ?= docker.io/vshn/k8up:$(IMG_TAG)
 QUAY_IMG ?= quay.io/vshn/k8up:$(IMG_TAG)
 WRESTIC_IMG ?= quay.io/vshn/wrestic:v0.2.2
-BUSYBOX_IMG ?= quay.io/prometheus/busybox:latest
 
 testbin_created = $(TESTBIN_DIR)/.created
