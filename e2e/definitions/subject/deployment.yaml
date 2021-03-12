@@ -21,9 +21,9 @@ spec:
         - sh
         - -c
         - |
-          date +%s | tee /data/expectation.txt && \
+          printf '$BACKUP_FILE_CONTENT' | tee '/data/$BACKUP_FILE_NAME' && \
           ls -la /data && \
-          echo 'test file written, sleeping now' && \
+          echo "test file '/data/$BACKUP_FILE_NAME' written, sleeping now" && \
           sleep infinity
         securityContext:
           runAsUser: $ID

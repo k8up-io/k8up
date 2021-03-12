@@ -12,10 +12,13 @@ DETIK_CLIENT_NAMESPACE="k8up-e2e-subject"
 DEBUG_DETIK="true"
 
 @test "verify a backup" {
+	expected_content="expected content: $(timestamp)"
+	expected_filename="expected_filename.txt"
+
 	given_a_running_operator
 	given_a_clean_ns
 	given_s3_storage
-	given_a_subject
+	given_a_subject "${expected_filename}" "${expected_content}"
 
 	apply definitions/backup
 	try "at most 10 times every 1s to get backup named 'k8up-k8up-backup' and verify that '.status.started' is 'true'"
@@ -31,11 +34,11 @@ DEBUG_DETIK="true"
 	echo -n "Number of Snapshots >= 1? "
 	jq -e 'length >= 1' <<< "${output}"          # Ensure that there was actually a backup created
 
-	run restic dump latest '/data/subject-pvc/expectation.txt'
+	run restic dump latest "/data/subject-pvc/${expected_filename}"
 
-	echo "---BEGIN actual expectation.txt---"
+	echo "---BEGIN actual ${expected_filename}---"
 	echo "${output}"
 	echo "---END---"
 
-	[ "${output}" = "$(< debug/data/pvc-subject/expectation.txt)" ]
+	[ "${output}" = "${expected_content}" ]
 }
