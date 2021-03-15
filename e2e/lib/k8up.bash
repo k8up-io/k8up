@@ -62,9 +62,11 @@ restic() {
 }
 
 mc() {
+	local minio_access_key minio_secret_key minio_url
 	minio_access_key=$(kubectl -n "${MINIO_NAMESPACE}" get secret minio -o jsonpath="{.data.accesskey}" | base64 --decode)
 	minio_secret_key=$(kubectl -n "${MINIO_NAMESPACE}" get secret minio -o jsonpath="{.data.secretkey}" | base64 --decode)
 	minio_url=http://${minio_access_key}:${minio_secret_key}@minio.minio.svc.cluster.local:9000
+
 	kubectl run "minio-$(timestamp)" \
 		--rm \
 		--attach \
@@ -87,19 +89,21 @@ replace_in_file() {
 		exit 1
 	fi
 
-	FILE=${1}
-	VAR_NAME=${2}
-	VAR_VALUE=${3}
+	local file var_name var_value
+	file=${1}
+	var_name=${2}
+	var_value=${3}
 
 	sed -i \
-		-e "s|\$${VAR_NAME}|${VAR_VALUE}|" \
-		"${FILE}"
+		-e "s|\$${var_name}|${var_value}|" \
+		"${file}"
 }
 
 prepare() {
 	DEFINITION_DIR=${1}
 	mkdir -p "debug/${DEFINITION_DIR}"
 
+	local target_file
 	target_file="debug/${DEFINITION_DIR}/main.yml"
 
 	kustomize build "${DEFINITION_DIR}" -o "${target_file}"
@@ -164,12 +168,14 @@ given_an_existing_backup() {
 		exit 1
 	fi
 
+	local backup_file_name backup_file_content
 	backup_file_name=${1}
 	backup_file_content=${2}
 	given_a_subject "${backup_file_name}" "${backup_file_content}"
 
 	apply definitions/backup
 	wait_until backup/k8up-k8up-backup completed
+	verify "'.status.conditions[?(@.type==\"Completed\")].reason' is 'Succeeded' for Backup named 'k8up-k8up-backup'"
 
 	run restic dump latest "/data/subject-pvc/${backup_file_name}"
 	# shellcheck disable=SC2154
@@ -179,9 +185,11 @@ given_an_existing_backup() {
 }
 
 wait_until() {
+	local object condition ns
 	object=${1}
 	condition=${2}
 	ns=${NAMESPACE=${DETIK_CLIENT_NAMESPACE}}
+
 	echo "Waiting for '${object}' in namespace '${ns}' to become '${condition}' ..."
 	kubectl -n "${ns}" wait --timeout 1m --for "condition=${condition}" "${object}"
 }
@@ -192,6 +200,7 @@ expect_file_in_container() {
 		exit 1
 	fi
 
+	local pod container expected_file expected_content
 	pod=${1}
 	container=${2}
 	expected_file=${3}
@@ -204,11 +213,10 @@ expect_file_in_container() {
 		"test \"${expected_content}\" \"=\" \"\$(cat \"${expected_file}\")\" "
 	)
 
-	echo "Testing if file '${expected_file}' contains '${expected_content}'"
-	echo "in container '${container}' of pod '${pod}'."
+	echo "Testing if file '${expected_file}' contains '${expected_content}' in container '${container}' of pod '${pod}':"
 
 	for cmd in "${commands[@]}"; do
-		echo "by running the command >sh -c '${cmd}'<."
+		echo "> by running the command \`sh -c '${cmd}'\`."
 		kubectl exec \
 			"${pod}" \
 			--container "${container}" \
@@ -217,5 +225,4 @@ expect_file_in_container() {
 			-- sh -c "${cmd}"
 		echo '↩'
 	done
-
 }

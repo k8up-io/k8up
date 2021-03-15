@@ -23,7 +23,6 @@ DEBUG_DETIK="true"
 	apply definitions/backup
 	try "at most 10 times every 1s to get backup named 'k8up-k8up-backup' and verify that '.status.started' is 'true'"
 	try "at most 10 times every 1s to get job named 'k8up-k8up-backup' and verify that '.status.active' is '1'"
-	try "at most 10 times every 2s to find 1 pod named 'k8up-k8up-backup-.....' with 'status' being 'Running'"
 
 	wait_until backup/k8up-k8up-backup completed
 
