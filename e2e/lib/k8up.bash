@@ -3,7 +3,11 @@
 export MINIO_NAMESPACE=${MINIO_NAMESPACE-minio}
 
 errcho() {
-	>&2 echo "${@}"
+	echo >&2 "${@}"
+}
+
+timestamp() {
+	date +%s
 }
 
 if [ -z "${E2E_IMAGE}" ]; then
@@ -20,10 +24,16 @@ setup() {
 
 setup_file() {
 	reset_debug
+	clear_pv_data
 }
 
 teardown() {
 	cp -r /tmp/detik debug || true
+}
+
+clear_pv_data() {
+	rm -rfv ./debug/data/pvc-subject
+	mkdir -p ./debug/data/pvc-subject
 }
 
 kustomize() {
@@ -31,7 +41,7 @@ kustomize() {
 }
 
 restic() {
-	kubectl run "wrestic" \
+	kubectl run "wrestic-$(timestamp)" \
 		--rm \
 		--attach \
 		--restart Never \
@@ -44,52 +54,44 @@ restic() {
 		--pod-running-timeout 10s \
 		--quiet=true \
 		--command -- \
-			restic \
-			--no-cache \
-			-r "s3:http://minio.minio.svc.cluster.local:9000/backup" \
-			"${@}" \
-			--json
-}
-
-mc() {
-	minio_access_key=$(kubectl -n "${MINIO_NAMESPACE}" get secret minio -o jsonpath="{.data.accesskey}" | base64 --decode)
-	minio_secret_key=$(kubectl -n "${MINIO_NAMESPACE}" get secret minio -o jsonpath="{.data.secretkey}" | base64 --decode)
-	minio_url=http://${minio_access_key}:${minio_secret_key}@minio.minio.svc.cluster.local:9000
-	kubectl run "minio" \
-		--rm \
-		--attach \
-		--stdin \
-		--restart Never \
-		--wait \
-		--namespace "${DETIK_CLIENT_NAMESPACE-"k8up-system"}" \
-		--image "${MINIO_IMAGE-minio/mc:latest}" \
-		--env "MC_HOST_s3=${minio_url}" \
-		--pod-running-timeout 10s \
-		--quiet=true \
-		--command -- \
-			mc \
-			"${@}"
+		restic \
+		--no-cache \
+		-r "s3:http://minio.minio.svc.cluster.local:9000/backup" \
+		"${@}" \
+		--json
 }
 
 replace_in_file() {
-	VAR_NAME=${1}
-	VAR_VALUE=${2}
-	FILE=${3}
+	if [ "${#}" != 3 ]; then
+		errcho "$0 Expected 3 arguments, got ${#}."
+		exit 1
+	fi
+
+	local file var_name var_value
+	file=${1}
+	var_name=${2}
+	var_value=${3}
 
 	sed -i \
-		-e "s|\$${VAR_NAME}|${VAR_VALUE}|" \
-		"${FILE}"
+		-e "s|\$${var_name}|${var_value}|" \
+		"${file}"
 }
 
 prepare() {
 	DEFINITION_DIR=${1}
 	mkdir -p "debug/${DEFINITION_DIR}"
-	kustomize build "${DEFINITION_DIR}" -o "debug/${DEFINITION_DIR}/main.yml"
 
-	replace_in_file E2E_IMAGE "'${E2E_IMAGE}'" "debug/${DEFINITION_DIR}/main.yml"
-	replace_in_file WRESTIC_IMAGE "'${WRESTIC_IMAGE}'" "debug/${DEFINITION_DIR}/main.yml"
-	replace_in_file ID "$(id -u)" "debug/${DEFINITION_DIR}/main.yml"
-	replace_in_file BACKUP_ENABLE_LEADER_ELECTION "'${BACKUP_ENABLE_LEADER_ELECTION}'" "debug/${DEFINITION_DIR}/main.yml"
+	local target_file
+	target_file="debug/${DEFINITION_DIR}/main.yml"
+
+	kustomize build "${DEFINITION_DIR}" -o "${target_file}"
+
+	replace_in_file "${target_file}" E2E_IMAGE "'${E2E_IMAGE}'"
+	replace_in_file "${target_file}" WRESTIC_IMAGE "'${WRESTIC_IMAGE}'"
+	replace_in_file "${target_file}" ID "$(id -u)"
+	replace_in_file "${target_file}" BACKUP_ENABLE_LEADER_ELECTION "'${BACKUP_ENABLE_LEADER_ELECTION}'"
+	replace_in_file "${target_file}" BACKUP_FILE_NAME "${BACKUP_FILE_NAME}"
+	replace_in_file "${target_file}" BACKUP_FILE_CONTENT "${BACKUP_FILE_CONTENT}"
 }
 
 apply() {
@@ -100,11 +102,20 @@ apply() {
 given_a_clean_ns() {
 	kubectl delete namespace "${DETIK_CLIENT_NAMESPACE}" --ignore-not-found
 	kubectl delete pv subject-pv --ignore-not-found
+	clear_pv_data
 	kubectl create namespace "${DETIK_CLIENT_NAMESPACE}"
 	echo "✅  The namespace '${DETIK_CLIENT_NAMESPACE}' is ready."
 }
 
 given_a_subject() {
+	if [ "${#}" != 2 ]; then
+		errcho "$0 Expected 2 arguments, got ${#}."
+		exit 1
+	fi
+
+	export BACKUP_FILE_NAME=$1
+	export BACKUP_FILE_CONTENT=$2
+
 	apply definitions/subject
 	echo "✅  The subject is ready"
 }
@@ -129,10 +140,67 @@ given_a_running_operator() {
 	echo "✅  A running operator is ready"
 }
 
+given_an_existing_backup() {
+	if [ "${#}" != 2 ]; then
+		errcho "$0 Expected 2 arguments, got ${#}."
+		exit 1
+	fi
+
+	local backup_file_name backup_file_content
+	backup_file_name=${1}
+	backup_file_content=${2}
+	given_a_subject "${backup_file_name}" "${backup_file_content}"
+
+	apply definitions/backup
+	wait_until backup/k8up-k8up-backup completed
+	verify "'.status.conditions[?(@.type==\"Completed\")].reason' is 'Succeeded' for Backup named 'k8up-k8up-backup'"
+
+	run restic dump latest "/data/subject-pvc/${backup_file_name}"
+	# shellcheck disable=SC2154
+	[ "${backup_file_content}" = "${output}" ]
+
+	echo "✅  An existing backup is ready"
+}
+
 wait_until() {
+	local object condition ns
 	object=${1}
 	condition=${2}
 	ns=${NAMESPACE=${DETIK_CLIENT_NAMESPACE}}
+
 	echo "Waiting for '${object}' in namespace '${ns}' to become '${condition}' ..."
 	kubectl -n "${ns}" wait --timeout 1m --for "condition=${condition}" "${object}"
+}
+
+expect_file_in_container() {
+	if [ "${#}" != 4 ]; then
+		errcho "$0 Expected 4 arguments, got ${#}."
+		exit 1
+	fi
+
+	local pod container expected_file expected_content
+	pod=${1}
+	container=${2}
+	expected_file=${3}
+	expected_content=${4}
+
+	commands=(
+		"ls -la \"$(dirname "${expected_file}")\""
+		"test -f \"${expected_file}\""
+		"cat \"${expected_file}\""
+		"test \"${expected_content}\" \"=\" \"\$(cat \"${expected_file}\")\" "
+	)
+
+	echo "Testing if file '${expected_file}' contains '${expected_content}' in container '${container}' of pod '${pod}':"
+
+	for cmd in "${commands[@]}"; do
+		echo "> by running the command \`sh -c '${cmd}'\`."
+		kubectl exec \
+			"${pod}" \
+			--container "${container}" \
+			--stdin \
+			--namespace "${DETIK_CLIENT_NAMESPACE}" \
+			-- sh -c "${cmd}"
+		echo '↩'
+	done
 }

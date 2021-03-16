@@ -20,7 +20,11 @@ spec:
         args:
         - sh
         - -c
-        - "echo MagicString > /data/expectation.txt && echo 'test file written, sleeping now' && sleep infinity"
+        - |
+          printf '$BACKUP_FILE_CONTENT' | tee '/data/$BACKUP_FILE_NAME' && \
+          ls -la /data && \
+          echo "test file '/data/$BACKUP_FILE_NAME' written, sleeping now" && \
+          sleep infinity
         securityContext:
           runAsUser: $ID
         volumeMounts:
