@@ -94,8 +94,11 @@ func (r *Restic) Restore(snapshotID string, options RestoreOptions, tags ArrayOp
 		err = fmt.Errorf("no valid restore type")
 	}
 
-	if stats != nil {
-		//r.statsHandler.SendWebhook(stats)
+	if stats != nil && err == nil {
+		err = r.statsHandler.SendWebhook(stats)
+		if err != nil {
+			return err
+		}
 	}
 
 	return err
@@ -227,7 +230,7 @@ func (r *Restic) s3Restore(log logr.Logger, snapshot Snapshot, stats *restoreSta
 		return err
 	}
 
-	snapRoot, tarHeader := r.getSnapshotRoot(latestSnap, log)
+	snapRoot, tarHeader := r.getSnapshotRoot(latestSnap, log, stats)
 
 	zipWriter := gzip.NewWriter(uploadWritePipe)
 
@@ -298,7 +301,7 @@ func (r *Restic) startS3Upload(fileName string, uploadReadPipe io.Reader, s3Clie
 
 // getSnapshotRoot will return the correct root to trigger the restore. If the
 // snapshot was done as a stdin backup it will also return a tar header.
-func (r *Restic) getSnapshotRoot(snapshot Snapshot, log logr.Logger) (string, *tar.Header) {
+func (r *Restic) getSnapshotRoot(snapshot Snapshot, log logr.Logger, stats *restoreStats) (string, *tar.Header) {
 
 	buf := bytes.Buffer{}
 
@@ -320,7 +323,7 @@ func (r *Restic) getSnapshotRoot(snapshot Snapshot, log logr.Logger) (string, *t
 	// dump this is the same case.
 	split := strings.Split(buf.String(), "\n")
 
-	amountOfFiles, lastNode := r.countFileNodes(split)
+	amountOfFiles, lastNode := r.countFileNodes(split, stats)
 
 	if amountOfFiles == 1 {
 		return lastNode.Path, r.getTarHeaderFromFileNode(lastNode)
@@ -342,7 +345,7 @@ func (r *Restic) getTarHeaderFromFileNode(file *fileNode) *tar.Header {
 	}
 }
 
-func (r *Restic) countFileNodes(rawJSON []string) (int, *fileNode) {
+func (r *Restic) countFileNodes(rawJSON []string, stats *restoreStats) (int, *fileNode) {
 	count := 0
 	lastNode := &fileNode{}
 	for _, fileJSON := range rawJSON {
@@ -354,6 +357,7 @@ func (r *Restic) countFileNodes(rawJSON []string) (int, *fileNode) {
 		if node.Type == "file" {
 			count++
 			lastNode = node
+			stats.RestoredFiles = append(stats.RestoredFiles, node.Path)
 		}
 	}
 	return count, lastNode
