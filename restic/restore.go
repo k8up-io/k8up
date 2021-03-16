@@ -231,14 +231,7 @@ func (r *Restic) s3Restore(log logr.Logger, snapshot Snapshot, stats *restoreSta
 
 	zipWriter := gzip.NewWriter(uploadWritePipe)
 
-	errorChanel := make(chan error)
-
-	go func() {
-		errorChanel <- s3Client.Upload(s3.UploadObject{
-			Name:         fileName,
-			ObjectStream: uploadReadPipe,
-		})
-	}()
+	errorChannel := r.startS3Upload(fileName, uploadReadPipe, s3Client)
 
 	finalWriter := io.WriteCloser(zipWriter)
 
@@ -288,8 +281,19 @@ func (r *Restic) s3Restore(log logr.Logger, snapshot Snapshot, stats *restoreSta
 		return err
 	}
 
-	return <-errorChanel
+	return <-errorChannel
 
+}
+
+func (r *Restic) startS3Upload(fileName string, uploadReadPipe io.Reader, s3Client *s3.Client) chan error {
+	errorChannel := make(chan error)
+	go func() {
+		errorChannel <- s3Client.Upload(s3.UploadObject{
+			Name:         fileName,
+			ObjectStream: uploadReadPipe,
+		})
+	}()
+	return errorChannel
 }
 
 // getSnapshotRoot will return the correct root to trigger the restore. If the
