@@ -61,28 +61,6 @@ restic() {
 		--json
 }
 
-mc() {
-	local minio_access_key minio_secret_key minio_url
-	minio_access_key=$(kubectl -n "${MINIO_NAMESPACE}" get secret minio -o jsonpath="{.data.accesskey}" | base64 --decode)
-	minio_secret_key=$(kubectl -n "${MINIO_NAMESPACE}" get secret minio -o jsonpath="{.data.secretkey}" | base64 --decode)
-	minio_url=http://${minio_access_key}:${minio_secret_key}@minio.minio.svc.cluster.local:9000
-
-	kubectl run "minio-$(timestamp)" \
-		--rm \
-		--attach \
-		--stdin \
-		--restart Never \
-		--wait=true \
-		--namespace "${DETIK_CLIENT_NAMESPACE-"k8up-system"}" \
-		--image "${MINIO_IMAGE-minio/mc:latest}" \
-		--env "MC_HOST_s3=${minio_url}" \
-		--pod-running-timeout 10s \
-		--quiet=true \
-		--command -- \
-		mc \
-		"${@}"
-}
-
 replace_in_file() {
 	if [ "${#}" != 3 ]; then
 		errcho "$0 Expected 3 arguments, got ${#}."
