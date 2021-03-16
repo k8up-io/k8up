@@ -7,7 +7,7 @@ require (
 	github.com/elastic/crd-ref-docs v0.0.7
 	github.com/go-logr/logr v0.4.0
 	github.com/go-logr/zapr v0.4.0
-	github.com/imdario/mergo v0.3.11
+	github.com/imdario/mergo v0.3.12
 	github.com/knadh/koanf v0.15.0
 	github.com/prometheus/client_golang v1.9.0
 	github.com/robfig/cron/v3 v3.0.1
