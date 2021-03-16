@@ -78,17 +78,18 @@ func (r *Restic) Restore(snapshotID string, options RestoreOptions, tags ArrayOp
 		return err
 	}
 
-	var stats *restoreStats
+	var stats *RestoreStats
 	switch options.RestoreType {
 	case FolderRestore:
 		err = r.folderRestore(options.RestoreDir, latestSnap, options.RestoreFilter, options.Verify, restorelogger)
-		stats = &restoreStats{
+		stats = &RestoreStats{
 			RestoreLocation: options.RestoreDir,
 			RestoredFiles:   []string{"not supported for folder restores"},
 			SnapshotID:      latestSnap.ID,
 		}
 
 	case S3Restore:
+		stats = &RestoreStats{}
 		err = r.s3Restore(restorelogger, latestSnap, stats)
 	default:
 		err = fmt.Errorf("no valid restore type")
@@ -207,7 +208,7 @@ func (r *Restic) parsePath(paths []string) string {
 	return path.Base(paths[len(paths)-1])
 }
 
-func (r *Restic) s3Restore(log logr.Logger, snapshot Snapshot, stats *restoreStats) error {
+func (r *Restic) s3Restore(log logr.Logger, snapshot Snapshot, stats *RestoreStats) error {
 
 	log.Info("S3 chosen as restore destination")
 
@@ -301,7 +302,7 @@ func (r *Restic) startS3Upload(fileName string, uploadReadPipe io.Reader, s3Clie
 
 // getSnapshotRoot will return the correct root to trigger the restore. If the
 // snapshot was done as a stdin backup it will also return a tar header.
-func (r *Restic) getSnapshotRoot(snapshot Snapshot, log logr.Logger, stats *restoreStats) (string, *tar.Header) {
+func (r *Restic) getSnapshotRoot(snapshot Snapshot, log logr.Logger, stats *RestoreStats) (string, *tar.Header) {
 
 	buf := bytes.Buffer{}
 
@@ -345,7 +346,7 @@ func (r *Restic) getTarHeaderFromFileNode(file *fileNode) *tar.Header {
 	}
 }
 
-func (r *Restic) countFileNodes(rawJSON []string, stats *restoreStats) (int, *fileNode) {
+func (r *Restic) countFileNodes(rawJSON []string, stats *RestoreStats) (int, *fileNode) {
 	count := 0
 	lastNode := &fileNode{}
 	for _, fileJSON := range rawJSON {
