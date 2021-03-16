@@ -56,6 +56,12 @@ type fileNode struct {
 	StructType string    `json:"struct_type"`
 }
 
+type restoreStats struct {
+	RestoreLocation string   `json:"restore_location,omitempty"`
+	SnapshotID      string   `json:"snapshot_ID,omitempty"`
+	RestoredFiles   []string `json:"restored_files,omitempty"`
+}
+
 // Restore triggers a restore of a snapshot
 func (r *Restic) Restore(snapshotID string, options RestoreOptions, tags ArrayOpts) error {
 	restorelogger := r.logger.WithName("restore")
@@ -78,15 +84,27 @@ func (r *Restic) Restore(snapshotID string, options RestoreOptions, tags ArrayOp
 		return err
 	}
 
+	var stats *restoreStats
 	switch options.RestoreType {
 	case FolderRestore:
-		return r.folderRestore(options.RestoreDir, latestSnap, options.RestoreFilter, options.Verify, restorelogger)
+		err = r.folderRestore(options.RestoreDir, latestSnap, options.RestoreFilter, options.Verify, restorelogger)
+		stats = &restoreStats{
+			RestoreLocation: options.RestoreDir,
+			RestoredFiles:   []string{"not supported for folder restores"},
+			SnapshotID:      latestSnap.ID,
+		}
+
 	case S3Restore:
-		return r.s3Restore(restorelogger, latestSnap)
+		err = r.s3Restore(restorelogger, latestSnap, stats)
 	default:
-		return fmt.Errorf("no valid restore type")
+		err = fmt.Errorf("no valid restore type")
 	}
 
+	if stats != nil {
+		//r.statsHandler.SendWebhook(stats)
+	}
+
+	return err
 }
 
 func (r *Restic) getLatestSnapshot(snapshotID string, log logr.Logger) (Snapshot, error) {
@@ -192,13 +210,15 @@ func (r *Restic) parsePath(paths []string) string {
 	return path.Base(paths[len(paths)-1])
 }
 
-func (r *Restic) s3Restore(log logr.Logger, snapshot Snapshot) error {
+func (r *Restic) s3Restore(log logr.Logger, snapshot Snapshot, stats *restoreStats) error {
 
 	log.Info("S3 chosen as restore destination")
 
 	snapDate := snapshot.Time.Format(time.RFC3339)
 	PVCName := r.parsePath(snapshot.Paths)
 	fileName := fmt.Sprintf("backup-%v-%v-%v.tar.gz", snapshot.Hostname, PVCName, snapDate)
+	stats.RestoreLocation = fmt.Sprintf("%s/%s", os.Getenv(RestoreS3EndpointEnv), fileName)
+	stats.SnapshotID = snapshot.ID
 
 	s3Client := s3.New(os.Getenv(RestoreS3EndpointEnv), os.Getenv(RestoreS3AccessKeyIDEnv), os.Getenv(RestoreS3SecretAccessKey))
 	err := s3Client.Connect()
@@ -206,33 +226,33 @@ func (r *Restic) s3Restore(log logr.Logger, snapshot Snapshot) error {
 		return err
 	}
 
-	readPipe, writePipe := io.Pipe()
+	uploadReadPipe, uploadWritePipe := io.Pipe()
 
 	latestSnap, err := r.getLatestSnapshot(snapshot.ID, log)
 	if err != nil {
 		return err
 	}
 
-	snapRoot, th := r.getSnapshotRoot(latestSnap, log)
+	snapRoot, tarHeader := r.getSnapshotRoot(latestSnap, log)
 
-	zw := gzip.NewWriter(writePipe)
+	zipWriter := gzip.NewWriter(uploadWritePipe)
 
 	errorChanel := make(chan error)
 
 	go func() {
 		errorChanel <- s3Client.Upload(s3.UploadObject{
 			Name:         fileName,
-			ObjectStream: readPipe,
+			ObjectStream: uploadReadPipe,
 		})
 	}()
 
-	finalWriter := io.WriteCloser(zw)
+	finalWriter := io.WriteCloser(zipWriter)
 
 	// If it's an stdin backup we restore we'll only have to write one header
 	// as stdin backups only contain one vritual file.
-	if th != nil {
-		tw := tar.NewWriter(zw)
-		err := tw.WriteHeader(th)
+	if tarHeader != nil {
+		tw := tar.NewWriter(zipWriter)
+		err := tw.WriteHeader(tarHeader)
 		if err != nil {
 			return err
 		}
@@ -258,11 +278,11 @@ func (r *Restic) s3Restore(log logr.Logger, snapshot Snapshot) error {
 
 	// We need to close the writers in a specific order
 	finalWriter.Close()
-	zw.Close()
+	zipWriter.Close()
 
 	// Send EOF so minio client knows it's finished
 	// or else the chanel will block forever
-	writePipe.Close()
+	uploadWritePipe.Close()
 
 	log.Info("restore finished")
 
