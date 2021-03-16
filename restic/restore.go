@@ -275,16 +275,24 @@ func (r *Restic) s3Restore(log logr.Logger, snapshot Snapshot, stats *restoreSta
 
 	cmd := NewCommand(r.ctx, log, opts)
 	cmd.Run()
+	defer log.Info("restore finished")
 
 	// We need to close the writers in a specific order
-	finalWriter.Close()
-	zipWriter.Close()
+	err = finalWriter.Close()
+	if err != nil {
+		return err
+	}
+	err = zipWriter.Close()
+	if err != nil {
+		return err
+	}
 
 	// Send EOF so minio client knows it's finished
 	// or else the chanel will block forever
-	uploadWritePipe.Close()
-
-	log.Info("restore finished")
+	err = uploadWritePipe.Close()
+	if err != nil {
+		return err
+	}
 
 	return <-errorChanel
 
