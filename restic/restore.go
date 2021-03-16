@@ -56,12 +56,6 @@ type fileNode struct {
 	StructType string    `json:"struct_type"`
 }
 
-type restoreStats struct {
-	RestoreLocation string   `json:"restore_location,omitempty"`
-	SnapshotID      string   `json:"snapshot_ID,omitempty"`
-	RestoredFiles   []string `json:"restored_files,omitempty"`
-}
-
 // Restore triggers a restore of a snapshot
 func (r *Restic) Restore(snapshotID string, options RestoreOptions, tags ArrayOpts) error {
 	restorelogger := r.logger.WithName("restore")

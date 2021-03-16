@@ -215,3 +215,14 @@ func (r *Restic) getMountedFolders() []string {
 
 	return folders
 }
+
+type restoreStats struct {
+	RestoreLocation string   `json:"restore_location,omitempty"`
+	SnapshotID      string   `json:"snapshot_ID,omitempty"`
+	RestoredFiles   []string `json:"restored_files,omitempty"`
+}
+
+func (r *restoreStats) ToJson() []byte {
+	jsonData, _ := json.Marshal(r)
+	return jsonData
+}
