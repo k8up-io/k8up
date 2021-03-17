@@ -11,7 +11,7 @@ DETIK_CLIENT_NAMESPACE="k8up-e2e-subject"
 # shellcheck disable=SC2034
 DEBUG_DETIK="true"
 
-@test "verify a restore" {
+@test "Given an existing Restic repository, When creating a Restore, Then Restore to PVC" {
 	# Backup
 	expected_content="Old content: $(timestamp)"
 	expected_filename="old_file.txt"

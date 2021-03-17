@@ -11,7 +11,7 @@ DETIK_CLIENT_NAMESPACE="k8up-e2e-subject"
 # shellcheck disable=SC2034
 DEBUG_DETIK="true"
 
-@test "verify a backup" {
+@test "Given a PVC, When creating a Backup of an app, Then expect Restic repository" {
 	expected_content="expected content: $(timestamp)"
 	expected_filename="expected_filename.txt"
 
