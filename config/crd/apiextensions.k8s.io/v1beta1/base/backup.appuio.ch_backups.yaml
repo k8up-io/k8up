@@ -17,7 +17,7 @@ spec:
     description: Status of Completion
     name: Completion
     type: string
-  - JSONPath: .status.conditions[?(@.type == "PreBackupPodsReady")].reason
+  - JSONPath: .status.conditions[?(@.type == "PreBackupPodReady")].reason
     description: Status of PreBackupPods
     name: PreBackup
     type: string
