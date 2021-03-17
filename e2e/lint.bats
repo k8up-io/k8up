@@ -2,7 +2,7 @@
 load "lib/utils"
 load "lib/linter"
 
-@test "lint assertions" {
+@test "Lint assertions in e2e tests" {
 
 	for file in test*.bats; do
 		echo "Linting '${file}'..."

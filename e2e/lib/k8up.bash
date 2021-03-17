@@ -133,7 +133,7 @@ given_s3_storage() {
 }
 
 given_a_running_operator() {
-	apply definitions/k8up
+	apply definitions/operator
 
 	NAMESPACE=k8up-system \
 		wait_until deployment/k8up-operator available
