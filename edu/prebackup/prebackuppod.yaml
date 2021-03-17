@@ -1,0 +1,14 @@
+apiVersion: backup.appuio.ch/v1alpha1
+kind: PreBackupPod
+metadata:
+  name: mysql-prebackup
+spec:
+  backupCommand: mysqldump -u root --all-databases -h mariadb-svc
+  pod:
+    spec:
+      containers:
+        - name: mysqldump
+          image: quay.io/bitnami/mariadb
+          command:
+          - sleep
+          - infinity

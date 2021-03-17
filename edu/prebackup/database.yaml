@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mariadb
+spec:
+  selector:
+    matchLabels:
+      tier: mariadb
+  template:
+    metadata:
+      labels:
+        tier: mariadb
+    spec:
+      securityContext:
+        runAsUser: 0
+      containers:
+      - image: quay.io/bitnami/mariadb
+        name: mariadb
+        env:
+        - name: ALLOW_EMPTY_PASSWORD
+          value: "yes" # Don't do this for production!
+        ports:
+        - containerPort: 3306
+          name: mariadb
+      #   volumeMounts:
+      #   - name: data
+      #     mountPath: /bitnami/mariadb
+      # volumes:
+      # - name: data
+      #   persistentVolumeClaim:
+      #     claimName: backup-pvc

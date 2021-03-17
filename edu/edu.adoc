@@ -1,0 +1,114 @@
+= K8up Internal Education
+:toc:
+
+== What is K8up?
+
+https://k8up.io/k8up/1.0.0/index.html[Introduction]
+
+== What's new in K8up v1.0?
+
+For the user
+
+. https://k8up.io/k8up/1.0.0/references/status.html[Conditions in Status]
+. Pretty print
++
+[source]
+----
+$ kubectl get backup
+NAME                         SCHEDULE REF    COMPLETION   PREBACKUP              AGE
+schedule-test-backup-4fpbd   schedule-test   Failed       NoPreBackupPodsFound    2m20s
+
+$ kubectl get restore
+NAME                SCHEDULE REF   COMPLETION   AGE
+k8up-k8up-restore                  Succeeded    14m
+----
+. https://k8up.io/k8up/1.0.0/how-tos/manage-pod-resources.html[Manage Pod resources]
+. https://k8up.io/k8up/1.0.0/references/schedule-specification.html[Randomized schedules]
+
+For the admin
+
+. Kubernetes 1.20
+. Leader election
+. Image registry mirror (docker.io & quay.io)
+
+For the developer
+
+. Integration testing with in-memory Kubernetes API server
+. end-to-end testing with KIND, BATS and DETIK
+. https://github.com/vshn/k8up/releases[Changelog generator]
+
+== Demo
+
+.Prepare cluster and operator
+[source,bash]
+----
+make e2e-test
+source edu/edu.functions.sh
+
+kapply edu/secrets
+
+# in terminal
+k get pods -w | grep -v -E "(ContainerCreating)|(Terminating)"
+----
+
+.Random schedule
+[source,bash]
+----
+kapply edu/random-schedules
+k -n k8up-system logs deploy/k8up-operator --tail 20
+k -n k8up-system get effectiveschedule
+kdelete edu/random-schedules
+----
+
+.PreBackup
+[source,bash]
+----
+kapply edu/prebackup
+kapply edu/backup
+k -n k8up-system logs deploy/k8up-operator --tail 20 -f
+restic dump latest /default-mysqldump | less
+kdelete edu/backup
+kdelete edu/prebackup
+----
+
+.Restore
+[source,bash]
+----
+kapply edu/restore
+k logs -l job-name=restore-database
+k -n minio exec -it deploy/minio -- ls -lah /export/restore
+kdelete edu/restore
+----
+
+.Resources
+[source,bash]
+----
+k -n k8up-system set env deploy/k8up-operator BACKUP_GLOBAL_MEMORY_LIMIT=499Mi
+kapply edu/resources
+# wait for backups
+k get backup -w
+k get backup -o yaml | grep -E "resources|$"
+k get pod -o name | grep resources-schedule-backup | xargs kubectl get -o yaml | grep -E "resources|$"
+k -n k8up-system set env deploy/k8up-operator BACKUP_GLOBAL_MEMORY_LIMIT-
+kdelete edu/resources
+----
+
+== Installation
+
+=== Helm
+
+https://github.com/appuio/charts/tree/master/k8up[to GitHub]
+
+=== Commodore Component
+
+https://github.com/projectsyn/component-backup-k8up/tree/v2.0.0[to GitHub]
+
+== Roadmap
+
+. Integrate wrestic into K8up
+. K8up v2
++
+image:docs/modules/ROOT/assets/images/v2-vision-process.svg[]
+
+  - CLI first
+  - Operator: Glorified CronJob manager with extra spice
