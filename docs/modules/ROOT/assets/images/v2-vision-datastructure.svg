@@ -1,0 +1,181 @@
+<svg host="65bd71144e" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="661px" height="360px" viewBox="-0.5 -0.5 661 360" content="&lt;mxfile host=&quot;06b0d378-823a-482b-91a1-7496f967f250&quot; modified=&quot;2021-02-25T14:09:11.406Z&quot; agent=&quot;5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Code/1.53.2 Chrome/87.0.4280.141 Electron/11.2.1 Safari/537.36&quot; etag=&quot;3UvbBNrHY0r2lxQriRXk&quot; version=&quot;14.2.4&quot; type=&quot;embed&quot;&gt;&lt;diagram id=&quot;paodFe8R_9SHJEKRlIYM&quot; name=&quot;datastructure&quot;&gt;7Zrdc6I6FMD/Gh/uQ3f4ELWPFW23t/Zup/aOum8pBMg2ECYElf719wSDQKHWbrW9O2PH6ZCTk0DO73wkYse0w/UVR3Fwy1xMO4bmrjvmqGMYlmbAfynINgLT6m8EPifuRqSXgil5xkqoKWlKXJzUFAVjVJC4LnRYFGFH1GSIc7aqq3mM1u8aIx83BFMH0aZ0RlwRKKneOy87vmPiB+rWA0OtL0SFslpJEiCXrSoic9wxbc6Y2FyFaxtTabvCLrOfU92a3NhX/sM9sQ0//TFYn20mu3zPkO0SOI7Eb08djJHvpMv55eI6TTw68+4mN2qItkQ0Vfa6xzFLiGA8U6sWWWHKZEVCiiJoDT0Wianq0aDtBIS6E5SxVD5gIpDzVLSGAePkGfQRhS4dBNDNhfIUoydnI5TajDIOgojlNygHTeVk6jYcJzDsrjCE/kJ0i9Y1xQlKRPGAjFIUJ+Qxf2Q5METcJ9GQCcFCpbSnnRWPJeYCrytepux+hVmIhbSfpnoHysxZ4Xyqvao4ZFfJgoovWir2kIoBfztzyRkuFOp3YNcb2IdgZBy5DeawQpEj4+wJv2DUgg1R4kfQpNiTw6SJCMTihRILFsvJYuSQyJ/kOqNuKblXS5ciBmM9msdbQFwXR5IqE0igx63XxYxEIreNNYQPWNDWvlkdCx7chrZetuEj1bmwWQRrQSQHjME/Vlj6SAv6nfHyNnrFGvx7L9SF3sFRdxuowQQe8U/RfajoNo23w9vQWpjrg2PFt7Ujrd9j7xTlu6O8u7cLvB7lrcSPFuW9BvA75j7gMKZI4BPuA+Mu6vJn4B7N59+XaNm1eXp5PjMT52nQa9m23S2dKaawgQZwJ9yHxd0ffDHu5natTOfjyOFZLAiLptjhWJzS++EdQNe6X+wBxg4PuHAcnCQn+kejb+65nztade+30BewSgj6E+1D07Y+cS/XGuvNE9uFD0dzdDqxHen7GNNqCXCr7cCmH4t588C2OaWf8nmV/s5w+dBhrY320QK8eVjLjTWaOgF2U4pz6KBk6nkQ9IcPWQyKFzBGfk2XxtKWhlaob3o6Xc1FhGZnHEUuC/86uc2B3abt0NfmNubgSG7T3AU0/eLE/KDMz/csDIdIFfzfsdCnz/2Rrd+n2e3C/UXC4qBfQYpdHxeVHiwSMJ9FiI5LKdg5jVzsKiuXOhMm+eW19hcWIlMVH6WCyQIvwmI/gNdEzNVweb2Q10Bi0xqtK12jrGhEsNx5MYFsVEbJZjksbxXj6q4JOc80Nfh7d/FPWModvGMjqCosbHV8vGvDqOaTZt7pIRxTJMiy/pbxI/z/Pru+XDzZmtkj2g+khzzwSHHu+yL+W+aLSs8b/CvIFzXi7fxbrf172G9Iml7/HM1S9k8ynkbzh/DqvAigKvZWvS+lbDYye/E23OhRmd8eOVz58gpYGRplkJUDJlPfZauDTNAjpnWoRW53wK6Yt2T3EPL0xn/kXv3VPD3aQmuk0e1LfDW4s311XsX5up+/ul8/074ZpqHq6t5I1HR38vErKszzEnCFl8y2d90L4y5fq2BcgS3ByA1G9RBdBUTgKRRR2bviKK6TO9YpqPfyvVXXalQ73Wipdj3t43HwehDWDAiHQoLcxz/DgEa/5b3+sQzYGkZful3QO/tvFw6Y9ne9D3sz7WvtgD8n7et/Cq2yuL9vc/d/oXyk4g7N8tdfmyJS/oTOHP8H&lt;/diagram&gt;&lt;/mxfile&gt;">
+    <defs>
+        <clipPath id="mx-clip-4-31-132-26-0">
+            <rect x="4" y="31" width="132" height="26"/>
+        </clipPath>
+        <clipPath id="mx-clip-244-31-192-26-0">
+            <rect x="244" y="31" width="192" height="26"/>
+        </clipPath>
+        <clipPath id="mx-clip-244-57-192-26-0">
+            <rect x="244" y="57" width="192" height="26"/>
+        </clipPath>
+        <clipPath id="mx-clip-244-83-192-26-0">
+            <rect x="244" y="83" width="192" height="26"/>
+        </clipPath>
+        <clipPath id="mx-clip-244-109-192-26-0">
+            <rect x="244" y="109" width="192" height="26"/>
+        </clipPath>
+        <clipPath id="mx-clip-244-135-192-26-0">
+            <rect x="244" y="135" width="192" height="26"/>
+        </clipPath>
+        <clipPath id="mx-clip-244-161-192-26-0">
+            <rect x="244" y="161" width="192" height="26"/>
+        </clipPath>
+        <clipPath id="mx-clip-4-271-242-26-0">
+            <rect x="4" y="271" width="242" height="26"/>
+        </clipPath>
+        <clipPath id="mx-clip-4-297-242-38-0">
+            <rect x="4" y="297" width="242" height="38"/>
+        </clipPath>
+        <clipPath id="mx-clip-4-335-242-26-0">
+            <rect x="4" y="335" width="242" height="26"/>
+        </clipPath>
+    </defs>
+    <g>
+        <path d="M 0 26 L 0 0 L 140 0 L 140 26" fill="none" stroke="#000000" stroke-miterlimit="10" pointer-events="all"/>
+        <path d="M 0 26 L 0 52 L 140 52 L 140 26" fill="none" stroke="#000000" stroke-miterlimit="10" pointer-events="none"/>
+        <path d="M 0 26 L 140 26" fill="none" stroke="#000000" stroke-miterlimit="10" pointer-events="none"/>
+        <g fill="#000000" font-family="Helvetica" pointer-events="none" text-anchor="middle" font-size="12px">
+            <text x="69.5" y="17.5">
+                Repository
+            </text>
+        </g>
+        <g fill="#000000" font-family="Helvetica" pointer-events="none" clip-path="url(#mx-clip-4-31-132-26-0)" font-size="12px">
+            <text x="5.5" y="43.5">
+                Backend
+            </text>
+        </g>
+        <path d="M 240 26 L 240 0 L 440 0 L 440 26" fill="none" stroke="#000000" stroke-miterlimit="10" pointer-events="none"/>
+        <path d="M 240 26 L 240 182 L 440 182 L 440 26" fill="none" stroke="#000000" stroke-miterlimit="10" pointer-events="none"/>
+        <path d="M 240 26 L 440 26" fill="none" stroke="#000000" stroke-miterlimit="10" pointer-events="none"/>
+        <g fill="#000000" font-family="Helvetica" pointer-events="none" text-anchor="middle" font-size="12px">
+            <text x="339.5" y="17.5">
+                Config
+            </text>
+        </g>
+        <g fill="#000000" font-family="Helvetica" pointer-events="none" clip-path="url(#mx-clip-244-31-192-26-0)" font-size="12px">
+            <text x="245.5" y="43.5">
+                RepositoryRef
+            </text>
+        </g>
+        <g fill="#000000" font-family="Helvetica" pointer-events="none" clip-path="url(#mx-clip-244-57-192-26-0)" font-size="12px">
+            <text x="245.5" y="69.5">
+                PodTemplate
+            </text>
+        </g>
+        <g fill="#000000" font-family="Helvetica" pointer-events="none" clip-path="url(#mx-clip-244-83-192-26-0)" font-size="12px">
+            <text x="245.5" y="95.5">
+                PvcSelector
+            </text>
+        </g>
+        <g fill="#000000" font-family="Helvetica" pointer-events="none" clip-path="url(#mx-clip-244-109-192-26-0)" font-size="12px">
+            <text x="245.5" y="121.5">
+                RepositoryEncryptionSecretRef
+            </text>
+        </g>
+        <g fill="#000000" font-family="Helvetica" pointer-events="none" clip-path="url(#mx-clip-244-135-192-26-0)" font-size="12px">
+            <text x="245.5" y="147.5">
+                RepositoryAccessSecretRef
+            </text>
+        </g>
+        <g fill="#000000" font-family="Helvetica" pointer-events="none" clip-path="url(#mx-clip-244-161-192-26-0)" font-size="12px">
+            <text x="245.5" y="173.5">
+                Retention
+            </text>
+        </g>
+        <path d="M 0 266 L 0 240 L 250 240 L 250 266" fill="none" stroke="#000000" stroke-miterlimit="10" pointer-events="none"/>
+        <path d="M 0 266 L 0 356 L 250 356 L 250 266" fill="none" stroke="#000000" stroke-miterlimit="10" pointer-events="none"/>
+        <path d="M 0 266 L 250 266" fill="none" stroke="#000000" stroke-miterlimit="10" pointer-events="none"/>
+        <g fill="#000000" font-family="Helvetica" pointer-events="none" text-anchor="middle" font-size="12px">
+            <text x="124.5" y="257.5">
+                Agenda
+            </text>
+        </g>
+        <g fill="#000000" font-family="Helvetica" pointer-events="none" clip-path="url(#mx-clip-4-271-242-26-0)" font-size="12px">
+            <text x="5.5" y="283.5">
+                ConfigRef
+            </text>
+        </g>
+        <g fill="#000000" font-family="Helvetica" pointer-events="none" clip-path="url(#mx-clip-4-297-242-38-0)" font-size="12px">
+            <text x="5.5" y="309.5">
+                []ScheduleRef
+            </text>
+            <text x="5.5" y="323.5">
+                {Type: Backup, Schedule: @daily-random)
+            </text>
+        </g>
+        <g fill="#000000" font-family="Helvetica" pointer-events="none" clip-path="url(#mx-clip-4-335-242-26-0)" font-size="12px">
+            <text x="5.5" y="347.5">
+                Type: Backup
+            </text>
+        </g>
+        <path d="M 240 39 L 146.37 39" fill="none" stroke="#330000" stroke-miterlimit="10" pointer-events="none"/>
+        <path d="M 141.12 39 L 148.12 35.5 L 146.37 39 L 148.12 42.5 Z" fill="#330000" stroke="#330000" stroke-miterlimit="10" pointer-events="none"/>
+        <path d="M 600 95 L 600 153.63" fill="none" stroke="#000000" stroke-miterlimit="10" pointer-events="none"/>
+        <path d="M 600 158.88 L 596.5 151.88 L 600 153.63 L 603.5 151.88 Z" fill="#000000" stroke="#000000" stroke-miterlimit="10" pointer-events="none"/>
+        <g transform="translate(-0.5 -0.5)">
+            <switch>
+                <foreignObject style="overflow: visible; text-align: left;" pointer-events="none" width="100%" height="100%" requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility">
+                    <div xmlns="http://www.w3.org/1999/xhtml" style="display: flex; align-items: unsafe center; justify-content: unsafe center; width: 1px; height: 1px; padding-top: 120px; margin-left: 600px;">
+                        <div style="box-sizing: border-box; font-size: 0; text-align: center; ">
+                            <div style="display: inline-block; font-size: 11px; font-family: Helvetica; color: #000000; line-height: 1.2; pointer-events: none; background-color: #ffffff; white-space: nowrap; ">
+                                connect
+                                <br/>
+                                to localhost?
+                            </div>
+                        </div>
+                    </div>
+                </foreignObject>
+                <text x="600" y="123" fill="#000000" font-family="Helvetica" font-size="11px" text-anchor="middle">
+                    connect...
+                </text>
+            </switch>
+        </g>
+        <rect x="540" y="35" width="120" height="60" fill="#ffffff" stroke="#000000" pointer-events="none"/>
+        <g transform="translate(-0.5 -0.5)">
+            <switch>
+                <foreignObject style="overflow: visible; text-align: left;" pointer-events="none" width="100%" height="100%" requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility">
+                    <div xmlns="http://www.w3.org/1999/xhtml" style="display: flex; align-items: unsafe center; justify-content: unsafe center; width: 118px; height: 1px; padding-top: 65px; margin-left: 541px;">
+                        <div style="box-sizing: border-box; font-size: 0; text-align: center; ">
+                            <div style="display: inline-block; font-size: 12px; font-family: Helvetica; color: #000000; line-height: 1.2; pointer-events: none; white-space: normal; word-wrap: normal; ">
+                                wrestic
+                            </div>
+                        </div>
+                    </div>
+                </foreignObject>
+                <text x="600" y="69" fill="#000000" font-family="Helvetica" font-size="12px" text-anchor="middle">
+                    wrestic
+                </text>
+            </switch>
+        </g>
+        <rect x="540" y="160" width="120" height="60" fill="#ffffff" stroke="#000000" pointer-events="none"/>
+        <g transform="translate(-0.5 -0.5)">
+            <switch>
+                <foreignObject style="overflow: visible; text-align: left;" pointer-events="none" width="100%" height="100%" requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility">
+                    <div xmlns="http://www.w3.org/1999/xhtml" style="display: flex; align-items: unsafe center; justify-content: unsafe center; width: 118px; height: 1px; padding-top: 190px; margin-left: 541px;">
+                        <div style="box-sizing: border-box; font-size: 0; text-align: center; ">
+                            <div style="display: inline-block; font-size: 12px; font-family: Helvetica; color: #000000; line-height: 1.2; pointer-events: none; white-space: normal; word-wrap: normal; ">
+                                mariadb
+                            </div>
+                        </div>
+                    </div>
+                </foreignObject>
+                <text x="600" y="194" fill="#000000" font-family="Helvetica" font-size="12px" text-anchor="middle">
+                    mariadb
+                </text>
+            </switch>
+        </g>
+        <path d="M 440 65 L 533.63 65" fill="none" stroke="#000000" stroke-miterlimit="10" pointer-events="none"/>
+        <path d="M 538.88 65 L 531.88 68.5 L 533.63 65 L 531.88 61.5 Z" fill="#000000" stroke="#000000" stroke-miterlimit="10" pointer-events="none"/>
+        <path d="M 440 65 L 490 65 L 490 190 L 533.63 190" fill="none" stroke="#000000" stroke-miterlimit="10" pointer-events="none"/>
+        <path d="M 538.88 190 L 531.88 193.5 L 533.63 190 L 531.88 186.5 Z" fill="#000000" stroke="#000000" stroke-miterlimit="10" pointer-events="none"/>
+    </g>
+    <switch>
+        <g requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility"/>
+        <a transform="translate(0,-5)" xlink:href="https://www.diagrams.net/doc/faq/svg-export-text-problems" target="_blank">
+            <text text-anchor="middle" font-size="10px" x="50%" y="100%">
+                Viewer does not support full SVG 1.1
+            </text>
+        </a>
+    </switch>
+</svg>
