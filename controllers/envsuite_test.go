@@ -124,7 +124,7 @@ func (ts *EnvTestSuite) RepeatedAssert(timeout time.Duration, interval time.Dura
 				failureMsg = timedCtx.Err().Error()
 			}
 
-			ts.Failf(failureMsg, "Failed after %s (%d attempts)", timeout, i)
+			ts.FailNowf(failureMsg, "Failed after %s (%d attempts)", timeout, i)
 			return
 		}
 	}
