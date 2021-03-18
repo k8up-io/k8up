@@ -43,6 +43,7 @@ func (c *CheckExecutor) Execute() error {
 	if !ok {
 		return stderrors.New("object is not a check")
 	}
+	c.check = checkObject
 
 	if c.Obj.GetStatus().Started {
 		return nil
@@ -55,13 +56,12 @@ func (c *CheckExecutor) Execute() error {
 	}
 	checkJob.GetLabels()[job.K8upExclusive] = "true"
 
-	return c.startCheck(checkJob, checkObject)
+	return c.startCheck(checkJob)
 }
 
-func (c *CheckExecutor) startCheck(checkJob *batchv1.Job, checkObject *k8upv1alpha1.Check) error {
-	c.check = checkObject
+func (c *CheckExecutor) startCheck(checkJob *batchv1.Job) error {
 	c.RegisterJobSucceededConditionCallback()
-	c.registerCheckCallback(checkObject)
+	c.registerCheckCallback()
 
 	checkJob.Spec.Template.Spec.Containers[0].Env = c.setupEnvVars()
 	checkJob.Spec.Template.Spec.Containers[0].Args = []string{"-check"}
@@ -97,10 +97,10 @@ func (c *CheckExecutor) setupEnvVars() []corev1.EnvVar {
 	return vars.Convert()
 }
 
-func (c *CheckExecutor) registerCheckCallback(check *k8upv1alpha1.Check) {
+func (c *CheckExecutor) registerCheckCallback() {
 	name := c.GetJobNamespacedName()
 	observer.GetObserver().RegisterCallback(name.String(), func(_ observer.ObservableJob) {
-		c.cleanupOldChecks(name, check)
+		c.cleanupOldChecks(name, c.check)
 	})
 }
 

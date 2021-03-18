@@ -35,8 +35,8 @@ func Test_Check(t *testing.T) {
 	suite.Run(t, new(CheckTestSuite))
 }
 
-func (c *CheckTestSuite) BeforeTest(_, _ string) {
-	c.CheckBaseName = "check-integration-test"
+func (ts *CheckTestSuite) BeforeTest(_, _ string) {
+	ts.CheckBaseName = "check-integration-test"
 }
 
 func NewCheckResource(restoreName, namespace string, keepJobs *int) *k8upv1a1.Check {
@@ -51,35 +51,35 @@ func NewCheckResource(restoreName, namespace string, keepJobs *int) *k8upv1a1.Ch
 	}
 }
 
-func (c *CheckTestSuite) TestReconciliation() {
-	c.givenCheckResources(1)
+func (ts *CheckTestSuite) TestReconciliation() {
+	ts.givenCheckResources(1)
 
-	result := c.whenReconcile()
-	c.Assert().GreaterOrEqual(result.RequeueAfter, 30*time.Second)
+	result := ts.whenReconcile()
+	ts.Assert().GreaterOrEqual(result.RequeueAfter, 30*time.Second)
 
-	c.expectNumberOfJobsEventually(1)
+	ts.expectNumberOfJobsEventually(1)
 }
 
-func (c *CheckTestSuite) TestJobCleanup() {
+func (ts *CheckTestSuite) TestJobCleanup() {
 	keepJobs := 1
-	c.KeepJobs = &keepJobs
+	ts.KeepJobs = &keepJobs
 
 	createJobs := 2
-	c.givenCheckResources(createJobs)
+	ts.givenCheckResources(createJobs)
 
-	c.whenReconcile()
-	c.expectNumberOfJobsEventually(createJobs)
+	ts.whenReconcile()
+	ts.expectNumberOfJobsEventually(createJobs)
 
-	c.whenJobCallbackIsInvoked(c.CheckNames[0])
-	c.expectCheckCleanupEventually(createJobs - keepJobs)
+	ts.whenJobCallbackIsInvoked(ts.CheckNames[0])
+	ts.expectCheckCleanupEventually(createJobs - keepJobs)
 }
 
-func (c *CheckTestSuite) expectCheckCleanupEventually(expectedDeletes int) {
+func (ts *CheckTestSuite) expectCheckCleanupEventually(expectedDeletes int) {
 	failureMsg := fmt.Sprintf("Not enough Checks deleted, expected %d.", expectedDeletes)
-	c.RepeatedAssert(10*time.Second, time.Second, failureMsg, func(timedCtx context.Context) (done bool, err error) {
+	ts.RepeatedAssert(10*time.Second, time.Second, failureMsg, func(timedCtx context.Context) (done bool, err error) {
 		checkResourceList := &k8upv1a1.CheckList{}
-		err = c.Client.List(c.Ctx, checkResourceList, &client.ListOptions{
-			Namespace: c.NS,
+		err = ts.Client.List(ts.Ctx, checkResourceList, &client.ListOptions{
+			Namespace: ts.NS,
 		})
 		if err != nil {
 			return
@@ -92,19 +92,18 @@ func (c *CheckTestSuite) expectCheckCleanupEventually(expectedDeletes int) {
 			}
 		}
 
-		c.T().Logf("%d deleted Checks found", amountOfDeletedItems)
+		ts.T().Logf("%d deleted Checks found", amountOfDeletedItems)
 		done = amountOfDeletedItems == expectedDeletes
 
 		return
 	})
 }
 
-func (c *CheckTestSuite) whenJobCallbackIsInvoked(checkName string) {
-	checkNSName := types.NamespacedName{Name: checkName, Namespace: c.NS}
+func (ts *CheckTestSuite) whenJobCallbackIsInvoked(checkName string) {
+	checkNSName := types.NamespacedName{Name: checkName, Namespace: ts.NS}
 
 	check := &batchv1.Job{}
-	err := c.Client.Get(c.Ctx, checkNSName, check)
-	c.Require().NoError(err)
+	ts.FetchResource(checkNSName, check)
 
 	o := observer.GetObserver()
 	observableJob := o.GetJobByName(checkNSName.String())
@@ -115,34 +114,34 @@ func (c *CheckTestSuite) whenJobCallbackIsInvoked(checkName string) {
 	eventChannel <- observableJob
 }
 
-func (c *CheckTestSuite) givenCheckResources(amount int) {
+func (ts *CheckTestSuite) givenCheckResources(amount int) {
 	for i := 0; i < amount; i++ {
-		checkName := c.CheckBaseName + strconv.Itoa(i)
-		check := NewCheckResource(checkName, c.NS, c.KeepJobs)
-		c.EnsureResources(check)
-		c.GivenChecks = append(c.GivenChecks, check)
-		c.CheckNames = append(c.CheckNames, checkName)
+		checkName := ts.CheckBaseName + strconv.Itoa(i)
+		check := NewCheckResource(checkName, ts.NS, ts.KeepJobs)
+		ts.EnsureResources(check)
+		ts.GivenChecks = append(ts.GivenChecks, check)
+		ts.CheckNames = append(ts.CheckNames, checkName)
 	}
 }
 
-func (c *CheckTestSuite) whenReconcile() (lastResult controllerruntime.Result) {
-	for _, checkName := range c.CheckNames {
+func (ts *CheckTestSuite) whenReconcile() (lastResult controllerruntime.Result) {
+	for _, checkName := range ts.CheckNames {
 		controller := controllers.CheckReconciler{
-			Client: c.Client,
-			Log:    c.Logger,
-			Scheme: c.Scheme,
+			Client: ts.Client,
+			Log:    ts.Logger,
+			Scheme: ts.Scheme,
 		}
 
 		key := types.NamespacedName{
-			Namespace: c.NS,
+			Namespace: ts.NS,
 			Name:      checkName,
 		}
 		request := controllerruntime.Request{
 			NamespacedName: key,
 		}
 
-		result, err := controller.Reconcile(c.Ctx, request)
-		c.Require().NoError(err)
+		result, err := controller.Reconcile(ts.Ctx, request)
+		ts.Require().NoError(err)
 
 		lastResult = result
 	}
@@ -150,14 +149,14 @@ func (c *CheckTestSuite) whenReconcile() (lastResult controllerruntime.Result) {
 	return
 }
 
-func (c *CheckTestSuite) expectNumberOfJobsEventually(jobAmount int) {
-	c.RepeatedAssert(10*time.Second, time.Second, "Jobs not found", func(timedCtx context.Context) (done bool, err error) {
+func (ts *CheckTestSuite) expectNumberOfJobsEventually(jobAmount int) {
+	ts.RepeatedAssert(10*time.Second, time.Second, "Jobs not found", func(timedCtx context.Context) (done bool, err error) {
 		jobs := new(batchv1.JobList)
-		err = c.Client.List(timedCtx, jobs, &client.ListOptions{Namespace: c.NS})
-		c.Require().NoError(err)
+		err = ts.Client.List(timedCtx, jobs, &client.ListOptions{Namespace: ts.NS})
+		ts.Require().NoError(err)
 
 		jobsLen := len(jobs.Items)
-		c.T().Logf("%d Jobs found", jobsLen)
+		ts.T().Logf("%d Jobs found", jobsLen)
 
 		if jobsLen >= jobAmount {
 			return true, err
