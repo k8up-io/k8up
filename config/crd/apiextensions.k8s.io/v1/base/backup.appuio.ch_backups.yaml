@@ -26,7 +26,7 @@ spec:
       name: Completion
       type: string
     - description: Status of PreBackupPods
-      jsonPath: .status.conditions[?(@.type == "PreBackupPodsReady")].reason
+      jsonPath: .status.conditions[?(@.type == "PreBackupPodReady")].reason
       name: PreBackup
       type: string
     - jsonPath: .metadata.creationTimestamp
