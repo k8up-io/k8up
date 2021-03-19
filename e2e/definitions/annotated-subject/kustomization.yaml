@@ -1,0 +1,9 @@
+resources:
+- deployment.yaml
+- pvc.yaml
+- pv.yaml
+namespace: k8up-e2e-subject
+
+commonLabels:
+  app.kubernetes.io/name: e2e
+  app.kubernetes.io/managed-by: kustomize

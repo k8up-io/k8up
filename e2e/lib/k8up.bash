@@ -6,14 +6,14 @@ errcho() {
 	echo >&2 "${@}"
 }
 
-timestamp() {
-	date +%s
-}
-
 if [ -z "${E2E_IMAGE}" ]; then
 	errcho "The environment variable 'E2E_IMAGE' is undefined or empty."
 	exit 1
 fi
+
+timestamp() {
+	date +%s
+}
 
 setup() {
 	debug "-- $BATS_TEST_DESCRIPTION"
@@ -118,6 +118,19 @@ given_a_subject() {
 
 	apply definitions/subject
 	echo "✅  The subject is ready"
+}
+
+given_an_annotated_subject() {
+	if [ "${#}" != 2 ]; then
+		errcho "$0 Expected 2 arguments, got ${#}."
+		exit 1
+	fi
+
+	export BACKUP_FILE_NAME=$1
+	export BACKUP_FILE_CONTENT=$2
+
+	apply definitions/annotated-subject
+	echo "✅  The annotated subject is ready"
 }
 
 given_s3_storage() {

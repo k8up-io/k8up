@@ -14,7 +14,7 @@ See xref:references/config-reference.adoc[Configuration reference]
 |`k8up.syn.tools/backup`
 |If defined, this influences whether this pod shall be backed up (`true`) or not (`false`)
 |Either `'true'` or `'false'`
-|`Pod`
+|`Pod`, `PersistentVolumeClaim`
 |`BACKUP_ANNOTATION`
 
 |`k8up.syn.tools/backupcommand`
