@@ -4,10 +4,12 @@ import (
 	stderrors "errors"
 
 	batchv1 "k8s.io/api/batch/v1"
+	"k8s.io/apimachinery/pkg/types"
 
 	k8upv1alpha1 "github.com/vshn/k8up/api/v1alpha1"
 	"github.com/vshn/k8up/cfg"
 	"github.com/vshn/k8up/job"
+	"github.com/vshn/k8up/observer"
 
 	corev1 "k8s.io/api/core/v1"
 )
@@ -30,12 +32,18 @@ func (c *CheckExecutor) GetConcurrencyLimit() int {
 	return cfg.Config.GlobalConcurrentCheckJobsLimit
 }
 
+// Exclusive should return true for jobs that can't run while other jobs run.
+func (*CheckExecutor) Exclusive() bool {
+	return true
+}
+
 // Execute creates the actual batch.job on the k8s api.
 func (c *CheckExecutor) Execute() error {
 	checkObject, ok := c.Obj.(*k8upv1alpha1.Check)
 	if !ok {
 		return stderrors.New("object is not a check")
 	}
+	c.check = checkObject
 
 	if c.Obj.GetStatus().Started {
 		return nil
@@ -48,12 +56,12 @@ func (c *CheckExecutor) Execute() error {
 	}
 	checkJob.GetLabels()[job.K8upExclusive] = "true"
 
-	return c.startCheck(checkObject, checkJob)
+	return c.startCheck(checkJob)
 }
 
-func (c *CheckExecutor) startCheck(checkObject *k8upv1alpha1.Check, checkJob *batchv1.Job) error {
-	c.check = checkObject
+func (c *CheckExecutor) startCheck(checkJob *batchv1.Job) error {
 	c.RegisterJobSucceededConditionCallback()
+	c.registerCheckCallback()
 
 	checkJob.Spec.Template.Spec.Containers[0].Env = c.setupEnvVars()
 	checkJob.Spec.Template.Spec.Containers[0].Args = []string{"-check"}
@@ -65,11 +73,6 @@ func (c *CheckExecutor) startCheck(checkObject *k8upv1alpha1.Check, checkJob *ba
 
 	c.SetStarted("the job '%v/%v' was created", checkJob.Namespace, checkJob.Name)
 	return nil
-}
-
-// Exclusive should return true for jobs that can't run while other jobs run.
-func (*CheckExecutor) Exclusive() bool {
-	return true
 }
 
 func (c *CheckExecutor) setupEnvVars() []corev1.EnvVar {
@@ -92,4 +95,27 @@ func (c *CheckExecutor) setupEnvVars() []corev1.EnvVar {
 	}
 
 	return vars.Convert()
+}
+
+func (c *CheckExecutor) registerCheckCallback() {
+	name := c.GetJobNamespacedName()
+	observer.GetObserver().RegisterCallback(name.String(), func(_ observer.ObservableJob) {
+		c.cleanupOldChecks(name, c.check)
+	})
+}
+
+func (c *CheckExecutor) cleanupOldChecks(name types.NamespacedName, check *k8upv1alpha1.Check) {
+	list := &k8upv1alpha1.CheckList{}
+	err := c.listOldResources(name.Namespace, list)
+	if err != nil {
+		return
+	}
+
+	jobs := make(jobObjectList, len(list.Items))
+	for i, check := range list.Items {
+		jobs[i] = &check
+	}
+
+	keepJobs := getKeepJobs(check.Spec.KeepJobs)
+	cleanOldObjects(jobs, keepJobs, c.Config)
 }
