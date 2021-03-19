@@ -191,6 +191,13 @@ func TestRestore(t *testing.T) {
 
 	assertOK(t, run(env.resticCli, env.log))
 
+	webhookData := restic.RestoreStats{}
+	assertOK(t, json.Unmarshal(env.webhook.jsonData, &webhookData))
+
+	if webhookData.SnapshotID == "" {
+		t.Errorf("No restore webhooks detected!")
+	}
+
 	env.webhook.srv.Shutdown(context.TODO())
 
 	testCheckS3Restore(t)
