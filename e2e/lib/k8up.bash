@@ -6,14 +6,26 @@ errcho() {
 	echo >&2 "${@}"
 }
 
-timestamp() {
-	date +%s
-}
-
 if [ -z "${E2E_IMAGE}" ]; then
 	errcho "The environment variable 'E2E_IMAGE' is undefined or empty."
 	exit 1
 fi
+
+timestamp() {
+	date +%s
+}
+
+require_args() {
+	if [ "${#}" != 2 ]; then
+		errcho "$0 expected 2 arguments, got ${#}."
+		exit 1
+	fi
+
+	if [ "${1}" != "${2}" ]; then
+		errcho "Expected ${1} arguments, got ${2}."
+		exit 1
+	fi
+}
 
 setup() {
 	debug "-- $BATS_TEST_DESCRIPTION"
@@ -62,10 +74,7 @@ restic() {
 }
 
 replace_in_file() {
-	if [ "${#}" != 3 ]; then
-		errcho "$0 Expected 3 arguments, got ${#}."
-		exit 1
-	fi
+	require_args 3 ${#}
 
 	local file var_name var_value
 	file=${1}
@@ -78,13 +87,15 @@ replace_in_file() {
 }
 
 prepare() {
-	DEFINITION_DIR=${1}
-	mkdir -p "debug/${DEFINITION_DIR}"
+	require_args 1 ${#}
 
-	local target_file
-	target_file="debug/${DEFINITION_DIR}/main.yml"
+	local definition_dir target_dir target_file
+	definition_dir=${1}
+	target_dir="debug/${definition_dir}"
+	target_file="${target_dir}/main.yml"
 
-	kustomize build "${DEFINITION_DIR}" -o "${target_file}"
+	mkdir -p "${target_dir}"
+	kustomize build "${definition_dir}" -o "${target_file}"
 
 	replace_in_file "${target_file}" E2E_IMAGE "'${E2E_IMAGE}'"
 	replace_in_file "${target_file}" WRESTIC_IMAGE "'${WRESTIC_IMAGE}'"
@@ -95,7 +106,9 @@ prepare() {
 }
 
 apply() {
-	prepare "${@}"
+	require_args 1 ${#}
+
+	prepare "${1}"
 	kubectl apply -f "debug/${1}/main.yml"
 }
 
@@ -108,16 +121,23 @@ given_a_clean_ns() {
 }
 
 given_a_subject() {
-	if [ "${#}" != 2 ]; then
-		errcho "$0 Expected 2 arguments, got ${#}."
-		exit 1
-	fi
+	require_args 2 ${#}
 
-	export BACKUP_FILE_NAME=$1
-	export BACKUP_FILE_CONTENT=$2
+	export BACKUP_FILE_NAME=${1}
+	export BACKUP_FILE_CONTENT=${2}
 
 	apply definitions/subject
 	echo "✅  The subject is ready"
+}
+
+given_an_annotated_subject() {
+	require_args 2 ${#}
+
+	export BACKUP_FILE_NAME=${1}
+	export BACKUP_FILE_CONTENT=${2}
+
+	apply definitions/annotated-subject
+	echo "✅  The annotated subject is ready"
 }
 
 given_s3_storage() {
@@ -141,10 +161,7 @@ given_a_running_operator() {
 }
 
 given_an_existing_backup() {
-	if [ "${#}" != 2 ]; then
-		errcho "$0 Expected 2 arguments, got ${#}."
-		exit 1
-	fi
+	require_args 2 ${#}
 
 	local backup_file_name backup_file_content
 	backup_file_name=${1}
@@ -163,6 +180,8 @@ given_an_existing_backup() {
 }
 
 wait_until() {
+	require_args 2 ${#}
+
 	local object condition ns
 	object=${1}
 	condition=${2}
@@ -173,10 +192,7 @@ wait_until() {
 }
 
 expect_file_in_container() {
-	if [ "${#}" != 4 ]; then
-		errcho "$0 Expected 4 arguments, got ${#}."
-		exit 1
-	fi
+	require_args 4 ${#}
 
 	local pod container expected_file expected_content
 	pod=${1}

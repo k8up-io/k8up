@@ -2,7 +2,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: subject-deployment
+  name: annotated-subject-deployment
 spec:
   replicas: 1
   selector:
@@ -12,6 +12,9 @@ spec:
     metadata:
       labels:
         app: subject
+      annotations:
+        k8up.syn.tools/backupcommand: '/tmp/test.sh'
+        k8up.syn.tools/file-extension: '.txt'
     spec:
       containers:
       - name: subject-container
@@ -22,6 +25,7 @@ spec:
         - -c
         - |
           printf '$BACKUP_FILE_CONTENT' | tee '/data/$BACKUP_FILE_NAME' && \
+          printf '#!/bin/sh\nsleep 30s\necho $BACKUP_FILE_CONTENT\n' | tee /tmp/test.sh && chmod a+x /tmp/test.sh && \
           echo && \
           ls -la /data && \
           echo "test file '/data/$BACKUP_FILE_NAME' written, sleeping now" && \
