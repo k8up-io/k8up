@@ -1,7 +1,6 @@
 resources:
 - deployment.yaml
-- pvc.yaml
-- pv.yaml
+- ../pv
 namespace: k8up-e2e-subject
 
 commonLabels:
