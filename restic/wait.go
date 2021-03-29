@@ -77,12 +77,11 @@ func (r *Restic) getLockList(log logr.Logger) ([]string, error) {
 	cmd := NewCommand(r.ctx, log, opts)
 	cmd.Run()
 
-	return []string(*list), cmd.FatalError
+	return *list, cmd.FatalError
 }
 
 type locklist []string
 
-func (l *locklist) out(s string) error {
+func (l *locklist) out(s string) {
 	*l = append(*l, s)
-	return nil
 }
