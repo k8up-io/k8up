@@ -106,28 +106,31 @@ func (r *Restic) Restore(snapshotID string, options RestoreOptions, tags ArrayOp
 }
 
 func (r *Restic) getLatestSnapshot(snapshotID string, log logr.Logger) (Snapshot, error) {
-
 	snapshot := Snapshot{}
+
+	if len(r.snapshots) == 0 {
+		err := fmt.Errorf("no snapshots available")
+		log.Error(err, "no snapshots available")
+		return snapshot, err
+	}
 
 	if snapshotID == "" {
 		log.Info("no snapshot defined, using latest one")
 		snapshot = r.snapshots[len(r.snapshots)-1]
 		log.Info("found snapshot", "date", snapshot.Time)
-	} else {
-		for i := range r.snapshots {
-			// Doing substrings so we can also use short IDs here.
-			if r.snapshots[i].ID[0:len(snapshotID)] == snapshotID {
-				snapshot = r.snapshots[i]
-				break
-			}
-		}
-		if snapshot.ID == "" {
-			log.Error(fmt.Errorf("no Snapshot found with ID %v", snapshotID), "the snapshot does not exist")
-			return snapshot, fmt.Errorf("no Snapshot found with ID %v", snapshotID)
+		return snapshot, nil
+	}
+
+	for i := range r.snapshots {
+		// Doing substrings so we can also use short IDs here.
+		if strings.HasPrefix(r.snapshots[i].ID, snapshotID) {
+			return r.snapshots[i], nil
 		}
 	}
 
-	return snapshot, nil
+	err := fmt.Errorf("no Snapshot found with ID %v", snapshotID)
+	log.Error(err, "the snapshot does not exist")
+	return snapshot, err
 }
 
 func (r *Restic) folderRestore(restoreDir string, snapshot Snapshot, restoreFilter string, verify bool, log logr.Logger) error {
