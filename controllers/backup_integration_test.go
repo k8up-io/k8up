@@ -12,6 +12,7 @@ import (
 
 	k8upv1a1 "github.com/vshn/k8up/api/v1alpha1"
 	"github.com/vshn/k8up/controllers"
+	"github.com/vshn/k8up/observer"
 )
 
 type BackupTestSuite struct {
@@ -54,7 +55,7 @@ func (ts *BackupTestSuite) Test_GivenPreBackupPods_ExpectPreBackupDeployment() {
 	ts.expectAPreBackupDeploymentEventually()
 	ts.assertConditionWaitingForPreBackup(ts.BackupResource)
 
-	ts.afterDeploymentStarted()
+	ts.afterPreBackupDeploymentStarted()
 	_ = ts.whenReconciling(ts.BackupResource)
 	ts.assertConditionReadyForPreBackup(ts.BackupResource)
 	ts.expectABackupContainer()
@@ -77,7 +78,25 @@ func (ts *BackupTestSuite) Test_GivenFailedPreBackupDeployment_WhenCreatingNewBa
 	result := ts.whenReconciling(ts.BackupResource)
 	ts.Assert().GreaterOrEqual(result.RequeueAfter, 30*time.Second)
 	ts.assertDeploymentIsDeleted(failedDeployment)
-	ts.assertConditionFailedBackup(ts.BackupResource)
+	ts.assertPreBackupPodConditionFailed(ts.BackupResource)
+}
+
+func (ts *BackupTestSuite) Test_GivenFinishedPreBackupDeployment_WhenReconciling_ThenExpectPreBackupToBeRemoved() {
+	// The backup reconciliation loop must run in order to start a backup,
+	// so that the callback is registered which eventually cleans up the PreBackupPods.
+	ts.EnsureResources(ts.newPreBackupPod(), ts.BackupResource)
+	_ = ts.whenReconciling(ts.BackupResource)
+	ts.expectAPreBackupDeploymentEventually()
+
+	ts.afterPreBackupDeploymentStarted()
+	_ = ts.whenReconciling(ts.BackupResource)
+	ts.expectABackupJobEventually()
+	ts.markBackupAsFinished(ts.BackupResource)
+
+	suceeded := observer.Suceeded
+	ts.notifyObserverOfBackupJobStatusChange(suceeded)
+
+	ts.assertDeploymentIsDeleted(ts.newPreBackupDeployment())
 }
 
 func (ts *BackupTestSuite) Test_GivenPreBackupPods_WhenRestartingK8up_ThenExpectToContinueWhereItLeftOff() {
@@ -87,7 +106,7 @@ func (ts *BackupTestSuite) Test_GivenPreBackupPods_WhenRestartingK8up_ThenExpect
 	ts.expectAPreBackupDeploymentEventually()
 
 	ts.whenCancellingTheContext()
-	ts.afterDeploymentStarted()
+	ts.afterPreBackupDeploymentStarted()
 	_ = ts.whenReconciling(ts.BackupResource)
 	ts.expectABackupContainer()
 }

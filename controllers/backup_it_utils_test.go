@@ -4,9 +4,13 @@ package controllers_test
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	appsv1 "k8s.io/api/apps/v1"
+	batchv1 "k8s.io/api/batch/v1"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -15,11 +19,8 @@ import (
 	controllerruntime "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	appsv1 "k8s.io/api/apps/v1"
-	batchv1 "k8s.io/api/batch/v1"
-	corev1 "k8s.io/api/core/v1"
-
 	k8upv1a1 "github.com/vshn/k8up/api/v1alpha1"
+	k8upObserver "github.com/vshn/k8up/observer"
 )
 
 func (ts *BackupTestSuite) newPreBackupPod() *k8upv1a1.PreBackupPod {
@@ -100,7 +101,7 @@ func (ts *BackupTestSuite) whenCancellingTheContext() {
 	ts.Ctx, ts.CancelCtx = context.WithCancel(context.Background())
 }
 
-func (ts *BackupTestSuite) afterDeploymentStarted() {
+func (ts *BackupTestSuite) afterPreBackupDeploymentStarted() {
 	deployment := &appsv1.Deployment{}
 	deploymentIdentifier := types.NamespacedName{Namespace: ts.NS, Name: ts.PreBackupPodName}
 	ts.FetchResource(deploymentIdentifier, deployment)
@@ -158,7 +159,7 @@ func (ts *BackupTestSuite) assertConditionReadyForPreBackup(backup *k8upv1a1.Bac
 	})
 }
 
-func (ts *BackupTestSuite) assertConditionFailedBackup(backup *k8upv1a1.Backup) {
+func (ts *BackupTestSuite) assertPreBackupPodConditionFailed(backup *k8upv1a1.Backup) {
 	ts.RepeatedAssert(5*time.Second, time.Second, "backup does not have expected condition", func(timedCtx context.Context) (done bool, err error) {
 		err = ts.Client.Get(timedCtx, k8upv1a1.MapToNamespacedName(backup), backup)
 		ts.Require().NoError(err)
@@ -172,13 +173,29 @@ func (ts *BackupTestSuite) assertConditionFailedBackup(backup *k8upv1a1.Backup) 
 	})
 }
 
-func (ts *BackupTestSuite) assertDeploymentIsDeleted(failedDeployment *appsv1.Deployment) {
-	ts.RepeatedAssert(5*time.Second, time.Second, "deployment still exists, but it shouldn't", func(timedCtx context.Context) (done bool, err error) {
-		if !ts.IsResourceExisting(timedCtx, failedDeployment) {
+func (ts *BackupTestSuite) assertPreBackupPodConditionSucceeded(backup *k8upv1a1.Backup) {
+	ts.RepeatedAssert(5*time.Second, time.Second, "backup does not have expected condition", func(timedCtx context.Context) (done bool, err error) {
+		err = ts.Client.Get(timedCtx, k8upv1a1.MapToNamespacedName(backup), backup)
+		ts.Require().NoError(err)
+		preBackupCond := meta.FindStatusCondition(backup.Status.Conditions, k8upv1a1.ConditionPreBackupPodReady.String())
+		if preBackupCond != nil && preBackupCond.Reason == k8upv1a1.ReasonFailed.String() {
+			ts.Assert().Equal(k8upv1a1.ReasonSucceeded.String(), preBackupCond.Reason)
+			ts.Assert().Equal(metav1.ConditionFalse, preBackupCond.Status)
 			return true, nil
 		}
 		return false, nil
 	})
+}
+
+func (ts *BackupTestSuite) assertDeploymentIsDeleted(deployment *appsv1.Deployment) {
+	ts.RepeatedAssert(
+		5*time.Second, time.Second,
+		fmt.Sprintf("deployment '%s/%s' still exists, but it shouldn't", deployment.Namespace, deployment.Name),
+		func(timedCtx context.Context) (done bool, err error) {
+			isDeleted := !ts.IsResourceExisting(timedCtx, deployment)
+			return isDeleted, nil
+		},
+	)
 }
 
 func (ts *BackupTestSuite) newPreBackupDeployment() *appsv1.Deployment {
@@ -215,4 +232,40 @@ func (ts *BackupTestSuite) markDeploymentAsFailed(deployment *appsv1.Deployment)
 		},
 	}
 	ts.UpdateStatus(deployment)
+}
+
+func (ts *BackupTestSuite) markDeploymentAsFinished(deployment *appsv1.Deployment) {
+	deployment.Status = appsv1.DeploymentStatus{
+		Conditions: []appsv1.DeploymentCondition{
+			{Type: "Progressing", Status: corev1.ConditionTrue, LastUpdateTime: metav1.Now(), Reason: "NewReplicaSetAvailable", Message: "deployment successful"},
+			{Type: "Available", Status: corev1.ConditionTrue, LastUpdateTime: metav1.Now(), Reason: "MinimumReplicasAvailable", Message: "deployment successful"},
+		},
+	}
+	ts.UpdateStatus(deployment)
+}
+
+func (ts *BackupTestSuite) markBackupAsFinished(backup *k8upv1a1.Backup) {
+	backup.Status = k8upv1a1.Status{
+		Started:  true,
+		Finished: true,
+		Conditions: []metav1.Condition{
+			{Type: "PreBackupPodReady", Status: metav1.ConditionTrue, LastTransitionTime: metav1.Now(), Reason: "Ready", Message: "backup successful"},
+			{Type: "Ready", Status: metav1.ConditionTrue, LastTransitionTime: metav1.Now(), Reason: "Ready", Message: "backup successful"},
+			{Type: "Progressing", Status: metav1.ConditionFalse, LastTransitionTime: metav1.Now(), Reason: "Finished", Message: "backup successful"},
+			{Type: "Completed", Status: metav1.ConditionTrue, LastTransitionTime: metav1.Now(), Reason: "Succeeded", Message: "backup successful"},
+		},
+	}
+}
+
+func (ts *BackupTestSuite) notifyObserverOfBackupJobStatusChange(status k8upObserver.EventType) {
+	observer := k8upObserver.GetObserver()
+	event := observer.GetJobByName(ts.BackupResource.Namespace + "/" + ts.BackupResource.Name)
+	event.Job = &batchv1.Job{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      ts.BackupResource.Name,
+			Namespace: ts.BackupResource.Namespace,
+		},
+	}
+	event.Event = status
+	observer.GetUpdateChannel() <- event
 }
