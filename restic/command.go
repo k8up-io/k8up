@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"strings"
 
 	"github.com/go-logr/logr"
 )
@@ -54,7 +55,8 @@ func (c *Command) Run() {
 // Mainly set the env vars and wire the right stdins/outs.
 func (c *Command) Configure() {
 	c.cmd = exec.CommandContext(c.ctx, c.options.Path, c.options.Args...)
-	c.cmd.Env = os.Environ()
+	osEnv := os.Environ()
+	c.cmd.Env = c.setResticProgressFPSIfNotDefined(osEnv)
 
 	if c.options.StdIn != nil {
 		c.cmd.Stdin = c.options.StdIn
@@ -67,6 +69,18 @@ func (c *Command) Configure() {
 	if c.options.StdErr != nil {
 		c.cmd.Stderr = c.options.StdErr
 	}
+}
+
+func (c *Command) setResticProgressFPSIfNotDefined(givenEnv []string) []string {
+	for _, envVar := range givenEnv {
+		if strings.HasPrefix("RESTIC_PROGRESS_FPS=", envVar) {
+			return givenEnv
+		}
+	}
+
+	const frequency = 1.0 / 60.0
+	c.cmdLogger.Info("Defining RESTIC_PROGRESS_FPS", "frequency", frequency)
+	return append(givenEnv, fmt.Sprintf("RESTIC_PROGRESS_FPS=%f", frequency))
 }
 
 // Start starts the specified command but does not wait for it to complete.
