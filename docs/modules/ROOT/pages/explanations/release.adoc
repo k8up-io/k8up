@@ -1,0 +1,15 @@
+= Releasing k8up
+
+The release process is automated all the way through.
+It starts when a maintainer pushes a new git tag.
+This will trigger a GitHub Action which will, in turn, create:
+
+- A GitHub release with a changelog based on the merged pull requests.
+- A build of the Docker image, which is pushed to https://hub.docker.com/r/vshn/k8up[Docker Hub] and https://quay.io/vshn/k8up[Quay.io].
+
+This process mostly relies on https://goreleaser.com/[GoReleaser].
+
+== Git Tag
+
+Note that we use the following format `v0.0.0` for git tags, see `git tags`.
+We follow https://semver.org/[SemVer].
