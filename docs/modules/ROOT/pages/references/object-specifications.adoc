@@ -412,8 +412,8 @@ spec:
               value: mariadb.example.com
           image: mariadb
           command:
-            - 'sleep'
-            - '9999999'
+            - sleep
+            - infinity
           imagePullPolicy: Always
           name: mysqldump
 ----

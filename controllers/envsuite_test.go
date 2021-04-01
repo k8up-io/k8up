@@ -233,7 +233,7 @@ func (ts *EnvTestSuite) SanitizeNameForNS(name string) string {
 }
 
 // IsResourceExisting tries to fetch the given resource and returns true if it exists.
-// It will consider still-existing object with a deletion timestamp as not existing.
+// It will consider still-existing object with a deletion timestamp as non-existing.
 // Any other errors will fail the test.
 func (ts *EnvTestSuite) IsResourceExisting(ctx context.Context, obj client.Object) bool {
 	err := ts.Client.Get(ctx, k8upv1a1.MapToNamespacedName(obj), obj)

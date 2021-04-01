@@ -92,7 +92,7 @@ func (b *BackupExecutor) StopPreBackupDeployments() {
 		return
 	}
 
-	deployments := b.generateDeployments(nil)
+	deployments := b.generateDeployments(templates.Items)
 	for _, deployment := range deployments {
 		// Avoid exportloopref
 		deployment := deployment
