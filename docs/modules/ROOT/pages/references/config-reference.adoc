@@ -21,7 +21,7 @@ The Operator can be configured in two ways:
 `BACKUP_GLOBAL_CONCURRENT_RESTORE_JOBS_LIMIT`:: set the limit of concurrent restore jobs
 `BACKUP_GLOBAL_CPU_LIMIT`:: set the CPU limit for scheduled jobs
 `BACKUP_GLOBAL_CPU_REQUEST`:: set the CPU request for scheduled jobs
-`BACKUP_GLOBALKEEPJOBS`:: set the number of old backup jobs to keep globally
+`BACKUP_GLOBALKEEPJOBS`:: set the number of old jobs to keep when cleaning up, applies to all job types
 `BACKUP_GLOBAL_MEMORY_LIMIT`:: set the memory limit for scheduled jobs
 `BACKUP_GLOBAL_MEMORY_REQUEST`:: set the memory request for scheduled jobs
 `BACKUP_GLOBALREPOPASSWORD`:: set the restic repository password to be used globally
