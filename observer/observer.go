@@ -17,12 +17,12 @@ import (
 )
 
 const (
-	Update   EventType = "update"
-	Delete   EventType = "delete"
-	Create   EventType = "create"
-	Failed   EventType = "failed"
-	Suceeded EventType = "suceeded"
-	Running  EventType = "running"
+	Update    EventType = "update"
+	Delete    EventType = "delete"
+	Create    EventType = "create"
+	Failed    EventType = "failed"
+	Succeeded EventType = "succeeded"
+	Running   EventType = "running"
 )
 
 var (
@@ -34,12 +34,12 @@ var (
 
 	metricsFailureCounter = promauto.NewCounterVec(prometheus.CounterOpts{
 		Name: "k8up_jobs_failed_counter",
-		Help: "The total number of backups that failed",
+		Help: "The total number of jobs that failed",
 	}, promLabels)
 
 	metricsSuccessCounter = promauto.NewCounterVec(prometheus.CounterOpts{
 		Name: "k8up_jobs_successful_counter",
-		Help: "The total number of backups that went through cleanly",
+		Help: "The total number of jobs that went through cleanly",
 	}, promLabels)
 
 	metricsTotalCounter = promauto.NewCounterVec(prometheus.CounterOpts{
@@ -122,7 +122,7 @@ func (o *Observer) handleEvent(event ObservableJob) {
 	case Failed:
 		incFailureCounters(event.Job.Namespace)
 		invokeCallbacks(event)
-	case Suceeded:
+	case Succeeded:
 		// Only report succeeded jobs we've already seen to prevent
 		// reporting succeeded jobs on operator restart
 		if exists {

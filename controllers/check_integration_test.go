@@ -107,7 +107,7 @@ func (ts *CheckTestSuite) whenJobCallbackIsInvoked(checkName string) {
 
 	o := observer.GetObserver()
 	observableJob := o.GetJobByName(checkNSName.String())
-	observableJob.Event = observer.Suceeded
+	observableJob.Event = observer.Succeeded
 	observableJob.Job = check
 
 	eventChannel := o.GetUpdateChannel()

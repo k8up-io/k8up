@@ -131,7 +131,7 @@ func (g *generic) RegisterJobSucceededConditionCallback() {
 	name := g.GetJobNamespacedName()
 	observer.GetObserver().RegisterCallback(name.String(), func(event observer.ObservableJob) {
 		switch event.Event {
-		case observer.Suceeded:
+		case observer.Succeeded:
 			g.SetFinished(event.Job.Namespace, event.Job.Name)
 			g.SetConditionTrueWithMessage(k8upv1alpha1.ConditionCompleted,
 				k8upv1alpha1.ReasonSucceeded,

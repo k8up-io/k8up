@@ -55,7 +55,7 @@ func (j *JobHandler) Handle() error {
 		}
 
 		if j.job.Status.Succeeded > 0 {
-			jobEvent = observer.Suceeded
+			jobEvent = observer.Succeeded
 		}
 
 		if j.job.Status.Failed > 0 {
