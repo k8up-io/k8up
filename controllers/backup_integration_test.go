@@ -93,7 +93,7 @@ func (ts *BackupTestSuite) Test_GivenFinishedPreBackupDeployment_WhenReconciling
 	ts.expectABackupJobEventually()
 	ts.markBackupAsFinished(ts.BackupResource)
 
-	suceeded := observer.Suceeded
+	suceeded := observer.Succeeded
 	ts.notifyObserverOfBackupJobStatusChange(suceeded)
 
 	ts.assertDeploymentIsDeleted(ts.newPreBackupDeployment())

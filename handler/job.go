@@ -55,7 +55,7 @@ func (j *JobHandler) Handle() error {
 		}
 
 		if j.job.Status.Succeeded > 0 {
-			jobEvent = observer.Suceeded
+			jobEvent = observer.Succeeded
 		}
 
 		if j.job.Status.Failed > 0 {
@@ -69,14 +69,14 @@ func (j *JobHandler) Handle() error {
 		exclusive = false
 	}
 
-	jobType := v1alpha1.ScheduleType
-	if j.Config.Obj != nil {
-		jobType = j.Config.Obj.GetType()
+	jobType, exists := j.job.GetLabels()[v1alpha1.LabelK8upType]
+	if !exists {
+		jobType = v1alpha1.ScheduleType.String()
 	}
 
 	oj := observer.ObservableJob{
 		Job:       j.job,
-		JobType:   jobType,
+		JobType:   v1alpha1.JobType(jobType),
 		Exclusive: exclusive,
 		Event:     jobEvent,
 	}

@@ -17,12 +17,12 @@ import (
 )
 
 const (
-	Update   EventType = "update"
-	Delete   EventType = "delete"
-	Create   EventType = "create"
-	Failed   EventType = "failed"
-	Suceeded EventType = "suceeded"
-	Running  EventType = "running"
+	Update    EventType = "update"
+	Delete    EventType = "delete"
+	Create    EventType = "create"
+	Failed    EventType = "failed"
+	Succeeded EventType = "succeeded"
+	Running   EventType = "running"
 )
 
 var (
@@ -30,16 +30,17 @@ var (
 
 	promLabels = []string{
 		"namespace",
+		"jobType",
 	}
 
 	metricsFailureCounter = promauto.NewCounterVec(prometheus.CounterOpts{
 		Name: "k8up_jobs_failed_counter",
-		Help: "The total number of backups that failed",
+		Help: "The total number of jobs that failed",
 	}, promLabels)
 
 	metricsSuccessCounter = promauto.NewCounterVec(prometheus.CounterOpts{
 		Name: "k8up_jobs_successful_counter",
-		Help: "The total number of backups that went through cleanly",
+		Help: "The total number of jobs that went through cleanly",
 	}, promLabels)
 
 	metricsTotalCounter = promauto.NewCounterVec(prometheus.CounterOpts{
@@ -120,15 +121,15 @@ func (o *Observer) handleEvent(event ObservableJob) {
 
 	switch event.Event {
 	case Failed:
-		incFailureCounters(event.Job.Namespace)
+		incFailureCounters(event.Job.Namespace, event.JobType)
 		invokeCallbacks(event)
-	case Suceeded:
+	case Succeeded:
 		// Only report succeeded jobs we've already seen to prevent
 		// reporting succeeded jobs on operator restart
 		if exists {
 			o.log.Info("job succeeded", "jobName", jobName)
 			o.observedJobs[jobName] = event
-			incSuccessCounters(event.Job.Namespace)
+			incSuccessCounters(event.Job.Namespace, event.JobType)
 			invokeCallbacks(event)
 		}
 	case Delete:
@@ -254,12 +255,12 @@ func (o *Observer) RegisterCallback(name string, callback ObservableJobCallback)
 	}
 }
 
-func incFailureCounters(namespace string) {
-	metricsFailureCounter.WithLabelValues(namespace).Inc()
-	metricsTotalCounter.WithLabelValues(namespace).Inc()
+func incFailureCounters(namespace string, jobType v1alpha1.JobType) {
+	metricsFailureCounter.WithLabelValues(namespace, jobType.String()).Inc()
+	metricsTotalCounter.WithLabelValues(namespace, jobType.String()).Inc()
 }
 
-func incSuccessCounters(namespace string) {
-	metricsSuccessCounter.WithLabelValues(namespace).Inc()
-	metricsTotalCounter.WithLabelValues(namespace).Inc()
+func incSuccessCounters(namespace string, jobType v1alpha1.JobType) {
+	metricsSuccessCounter.WithLabelValues(namespace, jobType.String()).Inc()
+	metricsTotalCounter.WithLabelValues(namespace, jobType.String()).Inc()
 }

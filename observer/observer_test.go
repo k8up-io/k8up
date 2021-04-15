@@ -78,7 +78,7 @@ func TestObserver_AreAllCallbacksInvoked(t *testing.T) {
 					},
 				},
 				JobType:    v1alpha1.BackupType,
-				Event:      Suceeded,
+				Event:      Succeeded,
 				Exclusive:  true,
 				Repository: "some-repo",
 				callbacks:  callbacks,
@@ -110,7 +110,7 @@ func TestObserver_AreOnlyExpectedCallbacksInvoked(t *testing.T) {
 		expectInvocation bool
 	}{
 		"GivenStatusSucceeded_WhenHandleEvent_ThenExpectInvocation": {
-			givenEventType:   Suceeded,
+			givenEventType:   Succeeded,
 			expectInvocation: true,
 		},
 		"GivenStatusFailed_WhenHandleEvent_ThenExpectInvocation": {
