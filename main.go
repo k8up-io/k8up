@@ -63,6 +63,7 @@ func main() {
 		Port:               9443,
 		LeaderElection:     cfg.Config.EnableLeaderElection,
 		LeaderElectionID:   "d2ab61da.syn.tools",
+		Namespace:          cfg.Config.WatchNamespace,
 	})
 	if err != nil {
 		setupLog.Error(err, "unable to start K8up operator")

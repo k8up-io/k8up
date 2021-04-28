@@ -70,6 +70,9 @@ type Configuration struct {
 	EnableLeaderElection bool   `koanf:"enable-leader-election"`
 	LogLevel             string `koanf:"log-level"`
 	OperatorNamespace    string `koanf:"operator-namespace"`
+	// WatchNamespace is the Namespace the operator should be watching for changes.
+	// An empty value means the operator is running with cluster scope.
+	WatchNamespace string `koanf:"watch-namespace"`
 }
 
 var (
