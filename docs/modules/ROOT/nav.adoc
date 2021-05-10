@@ -3,6 +3,13 @@ ifeval::['{page-origin-reftype}' == 'tag']
 * https://github.com/vshn/k8up/releases/tag/{page-origin-refname}[Changelog,window=_blank]
 endif::[]
 
+.About
+* xref:about/roadmap.adoc[Roadmap]
+* xref:about/community.adoc[Community]
+* xref:about/contribution_guide.adoc[Contribution Guide]
+* xref:about/code_of_conduct.adoc[Code of Conduct]
+* xref:about/visual_design.adoc[Visual Design]
+
 .Tutorials
 include::partial$nav-tutorials.adoc[]
 

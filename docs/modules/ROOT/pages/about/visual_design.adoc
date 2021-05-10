@@ -1,0 +1,43 @@
+= K8up Visual Design
+
+== Logo
+
+The logos are available under https://github.com/vshn/k8up/tree/master/docs/modules/ROOT/assets/images[assets/images].
+
+=== Wide
+
+link:/k8up/1.0.0/_images/k8up-logo.png[PNG], link:/k8up/1.0.0/_images/k8up-logo.svg[SVG]
+
+image::k8up-logo.png[link="/syn/_images/k8up-logo.png"]
+
+=== Square
+
+link:/k8up/1.0.0/_images/k8up-logo-square.png[PNG], link:/k8up/1.0.0/_images/k8up-logo-square.svg[SVG]
+
+image::k8up-logo-square.png[link="/syn/_images/k8up-logo-square.png"]
+
+== Colors
+
+The color palette is as follows:
+
+[cols=","]
+|===
+
+|{set:cellbgcolor:#1A5CE6}
+|{set:cellbgcolor:#white}#1A5CE6
+
+|{set:cellbgcolor:#a08794}
+|{set:cellbgcolor:#white}#a08794
+
+|{set:cellbgcolor:#bb7e8c}
+|{set:cellbgcolor:#white}#bb7e8c
+
+|{set:cellbgcolor:#c9b6be}
+|{set:cellbgcolor:#white}#c9b6be
+
+|{set:cellbgcolor:#d1becf}
+|{set:cellbgcolor:#white}#d1becf
+
+|===
+
+https://coolors.co/1a5ce6-a08794-bb7e8c-c9b6be-d1becf[https://coolors.co/].
