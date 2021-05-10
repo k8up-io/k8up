@@ -1,0 +1,9 @@
+= Contribution Guide
+
+We're really glad you're reading this, because we need volunteer developers to
+help this project come to fruition.
+
+== Submitting changes
+
+Please submit a Pull Request at GitHub with a clear list of what you've
+done (read more about http://help.github.com/pull-requests/[pull requests]).
