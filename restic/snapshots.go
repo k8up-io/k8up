@@ -42,10 +42,7 @@ func (r *Restic) listSnapshots(tags ArrayOpts, last bool) error {
 
 	opts := CommandOptions{
 		Path: r.resticPath,
-		Args: []string{
-			"snapshots",
-			"--json",
-		},
+		Args: r.globalFlags.ApplyToCommand("snapshots", "--json"),
 		StdOut: buf,
 		StdErr: logging.NewErrorWriter(snaplogger.WithName("restic")),
 	}

@@ -150,8 +150,7 @@ func (r *Restic) folderRestore(restoreDir string, snapshot Snapshot, restoreFilt
 		linkedDir = restoreDir
 	}
 
-	args := []string{"restore", snapshot.ID, "--target", linkedDir}
-
+	args := []string{snapshot.ID, "--target", linkedDir}
 	if restoreFilter != "" {
 		args = append(args, "--include", restoreFilter)
 	}
@@ -162,7 +161,7 @@ func (r *Restic) folderRestore(restoreDir string, snapshot Snapshot, restoreFilt
 
 	opts := CommandOptions{
 		Path:   r.resticPath,
-		Args:   args,
+		Args:   r.globalFlags.ApplyToCommand("restore", args...),
 		StdOut: logging.NewInfoWriter(log.WithName("restic")),
 		StdErr: logging.NewErrorWriter(log.WithName("restic")),
 	}
@@ -255,12 +254,8 @@ func (r *Restic) s3Restore(log logr.Logger, snapshot Snapshot, stats *RestoreSta
 	}
 
 	opts := CommandOptions{
-		Path: r.resticPath,
-		Args: []string{
-			"dump",
-			latestSnap.ID,
-			snapRoot,
-		},
+		Path:   r.resticPath,
+		Args:   r.globalFlags.ApplyToCommand("dump", latestSnap.ID, snapRoot),
 		StdOut: finalWriter,
 		StdErr: logging.NewErrorWriter(log.WithName("restic")),
 	}
@@ -310,12 +305,8 @@ func (r *Restic) getSnapshotRoot(snapshot Snapshot, log logr.Logger, stats *Rest
 	buf := bytes.Buffer{}
 
 	opts := CommandOptions{
-		Path: r.resticPath,
-		Args: []string{
-			"ls",
-			snapshot.ID,
-			"--json",
-		},
+		Path:   r.resticPath,
+		Args:   r.globalFlags.ApplyToCommand("ls", "--json", snapshot.ID),
 		StdOut: &buf,
 	}
 

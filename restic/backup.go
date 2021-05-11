@@ -27,7 +27,7 @@ func (r *Restic) Backup(backupDir string, tags ArrayOpts) error {
 
 	files, err := ioutil.ReadDir(backupDir)
 	if err != nil {
-		return fmt.Errorf("Error with the backupdir: %v", err)
+		return fmt.Errorf("can't read backupdir '%s': %w", backupDir, err)
 	}
 
 	// we need to ignore any non folder things in the directory
@@ -44,7 +44,6 @@ func (r *Restic) Backup(backupDir string, tags ArrayOpts) error {
 	r.sendPostWebhook()
 
 	return nil
-
 }
 
 func (r *Restic) folderBackup(folder string, backuplogger logr.Logger, tags ArrayOpts) error {
@@ -53,20 +52,19 @@ func (r *Restic) folderBackup(folder string, backuplogger logr.Logger, tags Arra
 
 	backuplogger.Info("starting backup for folder", "foldername", path.Base(folder))
 
+	flags := Combine(r.globalFlags, Flags{
+		"--host": {os.Getenv(Hostname)},
+		"--json": {},
+	})
+
 	opts := CommandOptions{
-		Path: r.resticPath,
-		Args: []string{
-			"backup",
-			folder,
-			"--host",
-			os.Getenv(Hostname),
-			"--json",
-		},
+		Path:   r.resticPath,
+		Args:   flags.ApplyToCommand("backup", folder),
 		StdOut: outputWriter,
 		StdErr: outputWriter,
 	}
 
-	return r.triggerBackup(folder, backuplogger, tags, opts, nil)
+	return r.triggerBackup(backuplogger, tags, opts, nil)
 }
 
 func (r *Restic) newParseBackupOutput(log logr.Logger, folder string) io.Writer {
@@ -74,10 +72,9 @@ func (r *Restic) newParseBackupOutput(log logr.Logger, folder string) io.Writer 
 	progressLogger := log.WithName("progress")
 
 	return logging.NewBackupOutputParser(progressLogger, folder, r.sendBackupStats)
-
 }
 
-func (r *Restic) sendBackupStats(summary logging.BackupSummary, errorCount int, folder string, startTimestamp, endTimestamp int64) {
+func (r *Restic) sendBackupStats(summary logging.BackupSummary, errorCount int, folder string, _, _ int64) {
 
 	metrics := r.parseSummary(summary, errorCount, folder, 1, time.Now().Unix())
 
@@ -95,7 +92,6 @@ func (r *Restic) sendBackupStats(summary logging.BackupSummary, errorCount int, 
 	if err != nil {
 		r.logger.Error(err, "prometheus send failed")
 	}
-
 }
 
 func (r *Restic) sendPostWebhook() {
@@ -113,10 +109,9 @@ func (r *Restic) sendPostWebhook() {
 	if err != nil {
 		r.logger.Error(err, "webhook send failed")
 	}
-
 }
 
-func (r *Restic) triggerBackup(name string, logger logr.Logger, tags ArrayOpts, opts CommandOptions, data *kubernetes.ExecData) error {
+func (r *Restic) triggerBackup(logger logr.Logger, tags ArrayOpts, opts CommandOptions, data *kubernetes.ExecData) error {
 	if len(tags) > 0 {
 		opts.Args = append(opts.Args, tags.BuildArgs()...)
 	}

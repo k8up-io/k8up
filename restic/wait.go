@@ -63,14 +63,14 @@ func (r *Restic) getLockList(log logr.Logger) ([]string, error) {
 
 	list := &locklist{}
 
+	flags := Combine(r.globalFlags, Flags{
+		"--json": {},
+		"--no-lock": {},
+	})
+
 	opts := CommandOptions{
-		Path: r.resticPath,
-		Args: []string{
-			"list",
-			"locks",
-			"--json",
-			"--no-lock",
-		},
+		Path:   r.resticPath,
+		Args:   flags.ApplyToCommand("list", "locks"),
 		StdOut: logging.New(list.out),
 		StdErr: logging.NewErrorWriter(log.WithName("restic")),
 	}

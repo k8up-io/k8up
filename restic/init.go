@@ -22,10 +22,8 @@ func (r *Restic) Init() error {
 	}
 
 	opts := CommandOptions{
-		Path: r.resticPath,
-		Args: []string{
-			"init",
-		},
+		Path:   r.resticPath,
+		Args:   r.globalFlags.ApplyToCommand("init"),
 		StdOut: logging.NewInfoWriter(resticLogger),
 		StdErr: initErrorCatcher,
 	}

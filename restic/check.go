@@ -1,6 +1,8 @@
 package restic
 
-import "github.com/vshn/wrestic/logging"
+import (
+	"github.com/vshn/wrestic/logging"
+)
 
 // Check will check the repository for errors
 func (r *Restic) Check() error {
@@ -10,9 +12,7 @@ func (r *Restic) Check() error {
 
 	opts := CommandOptions{
 		Path: r.resticPath,
-		Args: []string{
-			"check",
-		},
+		Args: r.globalFlags.ApplyToCommand("check"),
 		StdOut: logging.NewInfoWriter(checklogger.WithName("restic")),
 		StdErr: logging.NewErrorWriter(checklogger.WithName("restic")),
 	}
