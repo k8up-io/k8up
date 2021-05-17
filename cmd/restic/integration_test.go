@@ -15,10 +15,11 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/go-logr/glogr"
 	"github.com/go-logr/logr"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/vshn/wrestic/s3"
 	"github.com/vshn/wrestic/stats"
 
@@ -35,8 +36,7 @@ type testServer struct {
 }
 
 func (s *testServer) Shutdown(ctx context.Context) {
-	s.Server.Shutdown(ctx)
-	time.Sleep(1 * time.Second)
+	_ = s.Server.Shutdown(ctx)
 }
 
 type testEnvironment struct {
@@ -47,12 +47,6 @@ type testEnvironment struct {
 	resticCli *restic.Restic
 	log       logr.Logger
 	stats     *stats.Handler
-}
-
-func assertOK(t *testing.T, err error) {
-	if err != nil {
-		t.Error(err)
-	}
 }
 
 func newTestErrorChannel() chan error {
@@ -74,8 +68,9 @@ func (w *webhookserver) runWebServer(t *testing.T) {
 	}
 
 	go func() {
-		if err := srv.ListenAndServe(); err != http.ErrServerClosed {
-			assertOK(t, err)
+		err := srv.ListenAndServe()
+		if err != http.ErrServerClosed {
+			require.NoError(t, err)
 		}
 	}()
 
@@ -90,19 +85,20 @@ func getS3Repo() string {
 }
 
 func initTest(t *testing.T) *testEnvironment {
-
 	mainLogger := glogr.New().WithName("wrestic")
-
 	statHandler := stats.NewHandler(os.Getenv(promURLEnv), os.Getenv(restic.Hostname), os.Getenv(webhookURLEnv), mainLogger)
-
 	resticCli := restic.New(context.TODO(), mainLogger, statHandler)
 
-	webhook := &webhookserver{}
-	webhook.runWebServer(t)
-	s3client := s3.New(getS3Repo(), os.Getenv("AWS_ACCESS_KEY_ID"), os.Getenv("AWS_SECRET_ACCESS_KEY"))
-	s3client.Connect()
-	s3client.DeleteBucket()
+	cleanupDirs(t)
+	createTestFiles(t)
+	t.Cleanup(func() {
+		cleanupDirs(t)
+	})
+
+	webhook := startWebhookWebserver(t)
+	s3client := connectToS3Server(t)
 	resetFlags()
+
 	return &testEnvironment{
 		finishC:   newTestErrorChannel(),
 		webhook:   webhook,
@@ -111,6 +107,70 @@ func initTest(t *testing.T) *testEnvironment {
 		resticCli: resticCli,
 		log:       mainLogger,
 		stats:     statHandler,
+	}
+}
+
+func connectToS3Server(t *testing.T) *s3.Client {
+	repo := getS3Repo()
+	s3client := s3.New(repo, os.Getenv("AWS_ACCESS_KEY_ID"), os.Getenv("AWS_SECRET_ACCESS_KEY"))
+
+	err := s3client.Connect()
+	require.NoError(t, err)
+	t.Logf("Connected to S3 repo '%s'", repo)
+
+	_ = s3client.DeleteBucket()
+	t.Logf("Ensured that the bucket '%s' does not exist", repo)
+
+	t.Cleanup(func() {
+		_ = s3client.DeleteBucket()
+		t.Logf("Removing the bucket '%s'", repo)
+	})
+	return s3client
+}
+
+func startWebhookWebserver(t *testing.T) *webhookserver {
+	webhook := &webhookserver{}
+	webhook.runWebServer(t)
+	t.Logf("Started webserver on '%s'", webhook.srv.Addr)
+	t.Cleanup(func() {
+		if webhook.srv == nil {
+			t.Log("Webserver not running.")
+			return
+		}
+
+		t.Logf("Stopping the webserver on '%s'", webhook.srv.Addr)
+		webhook.srv.Shutdown(context.Background())
+	})
+	return webhook
+}
+
+func cleanupDirs(t *testing.T) {
+	dirs := []string{
+		os.Getenv(restic.BackupDirEnv),
+		os.Getenv(restic.RestoreDirEnv),
+	}
+
+	for _, dir := range dirs {
+		_ = os.RemoveAll(dir)
+		t.Logf("Ensured '%s' does not exist", dir)
+	}
+}
+
+func createTestFiles(t *testing.T) {
+	baseDir := os.Getenv(restic.BackupDirEnv)
+
+	testDirs := []string{"PVC1", "PVC2"}
+	for _, subDir := range testDirs {
+		dir := filepath.Join(baseDir, subDir)
+		file := filepath.Join(dir, "test.txt")
+
+		err := os.MkdirAll(dir, os.ModePerm)
+		require.NoError(t, err)
+
+		err = ioutil.WriteFile(file, []byte("data\n"), os.ModePerm)
+		require.NoError(t, err)
+
+		t.Logf("Created '%s'", file)
 	}
 }
 
@@ -130,30 +190,26 @@ func resetFlags() {
 func testBackup(t *testing.T) *testEnvironment {
 	env := initTest(t)
 
-	assertOK(t, run(env.resticCli, env.log))
+	cli := env.resticCli
+	err := run(cli, env.log)
+	require.NoError(t, err)
 
 	return env
 }
 
-func testResetEnvVars(vars []string) {
-	for _, envVar := range vars {
-		split := strings.Split(envVar, "=")
-		os.Setenv(split[0], split[1])
-	}
-}
-
 func testCheckS3Restore(t *testing.T) {
 	s3c := s3.New(os.Getenv("RESTORE_S3ENDPOINT"), os.Getenv("RESTORE_ACCESSKEYID"), os.Getenv("RESTORE_SECRETACCESSKEY"))
-	s3c.Connect()
+	err := s3c.Connect()
+	require.NoError(t, err)
 	files, err := s3c.ListObjects()
-	assertOK(t, err)
+	require.NoError(t, err)
 
 	for _, file := range files {
 		if strings.Contains(file.Key, "backup-test") {
 			file, err := s3c.Get(file.Key)
-			assertOK(t, err)
+			require.NoError(t, err)
 			gzpReader, err := gzip.NewReader(file)
-			assertOK(t, err)
+			require.NoError(t, err)
 			tarReader := tar.NewReader(gzpReader)
 
 			var contents bytes.Buffer
@@ -163,16 +219,17 @@ func testCheckS3Restore(t *testing.T) {
 				if err == io.EOF {
 					break
 				} else if err != nil {
-					assertOK(t, err)
+					require.NoError(t, err)
 					break
 				}
 
 				if header.Typeflag == tar.TypeReg {
-					io.Copy(&contents, tarReader)
+					_, err := io.Copy(&contents, tarReader)
+					require.NoError(t, err)
 				}
 			}
 
-			assertOK(t, err)
+			require.NoError(t, err)
 			if strings.TrimSpace(contents.String()) != "data" {
 				t.Error("restored contents is not \"data\" but: ", contents.String())
 			}
@@ -183,39 +240,35 @@ func testCheckS3Restore(t *testing.T) {
 
 func TestRestore(t *testing.T) {
 	env := testBackup(t)
+	defer env.webhook.srv.Shutdown(context.TODO())
 
 	restoreBool := true
 	restore = &restoreBool
 	rstType := "s3"
 	restoreType = &rstType
 
-	assertOK(t, run(env.resticCli, env.log))
+	err := run(env.resticCli, env.log)
+	require.NoError(t, err)
 
 	webhookData := restic.RestoreStats{}
-	assertOK(t, json.Unmarshal(env.webhook.jsonData, &webhookData))
+	err = json.Unmarshal(env.webhook.jsonData, &webhookData)
+	require.NoError(t, err)
 
 	if webhookData.SnapshotID == "" {
 		t.Errorf("No restore webhooks detected!")
 	}
 
-	env.webhook.srv.Shutdown(context.TODO())
-
 	testCheckS3Restore(t)
-
 }
 
 func TestBackup(t *testing.T) {
 	env := testBackup(t)
 
 	webhookData := restic.BackupStats{}
-	assertOK(t, json.Unmarshal(env.webhook.jsonData, &webhookData))
+	err := json.Unmarshal(env.webhook.jsonData, &webhookData)
+	require.NoError(t, err)
 
-	if len(webhookData.Snapshots) != 2 {
-		t.Errorf("Not exactly two snapshot in the repository, but: %v", len(webhookData.Snapshots))
-	}
-
-	env.webhook.srv.Shutdown(context.TODO())
-
+	assert.Len(t, webhookData.Snapshots, 2, "Not exactly two snapshot in the repository.")
 }
 
 func TestRestoreDisk(t *testing.T) {
@@ -226,35 +279,18 @@ func TestRestoreDisk(t *testing.T) {
 	rstType := "folder"
 	restoreType = &rstType
 
-	os.Setenv("TRIM_RESTOREPATH", "false")
-
-	assertOK(t, run(env.resticCli, env.log))
-
-	env.webhook.srv.Shutdown(context.TODO())
-
-	contents, err := ioutil.ReadFile(filepath.Join(os.Getenv(restic.RestoreDirEnv), "testdata/PVC2/test.txt"))
-	assertOK(t, err)
-
-	if strings.TrimSpace(string(contents)) != "data" {
-		t.Error("restored contents is not \"data\" but: ", string(contents))
-	}
-}
-
-func TestInitRepoFail(t *testing.T) {
-	oldEnvVars := os.Environ()
-
-	os.Setenv("RESTIC_REPOSITORY", "s3:http://localhost:1337/blah")
-	env := initTest(t)
-	defer testResetEnvVars(oldEnvVars)
+	_ = os.Setenv("TRIM_RESTOREPATH", "false")
 
 	err := run(env.resticCli, env.log)
+	require.NoError(t, err)
 
-	if err == nil || !strings.Contains(err.Error(), "cmd.Wait() err: 1") {
-		t.Errorf("command did not fail with expected error, received error was: %v", err)
-	}
+	restoredir := os.Getenv(restic.RestoreDirEnv)
+	backupdir := os.Getenv(restic.BackupDirEnv)
+	restoreFilePath := filepath.Join(restoredir, backupdir, "PVC2/test.txt")
+	contents, err := ioutil.ReadFile(restoreFilePath)
+	require.NoError(t, err)
 
-	env.webhook.srv.Shutdown(context.TODO())
-
+	assert.Equalf(t, "data\n", string(contents), "restored content of '%s' is not as expected", restoreFilePath)
 }
 
 func TestArchive(t *testing.T) {
@@ -265,10 +301,8 @@ func TestArchive(t *testing.T) {
 	restoreTypeVar := "s3"
 	restoreType = &restoreTypeVar
 
-	assertOK(t, run(env.resticCli, env.log))
-
-	env.webhook.srv.Shutdown(context.TODO())
+	err := run(env.resticCli, env.log)
+	require.NoError(t, err)
 
 	testCheckS3Restore(t)
-
 }

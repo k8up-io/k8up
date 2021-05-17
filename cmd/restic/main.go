@@ -79,7 +79,7 @@ func main() {
 
 func run(resticCLI *restic.Restic, mainLogger logr.Logger) error {
 	if err := resticCLI.Init(); err != nil {
-		mainLogger.Error(err, "failed to inialise the repository")
+		mainLogger.Error(err, "failed to initialise the repository")
 		return err
 	}
 
@@ -154,7 +154,7 @@ func run(resticCLI *restic.Restic, mainLogger logr.Logger) error {
 		_, serviceErr := os.Stat("/var/run/secrets/kubernetes.io")
 		_, kubeconfigErr := os.Stat(kubernetes.Kubeconfig)
 
-		if serviceErr == nil || kubeconfigErr == nil {
+		if serviceErr == nil && kubeconfigErr == nil {
 
 			podLister := kubernetes.NewPodLister(commandAnnotation, fileextAnnotation, os.Getenv(restic.Hostname), mainLogger)
 
