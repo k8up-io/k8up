@@ -39,6 +39,8 @@ func (s *testServer) Shutdown(ctx context.Context) {
 	_ = s.Server.Shutdown(ctx)
 }
 
+const testfileContent = "data\n"
+
 type testEnvironment struct {
 	s3Client  *s3.Client
 	webhook   *webhookserver
@@ -167,7 +169,7 @@ func createTestFiles(t *testing.T) {
 		err := os.MkdirAll(dir, os.ModePerm)
 		require.NoError(t, err)
 
-		err = ioutil.WriteFile(file, []byte("data\n"), os.ModePerm)
+		err = ioutil.WriteFile(file, []byte(testfileContent), os.ModePerm)
 		require.NoError(t, err)
 
 		t.Logf("Created '%s'", file)
@@ -290,7 +292,7 @@ func TestRestoreDisk(t *testing.T) {
 	contents, err := ioutil.ReadFile(restoreFilePath)
 	require.NoError(t, err)
 
-	assert.Equalf(t, "data\n", string(contents), "restored content of '%s' is not as expected", restoreFilePath)
+	assert.Equalf(t, testfileContent, string(contents), "restored content of '%s' is not as expected", restoreFilePath)
 }
 
 func TestArchive(t *testing.T) {
