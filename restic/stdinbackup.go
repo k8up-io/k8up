@@ -17,21 +17,20 @@ func (r *Restic) StdinBackup(data *kubernetes.ExecData, filename, fileExt string
 
 	outputWriter := logging.NewStdinBackupOutputParser(stdinlogger.WithName("progress"), filename+fileExt, r.sendBackupStats)
 
+	flags := Combine(r.globalFlags, Flags{
+		"--host":           {os.Getenv(Hostname)},
+		"--json":           {},
+		"--stdin":          {},
+		"--stdin-filename": {fmt.Sprintf("%s%s", filename, fileExt)},
+	})
+
 	opts := CommandOptions{
-		Path: r.resticPath,
-		Args: []string{
-			"backup",
-			"--stdin",
-			"--host",
-			os.Getenv(Hostname),
-			"--json",
-			"--stdin-filename",
-			fmt.Sprintf("%s%s", filename, fileExt),
-		},
+		Path:   r.resticPath,
+		Args:   flags.ApplyToCommand("backup"),
 		StdOut: outputWriter,
 		StdErr: outputWriter,
 		StdIn:  data.Reader,
 	}
 
-	return r.triggerBackup(filename+fileExt, stdinlogger, tags, opts, data)
+	return r.triggerBackup(stdinlogger, tags, opts, data)
 }

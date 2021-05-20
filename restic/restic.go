@@ -10,12 +10,14 @@ import (
 )
 
 const (
-	//prometheus
+	// prometheus
 	Namespace = "baas"
 	Subsystem = "backup_restic"
-	//general
+
+	// general
 	Hostname = "HOSTNAME"
-	//Env variable names
+
+	// Env variable names
 	keepLastEnv       = "KEEP_LAST"
 	keepHourlyEnv     = "KEEP_HOURLY"
 	keepDailyEnv      = "KEEP_DAILY"
@@ -25,7 +27,10 @@ const (
 	keepTagEnv        = "KEEP_TAG"
 	BackupDirEnv      = "BACKUP_DIR"
 	resticLocationEnv = "RESTIC_BINARY"
-	//Arguments for restic
+	resticRepository  = "RESTIC_REPOSITORY"
+	resticOptions     = "RESTIC_OPTIONS"
+
+	// Flags for restic
 	keepLastArg    = "--keep-last"
 	keepHourlyArg  = "--keep-hourly"
 	keepDailyArg   = "--keep-daily"
@@ -33,7 +38,8 @@ const (
 	keepMonthlyArg = "--keep-monthly"
 	keepYearlyArg  = "--keep-yearly"
 	keepTagsArg    = "--keep-tag"
-	//Restore
+
+	// Restore
 	RestoreS3EndpointEnv     = "RESTORE_S3ENDPOINT"
 	RestoreS3AccessKeyIDEnv  = "RESTORE_ACCESSKEYID"
 	RestoreS3SecretAccessKey = "RESTORE_SECRETACCESSKEY"
@@ -60,27 +66,44 @@ func (a *ArrayOpts) Set(value string) error {
 }
 
 type Restic struct {
-	resticPath   string
-	logger       logr.Logger
-	snapshots    []Snapshot
-	ctx          context.Context
-	bucket       string
+	resticPath string
+	logger     logr.Logger
+	snapshots  []Snapshot
+	ctx        context.Context
+	bucket     string
+
+	// globalFlags are applied to all invocations of restic
+	globalFlags  Flags
 	statsHandler StatsHandler
 }
 
 // New returns a new Restic reference
 func New(ctx context.Context, logger logr.Logger, statsHandler StatsHandler) *Restic {
-
-	bin := os.Getenv(resticLocationEnv)
-	if bin == "" {
+	bin, found := os.LookupEnv(resticLocationEnv)
+	if !found {
 		bin = "/usr/local/bin/restic"
+	}
+
+	repository, found := os.LookupEnv(resticRepository)
+	if !found {
+		logger.Info(resticRepository + " is undefined")
+	}
+
+	globalFlags := Flags{}
+
+	optionString, found := os.LookupEnv(resticOptions)
+	options := strings.Split(optionString, ",")
+	if found {
+		logger.Info("using the following restic options", "options", options)
+		globalFlags.AddFlag("--option", options...)
 	}
 
 	return &Restic{
 		logger:       logger,
 		resticPath:   bin,
 		ctx:          ctx,
-		bucket:       path.Base(os.Getenv("RESTIC_REPOSITORY")),
+		bucket:       path.Base(repository),
+		globalFlags:  globalFlags,
 		statsHandler: statsHandler,
 	}
 }

@@ -54,6 +54,7 @@ func (c *Command) Run() {
 // Configure will setup the command object.
 // Mainly set the env vars and wire the right stdins/outs.
 func (c *Command) Configure() {
+	c.cmdLogger.Info("restic command", "path", c.options.Path, "args", c.options.Args)
 	c.cmd = exec.CommandContext(c.ctx, c.options.Path, c.options.Args...)
 	osEnv := os.Environ()
 	c.cmd.Env = c.setResticProgressFPSIfNotDefined(osEnv)

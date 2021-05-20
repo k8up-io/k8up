@@ -10,9 +10,7 @@ func (r *Restic) Unlock(all bool) error {
 
 	opts := CommandOptions{
 		Path: r.resticPath,
-		Args: []string{
-			"unlock",
-		},
+		Args: r.globalFlags.ApplyToCommand("unlock"),
 		StdOut: logging.NewErrorWriter(unlocklogger.WithName("restic")),
 		StdErr: logging.NewErrorWriter(unlocklogger.WithName("restic")),
 	}

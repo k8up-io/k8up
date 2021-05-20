@@ -12,8 +12,7 @@ func (r *Restic) Prune(tags ArrayOpts) error {
 
 	prunelogger.Info("pruning repository")
 
-	args := []string{"forget", "--prune"}
-
+	args := []string{"--prune"}
 	if last := os.Getenv(keepLastEnv); last != "" {
 		args = append(args, keepLastArg, last)
 	}
@@ -44,7 +43,7 @@ func (r *Restic) Prune(tags ArrayOpts) error {
 
 	opts := CommandOptions{
 		Path:   r.resticPath,
-		Args:   args,
+		Args:   r.globalFlags.ApplyToCommand("forget", args...),
 		StdOut: logging.NewInfoWriter(prunelogger.WithName("restic")),
 		StdErr: logging.NewErrorWriter(prunelogger.WithName("restic")),
 	}
