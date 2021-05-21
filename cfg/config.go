@@ -14,6 +14,7 @@ const (
 
 	ResticRepositoryEnvName = "RESTIC_REPOSITORY"
 	ResticPasswordEnvName   = "RESTIC_PASSWORD"
+	ResticOptionsEnvName    = "RESTIC_OPTIONS"
 
 	AwsAccessKeyIDEnvName     = "AWS_ACCESS_KEY_ID"
 	AwsSecretAccessKeyEnvName = "AWS_SECRET_ACCESS_KEY"
@@ -70,6 +71,10 @@ type Configuration struct {
 	EnableLeaderElection bool   `koanf:"enable-leader-election"`
 	LogLevel             string `koanf:"log-level"`
 	OperatorNamespace    string `koanf:"operator-namespace"`
+
+	// Allows to pass options to restic, see https://restic.readthedocs.io/en/stable/manual_rest.html?highlight=--option#usage-help
+	// Format: `key=value,key2=value2`
+	ResticOptions string `koanf:"restic-options"`
 }
 
 var (
