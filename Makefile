@@ -13,6 +13,8 @@ include Makefile.vars.mk
 e2e_make := $(MAKE) -C e2e
 go_build ?= go build -o $(BIN_FILENAME) main.go
 
+setup-envtest ?= go run sigs.k8s.io/controller-runtime/tools/setup-envtest
+
 # Run tests (see https://sdk.operatorframework.io/docs/building-operators/golang/references/envtest-setup)
 ENVTEST_ASSETS_DIR=$(shell pwd)/testbin
 
@@ -28,16 +30,14 @@ test: ## Run tests
 # 1.20.2 is not (yet) supported, because starting the Kubernetes API controller with
 # `--insecure-port` and `--insecure-bind-address` flags is now deprecated,
 # but envtest was not updated accordingly.
-#integration-test: export ENVTEST_K8S_VERSION = 1.20.2
-integration-test: export ENVTEST_K8S_VERSION = 1.19.2
+#integration-test: export ENVTEST_K8S_VERSION = 1.20.x
+integration-test: export ENVTEST_K8S_VERSION = 1.19.x
 integration-test: export KUBEBUILDER_ATTACH_CONTROL_PLANE_OUTPUT = $(INTEGRATION_TEST_DEBUG_OUTPUT)
 integration-test: generate $(testbin_created) ## Run integration tests with envtest
-	test -f ${ENVTEST_ASSETS_DIR}/setup-envtest.sh || \
-		curl -sSLo ${ENVTEST_ASSETS_DIR}/setup-envtest.sh https://raw.githubusercontent.com/kubernetes-sigs/controller-runtime/master/hack/setup-envtest.sh
-	source ${ENVTEST_ASSETS_DIR}/setup-envtest.sh; \
-		fetch_envtest_tools $(ENVTEST_ASSETS_DIR); \
-		setup_envtest_env $(ENVTEST_ASSETS_DIR); \
-		go test -tags=integration ./... -coverprofile cover.out
+	$(setup-envtest) use '$(ENVTEST_K8S_VERSION)!'
+	export KUBEBUILDER_ASSETS="$$($(setup-envtest) use -i -p path '$(ENVTEST_K8S_VERSION)!')"; \
+		env | grep KUBEBUILDER; \
+		go test -tags=integration -v ./... -coverprofile cover.out
 
 .PHONY: build
 build: generate fmt vet $(BIN_FILENAME) ## Build manager binary
