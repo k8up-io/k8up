@@ -39,13 +39,18 @@ spec:
     name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: EffectiveSchedule is the Schema to persist schedules generated from Randomized schedules.
+        description: EffectiveSchedule is the Schema to persist schedules generated
+          from Randomized schedules.
         properties:
           apiVersion:
-            description: 'APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
             type: string
           kind:
-            description: 'Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
             type: string
           metadata:
             type: object
@@ -53,16 +58,20 @@ spec:
             description: EffectiveScheduleSpec defines the desired state of EffectiveSchedule
             properties:
               generatedSchedule:
-                description: GeneratedSchedule is the effective schedule that is added to Cron
+                description: GeneratedSchedule is the effective schedule that is added
+                  to Cron
                 type: string
               jobType:
                 description: JobType defines to which job type this schedule applies
                 type: string
               originalSchedule:
-                description: OriginalSchedule is the original user-defined schedule definition in the Schedule object.
+                description: OriginalSchedule is the original user-defined schedule
+                  definition in the Schedule object.
                 type: string
               scheduleRefs:
-                description: ScheduleRefs holds a list of schedules for which the generated schedule applies to. The list may omit entries that aren't generated from smart schedules.
+                description: ScheduleRefs holds a list of schedules for which the
+                  generated schedule applies to. The list may omit entries that aren't
+                  generated from smart schedules.
                 items:
                   description: ScheduleRef represents a reference to a Schedule resource
                   properties:
