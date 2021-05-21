@@ -13,6 +13,8 @@ include Makefile.vars.mk
 e2e_make := $(MAKE) -C e2e
 go_build ?= go build -o $(BIN_FILENAME) main.go
 
+setup-envtest ?= go run sigs.k8s.io/controller-runtime/tools/setup-envtest
+
 # Run tests (see https://sdk.operatorframework.io/docs/building-operators/golang/references/envtest-setup)
 ENVTEST_ASSETS_DIR=$(shell pwd)/testbin
 
@@ -32,10 +34,8 @@ test: ## Run tests
 integration-test: export ENVTEST_K8S_VERSION = 1.19.x
 integration-test: export KUBEBUILDER_ATTACH_CONTROL_PLANE_OUTPUT = $(INTEGRATION_TEST_DEBUG_OUTPUT)
 integration-test: generate $(testbin_created) ## Run integration tests with envtest
-	hash setup-envtest 2>/dev/null || \
-		go install sigs.k8s.io/controller-runtime/tools/setup-envtest@latest
-	setup-envtest use '$(ENVTEST_K8S_VERSION)!'
-	export KUBEBUILDER_ASSETS="$$(setup-envtest use -i -p path '$(ENVTEST_K8S_VERSION)!')"; \
+	$(setup-envtest) use '$(ENVTEST_K8S_VERSION)!'
+	export KUBEBUILDER_ASSETS="$$($(setup-envtest) use -i -p path '$(ENVTEST_K8S_VERSION)!')"; \
 		env | grep KUBEBUILDER; \
 		go test -tags=integration -v ./... -coverprofile cover.out
 
