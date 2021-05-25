@@ -7,6 +7,8 @@ The Operator can be configured in two ways:
 
 == Environment Variables
 
+You need to define `BACKUP_OPERATOR_NAMESPACE`, but everything else can be left to their default values.
+
 `BACKUP_ANNOTATION`:: the annotation to be used for filtering, by default: `k8up.syn.tools/backup`
 `BACKUP_BACKUPCOMMANDANNOTATION`:: set the annotation name that identify the backup commands on Pods, by default: `k8up.syn.tools/backupcommand`
 `BACKUP_CHECKSCHEDULE`:: the default check schedule, by default: `0 0 * * 0`
@@ -37,15 +39,14 @@ The Operator can be configured in two ways:
 `BACKUP_JOBNAME`:: names for the backup job objects in OpenShift, default: `backupjob`
 `BACKUP_LOG_LEVEL`:: Set to "debug" to enable verbose logging, default: `info`
 `BACKUP_METRICS_BINDADDRESS`:: set the bind address for the prometheus endpoint, default: `:8080`
-`BACKUP_OPERATOR_NAMESPACE`:: set the namespace in which the K8up operator itself runs, Required.
+`BACKUP_OPERATOR_NAMESPACE`:: set the namespace in which the K8up operator itself runs, *required!*
 `BACKUP_PODEXECACCOUNTNAME`:: set the service account name that should be used for the pod command execution, default: `pod-executor`
 `BACKUP_PODEXECROLENAME`:: set the role name that should be used for pod command execution, default `pod-executor`
 `BACKUP_PODFILTER`:: the filter used to find the backup pods, default: `backupPod=true`
 `BACKUP_PODNAME`:: names for the backup pod objects in OpenShift, default: `backupjob-pod`
 `BACKUP_PROMURL`:: set the operator wide default prometheus push gateway, default `\http://127.0.0.1/`
 `BACKUP_RESTARTPOLICY`:: set the RestartPolicy for the backup jobs. According to the https://kubernetes.io/docs/concepts/workloads/controllers/jobs-run-to-completion/[docs] this should be `OnFailure` for jobs that terminate, default: `OnFailure`
-
-You only need to adjust `BACKUP_IMAGE`, everything else can be left default.
+`BACKUP_RESTIC_OPTIONS`:: pass https://restic.readthedocs.io/en/stable/manual_rest.html?highlight=--option#usage-help[custom options to restic]
 
 == Global Settings
 

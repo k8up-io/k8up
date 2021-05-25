@@ -204,6 +204,10 @@ func DefaultEnv(namespace string) EnvVarConverter {
 	defaults.SetString(cfg.AwsSecretAccessKeyEnvName, cfg.Config.GlobalSecretAccessKey)
 	defaults.SetString("HOSTNAME", namespace)
 
+	if cfg.Config.ResticOptions != "" {
+		defaults.SetString(cfg.ResticOptionsEnvName, cfg.Config.ResticOptions)
+	}
+
 	return defaults
 }
 
