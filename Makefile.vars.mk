@@ -34,6 +34,6 @@ KUSTOMIZE ?= go run sigs.k8s.io/kustomize/kustomize/v3
 # Image URL to use all building/pushing image targets
 DOCKER_IMG ?= docker.io/vshn/k8up:$(IMG_TAG)
 QUAY_IMG ?= quay.io/vshn/k8up:$(IMG_TAG)
-WRESTIC_IMG ?= quay.io/vshn/wrestic:v0.2.2
+WRESTIC_IMG ?= quay.io/vshn/wrestic:latest
 
 testbin_created = $(TESTBIN_DIR)/.created
