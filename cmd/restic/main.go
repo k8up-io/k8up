@@ -97,10 +97,10 @@ func run(resticCLI *restic.Restic, mainLogger logr.Logger) error {
 		}
 	}
 
-	commandRun := false
+	skipBackup := false
 
 	if *prune {
-		commandRun = true
+		skipBackup = true
 		if err := resticCLI.Prune(tags); err != nil {
 			mainLogger.Error(err, "prune job failed")
 			return err
@@ -108,7 +108,7 @@ func run(resticCLI *restic.Restic, mainLogger logr.Logger) error {
 	}
 
 	if *check {
-		commandRun = true
+		skipBackup = true
 		if err := resticCLI.Check(); err != nil {
 			mainLogger.Error(err, "check job failed")
 			return err
@@ -116,7 +116,7 @@ func run(resticCLI *restic.Restic, mainLogger logr.Logger) error {
 	}
 
 	if *restore {
-		commandRun = true
+		skipBackup = true
 		if err := resticCLI.Restore(*restoreSnap, restic.RestoreOptions{
 			RestoreType:   restic.RestoreType(*restoreType),
 			RestoreDir:    os.Getenv(restic.RestoreDirEnv),
@@ -134,59 +134,73 @@ func run(resticCLI *restic.Restic, mainLogger logr.Logger) error {
 	}
 
 	if *archive {
-		commandRun = true
+		skipBackup = true
 		if err := resticCLI.Archive(*restoreFilter, *verifyRestore, tags); err != nil {
 			mainLogger.Error(err, "archive job failed")
 			return err
 		}
 	}
 
-	if !commandRun {
-		commandAnnotation := os.Getenv(commandEnv)
-		if commandAnnotation == "" {
-			commandAnnotation = "k8up.syn.tools/backupcommand"
-		}
-		fileextAnnotation := os.Getenv(fileextEnv)
-		if fileextAnnotation == "" {
-			fileextAnnotation = "k8up.syn.tools/file-extension"
-		}
+	if skipBackup {
+		return nil
+	}
 
-		_, serviceErr := os.Stat("/var/run/secrets/kubernetes.io")
-		_, kubeconfigErr := os.Stat(kubernetes.Kubeconfig)
+	err := backupAnnotatedPods(resticCLI, mainLogger)
+	if err != nil {
+		mainLogger.Error(err, "backup job failed", "step", "backup of annotated pods")
+		return err
+	}
+	mainLogger.Info("backups of annotated jobs have finished successfully")
 
-		if serviceErr == nil && kubeconfigErr == nil {
+	err = resticCLI.Backup(getBackupDir(), tags)
+	if err != nil {
+		mainLogger.Error(err, "backup job failed", "step", "backup of dir failed", "dir", getBackupDir())
+		return err
+	}
 
-			podLister := kubernetes.NewPodLister(commandAnnotation, fileextAnnotation, os.Getenv(restic.Hostname), mainLogger)
+	return nil
+}
 
-			podList, err := podLister.ListPods()
+func backupAnnotatedPods(resticCLI *restic.Restic, mainLogger logr.Logger) error {
+	commandAnnotation := os.Getenv(commandEnv)
+	if commandAnnotation == "" {
+		commandAnnotation = "k8up.syn.tools/backupcommand"
+	}
+	fileextAnnotation := os.Getenv(fileextEnv)
+	if fileextAnnotation == "" {
+		fileextAnnotation = "k8up.syn.tools/file-extension"
+	}
 
-			if err == nil {
-				for _, pod := range podList {
-					data, err := kubernetes.PodExec(pod, mainLogger)
-					if err != nil {
-						mainLogger.Error(errors.New("error occured during data stream from k8s"), "pod execution was interrupted")
-						return err
-					}
-					filename := fmt.Sprintf("/%s-%s", os.Getenv(restic.Hostname), pod.ContainerName)
-					err = resticCLI.StdinBackup(data, filename, pod.FileExtension, tags)
-					if err != nil {
-						mainLogger.Error(err, "backup commands failed")
-						return err
-					}
-				}
-				mainLogger.Info("all pod commands have finished successfully")
-			} else {
-				mainLogger.Error(err, "could not list pods", "namespace", os.Getenv(restic.Hostname))
-			}
-		}
+	_, serviceErr := os.Stat("/var/run/secrets/kubernetes.io")
+	_, kubeconfigErr := os.Stat(kubernetes.Kubeconfig)
 
-		err := resticCLI.Backup(getBackupDir(), tags)
+	if serviceErr != nil && kubeconfigErr != nil {
+		mainLogger.Info("No kubernetes credentials configured: Can't check for annotated Pods.")
+		return nil
+	}
+
+	podLister := kubernetes.NewPodLister(commandAnnotation, fileextAnnotation, os.Getenv(restic.Hostname), mainLogger)
+	podList, err := podLister.ListPods()
+
+	if err != nil {
+		mainLogger.Error(err, "could not list pods", "namespace", os.Getenv(restic.Hostname))
+		return nil
+	}
+
+	for _, pod := range podList {
+		data, err := kubernetes.PodExec(pod, mainLogger)
 		if err != nil {
-			mainLogger.Error(err, "backup job failed")
+			mainLogger.Error(errors.New("error occurred during data stream from k8s"), "pod execution was interrupted")
 			return err
 		}
-
+		filename := fmt.Sprintf("/%s-%s", os.Getenv(restic.Hostname), pod.ContainerName)
+		err = resticCLI.StdinBackup(data, filename, pod.FileExtension, tags)
+		if err != nil {
+			mainLogger.Error(err, "backup commands failed")
+			return err
+		}
 	}
+
 	return nil
 }
 
