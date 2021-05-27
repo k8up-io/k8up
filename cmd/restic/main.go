@@ -97,10 +97,10 @@ func run(resticCLI *restic.Restic, mainLogger logr.Logger) error {
 		}
 	}
 
-	dontBackup := false
+	skipBackup := false
 
 	if *prune {
-		dontBackup = true
+		skipBackup = true
 		if err := resticCLI.Prune(tags); err != nil {
 			mainLogger.Error(err, "prune job failed")
 			return err
@@ -108,7 +108,7 @@ func run(resticCLI *restic.Restic, mainLogger logr.Logger) error {
 	}
 
 	if *check {
-		dontBackup = true
+		skipBackup = true
 		if err := resticCLI.Check(); err != nil {
 			mainLogger.Error(err, "check job failed")
 			return err
@@ -116,7 +116,7 @@ func run(resticCLI *restic.Restic, mainLogger logr.Logger) error {
 	}
 
 	if *restore {
-		dontBackup = true
+		skipBackup = true
 		if err := resticCLI.Restore(*restoreSnap, restic.RestoreOptions{
 			RestoreType:   restic.RestoreType(*restoreType),
 			RestoreDir:    os.Getenv(restic.RestoreDirEnv),
@@ -134,14 +134,14 @@ func run(resticCLI *restic.Restic, mainLogger logr.Logger) error {
 	}
 
 	if *archive {
-		dontBackup = true
+		skipBackup = true
 		if err := resticCLI.Archive(*restoreFilter, *verifyRestore, tags); err != nil {
 			mainLogger.Error(err, "archive job failed")
 			return err
 		}
 	}
 
-	if dontBackup {
+	if skipBackup {
 		return nil
 	}
 
