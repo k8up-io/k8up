@@ -15,6 +15,7 @@ WARNING: Do not remove the CRDs, as you might loose the resources!
 
 . `kubectl` or `oc`
 . `helm` version 3, version 2 for deinstallation if you're still using Tiller
+. `yq` version 4 (alternatively, any editor works)
 
 NOTE: You might need to adapt the commands to your needs.
       This guide does not provide a copy-paste upgrade script, but points you in the right direction. It also assumes that you know basic usage of Helm.
@@ -42,8 +43,24 @@ helm -n ${ns} uninstall k8up
 
 === Install 1.x
 
-. Make sure to migrate any changed Helm values before installing the release.
-. Update the CRDs as documented in the Chart README.
+. Make sure to prepare any changed Helm values before installing the release.
+. Prepare all CRDs for 3-way-merge with `kubectl apply`
++
+[source,bash]
+----
+for crd in archives.backup.appuio.ch backups.backup.appuio.ch checks.backup.appuio.ch prebackuppods.backup.appuio.ch prunes.backup.appuio.ch restores.backup.appuio.ch schedules.backup.appuio.ch; do
+  # Get CRD definition in YAML
+  kubectl get crd "${crd}" -o yaml > "${crd}.yaml"
+  # Remove all metadata properties except `metadata.name`
+  yq -i eval 'del(.status) | del(.metadata) | .metadata.name += "'${crd}'"' "${crd}.yaml"
+  # Apply the CRD again (this shouldn't change anything, except adding the annotation "kubectl.kubernetes.io/last-applied-configuration")
+  # You will also see some warnings in the output mentioning the annotation.
+  # This is expected and actually required.
+  kubectl apply -f "${crd}.yaml"
+done
+----
+
+. Apply the new CRDs as documented in the Chart README.
 . Install the Helm Chart version 1.x.
 
 NOTE: For Kubernetes < 1.15 (OpenShift 3.11), please add `--set k8up.enableLeaderElection=false` to the `helm install` command.
