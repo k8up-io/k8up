@@ -17,7 +17,7 @@ spec:
         app: wordpress
         tier: mariadb
       annotations:
-        appuio.ch/backupcommand: /bin/bash -c 'mysqldump -uroot -p"${MARIADB_ROOT_PASSWORD}" --all-databases'
+        k8up.syn.tools/backupcommand: /bin/bash -c 'mysqldump -uroot -p"${MARIADB_ROOT_PASSWORD}" --all-databases'
     spec:
       containers:
       - image: mariadb/server:10.4
