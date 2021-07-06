@@ -28,7 +28,7 @@ echo ""
 echo "••• Installing K8up •••"
 helm repo add appuio https://charts.appuio.ch
 helm repo update
-helm install appuio/k8up --generate-name --set k8up.backupImage.tag=v0.1.8-root
+helm install appuio/k8up --generate-name 
 
 echo ""
 echo "••• Watch pods •••"
