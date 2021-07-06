@@ -1,4 +1,6 @@
-= Releasing k8up
+= Releasing K8up
+
+IMPORTANT: Before pushing a new Git tag, please adjust the version number in https://github.com/vshn/k8up/blob/master/docs/antora.yml[antora.yml].
 
 The release process is automated all the way through.
 It starts when a maintainer pushes a new git tag.
