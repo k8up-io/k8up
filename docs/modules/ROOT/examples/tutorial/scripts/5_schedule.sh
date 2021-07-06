@@ -6,7 +6,7 @@ source scripts/environment.sh
 kubectl config use-context minikube
 
 # Set the schedule
-kubectl apply -f k8up/schedule.yaml
+kubectl apply -f ../schedule.yaml
 
 # Watch how the number of snapshots grow
 watch restic snapshots
