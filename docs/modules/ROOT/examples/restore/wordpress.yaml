@@ -1,0 +1,22 @@
+apiVersion: backup.appuio.ch/v1alpha1
+kind: Restore
+metadata:
+  name: restore-wordpress
+spec:
+  snapshot: SNAPSHOT_ID
+  restoreMethod:
+    folder:
+      claimName: wordpress-pvc
+  backend:
+    repoPasswordSecretRef:
+      name: backup-repo
+      key: password
+    s3:
+      endpoint: http://minio:9000
+      bucket: backups
+      accessKeyIDSecretRef:
+        name: minio-credentials
+        key: username
+      secretAccessKeySecretRef:
+        name: minio-credentials
+        key: password
