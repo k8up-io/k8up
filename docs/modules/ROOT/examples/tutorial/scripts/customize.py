@@ -19,7 +19,7 @@ args = parser.parse_args()
 
 # Read the YAML file, replace the `spec:snapshot:` value and print to stdout
 dir = os.path.dirname(__file__)
-stream = open(os.path.join(dir, '../../restore/') + args.target + '.yaml', 'r')
+stream = open(os.path.join(dir, '../restore/') + args.target + '.yaml', 'r')
 document = yaml.load(stream, Loader=yaml.FullLoader)
 document['spec']['snapshot'] = args.snapshot
 print(yaml.dump(document))
