@@ -25,6 +25,10 @@ echo "••• Installing WordPress •••"
 kubectl apply -k wordpress
 
 echo ""
+echo "••• Installing CRDs for K8up •••"
+kubectl apply -f https://github.com/vshn/k8up/releases/download/v1.1.0/k8up-crd.yaml
+
+echo ""
 echo "••• Installing K8up •••"
 helm repo add appuio https://charts.appuio.ch
 helm repo update
