@@ -31,8 +31,6 @@ spec:
             - "-i"
             - "-c"
             - mysql -h 127.0.0.1 -uroot -p"${MARIADB_ROOT_PASSWORD}" -D mysql -e 'SELECT 1'
-          initialDelaySeconds: 5
-          timeoutSeconds: 1
         livenessProbe:
           timeoutSeconds: 1
           initialDelaySeconds: 30
