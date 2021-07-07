@@ -1,6 +1,6 @@
 * xref:k8up:ROOT:explanations/architecture.adoc[Architecture]
 * xref:k8up:ROOT:explanations/ide.adoc[IDE Integration]
-* xref:k8up:ROOT:explanations/release.adoc[Releasing k8up]
+* xref:k8up:ROOT:explanations/release.adoc[Releasing K8up]
 * xref:k8up:ROOT:explanations/missing-docs.adoc[Missing Documentation]
 * xref:k8up:ROOT:explanations/supported-k8s-versions.adoc[Supported Kubernetes Versions]
 * xref:k8up:ROOT:explanations/what-has-changed-in-v1.adoc[What has changed in K8up v1.0]
