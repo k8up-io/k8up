@@ -1,4 +1,4 @@
-FROM docker.io/library/alpine:3.13 as runtime
+FROM docker.io/library/alpine:3.14 as runtime
 
 ENTRYPOINT ["k8up"]
 
