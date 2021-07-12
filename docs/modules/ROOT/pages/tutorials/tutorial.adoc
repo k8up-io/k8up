@@ -335,7 +335,7 @@ Instead of restoring files to a PVC, we can instead connect to the running datab
 
 [start=4]
 . Get the snapshot ID for the database dump and save it to your local machine as `backup.sql`:
-
++
 ....
 $ export SNAPSHOT_ID=$(restic snapshots --json --last --path /default-mariadb | jq -r '.[0].id')
 $ restic dump "${SNAPSHOT_ID}" /default-mariadb > backup.sql
