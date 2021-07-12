@@ -343,7 +343,7 @@ $ restic dump "${SNAPSHOT_ID}" /default-mariadb > backup.sql
 
 [start=5]
 . Now connect to the MariaDB pod, copy the dump and a simple restore script to the pod and execute it there:
-
++
 ....
 $ export MARIADB_POD=$(kubectl get pods -o custom-columns="NAME:.metadata.name" --no-headers -l "app=wordpress,tier=mariadb")
 $ kubectl cp backup.sql "$MARIADB_POD":/
