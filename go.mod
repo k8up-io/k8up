@@ -8,11 +8,11 @@ require (
 	github.com/go-logr/logr v0.4.0
 	github.com/go-logr/zapr v0.4.0
 	github.com/imdario/mergo v0.3.12
-	github.com/knadh/koanf v1.1.0
+	github.com/knadh/koanf v1.1.1
 	github.com/prometheus/client_golang v1.11.0
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/stretchr/testify v1.7.0
-	go.uber.org/zap v1.17.0
+	go.uber.org/zap v1.18.1
 	k8s.io/api v0.20.5
 	k8s.io/apimachinery v0.20.5
 	k8s.io/client-go v0.20.5
