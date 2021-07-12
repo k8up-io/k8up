@@ -306,7 +306,8 @@ Let's start with the WordPress pod:
 TIP: In K9s you can open a shell in a pod by selecting that pod and then hitting the kbd:[S] key.
 
 [start=2]
-. Replace the files inside the pod with the ones from the restore. Using rsync here simplifies things by only copying files that are different from the target and also deleting any additional malicious files an attacker may have added:
+. Replace the files inside the pod with the ones from the restore. 
+  Using rsync here simplifies things by only copying files that are different from the target and also deleting any additional malicious files an attacker may have added:
 
 ....
 # apt update && apt install rsync
