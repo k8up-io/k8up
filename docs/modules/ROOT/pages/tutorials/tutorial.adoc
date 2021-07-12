@@ -29,10 +29,9 @@ It consists of eight steps to be executed in sequence:
 . <<step_2, Creating a blog>>.
 . <<step_3, Backing up the blog>>.
 . <<step_4, Restoring the contents of the backup>>.
-. <<step_5, Moving files to their actual location>>.
-. <<step_6, Deleting the backup pods>>.
-. <<step_7, Scheduling regular backups>>.
-. <<step_8, Cleaning up>>.
+. <<step_5, Deleting the backup pods>>.
+. <<step_6, Scheduling regular backups>>.
+. <<step_7, Cleaning up>>.
 
 Let's get started!
 
@@ -279,40 +278,17 @@ There is a predefined restore YAML file in `../examples/restore/wordpress.yaml` 
 
 TIP: Use the command `kubectl get pods --sort-by=.metadata.creationTimestamp` to order the pods in descending age order. Then you will quickly find the pod of the restore job at the end of the list.
 
-[[step_5]]
-=== Moving the files to their initial location
-
-NOTE: The operations of this step can be executed at once using the `scripts/4_restore.sh` script.
-
-The restore job restores data into an existing but empty PVC mounted in the WordPress pod under `/restore`:
+The restore job restores data into the existing PVC mounted in the WordPress pod under `/var/www/html`:
 
 [source,yaml]
 ....
 volumeMounts:
 - name: wordpress-persistent-storage
   mountPath: /var/www/html
-- name: wordpress-restore-storage
-  mountPath: /restore
 ....
 
-This is clearly not what we need for a full restoration; we need to move the files to their correct location.
-
-Let's start with the WordPress pod:
-
-. Log into the running pod to restore the files to their actual location.
-* `kubectl get pods` to find the name of the WordPress pod.
-* `kubectl exec -it wordpress-XXXXXXXXXX-xxxxx -- bash` (replace the Xs with the relevant name)
-
-TIP: In K9s you can open a shell in a pod by selecting that pod and then hitting the kbd:[S] key.
-
-[start=2]
-. Replace the files inside the pod with the ones from the restore. 
-  Using rsync here simplifies things by only copying files that are different from the target and also deleting any additional malicious files an attacker may have added:
-
-....
-# apt update && apt install rsync
-# rsync -a --delete /restore/ /var/www/html/
-....
+Any files that may have been manipulated will be restored to the state from the snapshot. 
+Please note that any newly created files in the PVC will not be deleted by the restore process.
 
 [start=3]
 . Since it is a PHP application, nothing else is needed for this pod.
@@ -356,14 +332,14 @@ Now refresh your WordPress page in your browser window. You should see the previ
 .WordPress website restored
 image::tutorial/wordpress-restored.png[]
 
-[[step_6]]
+[[step_5]]
 === Cleaning up the backup pods
 
 Whenever K8up performs a backup, it creates a pod for the job. The one we created previously can be manually deleted using the command:
 
 `kubectl delete -f restore/wordpress.yaml`
 
-[[step_7]]
+[[step_6]]
 === Scheduling regular backups
 
 NOTE: The operations of this step can be executed at once using the `scripts/7_schedule.sh` script.
@@ -407,7 +383,7 @@ Now wait for a bit more than 2 minutes. Then run `restic snapshots` again and wa
 
 TIP: Running the `watch restic snapshots` command will rerun restic every 2 seconds and update the output so that you don't have to do it yourself.
 
-[[step_8]]
+[[step_7]]
 === Cleaning up the cluster
 
 NOTE: The operations of this step can be executed at once using the `scripts/8_stop.sh` script.
