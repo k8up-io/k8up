@@ -6,7 +6,7 @@ spec:
   snapshot: SNAPSHOT_ID
   restoreMethod:
     folder:
-      claimName: wordpress-pvc
+      claimName: wordpress-restore-pvc
   backend:
     repoPasswordSecretRef:
       name: backup-repo

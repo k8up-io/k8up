@@ -58,7 +58,12 @@ spec:
         volumeMounts:
         - name: wordpress-persistent-storage
           mountPath: /var/www/html
+        - name: wordpress-restore-storage
+          mountPath: /restore
       volumes:
       - name: wordpress-persistent-storage
         persistentVolumeClaim:
           claimName: wordpress-pvc
+      - name: wordpress-restore-storage
+        persistentVolumeClaim:
+          claimName: wordpress-restore-pvc
