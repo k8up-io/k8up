@@ -328,7 +328,8 @@ spec:
         k8up.syn.tools/backupcommand: appuio.ch/backupcommand: /bin/bash -c 'mysqldump -uroot -p"${MARIADB_ROOT_PASSWORD}" --all-databases'
 ....
 
-Thus the restoration procedure is different. Instead of restoring files to a PVC, we can instead connect to the running database in the pod and restore directly from the dump.
+Thus the restoration procedure is different. 
+Instead of restoring files to a PVC, we can instead connect to the running database in the pod and restore directly from the dump.
 
 [start=4]
 . Get the snapshot ID for the database dump and save it to your local machine as `backup.sql`:
