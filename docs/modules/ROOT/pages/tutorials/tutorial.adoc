@@ -284,16 +284,18 @@ TIP: Use the command `kubectl get pods --sort-by=.metadata.creationTimestamp` to
 
 NOTE: The operations of this step can be executed at once using the `scripts/4_restore.sh` script.
 
-The restore job puts back all values in the `volumeMounts.mountPath` path specified at the moment of creation; for example, in the case of WordPress:
+The restore job restores data into an existing but empty PVC mounted in the WordPress pod under `/restore`:
 
 [source,yaml]
 ....
 volumeMounts:
 - name: wordpress-persistent-storage
   mountPath: /var/www/html
+- name: wordpress-restore-storage
+  mountPath: /restore
 ....
 
-After restoration, the files will be located in a `data` folder beneath that `mountPath` value. This is clearly not what we need for a full restoration; we need to move the files to their correct location.
+This is clearly not what we need for a full restoration; we need to move the files to their correct location.
 
 Let's start with the WordPress pod:
 
@@ -304,13 +306,11 @@ Let's start with the WordPress pod:
 TIP: In K9s you can open a shell in a pod by selecting that pod and then hitting the kbd:[S] key.
 
 [start=2]
-. Replace the files inside the pod with the ones from the restore:
+. Replace the files inside the pod with the ones from the restore. Using rsync here simplifies things by only copying files that are different from the target and also deleting any additional malicious files an attacker may have added:
 
 ....
-$ cd /var/www/html # or whatever value has `mountPath`
-$ mv data /
-$ rm -r *
-$ cp -R /data/wordpress-pvc/* .
+# apt update && apt install rsync
+# rsync -a --delete /restore/ /var/www/html/
 ....
 
 [start=3]
