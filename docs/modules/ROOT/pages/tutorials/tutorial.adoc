@@ -269,7 +269,8 @@ spec:
   backend:
 ....
 
-Don't forget to fill in your actual `backend:` information as documented above. There is a predefined restore YAML file in `../examples/restore/wordpress.yaml` where you only have to replace `SNAPSHOT_ID`.
+Don't forget to fill in your actual `backend:` information as documented above. 
+There is a predefined restore YAML file in `../examples/restore/wordpress.yaml` where you only have to replace `SNAPSHOT_ID`.
 
 [start=3]
 . Apply the changes:
