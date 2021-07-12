@@ -19,7 +19,7 @@ SNAPSHOT_ID=$(restic snapshots --json --last --path /default-mariadb | jq -r '.[
 restic dump "${SNAPSHOT_ID}" /default-mariadb > backup.sql
 
 # Restore MariaDB data
-MARIADB_POD=$(kubectl get pods | grep mariadb | awk '{print $1}')
+MARIADB_POD=$(kubectl get pods -o custom-columns="NAME:.metadata.name" --no-headers -l "app=wordpress,tier=mariadb")
 kubectl cp backup.sql "$MARIADB_POD":/
 kubectl cp scripts/db_restore.sh "$MARIADB_POD":/
 kubectl exec "$MARIADB_POD" -- /db_restore.sh
