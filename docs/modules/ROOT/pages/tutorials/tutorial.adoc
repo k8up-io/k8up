@@ -315,7 +315,7 @@ Instead of restoring files to a PVC, we can instead connect to the running datab
 ....
 $ export SNAPSHOT_ID=$(restic snapshots --json --last --path /default-mariadb | jq -r '.[0].id')
 $ export MARIADB_POD=$(kubectl get pods -o custom-columns="NAME:.metadata.name" --no-headers -l "app=wordpress,tier=mariadb")
-$ restic dump "${SNAPSHOT_ID}" /default-mariadb | kubectl exec -i "$MARIADB_POD" -- mysql -uroot --password=$(kubectl exec "$MARIADB_POD" -- printenv "MARIADB_ROOT_PASSWORD")
+$ restic dump "${SNAPSHOT_ID}" /default-mariadb | kubectl exec -i "$MARIADB_POD" -- /bin/bash -c 'mysql -uroot --password="${MARIADB_ROOT_PASSWORD}"'
 ....
 
 Now refresh your WordPress page in your browser window. You should see the previous state of the WordPress installation restored, working and looking as expected!
