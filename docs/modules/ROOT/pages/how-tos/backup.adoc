@@ -4,7 +4,7 @@ The `Backup` object defines what and how to backup:
 
 [source,yaml]
 ----
-include::example$backup.yaml[]
+include::example$tutorial/backup.yaml[]
 ----
 
 Save the YAML above in a file named `backup.yaml` and use the `kubectl apply -f backup.yaml` command to deploy this configuration to your cluster.
