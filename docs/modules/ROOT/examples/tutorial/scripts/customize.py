@@ -3,6 +3,7 @@
 import yaml
 import argparse
 import sys
+import os
 
 # This script populates the value of the YAML with the snapshot ID
 # of a particular Restic backup.
@@ -17,7 +18,8 @@ parser.add_argument("snapshot", help='Restic snapshot to restore')
 args = parser.parse_args()
 
 # Read the YAML file, replace the `spec:snapshot:` value and print to stdout
-stream = file('k8up/restore/' + args.target + '.yaml')
+dir = os.path.dirname(__file__)
+stream = open(os.path.join(dir, '../restore/') + args.target + '.yaml', 'r')
 document = yaml.load(stream, Loader=yaml.FullLoader)
 document['spec']['snapshot'] = args.snapshot
 print(yaml.dump(document))

@@ -29,10 +29,9 @@ It consists of eight steps to be executed in sequence:
 . <<step_2, Creating a blog>>.
 . <<step_3, Backing up the blog>>.
 . <<step_4, Restoring the contents of the backup>>.
-. <<step_5, Moving files to their actual location>>.
-. <<step_6, Deleting the backup pods>>.
-. <<step_7, Scheduling regular backups>>.
-. <<step_8, Cleaning up>>.
+. <<step_5, Deleting the backup pods>>.
+. <<step_6, Scheduling regular backups>>.
+. <<step_7, Cleaning up>>.
 
 Let's get started!
 
@@ -63,6 +62,9 @@ IMPORTANT: On some laptops, running Minikube on battery power severely undermine
 
 . Install WordPress:
 * `kubectl apply -k wordpress`
+
+. Install the CRDs K8up uses:
+* `kubectl apply -f https://github.com/vshn/k8up/releases/download/v1.1.0/k8up-crd.yaml`
 
 . Install K8up in Minikube:
 * `helm repo add appuio \https://charts.appuio.ch`
@@ -126,7 +128,7 @@ image::tutorial/wordpress-install.png[]
 === Backing up the blog
 
 In this step we're going to create a backup of our blog and it's database.
-Everything related to this is defined in `k8up/backup.yml`.
+Everything related to this is defined in `../backup.yml`.
 Once applied to our Minikube cluster,
 k8up will instantly take a backup of the database
 and copy it to Minio, our S3-compatible backup storage.
@@ -134,7 +136,7 @@ Read on to learn how K8up exactly does what it does.
 
 NOTE: The operations of this step can be executed at once using the `scripts/3_backup.sh` script.
 
-To trigger a backup, use the command `kubectl apply -f k8up/backup.yaml`. You can see the job in the "Jobs" section of `k9s`.
+To trigger a backup, use the command `kubectl apply -f ../backup.yaml`. You can see the job in the "Jobs" section of `k9s`.
 
 Running the `kubectl logs` command on a backup pod brings the following information:
 
@@ -235,7 +237,7 @@ With these variables in your environment, run the command `restic snapshots` to 
 
 ==== Restoring to a PVC
 
-NOTE: The operations of this step can be executed at once using the `scripts/4_restore_pvc.sh` script.
+NOTE: The operations of this step can be executed at once using the `scripts/4_restore.sh` script.
 
 K8up is able to restore data directly on specified PVCs. This requires some manual steps.
 
@@ -266,19 +268,17 @@ spec:
   backend:
 ....
 
+Don't forget to fill in your actual `backend:` information as documented above. 
+There is a predefined restore YAML file in `../examples/restore/wordpress.yaml` where you only have to replace `SNAPSHOT_ID`.
+
 [start=3]
 . Apply the changes:
-* `kubectl apply -f k8up/restore-wordpress.yaml`
+* `kubectl apply -f ../examples/restore/wordpress.yaml`
 * Use the `kubectl get pods` commands to see when your restore job is done.
 
 TIP: Use the command `kubectl get pods --sort-by=.metadata.creationTimestamp` to order the pods in descending age order. Then you will quickly find the pod of the restore job at the end of the list.
 
-[[step_5]]
-=== Moving the files to their initial location
-
-NOTE: The operations of this step can be executed at once using the `scripts/5_restore_files.sh` script.
-
-The restore job puts back all values in the `volumeMounts.mountPath` path specified at the moment of creation; for example, in the case of WordPress:
+The restore job restores data into the existing PVC mounted in the WordPress pod under `/var/www/html`:
 
 [source,yaml]
 ....
@@ -287,59 +287,50 @@ volumeMounts:
   mountPath: /var/www/html
 ....
 
-After restoration, the files will be located in a `data` folder beneath that `mountPath` value. This is clearly not what we need for a full restoration; we need to move the files to their correct location.
-
-Let's start with the WordPress pod:
-
-. Log into the running pod to restore the files to their actual location.
-* `kubectl get pods` to find the name of the WordPress pod.
-* `kubectl exec -it wordpress-XXXXXXXXXX-xxxxx -- bash` (replace the Xs with the relevant name)
-
-TIP: In K9s you can open a shell in a pod by selecting that pod and then hitting the kbd:[S] key.
-
-[start=2]
-. Replace the files inside the pod with the ones from the restore:
-
-....
-$ cd /var/www/html # or whatever value has `mountPath`
-$ mv data /
-$ rm -r *
-$ cp -R /data/wordpress-pvc/* .
-....
+Any files that may have been manipulated will be restored to the state from the snapshot. 
+Please note that any newly created files in the PVC will not be deleted by the restore process.
 
 [start=3]
 . Since it is a PHP application, nothing else is needed for this pod.
 
-In the case of the MariaDB pod, the application must be restarted after restoring the files:
+=== Restoring the database dump
+
+In the case of the MariaDB pod, this backup annotation in the MariaDB deployment instructed K8up to create a database dump as text and store it in MinIO:
+
+[source,yaml]
+....
+spec:
+  template:
+    metadata:
+      annotations:
+        k8up.syn.tools/backupcommand: appuio.ch/backupcommand: /bin/bash -c 'mysqldump -uroot -p"${MARIADB_ROOT_PASSWORD}" --all-databases'
+....
+
+Thus the restoration procedure is different. 
+Instead of restoring files to a PVC, we can instead connect to the running database in the pod and restore directly from the dump.
 
 [start=4]
-. Follow the same logic as previously:
-
+. Pipe the database dump from restic to the MariaDB instance running inside the MariaDB pod:
++
 ....
-$ cd /var/lib/mysql # Attention! Different path!
-$ mv data /
-$ rm -r *
-$ cp -R /data/mariadb-pvc/* .
+$ export SNAPSHOT_ID=$(restic snapshots --json --last --path /default-mariadb | jq -r '.[0].id')
+$ export MARIADB_POD=$(kubectl get pods -o custom-columns="NAME:.metadata.name" --no-headers -l "app=wordpress,tier=mariadb")
+$ restic dump "${SNAPSHOT_ID}" /default-mariadb | kubectl exec -i "$MARIADB_POD" -- /bin/bash -c "mysql -uroot --password=\"${MARIADB_ROOT_PASSWORD}\""
 ....
-
-[start=5]
-. Delete the MariaDB pod and a new one will be immediately created due to the deployment policy (see `mariadb/deployment.yml`): `kubectl delete pod mariadb-XXXXXXXXXX-xxxx`
 
 Now refresh your WordPress page in your browser window. You should see the previous state of the WordPress installation restored, working and looking as expected!
 
 .WordPress website restored
 image::tutorial/wordpress-restored.png[]
 
-[[step_6]]
+[[step_5]]
 === Cleaning up the backup pods
-
-NOTE: The operations of this step can be executed at once using the `scripts/6_delete_restore_pods.sh` script.
 
 Whenever K8up performs a backup, it creates a pod for the job. The one we created previously can be manually deleted using the command:
 
-`kubectl delete -f k8up/restore-wordpress.yaml`
+`kubectl delete -f restore/wordpress.yaml`
 
-[[step_7]]
+[[step_6]]
 === Scheduling regular backups
 
 NOTE: The operations of this step can be executed at once using the `scripts/7_schedule.sh` script.
@@ -383,7 +374,7 @@ Now wait for a bit more than 2 minutes. Then run `restic snapshots` again and wa
 
 TIP: Running the `watch restic snapshots` command will rerun restic every 2 seconds and update the output so that you don't have to do it yourself.
 
-[[step_8]]
+[[step_7]]
 === Cleaning up the cluster
 
 NOTE: The operations of this step can be executed at once using the `scripts/8_stop.sh` script.

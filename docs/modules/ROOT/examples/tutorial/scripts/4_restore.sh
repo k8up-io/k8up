@@ -16,10 +16,7 @@ scripts/customize.py wordpress "${SNAPSHOT_ID}" | kubectl apply -f -
 
 # Read SQL data from Restic into file
 SNAPSHOT_ID=$(restic snapshots --json --last --path /default-mariadb | jq -r '.[0].id')
-restic dump "${SNAPSHOT_ID}" /default-mariadb > backup.sql
 
 # Restore MariaDB data
-MARIADB_POD=$(kubectl get pods | grep mariadb | awk '{print $1}')
-kubectl cp backup.sql "$MARIADB_POD":/
-kubectl cp scripts/db_restore.sh "$MARIADB_POD":/
-kubectl exec "$MARIADB_POD" -- /db_restore.sh
+MARIADB_POD=$(kubectl get pods -o custom-columns="NAME:.metadata.name" --no-headers -l "app=wordpress,tier=mariadb")
+restic dump "${SNAPSHOT_ID}" /default-mariadb | kubectl exec -i "$MARIADB_POD" -- /bin/bash -c "mysql -uroot --password=\"${MARIADB_ROOT_PASSWORD}\""

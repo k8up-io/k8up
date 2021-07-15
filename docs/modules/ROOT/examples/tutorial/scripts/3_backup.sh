@@ -6,4 +6,4 @@
 kubectl config use-context minikube
 
 # Trigger backup
-kubectl apply -f k8up/backup.yaml
+kubectl apply -f backup.yaml
