@@ -31,24 +31,13 @@ type Config struct {
 	Client     client.Client
 	Log        logr.Logger
 	CTX        context.Context
-	Obj        Object
+	Obj        k8upv1alpha1.JobObject
 	Scheme     *runtime.Scheme
 	Repository string
 }
 
-// Object is an interface that must be implemented by all CRDs that implement a
-// job.
-type Object interface {
-	GetMetaObject() metav1.Object
-	GetRuntimeObject() runtime.Object
-	GetStatus() k8upv1alpha1.Status
-	SetStatus(s k8upv1alpha1.Status)
-	GetType() k8upv1alpha1.JobType
-	GetResources() corev1.ResourceRequirements
-}
-
 // NewConfig returns a new configuration.
-func NewConfig(ctx context.Context, client client.Client, log logr.Logger, obj Object, scheme *runtime.Scheme, repository string) Config {
+func NewConfig(ctx context.Context, client client.Client, log logr.Logger, obj k8upv1alpha1.JobObject, scheme *runtime.Scheme, repository string) Config {
 	return Config{
 		Client:     client,
 		Log:        log,
@@ -60,7 +49,7 @@ func NewConfig(ctx context.Context, client client.Client, log logr.Logger, obj O
 }
 
 // GenerateGenericJob returns a generic batchv1.job for further use.
-func GenerateGenericJob(obj Object, config Config) (*batchv1.Job, error) {
+func GenerateGenericJob(obj k8upv1alpha1.JobObject, config Config) (*batchv1.Job, error) {
 	job := &batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      obj.GetMetaObject().GetName(),

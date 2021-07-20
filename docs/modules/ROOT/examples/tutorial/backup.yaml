@@ -3,7 +3,8 @@ kind: Backup
 metadata:
   name: backup-test
 spec:
-  keepJobs: 4
+  failedJobsHistoryLimit: 2
+  successfulJobsHistoryLimit: 2
   promURL: http://minio:9000
   backend:
     repoPasswordSecretRef:

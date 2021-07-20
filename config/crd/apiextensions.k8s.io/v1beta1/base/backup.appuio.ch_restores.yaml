@@ -293,7 +293,14 @@ spec:
                       type: string
                   type: object
               type: object
+            failedJobsHistoryLimit:
+              description: FailedJobsHistoryLimit amount of failed jobs to keep for
+                later analysis. KeepJobs is used property is not specified.
+              type: integer
             keepJobs:
+              description: "KeepJobs amount of jobs to keep for later analysis. \n
+                Deprecated: Use FailedJobsHistoryLimit and SuccessfulJobsHistoryLimit
+                respectively."
               type: integer
             resources:
               description: Resources describes the compute resource requirements (cpu,
@@ -388,6 +395,10 @@ spec:
               type: object
             snapshot:
               type: string
+            successfulJobsHistoryLimit:
+              description: SuccessfulJobsHistoryLimit amount of successful jobs to
+                keep for later analysis. KeepJobs is used property is not specified.
+              type: integer
             tags:
               description: Tags is a list of arbitrary tags that get added to the
                 backup via Restic's tagging system

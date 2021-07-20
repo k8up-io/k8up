@@ -14,7 +14,19 @@ type RestoreSpec struct {
 	RestoreMethod *RestoreMethod `json:"restoreMethod,omitempty"`
 	RestoreFilter string         `json:"restoreFilter,omitempty"`
 	Snapshot      string         `json:"snapshot,omitempty"`
-	KeepJobs      *int           `json:"keepJobs,omitempty"`
+	// KeepJobs amount of jobs to keep for later analysis.
+	//
+	// Deprecated: Use FailedJobsHistoryLimit and SuccessfulJobsHistoryLimit respectively.
+	// +optional
+	KeepJobs *int `json:"keepJobs,omitempty"`
+	// FailedJobsHistoryLimit amount of failed jobs to keep for later analysis.
+	// KeepJobs is used property is not specified.
+	// +optional
+	FailedJobsHistoryLimit *int `json:"failedJobsHistoryLimit,omitempty"`
+	// SuccessfulJobsHistoryLimit amount of successful jobs to keep for later analysis.
+	// KeepJobs is used property is not specified.
+	// +optional
+	SuccessfulJobsHistoryLimit *int `json:"successfulJobsHistoryLimit,omitempty"`
 	// Tags is a list of arbitrary tags that get added to the backup via Restic's tagging system
 	Tags []string `json:"tags,omitempty"`
 }
@@ -80,6 +92,33 @@ func (r *Restore) SetStatus(status Status) {
 // GetResources returns the resource requirements
 func (r *Restore) GetResources() corev1.ResourceRequirements {
 	return r.Spec.Resources
+}
+
+// GetFailedJobsHistoryLimit returns failed jobs history limit.
+// Returns KeepJobs if unspecified.
+func (r *Restore) GetFailedJobsHistoryLimit() *int {
+	if r.Spec.FailedJobsHistoryLimit != nil {
+		return r.Spec.FailedJobsHistoryLimit
+	}
+	return r.Spec.KeepJobs
+}
+
+// GetSuccessfulJobsHistoryLimit returns successful jobs history limit.
+// Returns KeepJobs if unspecified.
+func (r *Restore) GetSuccessfulJobsHistoryLimit() *int {
+	if r.Spec.SuccessfulJobsHistoryLimit != nil {
+		return r.Spec.SuccessfulJobsHistoryLimit
+	}
+	return r.Spec.KeepJobs
+}
+
+// GetJobObjects returns a sortable list of jobs
+func (r *RestoreList) GetJobObjects() JobObjectList {
+	items := make(JobObjectList, len(r.Items))
+	for i := range r.Items {
+		items[i] = &r.Items[i]
+	}
+	return items
 }
 
 // GetDeepCopy returns a deep copy

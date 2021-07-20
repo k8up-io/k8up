@@ -3,7 +3,8 @@ kind: Backup
 metadata:
   name: k8up-test
 spec:
-  keepJobs: 4
+  failedJobsHistoryLimit: 2
+  successfulJobsHistoryLimit: 2
   backend:
     repoPasswordSecretRef:
       name: backup-repo

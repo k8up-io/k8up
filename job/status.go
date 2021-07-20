@@ -91,3 +91,34 @@ func (c *Config) SetFinished(namespace, name string) {
 		c.Log.Error(err, "could not patch status")
 	}
 }
+
+// GroupByStatus groups jobs by the running state
+func GroupByStatus(jobs []k8upv1alpha1.JobObject) (running []k8upv1alpha1.JobObject, failed []k8upv1alpha1.JobObject, successful []k8upv1alpha1.JobObject) {
+	running = make([]k8upv1alpha1.JobObject, 0, len(jobs))
+	successful = make([]k8upv1alpha1.JobObject, 0, len(jobs))
+	failed = make([]k8upv1alpha1.JobObject, 0, len(jobs))
+	for _, job := range jobs {
+		finished, cond := isJobFinished(job)
+		if !finished {
+			running = append(running, job)
+			continue
+		}
+		switch cond {
+		case k8upv1alpha1.ReasonFailed:
+			failed = append(failed, job)
+		case k8upv1alpha1.ReasonSucceeded:
+			successful = append(successful, job)
+		}
+	}
+
+	return
+}
+
+func isJobFinished(job k8upv1alpha1.JobObject) (bool, k8upv1alpha1.ConditionReason) {
+	for _, c := range job.GetStatus().Conditions {
+		if (k8upv1alpha1.ConditionType(c.Type) == k8upv1alpha1.ConditionCompleted) && c.Status == metav1.ConditionTrue {
+			return true, k8upv1alpha1.ConditionReason(c.Reason)
+		}
+	}
+	return false, ""
+}

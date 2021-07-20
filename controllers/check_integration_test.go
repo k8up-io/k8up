@@ -26,9 +26,10 @@ type CheckTestSuite struct {
 
 	CheckBaseName string
 
-	CheckNames  []string
-	GivenChecks []*k8upv1a1.Check
-	KeepJobs    *int
+	CheckNames     []string
+	GivenChecks    []*k8upv1a1.Check
+	KeepSuccessful int
+	KeepFailed     int
 }
 
 func Test_Check(t *testing.T) {
@@ -39,10 +40,11 @@ func (ts *CheckTestSuite) BeforeTest(_, _ string) {
 	ts.CheckBaseName = "check-integration-test"
 }
 
-func NewCheckResource(restoreName, namespace string, keepJobs *int) *k8upv1a1.Check {
+func NewCheckResource(restoreName, namespace string, keepFailed, keepSuccessful int) *k8upv1a1.Check {
 	return &k8upv1a1.Check{
 		Spec: k8upv1a1.CheckSpec{
-			KeepJobs: keepJobs,
+			SuccessfulJobsHistoryLimit: &keepSuccessful,
+			FailedJobsHistoryLimit:     &keepFailed,
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      restoreName,
@@ -61,17 +63,25 @@ func (ts *CheckTestSuite) TestReconciliation() {
 }
 
 func (ts *CheckTestSuite) TestJobCleanup() {
-	keepJobs := 1
-	ts.KeepJobs = &keepJobs
+	ts.KeepSuccessful = 1
+	ts.KeepFailed = 2
 
-	createJobs := 2
+	createJobs := 6
 	ts.givenCheckResources(createJobs)
 
 	ts.whenReconcile()
 	ts.expectNumberOfJobsEventually(createJobs)
 
-	ts.whenJobCallbackIsInvoked(ts.CheckNames[0])
-	ts.expectCheckCleanupEventually(createJobs - keepJobs)
+	successfulJobs := 2
+	failedJobs := 3
+	for i := 0; i < successfulJobs; i++ {
+		ts.whenJobCallbackIsInvoked(ts.CheckNames[i], observer.Succeeded)
+	}
+	for i := successfulJobs; i < successfulJobs+failedJobs; i++ {
+		ts.whenJobCallbackIsInvoked(ts.CheckNames[i], observer.Failed)
+	}
+
+	ts.expectCheckCleanupEventually((successfulJobs - ts.KeepSuccessful) + (failedJobs - ts.KeepFailed))
 }
 
 func (ts *CheckTestSuite) expectCheckCleanupEventually(expectedDeletes int) {
@@ -99,7 +109,7 @@ func (ts *CheckTestSuite) expectCheckCleanupEventually(expectedDeletes int) {
 	})
 }
 
-func (ts *CheckTestSuite) whenJobCallbackIsInvoked(checkName string) {
+func (ts *CheckTestSuite) whenJobCallbackIsInvoked(checkName string, evtType observer.EventType) {
 	checkNSName := types.NamespacedName{Name: checkName, Namespace: ts.NS}
 
 	check := &batchv1.Job{}
@@ -107,7 +117,7 @@ func (ts *CheckTestSuite) whenJobCallbackIsInvoked(checkName string) {
 
 	o := observer.GetObserver()
 	observableJob := o.GetJobByName(checkNSName.String())
-	observableJob.Event = observer.Succeeded
+	observableJob.Event = evtType
 	observableJob.Job = check
 
 	eventChannel := o.GetUpdateChannel()
@@ -117,7 +127,7 @@ func (ts *CheckTestSuite) whenJobCallbackIsInvoked(checkName string) {
 func (ts *CheckTestSuite) givenCheckResources(amount int) {
 	for i := 0; i < amount; i++ {
 		checkName := ts.CheckBaseName + strconv.Itoa(i)
-		check := NewCheckResource(checkName, ts.NS, ts.KeepJobs)
+		check := NewCheckResource(checkName, ts.NS, ts.KeepFailed, ts.KeepSuccessful)
 		ts.EnsureResources(check)
 		ts.GivenChecks = append(ts.GivenChecks, check)
 		ts.CheckNames = append(ts.CheckNames, checkName)

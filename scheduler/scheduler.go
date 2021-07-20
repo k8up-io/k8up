@@ -165,7 +165,7 @@ func (s *Scheduler) createObject(jobType k8upv1alpha1.JobType, namespace string,
 
 	rtObj := obj.CreateObject(name, namespace)
 
-	jobObject, ok := rtObj.(job.Object)
+	jobObject, ok := rtObj.(k8upv1alpha1.JobObject)
 	if !ok {
 		config.Log.Error(errors.New("cannot cast object"), "object is not a valid objectMeta")
 		return

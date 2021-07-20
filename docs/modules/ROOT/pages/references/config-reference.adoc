@@ -24,6 +24,8 @@ You need to define `BACKUP_OPERATOR_NAMESPACE`, but everything else can be left 
 `BACKUP_GLOBAL_CPU_LIMIT`:: set the CPU limit for scheduled jobs
 `BACKUP_GLOBAL_CPU_REQUEST`:: set the CPU request for scheduled jobs
 `BACKUP_GLOBALKEEPJOBS`:: set the number of old jobs to keep when cleaning up, applies to all job types
+`BACKUP_GLOBAL_FAILED_JOBS_HISTORY_LIMIT`:: set the number of old, failed jobs to keep when cleaning up, applies to all job types
+`BACKUP_GLOBAL_SUCCESSFUL_JOBS_HISTORY_LIMIT`:: set the number of old, successful jobs to keep when cleaning up, applies to all job types
 `BACKUP_GLOBAL_MEMORY_LIMIT`:: set the memory limit for scheduled jobs
 `BACKUP_GLOBAL_MEMORY_REQUEST`:: set the memory request for scheduled jobs
 `BACKUP_GLOBALREPOPASSWORD`:: set the restic repository password to be used globally

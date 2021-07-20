@@ -15,8 +15,19 @@ type CheckSpec struct {
 	// +optional
 	PromURL string `json:"promURL,omitempty"`
 
-	// KeepJobs amount of jobs to keep for later analysis
+	// KeepJobs amount of jobs to keep for later analysis.
+	//
+	// Deprecated: Use FailedJobsHistoryLimit and SuccessfulJobsHistoryLimit respectively.
+	// +optional
 	KeepJobs *int `json:"keepJobs,omitempty"`
+	// FailedJobsHistoryLimit amount of failed jobs to keep for later analysis.
+	// KeepJobs is used property is not specified.
+	// +optional
+	FailedJobsHistoryLimit *int `json:"failedJobsHistoryLimit,omitempty"`
+	// SuccessfulJobsHistoryLimit amount of successful jobs to keep for later analysis.
+	// KeepJobs is used property is not specified.
+	// +optional
+	SuccessfulJobsHistoryLimit *int `json:"successfulJobsHistoryLimit,omitempty"`
 }
 
 // +kubebuilder:object:root=true
@@ -72,6 +83,33 @@ func (c *Check) SetStatus(status Status) {
 // GetResources returns the resource requirements
 func (c *Check) GetResources() corev1.ResourceRequirements {
 	return c.Spec.Resources
+}
+
+// GetFailedJobsHistoryLimit returns failed jobs history limit.
+// Returns KeepJobs if unspecified.
+func (c *Check) GetFailedJobsHistoryLimit() *int {
+	if c.Spec.FailedJobsHistoryLimit != nil {
+		return c.Spec.FailedJobsHistoryLimit
+	}
+	return c.Spec.KeepJobs
+}
+
+// GetSuccessfulJobsHistoryLimit returns successful jobs history limit.
+// Returns KeepJobs if unspecified.
+func (c *Check) GetSuccessfulJobsHistoryLimit() *int {
+	if c.Spec.SuccessfulJobsHistoryLimit != nil {
+		return c.Spec.SuccessfulJobsHistoryLimit
+	}
+	return c.Spec.KeepJobs
+}
+
+// GetJobObjects returns a sortable list of jobs
+func (c *CheckList) GetJobObjects() JobObjectList {
+	items := make(JobObjectList, len(c.Items))
+	for i := range c.Items {
+		items[i] = &c.Items[i]
+	}
+	return items
 }
 
 // GetDeepCopy returns a deep copy
