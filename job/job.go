@@ -5,7 +5,6 @@ package job
 import (
 	"context"
 
-	"github.com/vshn/k8up/api/v1alpha1"
 	k8upv1alpha1 "github.com/vshn/k8up/api/v1alpha1"
 	"github.com/vshn/k8up/cfg"
 
@@ -44,7 +43,7 @@ type Object interface {
 	GetRuntimeObject() runtime.Object
 	GetStatus() k8upv1alpha1.Status
 	SetStatus(s k8upv1alpha1.Status)
-	GetType() v1alpha1.JobType
+	GetType() k8upv1alpha1.JobType
 	GetResources() corev1.ResourceRequirements
 }
 
