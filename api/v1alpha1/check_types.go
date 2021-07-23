@@ -66,6 +66,11 @@ func (c *Check) GetMetaObject() metav1.Object {
 	return c
 }
 
+// GetJobName returns the name of the underlying batch/v1 job.
+func (c *Check) GetJobName() string {
+	return c.GetType().String() + "-" + c.Name
+}
+
 func (c *Check) GetType() JobType {
 	return CheckType
 }

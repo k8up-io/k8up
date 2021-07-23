@@ -52,7 +52,7 @@ func NewConfig(ctx context.Context, client client.Client, log logr.Logger, obj k
 func GenerateGenericJob(obj k8upv1alpha1.JobObject, config Config) (*batchv1.Job, error) {
 	job := &batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      obj.GetMetaObject().GetName(),
+			Name:      obj.GetJobName(),
 			Namespace: obj.GetMetaObject().GetNamespace(),
 			Labels: map[string]string{
 				K8uplabel:                  "true",
@@ -65,7 +65,7 @@ func GenerateGenericJob(obj k8upv1alpha1.JobObject, config Config) (*batchv1.Job
 					RestartPolicy: corev1.RestartPolicyOnFailure,
 					Containers: []corev1.Container{
 						{
-							Name:      obj.GetMetaObject().GetName(),
+							Name:      obj.GetType().String(),
 							Image:     cfg.Config.BackupImage,
 							Resources: config.Obj.GetResources(),
 						},

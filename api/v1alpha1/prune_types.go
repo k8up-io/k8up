@@ -85,6 +85,11 @@ func (p *Prune) GetMetaObject() metav1.Object {
 	return p
 }
 
+// GetJobName returns the name of the underlying batch/v1 job.
+func (p *Prune) GetJobName() string {
+	return p.GetType().String() + "-" + p.Name
+}
+
 func (p *Prune) GetType() JobType {
 	return PruneType
 }

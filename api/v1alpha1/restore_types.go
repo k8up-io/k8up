@@ -75,6 +75,11 @@ func (r *Restore) GetMetaObject() metav1.Object {
 	return r
 }
 
+// GetJobName returns the name of the underlying batch/v1 job.
+func (r *Restore) GetJobName() string {
+	return r.GetType().String() + "-" + r.Name
+}
+
 func (r *Restore) GetType() JobType {
 	return RestoreType
 }
