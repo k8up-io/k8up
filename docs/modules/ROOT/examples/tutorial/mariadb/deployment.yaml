@@ -20,7 +20,7 @@ spec:
         k8up.syn.tools/backupcommand: /bin/bash -c 'mysqldump -uroot -p"${MARIADB_ROOT_PASSWORD}" --all-databases'
     spec:
       containers:
-      - image: mariadb/server:10.4
+      - image: mariadb:10.4
         name: mariadb
         readinessProbe:
           timeoutSeconds: 1
