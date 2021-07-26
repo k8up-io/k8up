@@ -30,34 +30,39 @@ type GetJobsHistoryLimiter interface {
 
 // CleanOldObjects iterates over the given list and deletes them with the oldest object first until the amount returned from GetJobsHistoryLimiter remain.
 // The function aborts early on errors.
-func (c *ObjectCleaner) CleanOldObjects(ctx context.Context, jobObjects k8upv1alpha1.JobObjectList) error {
+// Returns the amount of deleted objects and possible errors.
+func (c *ObjectCleaner) CleanOldObjects(ctx context.Context, jobObjects k8upv1alpha1.JobObjectList) (int, error) {
 	maxSuccessfulObjects, maxFailedObjects := historyLimits(c.Limits)
 	_, failedJobs, successfulJobs := job.GroupByStatus(jobObjects)
 
-	if err := c.cleanOldObjects(ctx, successfulJobs, maxSuccessfulObjects); err != nil {
-		return err
+	successDel, err := c.cleanOldObjects(ctx, successfulJobs, maxSuccessfulObjects)
+	if err != nil {
+		return successDel, err
 	}
-	return c.cleanOldObjects(ctx, failedJobs, maxFailedObjects)
+	failedDel, err := c.cleanOldObjects(ctx, failedJobs, maxFailedObjects)
+	return successDel + failedDel, err
 }
 
-func (c *ObjectCleaner) cleanOldObjects(ctx context.Context, jobObjects k8upv1alpha1.JobObjectList, maxObjects int) error {
+// cleanOldObjects deletes from the given objects until maxObjects remain.
+// Returns the amount of deleted objects and possible errors.
+func (c *ObjectCleaner) cleanOldObjects(ctx context.Context, jobObjects k8upv1alpha1.JobObjectList, maxObjects int) (int, error) {
 	numToDelete := len(jobObjects) - maxObjects
 
 	c.Log.Info("cleaning old jobs", "have", len(jobObjects), "want", maxObjects, "deleting", numToDelete)
 
 	if numToDelete <= 0 {
-		return nil
+		return 0, nil
 	}
 
 	sort.Sort(jobObjects)
 	for i := 0; i < numToDelete; i++ {
 		if err := c.deleteJob(ctx, jobObjects[i]); err != nil {
 			c.Log.Error(err, "could not delete old job", "namespace", jobObjects[i].GetMetaObject().GetNamespace())
-			return fmt.Errorf("could not delete old %s: %w", jobObjects[i].GetType(), err)
+			return i, fmt.Errorf("could not delete old %s: %w", jobObjects[i].GetType(), err)
 		}
 	}
 
-	return nil
+	return numToDelete, nil
 }
 
 func (c *ObjectCleaner) deleteJob(ctx context.Context, job k8upv1alpha1.JobObject) error {

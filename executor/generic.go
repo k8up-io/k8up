@@ -175,12 +175,12 @@ func (g *generic) cleanupOldResources(typ jobObjectList, name types.NamespacedNa
 	}
 
 	cl := cleaner.ObjectCleaner{Client: g.Client, Limits: limits, Log: g.Logger()}
-	err = cl.CleanOldObjects(g.CTX, typ.GetJobObjects())
+	deleted, err := cl.CleanOldObjects(g.CTX, typ.GetJobObjects())
 	if err != nil {
 		g.SetConditionFalseWithMessage(k8upv1alpha1.ConditionScrubbed, k8upv1alpha1.ReasonDeletionFailed, "could not cleanup old resources: %v", err)
 		return
 	}
-	g.SetConditionTrueWithMessage(k8upv1alpha1.ConditionScrubbed, k8upv1alpha1.ReasonSucceeded, "Deleted resources")
+	g.SetConditionTrueWithMessage(k8upv1alpha1.ConditionScrubbed, k8upv1alpha1.ReasonSucceeded, "Deleted %v resources", deleted)
 
 }
 

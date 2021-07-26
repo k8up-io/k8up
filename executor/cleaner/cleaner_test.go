@@ -24,8 +24,9 @@ func TestCleanup(t *testing.T) {
 	client := newMockClient(jobs)
 
 	objCleaner := &cleaner.ObjectCleaner{Client: client, Limits: newLimiter(1, 1), Log: logr.DiscardLogger{}}
-	err := objCleaner.CleanOldObjects(context.TODO(), jobs.GetJobObjects())
+	deleted, err := objCleaner.CleanOldObjects(context.TODO(), jobs.GetJobObjects())
 	assert.NoError(t, err)
+	assert.Equal(t, 2, deleted)
 
 	afterClean := &k8upv1a1.RestoreList{}
 	assert.NoError(t, client.List(context.TODO(), afterClean))
@@ -72,7 +73,7 @@ func jobList(running, failed, successful int) *k8upv1a1.RestoreList {
 		failedJobs[i] = createJob()
 		markJobFailed(&failedJobs[i])
 	}
-	successfulJobs := make([]k8upv1a1.Restore, running)
+	successfulJobs := make([]k8upv1a1.Restore, successful)
 	for i := range successfulJobs {
 		successfulJobs[i] = createJob()
 		markJobSuccessful(&successfulJobs[i])
