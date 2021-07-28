@@ -126,18 +126,5 @@ func (a *ArchiveExecutor) setupEnvVars(archive *k8upv1alpha1.Archive) []corev1.E
 }
 
 func (a *ArchiveExecutor) cleanupOldArchives(name types.NamespacedName, archive *k8upv1alpha1.Archive) {
-	list := &k8upv1alpha1.ArchiveList{}
-	err := a.listOldResources(name.Namespace, list)
-	if err != nil {
-		return
-	}
-
-	jobs := make(jobObjectList, len(list.Items))
-	for i, aItem := range list.Items {
-		jobs[i] = &aItem
-	}
-
-	var keepJobs = archive.Spec.KeepJobs
-
-	cleanOldObjects(jobs, getKeepJobs(keepJobs), a.Config)
+	a.cleanupOldResources(&k8upv1alpha1.ArchiveList{}, name, archive)
 }

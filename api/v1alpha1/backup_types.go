@@ -12,8 +12,19 @@ import (
 type BackupSpec struct {
 	RunnableSpec `json:",inline"`
 
-	// KeepJobs amount of jobs to keep for later analysis
+	// KeepJobs amount of jobs to keep for later analysis.
+	//
+	// Deprecated: Use FailedJobsHistoryLimit and SuccessfulJobsHistoryLimit respectively.
+	// +optional
 	KeepJobs *int `json:"keepJobs,omitempty"`
+	// FailedJobsHistoryLimit amount of failed jobs to keep for later analysis.
+	// KeepJobs is used property is not specified.
+	// +optional
+	FailedJobsHistoryLimit *int `json:"failedJobsHistoryLimit,omitempty"`
+	// SuccessfulJobsHistoryLimit amount of successful jobs to keep for later analysis.
+	// KeepJobs is used property is not specified.
+	// +optional
+	SuccessfulJobsHistoryLimit *int `json:"successfulJobsHistoryLimit,omitempty"`
 
 	// PromURL sets a prometheus push URL where the backup container send metrics to
 	// +optional
@@ -93,6 +104,33 @@ func (b *Backup) SetStatus(status Status) {
 // GetResources returns the resource requirements
 func (b *Backup) GetResources() corev1.ResourceRequirements {
 	return b.Spec.Resources
+}
+
+// GetFailedJobsHistoryLimit returns failed jobs history limit.
+// Returns KeepJobs if unspecified.
+func (b *Backup) GetFailedJobsHistoryLimit() *int {
+	if b.Spec.FailedJobsHistoryLimit != nil {
+		return b.Spec.FailedJobsHistoryLimit
+	}
+	return b.Spec.KeepJobs
+}
+
+// GetSuccessfulJobsHistoryLimit returns successful jobs history limit.
+// Returns KeepJobs if unspecified.
+func (b *Backup) GetSuccessfulJobsHistoryLimit() *int {
+	if b.Spec.SuccessfulJobsHistoryLimit != nil {
+		return b.Spec.SuccessfulJobsHistoryLimit
+	}
+	return b.Spec.KeepJobs
+}
+
+// GetJobObjects returns a sortable list of jobs
+func (b *BackupList) GetJobObjects() JobObjectList {
+	items := make(JobObjectList, len(b.Items))
+	for i := range b.Items {
+		items[i] = &b.Items[i]
+	}
+	return items
 }
 
 // GetDeepCopy returns a deep copy

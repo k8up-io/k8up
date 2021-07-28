@@ -87,19 +87,7 @@ func (p *PruneExecutor) registerPruneCallback(prune *k8upv1alpha1.Prune) {
 }
 
 func (p *PruneExecutor) cleanupOldPrunes(name types.NamespacedName, prune *k8upv1alpha1.Prune) {
-	list := &k8upv1alpha1.PruneList{}
-	err := p.listOldResources(name.Namespace, list)
-	if err != nil {
-		return
-	}
-
-	jobs := make(jobObjectList, len(list.Items))
-	for i, prune := range list.Items {
-		jobs[i] = &prune
-	}
-
-	keepJobs := getKeepJobs(prune.Spec.KeepJobs)
-	cleanOldObjects(jobs, keepJobs, p.Config)
+	p.cleanupOldResources(&k8upv1alpha1.PruneList{}, name, prune)
 }
 
 func (p *PruneExecutor) setupEnvVars(prune *k8upv1alpha1.Prune) []corev1.EnvVar {

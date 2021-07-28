@@ -156,7 +156,7 @@ snapshots command:
 0 Snapshots
 backing up...
 Starting backup for folder wordpress-pvc
-done: 0.00% 
+done: 0.00%
 backup finished! new files: 1907 changed files: 0 bytes added: 45561795
 Listing snapshots
 snapshots command:
@@ -268,7 +268,7 @@ spec:
   backend:
 ....
 
-Don't forget to fill in your actual `backend:` information as documented above. 
+Don't forget to fill in your actual `backend:` information as documented above.
 There is a predefined restore YAML file in `../examples/restore/wordpress.yaml` where you only have to replace `SNAPSHOT_ID`.
 
 [start=3]
@@ -287,7 +287,7 @@ volumeMounts:
   mountPath: /var/www/html
 ....
 
-Any files that may have been manipulated will be restored to the state from the snapshot. 
+Any files that may have been manipulated will be restored to the state from the snapshot.
 Please note that any newly created files in the PVC will not be deleted by the restore process.
 
 [start=3]
@@ -306,7 +306,7 @@ spec:
         k8up.syn.tools/backupcommand: appuio.ch/backupcommand: /bin/bash -c 'mysqldump -uroot -p"${MARIADB_ROOT_PASSWORD}" --all-databases'
 ....
 
-Thus the restoration procedure is different. 
+Thus the restoration procedure is different.
 Instead of restoring files to a PVC, we can instead connect to the running database in the pod and restore directly from the dump.
 
 [start=4]
@@ -341,7 +341,8 @@ Instead of performing backups manually, you can also set a schedule on which bac
 ....
 backup:
   schedule: '*/2 * * * *'    # backup every 2 minutes
-  keepJobs: 4
+  failedJobsHistoryLimit: 2
+  successfulJobsHistoryLimit: 2
   promURL: http://minio:9000
 ....
 

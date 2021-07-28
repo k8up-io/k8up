@@ -3,7 +3,8 @@ kind: Restore
 metadata:
   name: k8up-restore
 spec:
-  keepJobs: 1
+  failedJobsHistoryLimit: 1
+  successfulJobsHistoryLimit: 1
   restoreMethod:
     folder:
       claimName: subject-pvc

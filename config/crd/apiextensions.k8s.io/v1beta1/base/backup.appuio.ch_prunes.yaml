@@ -293,7 +293,14 @@ spec:
                       type: string
                   type: object
               type: object
+            failedJobsHistoryLimit:
+              description: FailedJobsHistoryLimit amount of failed jobs to keep for
+                later analysis. KeepJobs is used property is not specified.
+              type: integer
             keepJobs:
+              description: "KeepJobs amount of jobs to keep for later analysis. \n
+                Deprecated: Use FailedJobsHistoryLimit and SuccessfulJobsHistoryLimit
+                respectively."
               type: integer
             resources:
               description: Resources describes the compute resource requirements (cpu,
@@ -356,6 +363,10 @@ spec:
                     type: string
                   type: array
               type: object
+            successfulJobsHistoryLimit:
+              description: SuccessfulJobsHistoryLimit amount of successful jobs to
+                keep for later analysis. KeepJobs is used property is not specified.
+              type: integer
           type: object
         status:
           description: Status defines the observed state of a generic K8up job. It

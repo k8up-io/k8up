@@ -6,12 +6,12 @@ package executor
 
 import (
 	"fmt"
-	"sort"
 
 	"k8s.io/apimachinery/pkg/types"
 
 	k8upv1alpha1 "github.com/vshn/k8up/api/v1alpha1"
 	"github.com/vshn/k8up/cfg"
+	"github.com/vshn/k8up/executor/cleaner"
 	"github.com/vshn/k8up/job"
 	"github.com/vshn/k8up/observer"
 	"github.com/vshn/k8up/queue"
@@ -20,7 +20,6 @@ import (
 	"github.com/imdario/mergo"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -88,19 +87,6 @@ func (e *EnvVarConverter) Merge(source EnvVarConverter) error {
 	return mergo.Merge(&e.Vars, source.Vars)
 }
 
-type jobObjectList []job.Object
-
-func (jo jobObjectList) Len() int      { return len(jo) }
-func (jo jobObjectList) Swap(i, j int) { jo[i], jo[j] = jo[j], jo[i] }
-
-func (jo jobObjectList) Less(i, j int) bool {
-
-	if jo[i].GetMetaObject().GetCreationTimestamp().Time.Equal(jo[j].GetMetaObject().GetCreationTimestamp().Time) {
-		return jo[i].GetMetaObject().GetName() < jo[j].GetMetaObject().GetName()
-	}
-
-	return jo[i].GetMetaObject().GetCreationTimestamp().Time.Before(jo[j].GetMetaObject().GetCreationTimestamp().Time)
-}
 func (g *generic) Logger() logr.Logger {
 	return g.Log
 }
@@ -176,6 +162,28 @@ func (g *generic) listOldResources(namespace string, objList client.ObjectList) 
 	return nil
 }
 
+type jobObjectList interface {
+	client.ObjectList
+
+	GetJobObjects() k8upv1alpha1.JobObjectList
+}
+
+func (g *generic) cleanupOldResources(typ jobObjectList, name types.NamespacedName, limits cleaner.GetJobsHistoryLimiter) {
+	err := g.listOldResources(name.Namespace, typ)
+	if err != nil {
+		return
+	}
+
+	cl := cleaner.ObjectCleaner{Client: g.Client, Limits: limits, Log: g.Logger()}
+	deleted, err := cl.CleanOldObjects(g.CTX, typ.GetJobObjects())
+	if err != nil {
+		g.SetConditionFalseWithMessage(k8upv1alpha1.ConditionScrubbed, k8upv1alpha1.ReasonDeletionFailed, "could not cleanup old resources: %v", err)
+		return
+	}
+	g.SetConditionTrueWithMessage(k8upv1alpha1.ConditionScrubbed, k8upv1alpha1.ReasonSucceeded, "Deleted %v resources", deleted)
+
+}
+
 // NewExecutor will return the right Executor for the given job object.
 func NewExecutor(config job.Config) queue.Executor {
 	switch config.Obj.GetType() {
@@ -209,41 +217,6 @@ func DefaultEnv(namespace string) EnvVarConverter {
 	}
 
 	return defaults
-}
-
-// cleanOldObjects iterates sorted over the given list and deletes them until maxObjects remain. If a deletion fails,
-// the Scrubbed condition will be set to false with the error message, which will also be logged. The func also aborts early.
-// If all succeed, the condition is set to "true".
-func cleanOldObjects(jobObjects jobObjectList, maxObjects int, config job.Config) {
-	numToDelete := len(jobObjects) - maxObjects
-
-	if numToDelete <= 0 {
-		return
-	}
-
-	sort.Sort(jobObjects)
-	for i := 0; i < numToDelete; i++ {
-		name := jobObjects[i].GetMetaObject().GetName()
-		ns := jobObjects[i].GetMetaObject().GetNamespace()
-		config.Log.Info("cleaning old job", "namespace", ns, "name", name)
-		option := metav1.DeletePropagationForeground
-		err := config.Client.Delete(config.CTX, jobObjects[i].GetRuntimeObject().(client.Object), &client.DeleteOptions{
-			PropagationPolicy: &option,
-		})
-		if err != nil && !errors.IsNotFound(err) {
-			config.Log.Error(err, "could not delete old job", "namespace", ns)
-			config.SetConditionFalseWithMessage(k8upv1alpha1.ConditionScrubbed, k8upv1alpha1.ReasonDeletionFailed, "could not delete old %s: %v", jobObjects[i].GetType(), err)
-			return
-		}
-	}
-	config.SetConditionTrueWithMessage(k8upv1alpha1.ConditionScrubbed, k8upv1alpha1.ReasonSucceeded, "Deleted %d resources", numToDelete)
-}
-
-func getKeepJobs(keepJobs *int) int {
-	if keepJobs == nil {
-		return cfg.Config.GlobalKeepJobs
-	}
-	return *keepJobs
 }
 
 // BuildTagArgs will prepend "--tag " to every element in the given []string

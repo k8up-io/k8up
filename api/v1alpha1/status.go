@@ -18,20 +18,49 @@ type Status struct {
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
 }
 
-// HasFinished returns true in the following cases:
+// HasFailed returns true in the following cases:
 //
-// * If ConditionProgressing is false with ReasonFinished.
+// * If ConditionCompleted is true with any other reason than ReasonSucceeded.
 //
 // * If ConditionPreBackupPodReady is false with any of the "failed" reasons.
-func (in *Status) HasFinished() bool {
+func (in Status) HasFailed() bool {
+	if in.HasFailedPreBackup() {
+		return true
+	}
+	completedCond := meta.FindStatusCondition(in.Conditions, ConditionCompleted.String())
+	if completedCond != nil && !matchAnyReason(*completedCond, ReasonSucceeded) {
+		return completedCond.Status == metav1.ConditionTrue
+	}
+	return false
+}
+
+// HasSucceeded returns true if all cases are true:
+//
+// * If ConditionCompleted is true with ReasonSucceeded.
+//
+// * If ConditionPreBackupPodReady has no failure reason.
+func (in Status) HasSucceeded() bool {
+	if in.HasFailedPreBackup() {
+		return false
+	}
+	completedCond := meta.FindStatusCondition(in.Conditions, ConditionCompleted.String())
+	if completedCond != nil && matchAnyReason(*completedCond, ReasonSucceeded) {
+		return completedCond.Status == metav1.ConditionTrue
+	}
+	return false
+}
+
+// HasFinished returns true if either HasFailed() or HasSucceeded() return true.
+func (in Status) HasFinished() bool {
+	return in.HasFailed() || in.HasSucceeded()
+}
+
+// HasFailedPreBackup returns true if ConditionPreBackupPodReady is false with any of the "failed" reasons.
+func (in Status) HasFailedPreBackup() bool {
 	preBackupCond := meta.FindStatusCondition(in.Conditions, ConditionPreBackupPodReady.String())
 	// Failed pre backups also count as finished
 	if preBackupCond != nil && isPreBackupFailed(*preBackupCond) {
 		return preBackupCond.Status == metav1.ConditionFalse
-	}
-	progressingCond := meta.FindStatusCondition(in.Conditions, ConditionProgressing.String())
-	if progressingCond != nil && matchAnyReason(*progressingCond, ReasonFinished) {
-		return progressingCond.Status == metav1.ConditionFalse
 	}
 	return false
 }

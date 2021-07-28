@@ -16,10 +16,11 @@ import (
 
 	k8upv1a1 "github.com/vshn/k8up/api/v1alpha1"
 	"github.com/vshn/k8up/controllers"
+	"github.com/vshn/k8up/envtest"
 )
 
 type RestoreTestSuite struct {
-	EnvTestSuite
+	envtest.Suite
 
 	GivenRestore *k8upv1a1.Restore
 	RestoreName  string

@@ -17,6 +17,7 @@ exclude_patterns:
 - 'features/'
 - '**/node_modules/'
 - 'script/'
+- 'envtest/'
 - '**/spec/'
 - '**/test/'
 - '**/tests/'

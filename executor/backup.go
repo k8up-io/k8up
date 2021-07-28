@@ -135,21 +135,5 @@ func (b *BackupExecutor) startBackup(backupJob *batchv1.Job) error {
 }
 
 func (b *BackupExecutor) cleanupOldBackups(name types.NamespacedName) {
-	list := &k8upv1alpha1.BackupList{}
-	err := b.listOldResources(name.Namespace, list)
-	if err != nil {
-		return
-	}
-
-	jobs := make(jobObjectList, 0)
-	for _, backup := range list.Items {
-		// Avoid exportloopref
-		backup := backup
-		jobs = append(jobs, &backup)
-	}
-	var keepJobs *int = nil
-	if b.backup != nil {
-		keepJobs = b.backup.Spec.KeepJobs
-	}
-	cleanOldObjects(jobs, getKeepJobs(keepJobs), b.Config)
+	b.cleanupOldResources(&k8upv1alpha1.BackupList{}, name, b.backup)
 }

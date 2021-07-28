@@ -296,7 +296,14 @@ spec:
                     type: object
                   concurrentRunsAllowed:
                     type: boolean
+                  failedJobsHistoryLimit:
+                    description: FailedJobsHistoryLimit amount of failed jobs to keep
+                      for later analysis. KeepJobs is used property is not specified.
+                    type: integer
                   keepJobs:
+                    description: "KeepJobs amount of jobs to keep for later analysis.
+                      \n Deprecated: Use FailedJobsHistoryLimit and SuccessfulJobsHistoryLimit
+                      respectively."
                     type: integer
                   resources:
                     description: Resources describes the compute resource requirements
@@ -397,6 +404,11 @@ spec:
                     type: string
                   snapshot:
                     type: string
+                  successfulJobsHistoryLimit:
+                    description: SuccessfulJobsHistoryLimit amount of successful jobs
+                      to keep for later analysis. KeepJobs is used property is not
+                      specified.
+                    type: integer
                   tags:
                     description: Tags is a list of arbitrary tags that get added to
                       the backup via Restic's tagging system
@@ -909,8 +921,14 @@ spec:
                     type: object
                   concurrentRunsAllowed:
                     type: boolean
+                  failedJobsHistoryLimit:
+                    description: FailedJobsHistoryLimit amount of failed jobs to keep
+                      for later analysis. KeepJobs is used property is not specified.
+                    type: integer
                   keepJobs:
-                    description: KeepJobs amount of jobs to keep for later analysis
+                    description: "KeepJobs amount of jobs to keep for later analysis.
+                      \n Deprecated: Use FailedJobsHistoryLimit and SuccessfulJobsHistoryLimit
+                      respectively."
                     type: integer
                   promURL:
                     description: PromURL sets a prometheus push URL where the backup
@@ -952,6 +970,11 @@ spec:
                       container posts metrics and information about the snapshots
                       to. This is in addition to the prometheus pushgateway.
                     type: string
+                  successfulJobsHistoryLimit:
+                    description: SuccessfulJobsHistoryLimit amount of successful jobs
+                      to keep for later analysis. KeepJobs is used property is not
+                      specified.
+                    type: integer
                   tags:
                     description: Tags is a list of arbitrary tags that get added to
                       the backup via Restic's tagging system
@@ -1219,8 +1242,14 @@ spec:
                     type: object
                   concurrentRunsAllowed:
                     type: boolean
+                  failedJobsHistoryLimit:
+                    description: FailedJobsHistoryLimit amount of failed jobs to keep
+                      for later analysis. KeepJobs is used property is not specified.
+                    type: integer
                   keepJobs:
-                    description: KeepJobs amount of jobs to keep for later analysis
+                    description: "KeepJobs amount of jobs to keep for later analysis.
+                      \n Deprecated: Use FailedJobsHistoryLimit and SuccessfulJobsHistoryLimit
+                      respectively."
                     type: integer
                   promURL:
                     description: PromURL sets a prometheus push URL where the backup
@@ -1257,8 +1286,20 @@ spec:
                     description: ScheduleDefinition is the actual cron-type expression
                       that defines the interval of the actions.
                     type: string
+                  successfulJobsHistoryLimit:
+                    description: SuccessfulJobsHistoryLimit amount of successful jobs
+                      to keep for later analysis. KeepJobs is used property is not
+                      specified.
+                    type: integer
                 type: object
+              failedJobsHistoryLimit:
+                description: FailedJobsHistoryLimit amount of failed jobs to keep
+                  for later analysis. KeepJobs is used property is not specified.
+                type: integer
               keepJobs:
+                description: "KeepJobs amount of jobs to keep for later analysis.
+                  \n Deprecated: Use FailedJobsHistoryLimit and SuccessfulJobsHistoryLimit
+                  respectively."
                 type: integer
               prune:
                 properties:
@@ -1519,7 +1560,14 @@ spec:
                     type: object
                   concurrentRunsAllowed:
                     type: boolean
+                  failedJobsHistoryLimit:
+                    description: FailedJobsHistoryLimit amount of failed jobs to keep
+                      for later analysis. KeepJobs is used property is not specified.
+                    type: integer
                   keepJobs:
+                    description: "KeepJobs amount of jobs to keep for later analysis.
+                      \n Deprecated: Use FailedJobsHistoryLimit and SuccessfulJobsHistoryLimit
+                      respectively."
                     type: integer
                   resources:
                     description: Resources describes the compute resource requirements
@@ -1586,6 +1634,11 @@ spec:
                     description: ScheduleDefinition is the actual cron-type expression
                       that defines the interval of the actions.
                     type: string
+                  successfulJobsHistoryLimit:
+                    description: SuccessfulJobsHistoryLimit amount of successful jobs
+                      to keep for later analysis. KeepJobs is used property is not
+                      specified.
+                    type: integer
                 type: object
               resourceRequirementsTemplate:
                 description: ResourceRequirementsTemplate describes the compute resource
@@ -1874,7 +1927,14 @@ spec:
                     type: object
                   concurrentRunsAllowed:
                     type: boolean
+                  failedJobsHistoryLimit:
+                    description: FailedJobsHistoryLimit amount of failed jobs to keep
+                      for later analysis. KeepJobs is used property is not specified.
+                    type: integer
                   keepJobs:
+                    description: "KeepJobs amount of jobs to keep for later analysis.
+                      \n Deprecated: Use FailedJobsHistoryLimit and SuccessfulJobsHistoryLimit
+                      respectively."
                     type: integer
                   resources:
                     description: Resources describes the compute resource requirements
@@ -1975,6 +2035,11 @@ spec:
                     type: string
                   snapshot:
                     type: string
+                  successfulJobsHistoryLimit:
+                    description: SuccessfulJobsHistoryLimit amount of successful jobs
+                      to keep for later analysis. KeepJobs is used property is not
+                      specified.
+                    type: integer
                   tags:
                     description: Tags is a list of arbitrary tags that get added to
                       the backup via Restic's tagging system
@@ -1982,6 +2047,10 @@ spec:
                       type: string
                     type: array
                 type: object
+              successfulJobsHistoryLimit:
+                description: SuccessfulJobsHistoryLimit amount of successful jobs
+                  to keep for later analysis. KeepJobs is used property is not specified.
+                type: integer
             type: object
           status:
             description: ScheduleStatus defines the observed state of Schedule

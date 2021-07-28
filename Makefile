@@ -13,7 +13,7 @@ include Makefile.vars.mk
 e2e_make := $(MAKE) -C e2e
 go_build ?= go build -o $(BIN_FILENAME) main.go
 
-setup-envtest ?= go run sigs.k8s.io/controller-runtime/tools/setup-envtest
+setup-envtest ?= go run sigs.k8s.io/controller-runtime/tools/setup-envtest $(ENVTEST_ADDITIONAL_FLAGS)
 
 # Run tests (see https://sdk.operatorframework.io/docs/building-operators/golang/references/envtest-setup)
 ENVTEST_ASSETS_DIR=$(shell pwd)/testbin

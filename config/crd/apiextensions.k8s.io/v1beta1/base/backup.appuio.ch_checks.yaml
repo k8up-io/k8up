@@ -293,8 +293,14 @@ spec:
                       type: string
                   type: object
               type: object
+            failedJobsHistoryLimit:
+              description: FailedJobsHistoryLimit amount of failed jobs to keep for
+                later analysis. KeepJobs is used property is not specified.
+              type: integer
             keepJobs:
-              description: KeepJobs amount of jobs to keep for later analysis
+              description: "KeepJobs amount of jobs to keep for later analysis. \n
+                Deprecated: Use FailedJobsHistoryLimit and SuccessfulJobsHistoryLimit
+                respectively."
               type: integer
             promURL:
               description: PromURL sets a prometheus push URL where the backup container
@@ -327,6 +333,10 @@ spec:
                     value. More info: https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/'
                   type: object
               type: object
+            successfulJobsHistoryLimit:
+              description: SuccessfulJobsHistoryLimit amount of successful jobs to
+                keep for later analysis. KeepJobs is used property is not specified.
+              type: integer
           type: object
         status:
           description: Status defines the observed state of a generic K8up job. It

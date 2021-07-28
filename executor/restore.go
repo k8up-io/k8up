@@ -80,19 +80,8 @@ func (r *RestoreExecutor) registerRestoreCallback(restore *k8upv1alpha1.Restore)
 }
 
 func (r *RestoreExecutor) cleanupOldRestores(name types.NamespacedName, restore *k8upv1alpha1.Restore) {
-	list := &k8upv1alpha1.RestoreList{}
-	err := r.listOldResources(name.Namespace, list)
-	if err != nil {
-		return
-	}
+	r.cleanupOldResources(&k8upv1alpha1.RestoreList{}, name, restore)
 
-	jobs := make(jobObjectList, len(list.Items))
-	for i, restore := range list.Items {
-		jobs[i] = &restore
-	}
-
-	keepJobs := getKeepJobs(restore.Spec.KeepJobs)
-	cleanOldObjects(jobs, keepJobs, r.Config)
 }
 
 func (r *RestoreExecutor) buildRestoreObject(restore *k8upv1alpha1.Restore) (*batchv1.Job, error) {

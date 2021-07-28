@@ -13,7 +13,19 @@ type PruneSpec struct {
 
 	// Retention sets how many backups should be kept after a forget and prune
 	Retention RetentionPolicy `json:"retention,omitempty"`
-	KeepJobs  *int            `json:"keepJobs,omitempty"`
+	// KeepJobs amount of jobs to keep for later analysis.
+	//
+	// Deprecated: Use FailedJobsHistoryLimit and SuccessfulJobsHistoryLimit respectively.
+	// +optional
+	KeepJobs *int `json:"keepJobs,omitempty"`
+	// FailedJobsHistoryLimit amount of failed jobs to keep for later analysis.
+	// KeepJobs is used property is not specified.
+	// +optional
+	FailedJobsHistoryLimit *int `json:"failedJobsHistoryLimit,omitempty"`
+	// SuccessfulJobsHistoryLimit amount of successful jobs to keep for later analysis.
+	// KeepJobs is used property is not specified.
+	// +optional
+	SuccessfulJobsHistoryLimit *int `json:"successfulJobsHistoryLimit,omitempty"`
 }
 
 func (p PruneSpec) CreateObject(name, namespace string) runtime.Object {
@@ -90,6 +102,33 @@ func (p *Prune) SetStatus(status Status) {
 // GetResources returns the resource requirements
 func (p *Prune) GetResources() corev1.ResourceRequirements {
 	return p.Spec.Resources
+}
+
+// GetFailedJobsHistoryLimit returns failed jobs history limit.
+// Returns KeepJobs if unspecified.
+func (p *Prune) GetFailedJobsHistoryLimit() *int {
+	if p.Spec.FailedJobsHistoryLimit != nil {
+		return p.Spec.FailedJobsHistoryLimit
+	}
+	return p.Spec.KeepJobs
+}
+
+// GetSuccessfulJobsHistoryLimit returns successful jobs history limit.
+// Returns KeepJobs if unspecified.
+func (p *Prune) GetSuccessfulJobsHistoryLimit() *int {
+	if p.Spec.SuccessfulJobsHistoryLimit != nil {
+		return p.Spec.SuccessfulJobsHistoryLimit
+	}
+	return p.Spec.KeepJobs
+}
+
+// GetJobObjects returns a sortable list of jobs
+func (p *PruneList) GetJobObjects() JobObjectList {
+	items := make(JobObjectList, len(p.Items))
+	for i := range p.Items {
+		items[i] = &p.Items[i]
+	}
+	return items
 }
 
 // GetDeepCopy returns a deep copy

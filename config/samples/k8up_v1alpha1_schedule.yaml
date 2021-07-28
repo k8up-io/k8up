@@ -38,7 +38,8 @@ spec:
           key: password
   backup:
     schedule: '* * * * *'
-    keepJobs: 4
+    failedJobsHistoryLimit: 2
+    successfulJobsHistoryLimit: 2
     promURL: http://10.144.1.224:9000
     resources:
       requests:

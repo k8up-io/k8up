@@ -10,13 +10,27 @@ import (
 
 // ScheduleSpec defines the schedules for the various job types.
 type ScheduleSpec struct {
-	Restore  *RestoreSchedule `json:"restore,omitempty"`
-	Backup   *BackupSchedule  `json:"backup,omitempty"`
-	Archive  *ArchiveSchedule `json:"archive,omitempty"`
-	Check    *CheckSchedule   `json:"check,omitempty"`
-	Prune    *PruneSchedule   `json:"prune,omitempty"`
-	Backend  *Backend         `json:"backend,omitempty"`
-	KeepJobs *int             `json:"keepJobs,omitempty"`
+	Restore *RestoreSchedule `json:"restore,omitempty"`
+	Backup  *BackupSchedule  `json:"backup,omitempty"`
+	Archive *ArchiveSchedule `json:"archive,omitempty"`
+	Check   *CheckSchedule   `json:"check,omitempty"`
+	Prune   *PruneSchedule   `json:"prune,omitempty"`
+	Backend *Backend         `json:"backend,omitempty"`
+
+	// KeepJobs amount of jobs to keep for later analysis.
+	//
+	// Deprecated: Use FailedJobsHistoryLimit and SuccessfulJobsHistoryLimit respectively.
+	// +optional
+	KeepJobs *int `json:"keepJobs,omitempty"`
+	// FailedJobsHistoryLimit amount of failed jobs to keep for later analysis.
+	// KeepJobs is used property is not specified.
+	// +optional
+	FailedJobsHistoryLimit *int `json:"failedJobsHistoryLimit,omitempty"`
+	// SuccessfulJobsHistoryLimit amount of successful jobs to keep for later analysis.
+	// KeepJobs is used property is not specified.
+	// +optional
+	SuccessfulJobsHistoryLimit *int `json:"successfulJobsHistoryLimit,omitempty"`
+
 	// ResourceRequirementsTemplate describes the compute resource requirements (cpu, memory, etc.)
 	ResourceRequirementsTemplate corev1.ResourceRequirements `json:"resourceRequirementsTemplate,omitempty"`
 }
@@ -121,6 +135,24 @@ func (s *Schedule) SetStatus(status Status) {
 
 func (s *Schedule) GetResources() corev1.ResourceRequirements {
 	return s.Spec.ResourceRequirementsTemplate
+}
+
+// GetFailedJobsHistoryLimit returns failed jobs history limit.
+// Returns KeepJobs if unspecified.
+func (s *Schedule) GetFailedJobsHistoryLimit() *int {
+	if s.Spec.FailedJobsHistoryLimit != nil {
+		return s.Spec.FailedJobsHistoryLimit
+	}
+	return s.Spec.KeepJobs
+}
+
+// GetSuccessfulJobsHistoryLimit returns successful jobs history limit.
+// Returns KeepJobs if unspecified.
+func (s *Schedule) GetSuccessfulJobsHistoryLimit() *int {
+	if s.Spec.SuccessfulJobsHistoryLimit != nil {
+		return s.Spec.SuccessfulJobsHistoryLimit
+	}
+	return s.Spec.KeepJobs
 }
 
 // String casts the value to string.

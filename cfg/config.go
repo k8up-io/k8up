@@ -42,6 +42,8 @@ type Configuration struct {
 	BackupCheckSchedule              string `koanf:"checkschedule"`
 	GlobalAccessKey                  string `koanf:"globalaccesskeyid"`
 	GlobalKeepJobs                   int    `koanf:"globalkeepjobs"`
+	GlobalFailedJobsHistoryLimit     int    `koanf:"global-failed-jobs-history-limit"`
+	GlobalSuccessfulJobsHistoryLimit int    `koanf:"global-successful-jobs-history-limit"`
 	GlobalRepoPassword               string `koanf:"globalrepopassword"`
 	GlobalRestoreS3AccessKey         string `koanf:"globalrestores3accesskeyid"`
 	GlobalRestoreS3Bucket            string `koanf:"globalrestores3bucket"`
@@ -84,19 +86,20 @@ var (
 // NewDefaultConfig retrieves the config with sane defaults
 func NewDefaultConfig() *Configuration {
 	return &Configuration{
-		MountPath:               "/data",
-		BackupAnnotation:        "k8up.syn.tools/backup",
-		BackupCommandAnnotation: "k8up.syn.tools/backupcommand",
-		FileExtensionAnnotation: "k8up.syn.tools/file-extension",
-		ServiceAccount:          "pod-executor",
-		BackupCheckSchedule:     "0 0 * * 0",
-		GlobalKeepJobs:          6,
-		BackupImage:             "quay.io/vshn/wrestic:latest",
-		PodExecRoleName:         "pod-executor",
-		RestartPolicy:           "OnFailure",
-		MetricsBindAddress:      ":8080",
-		PodFilter:               "backupPod=true",
-		EnableLeaderElection:    true,
+		MountPath:                        "/data",
+		BackupAnnotation:                 "k8up.syn.tools/backup",
+		BackupCommandAnnotation:          "k8up.syn.tools/backupcommand",
+		FileExtensionAnnotation:          "k8up.syn.tools/file-extension",
+		ServiceAccount:                   "pod-executor",
+		BackupCheckSchedule:              "0 0 * * 0",
+		GlobalFailedJobsHistoryLimit:     3,
+		GlobalSuccessfulJobsHistoryLimit: 3,
+		BackupImage:                      "quay.io/vshn/wrestic:latest",
+		PodExecRoleName:                  "pod-executor",
+		RestartPolicy:                    "OnFailure",
+		MetricsBindAddress:               ":8080",
+		PodFilter:                        "backupPod=true",
+		EnableLeaderElection:             true,
 	}
 }
 
@@ -155,4 +158,29 @@ func (c Configuration) GetGlobalDefaultResources() (res corev1.ResourceRequireme
 // GetGlobalRepository is a shortcut for building an S3 string "s3:<endpoint>/<bucket>"
 func GetGlobalRepository() string {
 	return fmt.Sprintf("s3:%s/%s", Config.GlobalS3Endpoint, Config.GlobalS3Bucket)
+}
+
+// GetGlobalFailedJobsHistoryLimit returns the global failed jobs history limit.
+// Returns global KeepJobs if unspecified.
+func (c Configuration) GetGlobalFailedJobsHistoryLimit() int {
+	if c.GlobalFailedJobsHistoryLimit > -1 {
+		return c.GlobalFailedJobsHistoryLimit
+	}
+	return maxInt(c.GlobalKeepJobs, 0)
+}
+
+// GetGlobalSuccessfulJobsHistoryLimit returns the global successful jobs history limit.
+// Returns global KeepJobs if unspecified.
+func (c Configuration) GetGlobalSuccessfulJobsHistoryLimit() int {
+	if c.GlobalSuccessfulJobsHistoryLimit > -1 {
+		return c.GlobalSuccessfulJobsHistoryLimit
+	}
+	return maxInt(c.GlobalKeepJobs, 0)
+}
+
+func maxInt(x, y int) int {
+	if x > y {
+		return x
+	}
+	return y
 }

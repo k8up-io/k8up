@@ -12,11 +12,12 @@ import (
 
 	k8upv1a1 "github.com/vshn/k8up/api/v1alpha1"
 	"github.com/vshn/k8up/controllers"
+	"github.com/vshn/k8up/envtest"
 	"github.com/vshn/k8up/observer"
 )
 
 type BackupTestSuite struct {
-	EnvTestSuite
+	envtest.Suite
 
 	PreBackupPodName string
 	CancelCtx        context.CancelFunc
@@ -114,7 +115,7 @@ func (ts *BackupTestSuite) Test_GivenPreBackupPods_WhenRestartingK8up_ThenExpect
 func (ts *BackupTestSuite) Test_GivenFinishedBackup_WhenReconciling_ThenIgnore() {
 	ts.EnsureResources(ts.BackupResource)
 	ts.SetCondition(ts.BackupResource, &ts.BackupResource.Status.Conditions,
-		k8upv1a1.ConditionProgressing, metav1.ConditionFalse, k8upv1a1.ReasonFinished)
+		k8upv1a1.ConditionCompleted, metav1.ConditionTrue, k8upv1a1.ReasonSucceeded)
 
 	result := ts.whenReconciling(ts.BackupResource)
 	ts.Assert().Equal(float64(0), result.RequeueAfter.Seconds())

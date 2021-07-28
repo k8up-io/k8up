@@ -76,6 +76,33 @@ func (a *Archive) GetResources() corev1.ResourceRequirements {
 	return a.Spec.Resources
 }
 
+// GetFailedJobsHistoryLimit returns failed jobs history limit.
+// Returns KeepJobs if unspecified.
+func (a *Archive) GetFailedJobsHistoryLimit() *int {
+	if a.Spec.FailedJobsHistoryLimit != nil {
+		return a.Spec.FailedJobsHistoryLimit
+	}
+	return a.Spec.KeepJobs
+}
+
+// GetSuccessfulJobsHistoryLimit returns successful jobs history limit.
+// Returns KeepJobs if unspecified.
+func (a *Archive) GetSuccessfulJobsHistoryLimit() *int {
+	if a.Spec.SuccessfulJobsHistoryLimit != nil {
+		return a.Spec.SuccessfulJobsHistoryLimit
+	}
+	return a.Spec.KeepJobs
+}
+
+// GetJobObjects returns a sortable list of jobs
+func (a *ArchiveList) GetJobObjects() JobObjectList {
+	items := make(JobObjectList, len(a.Items))
+	for i := range a.Items {
+		items[i] = &a.Items[i]
+	}
+	return items
+}
+
 // GetDeepCopy returns a deep copy
 func (in *ArchiveSchedule) GetDeepCopy() ScheduleSpecInterface {
 	return in.DeepCopy()

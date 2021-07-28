@@ -237,7 +237,10 @@ BackupSpec defines a single backup. It must contain all inforomation to connect 
 |===
 | Field | Description
 | *`RunnableSpec`* __xref:{anchor_prefix}-github-com-vshn-k8up-api-v1alpha1-runnablespec[$$RunnableSpec$$]__ | 
-| *`keepJobs`* __integer__ | KeepJobs amount of jobs to keep for later analysis
+| *`keepJobs`* __integer__ | KeepJobs amount of jobs to keep for later analysis. 
+ Deprecated: Use FailedJobsHistoryLimit and SuccessfulJobsHistoryLimit respectively.
+| *`failedJobsHistoryLimit`* __integer__ | FailedJobsHistoryLimit amount of failed jobs to keep for later analysis. KeepJobs is used property is not specified.
+| *`successfulJobsHistoryLimit`* __integer__ | SuccessfulJobsHistoryLimit amount of successful jobs to keep for later analysis. KeepJobs is used property is not specified.
 | *`promURL`* __string__ | PromURL sets a prometheus push URL where the backup container send metrics to
 | *`statsURL`* __string__ | StatsURL sets an arbitrary URL where the wrestic container posts metrics and information about the snapshots to. This is in addition to the prometheus pushgateway.
 | *`tags`* __string array__ | Tags is a list of arbitrary tags that get added to the backup via Restic's tagging system
@@ -319,7 +322,10 @@ CheckSpec defines the desired state of Check. It needs to contain the repository
 | Field | Description
 | *`RunnableSpec`* __xref:{anchor_prefix}-github-com-vshn-k8up-api-v1alpha1-runnablespec[$$RunnableSpec$$]__ | 
 | *`promURL`* __string__ | PromURL sets a prometheus push URL where the backup container send metrics to
-| *`keepJobs`* __integer__ | KeepJobs amount of jobs to keep for later analysis
+| *`keepJobs`* __integer__ | KeepJobs amount of jobs to keep for later analysis. 
+ Deprecated: Use FailedJobsHistoryLimit and SuccessfulJobsHistoryLimit respectively.
+| *`failedJobsHistoryLimit`* __integer__ | FailedJobsHistoryLimit amount of failed jobs to keep for later analysis. KeepJobs is used property is not specified.
+| *`successfulJobsHistoryLimit`* __integer__ | SuccessfulJobsHistoryLimit amount of successful jobs to keep for later analysis. KeepJobs is used property is not specified.
 |===
 
 
@@ -426,6 +432,10 @@ EffectiveScheduleSpec defines the desired state of EffectiveSchedule
 ****
 - xref:{anchor_prefix}-github-com-vshn-k8up-api-v1alpha1-backend[$$Backend$$]
 ****
+
+
+
+
 
 
 
@@ -591,7 +601,10 @@ PruneSpec needs to contain the repository information as well as the desired ret
 | Field | Description
 | *`RunnableSpec`* __xref:{anchor_prefix}-github-com-vshn-k8up-api-v1alpha1-runnablespec[$$RunnableSpec$$]__ | 
 | *`retention`* __xref:{anchor_prefix}-github-com-vshn-k8up-api-v1alpha1-retentionpolicy[$$RetentionPolicy$$]__ | Retention sets how many backups should be kept after a forget and prune
-| *`keepJobs`* __integer__ | 
+| *`keepJobs`* __integer__ | KeepJobs amount of jobs to keep for later analysis. 
+ Deprecated: Use FailedJobsHistoryLimit and SuccessfulJobsHistoryLimit respectively.
+| *`failedJobsHistoryLimit`* __integer__ | FailedJobsHistoryLimit amount of failed jobs to keep for later analysis. KeepJobs is used property is not specified.
+| *`successfulJobsHistoryLimit`* __integer__ | SuccessfulJobsHistoryLimit amount of successful jobs to keep for later analysis. KeepJobs is used property is not specified.
 |===
 
 
@@ -701,7 +714,10 @@ RestoreSpec can either contain an S3 restore point or a local one. For the local
 | *`restoreMethod`* __xref:{anchor_prefix}-github-com-vshn-k8up-api-v1alpha1-restoremethod[$$RestoreMethod$$]__ | 
 | *`restoreFilter`* __string__ | 
 | *`snapshot`* __string__ | 
-| *`keepJobs`* __integer__ | 
+| *`keepJobs`* __integer__ | KeepJobs amount of jobs to keep for later analysis. 
+ Deprecated: Use FailedJobsHistoryLimit and SuccessfulJobsHistoryLimit respectively.
+| *`failedJobsHistoryLimit`* __integer__ | FailedJobsHistoryLimit amount of failed jobs to keep for later analysis. KeepJobs is used property is not specified.
+| *`successfulJobsHistoryLimit`* __integer__ | SuccessfulJobsHistoryLimit amount of successful jobs to keep for later analysis. KeepJobs is used property is not specified.
 | *`tags`* __string array__ | Tags is a list of arbitrary tags that get added to the backup via Restic's tagging system
 |===
 
@@ -876,7 +892,10 @@ ScheduleSpec defines the schedules for the various job types.
 | *`check`* __xref:{anchor_prefix}-github-com-vshn-k8up-api-v1alpha1-checkschedule[$$CheckSchedule$$]__ | 
 | *`prune`* __xref:{anchor_prefix}-github-com-vshn-k8up-api-v1alpha1-pruneschedule[$$PruneSchedule$$]__ | 
 | *`backend`* __xref:{anchor_prefix}-github-com-vshn-k8up-api-v1alpha1-backend[$$Backend$$]__ | 
-| *`keepJobs`* __integer__ | 
+| *`keepJobs`* __integer__ | KeepJobs amount of jobs to keep for later analysis. 
+ Deprecated: Use FailedJobsHistoryLimit and SuccessfulJobsHistoryLimit respectively.
+| *`failedJobsHistoryLimit`* __integer__ | FailedJobsHistoryLimit amount of failed jobs to keep for later analysis. KeepJobs is used property is not specified.
+| *`successfulJobsHistoryLimit`* __integer__ | SuccessfulJobsHistoryLimit amount of successful jobs to keep for later analysis. KeepJobs is used property is not specified.
 | *`resourceRequirementsTemplate`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#resourcerequirements-v1-core[$$ResourceRequirements$$]__ | ResourceRequirementsTemplate describes the compute resource requirements (cpu, memory, etc.)
 |===
 

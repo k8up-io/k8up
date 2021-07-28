@@ -52,6 +52,46 @@ func Test_Configuration_DefaultConfig(t *testing.T) {
 	assert.Contains(t, err.Error(), "operator namespace")
 }
 
+func Test_Configuration_GetGlobalFailedJobsHistoryLimit(t *testing.T) {
+	t.Run("GlobalKeepJobsIfNotSet", func(t *testing.T) {
+		c := NewDefaultConfig()
+		c.GlobalFailedJobsHistoryLimit = -1
+		c.GlobalKeepJobs = 12
+		assert.Equal(t, c.GlobalKeepJobs, c.GetGlobalFailedJobsHistoryLimit())
+	})
+	t.Run("ReturnsGlobalFailedJobsHistoryLimitIfSet", func(t *testing.T) {
+		c := NewDefaultConfig()
+		c.GlobalFailedJobsHistoryLimit = 12
+		assert.Equal(t, c.GlobalFailedJobsHistoryLimit, c.GetGlobalFailedJobsHistoryLimit())
+	})
+	t.Run("LimitsNegativeValuesToZero", func(t *testing.T) {
+		c := NewDefaultConfig()
+		c.GlobalFailedJobsHistoryLimit = -23
+		c.GlobalKeepJobs = -23
+		assert.Equal(t, 0, c.GetGlobalFailedJobsHistoryLimit())
+	})
+}
+
+func Test_Configuration_GetGlobalSuccessfulJobsHistoryLimit(t *testing.T) {
+	t.Run("GlobalKeepJobsIfNotSet", func(t *testing.T) {
+		c := NewDefaultConfig()
+		c.GlobalSuccessfulJobsHistoryLimit = -1
+		c.GlobalKeepJobs = 17
+		assert.Equal(t, c.GlobalKeepJobs, c.GetGlobalSuccessfulJobsHistoryLimit())
+	})
+	t.Run("ReturnsGlobalSuccessfulJobsHistoryLimitIfSet", func(t *testing.T) {
+		c := NewDefaultConfig()
+		c.GlobalSuccessfulJobsHistoryLimit = 17
+		assert.Equal(t, c.GlobalSuccessfulJobsHistoryLimit, c.GetGlobalSuccessfulJobsHistoryLimit())
+	})
+	t.Run("LimitsNegativeValuesToZero", func(t *testing.T) {
+		c := NewDefaultConfig()
+		c.GlobalSuccessfulJobsHistoryLimit = -23
+		c.GlobalKeepJobs = -23
+		assert.Equal(t, 0, c.GetGlobalSuccessfulJobsHistoryLimit())
+	})
+}
+
 func (c *Configuration) WithOptions(f func(c *Configuration)) *Configuration {
 	f(c)
 	return c

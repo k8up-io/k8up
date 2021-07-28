@@ -18,7 +18,8 @@ spec:
       key: password
   backup:
     schedule: '*/5 * * * *'
-    keepJobs: 4
+    failedJobsHistoryLimit: 2
+    successfulJobsHistoryLimit: 2
     # optional
     #promURL: https://prometheus-io-instance:8443
   check:

@@ -105,17 +105,5 @@ func (c *CheckExecutor) registerCheckCallback() {
 }
 
 func (c *CheckExecutor) cleanupOldChecks(name types.NamespacedName, check *k8upv1alpha1.Check) {
-	list := &k8upv1alpha1.CheckList{}
-	err := c.listOldResources(name.Namespace, list)
-	if err != nil {
-		return
-	}
-
-	jobs := make(jobObjectList, len(list.Items))
-	for i, check := range list.Items {
-		jobs[i] = &check
-	}
-
-	keepJobs := getKeepJobs(check.Spec.KeepJobs)
-	cleanOldObjects(jobs, keepJobs, c.Config)
+	c.cleanupOldResources(&k8upv1alpha1.CheckList{}, name, check)
 }

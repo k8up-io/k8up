@@ -27,6 +27,8 @@ E2E_REPO ?= local.dev/k8up/e2e
 E2E_IMG = $(E2E_REPO):$(E2E_TAG)
 BATS_FILES ?= .
 
+ENVTEST_ADDITIONAL_FLAGS ?=
+
 INTEGRATION_TEST_DEBUG_OUTPUT ?= false
 
 KUSTOMIZE ?= go run sigs.k8s.io/kustomize/kustomize/v3
