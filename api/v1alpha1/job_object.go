@@ -15,6 +15,8 @@ type JobObject interface {
 	GetStatus() Status
 	SetStatus(s Status)
 	GetType() JobType
+	// GetJobName returns the name of the underlying batch/v1 job.
+	GetJobName() string
 	GetResources() corev1.ResourceRequirements
 }
 

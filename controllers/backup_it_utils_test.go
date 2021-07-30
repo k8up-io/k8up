@@ -262,7 +262,7 @@ func (ts *BackupTestSuite) notifyObserverOfBackupJobStatusChange(status k8upObse
 	event := observer.GetJobByName(ts.BackupResource.Namespace + "/" + ts.BackupResource.Name)
 	event.Job = &batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      ts.BackupResource.Name,
+			Name:      ts.BackupResource.GetJobName(),
 			Namespace: ts.BackupResource.Namespace,
 		},
 	}

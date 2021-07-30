@@ -57,6 +57,11 @@ func (a *Archive) GetMetaObject() metav1.Object {
 	return a
 }
 
+// GetJobName returns the name of the underlying batch/v1 job.
+func (a *Archive) GetJobName() string {
+	return a.GetType().String() + "-" + a.Name
+}
+
 func (*Archive) GetType() JobType {
 	return ArchiveType
 }

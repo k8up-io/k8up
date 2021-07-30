@@ -76,10 +76,10 @@ func (ts *CheckTestSuite) TestJobCleanup() {
 	successfulJobs := 2
 	failedJobs := 3
 	for i := 0; i < successfulJobs; i++ {
-		ts.whenJobCallbackIsInvoked(ts.CheckNames[i], observer.Succeeded)
+		ts.whenJobCallbackIsInvoked(ts.GivenChecks[i], observer.Succeeded)
 	}
 	for i := successfulJobs; i < successfulJobs+failedJobs; i++ {
-		ts.whenJobCallbackIsInvoked(ts.CheckNames[i], observer.Failed)
+		ts.whenJobCallbackIsInvoked(ts.GivenChecks[i], observer.Failed)
 	}
 
 	ts.expectCheckCleanupEventually((successfulJobs - ts.KeepSuccessful) + (failedJobs - ts.KeepFailed))
@@ -110,16 +110,16 @@ func (ts *CheckTestSuite) expectCheckCleanupEventually(expectedDeletes int) {
 	})
 }
 
-func (ts *CheckTestSuite) whenJobCallbackIsInvoked(checkName string, evtType observer.EventType) {
-	checkNSName := types.NamespacedName{Name: checkName, Namespace: ts.NS}
+func (ts *CheckTestSuite) whenJobCallbackIsInvoked(check k8upv1a1.JobObject, evtType observer.EventType) {
+	checkNSName := types.NamespacedName{Name: check.GetJobName(), Namespace: ts.NS}
 
-	check := &batchv1.Job{}
-	ts.FetchResource(checkNSName, check)
+	childJob := &batchv1.Job{}
+	ts.FetchResource(checkNSName, childJob)
 
 	o := observer.GetObserver()
 	observableJob := o.GetJobByName(checkNSName.String())
 	observableJob.Event = evtType
-	observableJob.Job = check
+	observableJob.Job = childJob
 
 	eventChannel := o.GetUpdateChannel()
 	eventChannel <- observableJob
@@ -136,7 +136,7 @@ func (ts *CheckTestSuite) givenCheckResources(amount int) {
 }
 
 func (ts *CheckTestSuite) whenReconcile() (lastResult controllerruntime.Result) {
-	for _, checkName := range ts.CheckNames {
+	for _, check := range ts.GivenChecks {
 		controller := controllers.CheckReconciler{
 			Client: ts.Client,
 			Log:    ts.Logger,
@@ -145,7 +145,7 @@ func (ts *CheckTestSuite) whenReconcile() (lastResult controllerruntime.Result) 
 
 		key := types.NamespacedName{
 			Namespace: ts.NS,
-			Name:      checkName,
+			Name:      check.GetMetaObject().GetName(),
 		}
 		request := controllerruntime.Request{
 			NamespacedName: key,

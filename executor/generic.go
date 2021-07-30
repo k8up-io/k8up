@@ -104,7 +104,7 @@ func (g *generic) GetJobNamespace() string {
 }
 
 func (g *generic) GetJobNamespacedName() types.NamespacedName {
-	return types.NamespacedName{Namespace: g.Obj.GetMetaObject().GetNamespace(), Name: g.Obj.GetMetaObject().GetName()}
+	return types.NamespacedName{Namespace: g.Obj.GetMetaObject().GetNamespace(), Name: g.Obj.GetJobName()}
 }
 
 func (g *generic) GetJobType() k8upv1alpha1.JobType {

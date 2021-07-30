@@ -119,6 +119,11 @@ func (s *Schedule) GetMetaObject() metav1.Object {
 	return s
 }
 
+// GetJobName implements the JobObject interface.
+func (s *Schedule) GetJobName() string {
+	return s.GetType().String() + "-" + s.Name
+}
+
 func (*Schedule) GetType() JobType {
 	return ScheduleType
 }

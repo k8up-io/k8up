@@ -91,6 +91,11 @@ func (*Backup) GetType() JobType {
 	return BackupType
 }
 
+// GetJobName returns the name of the underlying batch/v1 job.
+func (b *Backup) GetJobName() string {
+	return b.GetType().String() + "-" + b.Name
+}
+
 // GetStatus retrieves the Status property
 func (b *Backup) GetStatus() Status {
 	return b.Status
