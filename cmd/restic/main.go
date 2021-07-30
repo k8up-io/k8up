@@ -83,6 +83,10 @@ func run(resticCLI *restic.Restic, mainLogger logr.Logger) error {
 		return err
 	}
 
+	if err := resticCLI.Unlock(false); err != nil {
+		mainLogger.Error(err, "failed to remove stale locks from the repository, continuing anyway")
+	}
+
 	// This builds up the cache without any other side effect. So it won't block
 	// during any stdin backups or such.
 	if err := resticCLI.Snapshots(nil); err != nil {

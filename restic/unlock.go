@@ -3,14 +3,15 @@ package restic
 import "github.com/vshn/wrestic/logging"
 
 // Unlock will remove stale locks from the repository
+// If the all flag is set to true, even non-stale locks are removed.
 func (r *Restic) Unlock(all bool) error {
 	unlocklogger := r.logger.WithName("unlock")
 
 	unlocklogger.Info("unlocking repository", "all", all)
 
 	opts := CommandOptions{
-		Path: r.resticPath,
-		Args: r.globalFlags.ApplyToCommand("unlock"),
+		Path:   r.resticPath,
+		Args:   r.globalFlags.ApplyToCommand("unlock"),
 		StdOut: logging.NewErrorWriter(unlocklogger.WithName("restic")),
 		StdErr: logging.NewErrorWriter(unlocklogger.WithName("restic")),
 	}
