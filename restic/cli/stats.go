@@ -1,4 +1,4 @@
-package restic
+package cli
 
 import (
 	"encoding/json"
@@ -6,7 +6,7 @@ import (
 	"os"
 
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/vshn/wrestic/logging"
+	"github.com/vshn/wrestic/restic/logging"
 )
 
 // RawMetrics contains the raw metrics that can be obtained at the end of a

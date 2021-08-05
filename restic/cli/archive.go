@@ -1,4 +1,4 @@
-package restic
+package cli
 
 // Archive uploads the last version of each snapshot to S3.
 func (r *Restic) Archive(restoreFilter string, verifyRestore bool, tags ArrayOpts) error {

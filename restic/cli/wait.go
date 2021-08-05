@@ -1,10 +1,10 @@
-package restic
+package cli
 
 import (
 	"time"
 
 	"github.com/go-logr/logr"
-	"github.com/vshn/wrestic/logging"
+	"github.com/vshn/wrestic/restic/logging"
 )
 
 type Lock struct {

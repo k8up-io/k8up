@@ -1,11 +1,11 @@
-package restic
+package cli
 
 import (
 	"fmt"
 	"os"
 
-	"github.com/vshn/wrestic/kubernetes"
-	"github.com/vshn/wrestic/logging"
+	"github.com/vshn/wrestic/restic/kubernetes"
+	"github.com/vshn/wrestic/restic/logging"
 )
 
 // StdinBackup create a snapshot with the data contained in the given reader.

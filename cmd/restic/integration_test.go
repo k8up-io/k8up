@@ -20,10 +20,10 @@ import (
 	"github.com/go-logr/logr"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/vshn/wrestic/s3"
-	"github.com/vshn/wrestic/stats"
 
-	"github.com/vshn/wrestic/restic"
+	"github.com/vshn/wrestic/restic/cli"
+	"github.com/vshn/wrestic/restic/s3"
+	"github.com/vshn/wrestic/restic/stats"
 )
 
 type webhookserver struct {
@@ -46,7 +46,7 @@ type testEnvironment struct {
 	webhook   *webhookserver
 	finishC   chan error
 	t         *testing.T
-	resticCli *restic.Restic
+	resticCli *cli.Restic
 	log       logr.Logger
 	stats     *stats.Handler
 }
@@ -88,8 +88,8 @@ func getS3Repo() string {
 
 func initTest(t *testing.T) *testEnvironment {
 	mainLogger := glogr.New().WithName("wrestic")
-	statHandler := stats.NewHandler(os.Getenv(promURLEnv), os.Getenv(restic.Hostname), os.Getenv(webhookURLEnv), mainLogger)
-	resticCli := restic.New(context.TODO(), mainLogger, statHandler)
+	statHandler := stats.NewHandler(os.Getenv(promURLEnv), os.Getenv(cli.Hostname), os.Getenv(webhookURLEnv), mainLogger)
+	resticCli := cli.New(context.TODO(), mainLogger, statHandler)
 
 	cleanupDirs(t)
 	createTestFiles(t)
@@ -148,8 +148,8 @@ func startWebhookWebserver(t *testing.T) *webhookserver {
 
 func cleanupDirs(t *testing.T) {
 	dirs := []string{
-		os.Getenv(restic.BackupDirEnv),
-		os.Getenv(restic.RestoreDirEnv),
+		os.Getenv(cli.BackupDirEnv),
+		os.Getenv(cli.RestoreDirEnv),
 	}
 
 	for _, dir := range dirs {
@@ -159,7 +159,7 @@ func cleanupDirs(t *testing.T) {
 }
 
 func createTestFiles(t *testing.T) {
-	baseDir := os.Getenv(restic.BackupDirEnv)
+	baseDir := os.Getenv(cli.BackupDirEnv)
 
 	testDirs := []string{"PVC1", "PVC2"}
 	for _, subDir := range testDirs {
@@ -252,7 +252,7 @@ func TestRestore(t *testing.T) {
 	err := run(env.resticCli, env.log)
 	require.NoError(t, err)
 
-	webhookData := restic.RestoreStats{}
+	webhookData := cli.RestoreStats{}
 	err = json.Unmarshal(env.webhook.jsonData, &webhookData)
 	require.NoError(t, err)
 
@@ -266,7 +266,7 @@ func TestRestore(t *testing.T) {
 func TestBackup(t *testing.T) {
 	env := testBackup(t)
 
-	webhookData := restic.BackupStats{}
+	webhookData := cli.BackupStats{}
 	err := json.Unmarshal(env.webhook.jsonData, &webhookData)
 	require.NoError(t, err)
 
@@ -286,8 +286,8 @@ func TestRestoreDisk(t *testing.T) {
 	err := run(env.resticCli, env.log)
 	require.NoError(t, err)
 
-	restoredir := os.Getenv(restic.RestoreDirEnv)
-	backupdir := os.Getenv(restic.BackupDirEnv)
+	restoredir := os.Getenv(cli.RestoreDirEnv)
+	backupdir := os.Getenv(cli.BackupDirEnv)
 	restoreFilePath := filepath.Join(restoredir, backupdir, "PVC2/test.txt")
 	contents, err := ioutil.ReadFile(restoreFilePath)
 	require.NoError(t, err)

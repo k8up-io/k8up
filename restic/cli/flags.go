@@ -1,4 +1,4 @@
-package restic
+package cli
 
 // Flags stores arguments to pass to `restic` and can return them as array, see ApplyToCommand().
 type Flags map[string][]string

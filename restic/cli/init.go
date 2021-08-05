@@ -1,4 +1,4 @@
-package restic
+package cli
 
 import (
 	"bufio"
@@ -6,7 +6,7 @@ import (
 	"io"
 	"strings"
 
-	"github.com/vshn/wrestic/logging"
+	"github.com/vshn/wrestic/restic/logging"
 )
 
 // Init initialises a repository, checks if the repositor exists and will

@@ -1,11 +1,11 @@
-package restic
+package cli
 
 import (
 	"bytes"
 	"encoding/json"
 	"time"
 
-	"github.com/vshn/wrestic/logging"
+	"github.com/vshn/wrestic/restic/logging"
 )
 
 // Snapshot models a restic a single snapshot from the
@@ -41,8 +41,8 @@ func (r *Restic) listSnapshots(tags ArrayOpts, last bool) error {
 	buf := &bytes.Buffer{}
 
 	opts := CommandOptions{
-		Path: r.resticPath,
-		Args: r.globalFlags.ApplyToCommand("snapshots", "--json"),
+		Path:   r.resticPath,
+		Args:   r.globalFlags.ApplyToCommand("snapshots", "--json"),
 		StdOut: buf,
 		StdErr: logging.NewErrorWriter(snaplogger.WithName("restic")),
 	}
