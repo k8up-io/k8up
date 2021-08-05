@@ -48,7 +48,7 @@ Example VSCode run configuration:
       "type": "go",
       "request": "launch",
       "mode": "auto",
-      "program": "${workspaceFolder}/main.go",
+      "program": "${workspaceFolder}/cmd/operator/main.go",
       "env": {
         "BACKUP_IMAGE": "quay.io/vshn/wrestic:latest",
         "BACKUP_GLOBALS3ENDPOINT": "http://somewhere.example.org",
