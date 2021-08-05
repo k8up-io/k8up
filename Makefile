@@ -11,7 +11,7 @@ PROJECT_ROOT_DIR = .
 include Makefile.vars.mk
 
 e2e_make := $(MAKE) -C e2e
-go_build ?= go build -o $(BIN_FILENAME) main.go
+go_build ?= go build -o $(BIN_FILENAME) cmd/operator/main.go
 
 setup-envtest ?= go run sigs.k8s.io/controller-runtime/tools/setup-envtest $(ENVTEST_ADDITIONAL_FLAGS)
 
@@ -47,7 +47,7 @@ run: export BACKUP_ENABLE_LEADER_ELECTION = $(ENABLE_LEADER_ELECTION)
 run: export BACKUP_LOG_LEVEL = debug
 run: export BACKUP_OPERATOR_NAMESPACE = default
 run: fmt vet ## Run against the configured Kubernetes cluster in ~/.kube/config
-	go run ./main.go
+	go run ./cmd/operator/main.go
 
 .PHONY: install
 install: generate ## Install CRDs into a cluster
