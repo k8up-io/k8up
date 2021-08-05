@@ -11,7 +11,7 @@ PROJECT_ROOT_DIR = .
 include Makefile.vars.mk
 
 e2e_make := $(MAKE) -C e2e
-go_build ?= go build -o $(BIN_FILENAME) cmd/operator/main.go
+go_build ?= go build -o $(BIN_FILENAME) cmd/k8up/main.go
 
 setup-envtest ?= go run sigs.k8s.io/controller-runtime/tools/setup-envtest $(ENVTEST_ADDITIONAL_FLAGS)
 
@@ -44,10 +44,10 @@ build: generate fmt vet $(BIN_FILENAME) ## Build manager binary
 
 .PHONY: run
 run: export BACKUP_ENABLE_LEADER_ELECTION = $(ENABLE_LEADER_ELECTION)
-run: export BACKUP_LOG_LEVEL = debug
+run: export K8UP_DEBUG = true
 run: export BACKUP_OPERATOR_NAMESPACE = default
 run: fmt vet ## Run against the configured Kubernetes cluster in ~/.kube/config
-	go run ./cmd/operator/main.go
+	go run ./cmd/k8up/main.go
 
 .PHONY: install
 install: generate ## Install CRDs into a cluster
@@ -86,14 +86,13 @@ lint: fmt vet ## Invokes the fmt and vet targets
 	git diff --exit-code
 
 .PHONY: docker-build
-docker-build: export GOOS = linux
 docker-build: $(BIN_FILENAME) ## Build the docker image
-	docker build . -t $(DOCKER_IMG) -t $(QUAY_IMG) -t $(E2E_IMG)
+	docker build . --target=k8up -t $(K8UP_DOCKER_IMG) -t $(K8UP_QUAY_IMG) -t $(K8UP_E2E_IMG)
+	docker build . --target=wrestic -t $(WRESTIC_DOCKER_IMG) -t $(WRESTIC_QUAY_IMG) -t $(WRESTIC_E2E_IMG)
 
 .PHONY: docker-push
 docker-push: ## Push the docker image
-	docker push $(DOCKER_IMG)
-	docker push $(QUAY_IMG)
+	docker push $(K8UP_DOCKER_IMG) $(WRESTIC_DOCKER_IMG) $(K8UP_QUAY_IMG) $(WRESTIC_QUAY_IMG)
 
 clean: export KUBECONFIG = $(KIND_KUBECONFIG)
 clean: e2e-clean kind-clean ## Cleans up the generated resources
@@ -117,6 +116,7 @@ $(testbin_created):
 # Build the binary without running generators
 .PHONY: $(BIN_FILENAME)
 $(BIN_FILENAME): export CGO_ENABLED = 0
+$(BIN_FILENAME): export GOOS = linux
 $(BIN_FILENAME):
 	$(go_build)
 

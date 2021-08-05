@@ -22,8 +22,10 @@ KIND_KUBECTL_ARGS ?= --validate=true
 
 SHASUM ?= $(shell command -v sha1sum > /dev/null && echo "sha1sum" || echo "shasum -a1")
 E2E_TAG ?= e2e_$(shell $(SHASUM) $(BIN_FILENAME) | cut -b-8)
-E2E_REPO ?= local.dev/k8up/e2e
-E2E_IMG = $(E2E_REPO):$(E2E_TAG)
+E2E_REPO ?= local.dev/k8up
+K8UP_E2E_IMG = $(E2E_REPO)/k8up:$(E2E_TAG)
+WRESTIC_E2E_IMG = $(E2E_REPO)/wrestic:$(E2E_TAG)
+
 BATS_FILES ?= .
 
 ENVTEST_ADDITIONAL_FLAGS ?=
@@ -33,8 +35,9 @@ INTEGRATION_TEST_DEBUG_OUTPUT ?= false
 KUSTOMIZE ?= go run sigs.k8s.io/kustomize/kustomize/v3
 
 # Image URL to use all building/pushing image targets
-DOCKER_IMG ?= docker.io/vshn/k8up:$(IMG_TAG)
-QUAY_IMG ?= quay.io/vshn/k8up:$(IMG_TAG)
-WRESTIC_IMG ?= quay.io/vshn/wrestic:latest
+K8UP_DOCKER_IMG ?= docker.io/vshn/k8up:$(IMG_TAG)
+WRESTIC_DOCKER_IMG ?= docker.io/vshn/wrestic:$(IMG_TAG)
+K8UP_QUAY_IMG ?= quay.io/vshn/k8up:$(IMG_TAG)
+WRESTIC_QUAY_IMG ?= quay.io/vshn/wrestic:$(IMG_TAG)
 
 testbin_created = $(TESTBIN_DIR)/.created

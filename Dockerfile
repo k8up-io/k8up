@@ -1,6 +1,8 @@
-FROM docker.io/library/alpine:3.14 as runtime
+FROM docker.io/library/alpine:3.14 as k8up
 
 ENTRYPOINT ["k8up"]
+
+RUN mkdir /.cache && chmod -R g=u /.cache
 
 RUN apk add --update --no-cache \
     bash \
@@ -10,7 +12,21 @@ RUN apk add --update --no-cache \
     openssh-client \
     tzdata
 
-COPY --from=restic/restic:0.12.1 /usr/bin/restic /usr/bin/restic
+ENV RESTIC_BINARY=/usr/local/bin/restic
 
-COPY k8up /usr/bin/k8up
-USER 65532:65532
+COPY wrestic/wrestic.sh /app/wrestic
+COPY --from=restic/restic:0.12.1 /usr/bin/restic $RESTIC_BINARY
+COPY k8up /usr/local/bin/
+
+RUN chmod a+x /usr/local/bin/k8up /usr/local/bin/restic /app/wrestic
+
+USER 65532
+
+## wrestic compatibility shim
+FROM k8up as wrestic
+
+WORKDIR /app
+ENTRYPOINT ["./wrestic"]
+
+## Default build shall not contain the wrestic compatibility stuff
+FROM k8up as default

@@ -1,4 +1,4 @@
-package main
+package operator
 
 import (
 	"fmt"
@@ -9,63 +9,48 @@ import (
 
 	"github.com/knadh/koanf"
 	"github.com/knadh/koanf/providers/env"
-	"go.uber.org/zap/zapcore"
+	"github.com/urfave/cli/v2"
 	batchv1 "k8s.io/api/batch/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	k8upv1alpha1 "github.com/vshn/k8up/api/v1alpha1"
+	"github.com/vshn/k8up/cmd"
 	"github.com/vshn/k8up/controllers"
 	"github.com/vshn/k8up/operator/cfg"
 	"github.com/vshn/k8up/operator/executor"
 	// +kubebuilder:scaffold:imports
 )
 
-var (
-	// These will be populated by Goreleaser
-	version string
-	commit  string
-	date    string
+const leaderElectionID = "d2ab61da.syn.tools"
 
-	scheme   = runtime.NewScheme()
-	setupLog = ctrl.Log.WithName("setup")
-	// Global koanfInstance instance. Use . as the key path delimiter.
-	koanfInstance = koanf.New(".")
+var (
+	Command = &cli.Command{
+		Name:        "operator",
+		Description: "Start k8up in operator mode",
+		Action:      operatorMain,
+	}
 )
 
-func init() {
-	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
+func operatorMain(c *cli.Context) error {
+	operatorLog := cmd.Logger(c, "operator")
+	operatorLog.Info("initializing")
 
-	utilruntime.Must(k8upv1alpha1.AddToScheme(scheme))
-	utilruntime.Must(batchv1.AddToScheme(scheme))
-	// +kubebuilder:scaffold:scheme
-}
-
-func main() {
-
-	loadEnvironmentVariables()
-	level := zapcore.InfoLevel
-	if strings.EqualFold(cfg.Config.LogLevel, "debug") {
-		level = zapcore.DebugLevel
-	}
-	ctrl.SetLogger(zap.New(zap.UseDevMode(true), zap.Level(level)))
-
-	setupLog.WithValues("version", version, "date", date, "commit", commit).Info("Starting K8up operator")
 	executor.GetExecutor()
+	loadEnvironmentVariables()
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
-		Scheme:             scheme,
+		Scheme:             k8upScheme(),
 		MetricsBindAddress: cfg.Config.MetricsBindAddress,
 		Port:               9443,
 		LeaderElection:     cfg.Config.EnableLeaderElection,
-		LeaderElectionID:   "d2ab61da.syn.tools",
+		LeaderElectionID:   leaderElectionID,
 	})
 	if err != nil {
-		setupLog.Error(err, "unable to start K8up operator")
-		os.Exit(1)
+		operatorLog.Error(err, "unable to initialize operator mode", "step", "manager")
+		return err
 	}
 
 	for name, reconciler := range map[string]controllers.ReconcilerSetup{
@@ -78,31 +63,44 @@ func main() {
 		"Job":      &controllers.JobReconciler{},
 	} {
 		if err := reconciler.SetupWithManager(mgr, ctrl.Log.WithName("controllers").WithName(name)); err != nil {
-			setupLog.Error(err, "unable to create controller", "controller", name)
-			os.Exit(1)
+			operatorLog.Error(err, "unable to initialize operator mode", "step", "controller", "controller", name)
+			return err
 		}
 	}
 	// +kubebuilder:scaffold:builder
 
 	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {
-		setupLog.Error(err, "problem running K8up")
-		os.Exit(1)
+		operatorLog.Error(err, "unable to initialize operator mode", "step", "signal_handler")
+		return err
 	}
+
+	return nil
+}
+
+func k8upScheme() *runtime.Scheme {
+	scheme := runtime.NewScheme()
+	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
+	utilruntime.Must(batchv1.AddToScheme(scheme))
+	utilruntime.Must(k8upv1alpha1.AddToScheme(scheme))
+	// +kubebuilder:scaffold:scheme
+	return scheme
 }
 
 func loadEnvironmentVariables() {
+	operatorKoanf := koanf.New(".")
 	prefix := "BACKUP_"
 	// Load environment variables
-	err := koanfInstance.Load(env.Provider(prefix, ".", func(s string) string {
+	err := operatorKoanf.Load(env.Provider(prefix, ".", func(s string) string {
 		s = strings.TrimPrefix(s, prefix)
-		s = strings.Replace(strings.ToLower(s), "_", "-", -1)
+		s = strings.ToLower(s)
+		s = strings.Replace(s, "_", "-", -1)
 		return s
 	}), nil)
 	if err != nil {
 		_, _ = fmt.Fprintf(os.Stderr, "could not load environment variables: %v\n", err)
 	}
 
-	if err := koanfInstance.UnmarshalWithConf("", &cfg.Config, koanf.UnmarshalConf{Tag: "koanf", FlatPaths: true}); err != nil {
+	if err := operatorKoanf.UnmarshalWithConf("", &cfg.Config, koanf.UnmarshalConf{Tag: "koanf", FlatPaths: true}); err != nil {
 		_, _ = fmt.Fprintf(os.Stderr, "could not merge defaults with settings from environment variables: %v\n", err)
 	}
 	if err := cfg.Config.ValidateSyntax(); err != nil {

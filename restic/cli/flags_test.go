@@ -71,8 +71,8 @@ func TestFlags_ApplyTo(t *testing.T) {
 			expectedArgs: []string{},
 		},
 		"GivenCommand_ExpectJustCommand": {
-			givenCommand:     "command",
-			expectedArgs:     []string{"command"},
+			givenCommand: "command",
+			expectedArgs: []string{"command"},
 		},
 		"GivenCommandWithCommandArgs_ExpectJustCommandWithCommandArgs": {
 			givenCommand:     "command",
@@ -80,9 +80,9 @@ func TestFlags_ApplyTo(t *testing.T) {
 			expectedArgs:     []string{"command", "--command-argument", "parameter"},
 		},
 		"GivenCommandWithFlag_ExpectJustCommandAndFlag": {
-			givenCommand:     "command",
-			givenFlags:       map[string][]string{"--flag": {}},
-			expectedArgs:     []string{"command", "--flag"},
+			givenCommand: "command",
+			givenFlags:   map[string][]string{"--flag": {}},
+			expectedArgs: []string{"command", "--flag"},
 		},
 		"GivenCommandWithCommandArgsAndFlag_ExpectCommandAndCommandArgsAndFlag": {
 			givenCommand:     "command",
@@ -97,24 +97,24 @@ func TestFlags_ApplyTo(t *testing.T) {
 			expectedArgs:     []string{"command", "--flag", "flag-argument", "--command-argument", "parameter"},
 		},
 		"GivenCommandWithFlagAndFlagArg_ExpectCommandWithFlagAndFlagArg": {
-			givenCommand:     "command",
-			givenFlags:       map[string][]string{"--flag": {"flag-argument"}},
-			expectedArgs:     []string{"command", "--flag", "flag-argument"},
+			givenCommand: "command",
+			givenFlags:   map[string][]string{"--flag": {"flag-argument"}},
+			expectedArgs: []string{"command", "--flag", "flag-argument"},
 		},
 		"GivenCommandWithFlagAndEmptyFlagArg_ExpectCommandWithFlagAndEmptyFlagArg": {
-			givenCommand:     "command",
-			givenFlags:       map[string][]string{"--flag": {""}},
-			expectedArgs:     []string{"command", "--flag", ""},
+			givenCommand: "command",
+			givenFlags:   map[string][]string{"--flag": {""}},
+			expectedArgs: []string{"command", "--flag", ""},
 		},
 		"GivenCommandWithFlagAndMultipleFlagArgs_ExpectCommandWithFlagAndArgCombination": {
-			givenCommand:     "command",
-			givenFlags:       map[string][]string{"--flag": {"flag-argument1", "flag-argument2"}},
-			expectedArgs:     []string{"command", "--flag", "flag-argument1", "--flag", "flag-argument2"},
+			givenCommand: "command",
+			givenFlags:   map[string][]string{"--flag": {"flag-argument1", "flag-argument2"}},
+			expectedArgs: []string{"command", "--flag", "flag-argument1", "--flag", "flag-argument2"},
 		},
 		"GivenCommandWithTwoFlags_ExpectCommandWithTwoFlagsAndTheirArguments": {
-			givenCommand:     "command",
-			givenFlags:       map[string][]string{"--flag1": {"flag-argument"}, "--flag2": {}},
-			expectedArgs:     []string{"command", "--flag1", "flag-argument", "--flag2"},
+			givenCommand: "command",
+			givenFlags:   map[string][]string{"--flag1": {"flag-argument"}, "--flag2": {}},
+			expectedArgs: []string{"command", "--flag1", "flag-argument", "--flag2"},
 		},
 		"GivenCommandWithCommandArgsAndMultipleFlagsWithMultipleFlagArgs_ExpectCorrectCommand": {
 			givenCommand:     "command",

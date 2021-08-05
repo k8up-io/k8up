@@ -17,6 +17,7 @@ require (
 	github.com/prometheus/client_golang v1.11.0
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/stretchr/testify v1.7.0
+	github.com/urfave/cli/v2 v2.3.0 // indirect
 	go.uber.org/zap v1.18.1
 	k8s.io/api v0.20.5
 	k8s.io/apimachinery v0.20.5

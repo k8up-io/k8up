@@ -65,7 +65,7 @@ func (r *Restic) getLockList(log logr.Logger) ([]string, error) {
 	list := &locklist{}
 
 	flags := Combine(r.globalFlags, Flags{
-		"--json": {},
+		"--json":    {},
 		"--no-lock": {},
 	})
 

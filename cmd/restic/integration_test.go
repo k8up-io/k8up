@@ -1,6 +1,6 @@
 // +build integration
 
-package main
+package restic
 
 import (
 	"archive/tar"
@@ -177,23 +177,21 @@ func createTestFiles(t *testing.T) {
 }
 
 func resetFlags() {
-	empty := ""
-	falseBool := false
-	check = &falseBool
-	prune = &falseBool
-	restore = &falseBool
-	restoreSnap = &empty
-	verifyRestore = &falseBool
-	restoreType = &empty
-	restoreFilter = &empty
-	archive = &falseBool
+	check = false
+	prune = false
+	restore = false
+	restoreSnap = ""
+	verifyRestore = false
+	restoreType = ""
+	restoreFilter = ""
+	archive = false
 }
 
 func testBackup(t *testing.T) *testEnvironment {
 	env := initTest(t)
 
-	cli := env.resticCli
-	err := run(nil, cli, env.log)
+	resticCli := env.resticCli
+	err := run(nil, resticCli, env.log)
 	require.NoError(t, err)
 
 	return env
@@ -244,10 +242,8 @@ func TestRestore(t *testing.T) {
 	env := testBackup(t)
 	defer env.webhook.srv.Shutdown(context.TODO())
 
-	restoreBool := true
-	restore = &restoreBool
-	rstType := "s3"
-	restoreType = &rstType
+	restore = true
+	restoreType = "s3"
 
 	err := run(nil, env.resticCli, env.log)
 	require.NoError(t, err)
@@ -276,10 +272,8 @@ func TestBackup(t *testing.T) {
 func TestRestoreDisk(t *testing.T) {
 	env := testBackup(t)
 
-	restoreBool := true
-	restore = &restoreBool
-	rstType := "folder"
-	restoreType = &rstType
+	restore = true
+	restoreType = "folder"
 
 	_ = os.Setenv("TRIM_RESTOREPATH", "false")
 
@@ -298,10 +292,8 @@ func TestRestoreDisk(t *testing.T) {
 func TestArchive(t *testing.T) {
 	env := testBackup(t)
 
-	archiveBool := true
-	archive = &archiveBool
-	restoreTypeVar := "s3"
-	restoreType = &restoreTypeVar
+	archive = true
+	restoreType = "s3"
 
 	err := run(nil, env.resticCli, env.log)
 	require.NoError(t, err)

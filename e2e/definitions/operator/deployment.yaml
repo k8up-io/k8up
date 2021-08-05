@@ -10,6 +10,8 @@ spec:
       containers:
       - name: k8up
         image: $E2E_IMAGE
+        args:
+          - operator
         env:
         - name: BACKUP_LOG_LEVEL
           value: debug

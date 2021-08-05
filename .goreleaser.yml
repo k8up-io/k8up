@@ -2,7 +2,9 @@
 # Make sure to check the documentation at http://goreleaser.com
 
 builds:
-- env:
+- main: ./cmd/k8up
+  binary: k8up
+  env:
   - CGO_ENABLED=0 # this is needed otherwise the Docker image build is faulty
   goarch:
   - amd64
@@ -16,10 +18,9 @@ snapshot:
   name_template: "{{ .Tag }}-snapshot"
 
 dockers:
-
 - image_templates:
-  - "docker.io/vshn/k8up:v{{ .Version }}"
-  - "quay.io/vshn/k8up:v{{ .Version }}"
+  - "docker.io/vshn/k8up:{{ .Version }}"
+  - "quay.io/vshn/k8up:{{ .Version }}"
 
   # For prereleases, updating `latest` and the floating tags of the major
   # version does not make sense. Only the image for the exact version should
@@ -29,6 +30,26 @@ dockers:
 
   - "{{ if not .Prerelease }}docker.io/vshn/k8up:latest{{ end }}"
   - "{{ if not .Prerelease }}quay.io/vshn/k8up:latest{{ end }}"
+  build_flag_templates:
+  - "--target=k8up"
+  extra_files:
+    - wrestic/wrestic.sh
+- image_templates:
+  - "docker.io/vshn/wrestic:{{ .Version }}"
+  - "quay.io/vshn/wrestic:{{ .Version }}"
+
+  # For prereleases, updating `latest` and the floating tags of the major
+  # version does not make sense. Only the image for the exact version should
+  # be pushed.
+  - "{{ if not .Prerelease }}docker.io/vshn/wrestic:v{{ .Major }}{{ end }}"
+  - "{{ if not .Prerelease }}quay.io/vshn/wrestic:v{{ .Major }}{{ end }}"
+
+  - "{{ if not .Prerelease }}docker.io/vshn/wrestic:latest{{ end }}"
+  - "{{ if not .Prerelease }}quay.io/vshn/wrestic:latest{{ end }}"
+  build_flag_templates:
+  - "--target=wrestic"
+  extra_files:
+  - wrestic/wrestic.sh
 
 release:
   prerelease: auto
