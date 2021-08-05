@@ -1,6 +1,8 @@
-package restic
+package cli
 
-import "github.com/vshn/wrestic/logging"
+import (
+	"github.com/vshn/wrestic/restic/logging"
+)
 
 // Unlock will remove stale locks from the repository
 // If the all flag is set to true, even non-stale locks are removed.

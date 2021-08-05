@@ -13,9 +13,10 @@ import (
 	"github.com/go-logr/glogr"
 	"github.com/go-logr/logr"
 	"github.com/golang/glog"
-	"github.com/vshn/wrestic/kubernetes"
-	"github.com/vshn/wrestic/restic"
-	"github.com/vshn/wrestic/stats"
+
+	"github.com/vshn/wrestic/restic/cli"
+	"github.com/vshn/wrestic/restic/kubernetes"
+	"github.com/vshn/wrestic/restic/stats"
 )
 
 const (
@@ -26,8 +27,9 @@ const (
 )
 
 var (
-	Version       = "unreleased"
-	BuildDate     = "now"
+	Version   = "unreleased"
+	BuildDate = "now"
+
 	check         = flag.Bool("check", false, "Set if the container should run a check")
 	prune         = flag.Bool("prune", false, "Set if the container should run a prune")
 	restore       = flag.Bool("restore", false, "Whether or not a restore should be done")
@@ -36,7 +38,8 @@ var (
 	restoreType   = flag.String("restoreType", "", "Type of this restore, folder or S3")
 	restoreFilter = flag.String("restoreFilter", "", "Simple filter to define what should get restored. For example the PVC name")
 	archive       = flag.Bool("archive", false, "")
-	tags          restic.ArrayOpts
+
+	tags cli.ArrayOpts
 )
 
 func printVersion(log logr.Logger) {
@@ -66,9 +69,9 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	cancelOnTermination(cancel, mainLogger)
 
-	statHandler := stats.NewHandler(os.Getenv(promURLEnv), os.Getenv(restic.Hostname), os.Getenv(webhookURLEnv), mainLogger)
+	statHandler := stats.NewHandler(os.Getenv(promURLEnv), os.Getenv(cli.Hostname), os.Getenv(webhookURLEnv), mainLogger)
 
-	resticCLI := restic.New(ctx, mainLogger, statHandler)
+	resticCLI := cli.New(ctx, mainLogger, statHandler)
 
 	err := run(resticCLI, mainLogger)
 	if err != nil {
@@ -77,7 +80,7 @@ func main() {
 
 }
 
-func run(resticCLI *restic.Restic, mainLogger logr.Logger) error {
+func run(resticCLI *cli.Restic, mainLogger logr.Logger) error {
 	if err := resticCLI.Init(); err != nil {
 		mainLogger.Error(err, "failed to initialise the repository")
 		return err
@@ -121,15 +124,15 @@ func run(resticCLI *restic.Restic, mainLogger logr.Logger) error {
 
 	if *restore {
 		skipBackup = true
-		if err := resticCLI.Restore(*restoreSnap, restic.RestoreOptions{
-			RestoreType:   restic.RestoreType(*restoreType),
-			RestoreDir:    os.Getenv(restic.RestoreDirEnv),
+		if err := resticCLI.Restore(*restoreSnap, cli.RestoreOptions{
+			RestoreType:   cli.RestoreType(*restoreType),
+			RestoreDir:    os.Getenv(cli.RestoreDirEnv),
 			RestoreFilter: *restoreFilter,
 			Verify:        *verifyRestore,
-			S3Destination: restic.S3Bucket{
-				Endpoint:  os.Getenv(restic.RestoreS3EndpointEnv),
-				AccessKey: os.Getenv(restic.RestoreS3AccessKeyIDEnv),
-				SecretKey: os.Getenv(restic.RestoreS3AccessKeyIDEnv),
+			S3Destination: cli.S3Bucket{
+				Endpoint:  os.Getenv(cli.RestoreS3EndpointEnv),
+				AccessKey: os.Getenv(cli.RestoreS3AccessKeyIDEnv),
+				SecretKey: os.Getenv(cli.RestoreS3AccessKeyIDEnv),
 			},
 		}, tags); err != nil {
 			mainLogger.Error(err, "restore job failed")
@@ -165,7 +168,7 @@ func run(resticCLI *restic.Restic, mainLogger logr.Logger) error {
 	return nil
 }
 
-func backupAnnotatedPods(resticCLI *restic.Restic, mainLogger logr.Logger) error {
+func backupAnnotatedPods(resticCLI *cli.Restic, mainLogger logr.Logger) error {
 	commandAnnotation := os.Getenv(commandEnv)
 	if commandAnnotation == "" {
 		commandAnnotation = "k8up.syn.tools/backupcommand"
@@ -183,11 +186,11 @@ func backupAnnotatedPods(resticCLI *restic.Restic, mainLogger logr.Logger) error
 		return nil
 	}
 
-	podLister := kubernetes.NewPodLister(commandAnnotation, fileextAnnotation, os.Getenv(restic.Hostname), mainLogger)
+	podLister := kubernetes.NewPodLister(commandAnnotation, fileextAnnotation, os.Getenv(cli.Hostname), mainLogger)
 	podList, err := podLister.ListPods()
 
 	if err != nil {
-		mainLogger.Error(err, "could not list pods", "namespace", os.Getenv(restic.Hostname))
+		mainLogger.Error(err, "could not list pods", "namespace", os.Getenv(cli.Hostname))
 		return nil
 	}
 
@@ -197,7 +200,7 @@ func backupAnnotatedPods(resticCLI *restic.Restic, mainLogger logr.Logger) error
 			mainLogger.Error(errors.New("error occurred during data stream from k8s"), "pod execution was interrupted")
 			return err
 		}
-		filename := fmt.Sprintf("/%s-%s", os.Getenv(restic.Hostname), pod.ContainerName)
+		filename := fmt.Sprintf("/%s-%s", os.Getenv(cli.Hostname), pod.ContainerName)
 		err = resticCLI.StdinBackup(data, filename, pod.FileExtension, tags)
 		if err != nil {
 			mainLogger.Error(err, "backup commands failed")
@@ -219,7 +222,7 @@ func cancelOnTermination(cancel context.CancelFunc, mainLogger logr.Logger) {
 }
 
 func getBackupDir() string {
-	backupDir := os.Getenv(restic.BackupDirEnv)
+	backupDir := os.Getenv(cli.BackupDirEnv)
 	if backupDir == "" {
 		return "/data"
 	}

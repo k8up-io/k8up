@@ -1,4 +1,4 @@
-package restic
+package cli
 
 import (
 	"archive/tar"
@@ -15,8 +15,9 @@ import (
 	"time"
 
 	"github.com/go-logr/logr"
-	"github.com/vshn/wrestic/logging"
-	"github.com/vshn/wrestic/s3"
+
+	"github.com/vshn/wrestic/restic/logging"
+	"github.com/vshn/wrestic/restic/s3"
 )
 
 const (

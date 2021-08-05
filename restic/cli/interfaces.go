@@ -1,4 +1,4 @@
-package restic
+package cli
 
 import "github.com/prometheus/client_golang/prometheus"
 
