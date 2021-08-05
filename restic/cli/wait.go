@@ -4,7 +4,8 @@ import (
 	"time"
 
 	"github.com/go-logr/logr"
-	"github.com/vshn/wrestic/restic/logging"
+
+	"github.com/vshn/k8up/restic/logging"
 )
 
 type Lock struct {

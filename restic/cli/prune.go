@@ -3,7 +3,7 @@ package cli
 import (
 	"os"
 
-	"github.com/vshn/wrestic/restic/logging"
+	"github.com/vshn/k8up/restic/logging"
 )
 
 // Prune will enforce the retention policy onto the repository

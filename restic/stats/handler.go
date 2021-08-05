@@ -9,7 +9,8 @@ import (
 	"github.com/go-logr/logr"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/push"
-	"github.com/vshn/wrestic/restic/cli"
+
+	"github.com/vshn/k8up/restic/cli"
 )
 
 const (

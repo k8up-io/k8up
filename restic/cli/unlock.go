@@ -1,7 +1,7 @@
 package cli
 
 import (
-	"github.com/vshn/wrestic/restic/logging"
+	"github.com/vshn/k8up/restic/logging"
 )
 
 // Unlock will remove stale locks from the repository

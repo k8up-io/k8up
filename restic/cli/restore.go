@@ -16,8 +16,8 @@ import (
 
 	"github.com/go-logr/logr"
 
-	"github.com/vshn/wrestic/restic/logging"
-	"github.com/vshn/wrestic/restic/s3"
+	"github.com/vshn/k8up/restic/logging"
+	"github.com/vshn/k8up/restic/s3"
 )
 
 const (

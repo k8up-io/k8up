@@ -5,13 +5,14 @@ import (
 	"io"
 	"strings"
 
-	"github.com/firepear/qsplit"
+	"github.com/firepear/qsplit/v2"
 	"github.com/go-logr/logr"
-	"github.com/vshn/wrestic/restic/logging"
 	apiv1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/remotecommand"
+
+	"github.com/vshn/k8up/restic/logging"
 )
 
 type ExecData struct {

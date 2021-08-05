@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/vshn/wrestic/restic/logging"
+	"github.com/vshn/k8up/restic/logging"
 )
 
 // Snapshot models a restic a single snapshot from the

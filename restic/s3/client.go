@@ -6,7 +6,7 @@ import (
 	"net/url"
 	"strings"
 
-	minio "github.com/minio/minio-go"
+	"github.com/minio/minio-go"
 )
 
 // Client wraps the minio s3 client

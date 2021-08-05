@@ -1,6 +1,7 @@
 package kubernetes
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/go-logr/logr"
@@ -18,6 +19,7 @@ type PodLister struct {
 	err                     error
 	namespace               string
 	log                     logr.Logger
+	ctx                     context.Context
 }
 
 // BackupPod contains all information nessecary to execute the backupcommands.
@@ -30,7 +32,7 @@ type BackupPod struct {
 }
 
 // NewPodLister returns a PodLister configured to find the defined annotations.
-func NewPodLister(backupCommandAnnotation, fileExtensionAnnotation, namespace string, log logr.Logger) *PodLister {
+func NewPodLister(ctx context.Context, backupCommandAnnotation, fileExtensionAnnotation, namespace string, log logr.Logger) *PodLister {
 	k8cli, err := newk8sClient()
 	if err != nil {
 		err = fmt.Errorf("can't create podLister: %v", err)
@@ -42,6 +44,7 @@ func NewPodLister(backupCommandAnnotation, fileExtensionAnnotation, namespace st
 		err:                     err,
 		namespace:               namespace,
 		log:                     log.WithName("k8sClient"),
+		ctx:                     ctx,
 	}
 }
 
@@ -53,15 +56,13 @@ func (p *PodLister) ListPods() ([]BackupPod, error) {
 		return nil, p.err
 	}
 
-	pods, err := p.k8scli.CoreV1().Pods(p.namespace).List(metav1.ListOptions{})
+	pods, err := p.k8scli.CoreV1().Pods(p.namespace).List(p.ctx, metav1.ListOptions{})
 	if err != nil {
 		return nil, fmt.Errorf("can't list pods: %v", err)
 	}
 
-	foundPods := []BackupPod{}
-
+	foundPods := make([]BackupPod, 0)
 	sameOwner := make(map[string]bool)
-
 	for _, pod := range pods.Items {
 		if pod.Status.Phase != corev1.PodRunning {
 			continue
@@ -86,7 +87,6 @@ func (p *PodLister) ListPods() ([]BackupPod, error) {
 					FileExtension: fileExtension,
 				})
 			}
-
 		}
 	}
 

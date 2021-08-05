@@ -6,7 +6,8 @@ import (
 	"os"
 
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/vshn/wrestic/restic/logging"
+
+	"github.com/vshn/k8up/restic/logging"
 )
 
 // RawMetrics contains the raw metrics that can be obtained at the end of a

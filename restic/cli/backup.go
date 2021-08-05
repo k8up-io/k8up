@@ -10,8 +10,8 @@ import (
 
 	"github.com/go-logr/logr"
 
-	"github.com/vshn/wrestic/restic/kubernetes"
-	"github.com/vshn/wrestic/restic/logging"
+	"github.com/vshn/k8up/restic/kubernetes"
+	"github.com/vshn/k8up/restic/logging"
 )
 
 // Backup backup to the repository. It will loop through all subfolders of

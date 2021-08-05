@@ -21,9 +21,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/vshn/wrestic/restic/cli"
-	"github.com/vshn/wrestic/restic/s3"
-	"github.com/vshn/wrestic/restic/stats"
+	"github.com/vshn/k8up/restic/cli"
+	"github.com/vshn/k8up/restic/s3"
+	"github.com/vshn/k8up/restic/stats"
 )
 
 type webhookserver struct {
@@ -193,7 +193,7 @@ func testBackup(t *testing.T) *testEnvironment {
 	env := initTest(t)
 
 	cli := env.resticCli
-	err := run(cli, env.log)
+	err := run(nil, cli, env.log)
 	require.NoError(t, err)
 
 	return env
@@ -249,7 +249,7 @@ func TestRestore(t *testing.T) {
 	rstType := "s3"
 	restoreType = &rstType
 
-	err := run(env.resticCli, env.log)
+	err := run(nil, env.resticCli, env.log)
 	require.NoError(t, err)
 
 	webhookData := cli.RestoreStats{}
@@ -283,7 +283,7 @@ func TestRestoreDisk(t *testing.T) {
 
 	_ = os.Setenv("TRIM_RESTOREPATH", "false")
 
-	err := run(env.resticCli, env.log)
+	err := run(nil, env.resticCli, env.log)
 	require.NoError(t, err)
 
 	restoredir := os.Getenv(cli.RestoreDirEnv)
@@ -303,7 +303,7 @@ func TestArchive(t *testing.T) {
 	restoreTypeVar := "s3"
 	restoreType = &restoreTypeVar
 
-	err := run(env.resticCli, env.log)
+	err := run(nil, env.resticCli, env.log)
 	require.NoError(t, err)
 
 	testCheckS3Restore(t)

@@ -14,9 +14,9 @@ import (
 	"github.com/go-logr/logr"
 	"github.com/golang/glog"
 
-	"github.com/vshn/wrestic/restic/cli"
-	"github.com/vshn/wrestic/restic/kubernetes"
-	"github.com/vshn/wrestic/restic/stats"
+	"github.com/vshn/k8up/restic/cli"
+	"github.com/vshn/k8up/restic/kubernetes"
+	"github.com/vshn/k8up/restic/stats"
 )
 
 const (
@@ -28,7 +28,7 @@ const (
 
 var (
 	Version   = "unreleased"
-	BuildDate = "now"
+	BuildDate = "unknown"
 
 	check         = flag.Bool("check", false, "Set if the container should run a check")
 	prune         = flag.Bool("prune", false, "Set if the container should run a prune")
@@ -73,14 +73,14 @@ func main() {
 
 	resticCLI := cli.New(ctx, mainLogger, statHandler)
 
-	err := run(resticCLI, mainLogger)
+	err := run(ctx, resticCLI, mainLogger)
 	if err != nil {
 		os.Exit(1)
 	}
 
 }
 
-func run(resticCLI *cli.Restic, mainLogger logr.Logger) error {
+func run(ctx context.Context, resticCLI *cli.Restic, mainLogger logr.Logger) error {
 	if err := resticCLI.Init(); err != nil {
 		mainLogger.Error(err, "failed to initialise the repository")
 		return err
@@ -152,7 +152,7 @@ func run(resticCLI *cli.Restic, mainLogger logr.Logger) error {
 		return nil
 	}
 
-	err := backupAnnotatedPods(resticCLI, mainLogger)
+	err := backupAnnotatedPods(ctx, resticCLI, mainLogger)
 	if err != nil {
 		mainLogger.Error(err, "backup job failed", "step", "backup of annotated pods")
 		return err
@@ -168,7 +168,7 @@ func run(resticCLI *cli.Restic, mainLogger logr.Logger) error {
 	return nil
 }
 
-func backupAnnotatedPods(resticCLI *cli.Restic, mainLogger logr.Logger) error {
+func backupAnnotatedPods(ctx context.Context, resticCLI *cli.Restic, mainLogger logr.Logger) error {
 	commandAnnotation := os.Getenv(commandEnv)
 	if commandAnnotation == "" {
 		commandAnnotation = "k8up.syn.tools/backupcommand"
@@ -186,7 +186,7 @@ func backupAnnotatedPods(resticCLI *cli.Restic, mainLogger logr.Logger) error {
 		return nil
 	}
 
-	podLister := kubernetes.NewPodLister(commandAnnotation, fileextAnnotation, os.Getenv(cli.Hostname), mainLogger)
+	podLister := kubernetes.NewPodLister(ctx, commandAnnotation, fileextAnnotation, os.Getenv(cli.Hostname), mainLogger)
 	podList, err := podLister.ListPods()
 
 	if err != nil {

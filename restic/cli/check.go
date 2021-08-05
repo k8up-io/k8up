@@ -1,7 +1,7 @@
 package cli
 
 import (
-	"github.com/vshn/wrestic/restic/logging"
+	"github.com/vshn/k8up/restic/logging"
 )
 
 // Check will check the repository for errors
