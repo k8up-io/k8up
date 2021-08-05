@@ -12,9 +12,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 
 	k8upv1alpha1 "github.com/vshn/k8up/api/v1alpha1"
-	"github.com/vshn/k8up/cfg"
-	"github.com/vshn/k8up/handler"
-	"github.com/vshn/k8up/job"
+	"github.com/vshn/k8up/operator/cfg"
+	"github.com/vshn/k8up/operator/handler"
+	"github.com/vshn/k8up/operator/job"
 )
 
 // PruneReconciler reconciles a Prune object

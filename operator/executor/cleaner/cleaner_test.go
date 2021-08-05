@@ -5,15 +5,15 @@ package cleaner_test
 import (
 	"testing"
 
-	k8upv1a1 "github.com/vshn/k8up/api/v1alpha1"
-	"github.com/vshn/k8up/envtest"
-	"github.com/vshn/k8up/executor/cleaner"
-	"github.com/vshn/k8up/job"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-
 	"github.com/stretchr/testify/suite"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/uuid"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	k8upv1a1 "github.com/vshn/k8up/api/v1alpha1"
+	"github.com/vshn/k8up/envtest"
+	"github.com/vshn/k8up/operator/executor/cleaner"
+	"github.com/vshn/k8up/operator/job"
 )
 
 type CleanerTestSuite struct {

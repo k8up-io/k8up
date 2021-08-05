@@ -16,7 +16,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/metrics"
 
 	k8upv1alpha1 "github.com/vshn/k8up/api/v1alpha1"
-	"github.com/vshn/k8up/job"
+	"github.com/vshn/k8up/operator/job"
 )
 
 type (

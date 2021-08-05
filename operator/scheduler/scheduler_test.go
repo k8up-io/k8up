@@ -10,7 +10,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	k8upv1alpha1 "github.com/vshn/k8up/api/v1alpha1"
-	"github.com/vshn/k8up/job"
+	"github.com/vshn/k8up/operator/job"
 )
 
 func TestScheduler_SyncSchedules(t *testing.T) {

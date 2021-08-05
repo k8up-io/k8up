@@ -13,7 +13,7 @@ import (
 	k8upv1a1 "github.com/vshn/k8up/api/v1alpha1"
 	"github.com/vshn/k8up/controllers"
 	"github.com/vshn/k8up/envtest"
-	"github.com/vshn/k8up/observer"
+	"github.com/vshn/k8up/operator/observer"
 )
 
 type BackupTestSuite struct {

@@ -8,9 +8,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
 	k8upv1alpha1 "github.com/vshn/k8up/api/v1alpha1"
-	"github.com/vshn/k8up/cfg"
-	"github.com/vshn/k8up/job"
-	"github.com/vshn/k8up/scheduler"
+	"github.com/vshn/k8up/operator/cfg"
+	"github.com/vshn/k8up/operator/job"
+	"github.com/vshn/k8up/operator/scheduler"
 )
 
 // ScheduleHandler handles the reconciles for the schedules. Schedules are a special

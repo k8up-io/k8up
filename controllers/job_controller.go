@@ -4,14 +4,15 @@ import (
 	"context"
 
 	"github.com/go-logr/logr"
-	"github.com/vshn/k8up/handler"
-	"github.com/vshn/k8up/job"
 	batchv1 "k8s.io/api/batch/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+
+	"github.com/vshn/k8up/operator/handler"
+	"github.com/vshn/k8up/operator/job"
 )
 
 // JobReconciler reconciles a Job object

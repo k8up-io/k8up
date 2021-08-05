@@ -10,7 +10,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	k8upv1alpha1 "github.com/vshn/k8up/api/v1alpha1"
-	"github.com/vshn/k8up/cfg"
+	"github.com/vshn/k8up/operator/cfg"
 )
 
 func (s *ScheduleHandler) newEffectiveSchedule(jobType k8upv1alpha1.JobType) k8upv1alpha1.EffectiveSchedule {

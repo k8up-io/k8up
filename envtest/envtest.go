@@ -32,7 +32,7 @@ import (
 	// +kubebuilder:scaffold:imports
 
 	k8upv1a1 "github.com/vshn/k8up/api/v1alpha1"
-	"github.com/vshn/k8up/executor"
+	"github.com/vshn/k8up/operator/executor"
 )
 
 var InvalidNSNameCharacters = regexp.MustCompile("[^a-z0-9-]")

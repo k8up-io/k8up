@@ -8,7 +8,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/uuid"
 
 	k8upv1a1 "github.com/vshn/k8up/api/v1alpha1"
-	"github.com/vshn/k8up/job"
+	"github.com/vshn/k8up/operator/job"
 )
 
 func TestGroupByStatus(t *testing.T) {

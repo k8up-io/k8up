@@ -6,7 +6,7 @@ import (
 	"context"
 
 	k8upv1alpha1 "github.com/vshn/k8up/api/v1alpha1"
-	"github.com/vshn/k8up/cfg"
+	"github.com/vshn/k8up/operator/cfg"
 
 	"github.com/go-logr/logr"
 	batchv1 "k8s.io/api/batch/v1"

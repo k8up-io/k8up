@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/vshn/k8up/cfg"
+	"github.com/vshn/k8up/operator/cfg"
 )
 
 func Test_loadEnvironmentVariables(t *testing.T) {
