@@ -9,7 +9,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 
 	k8upv1alpha1 "github.com/vshn/k8up/api/v1alpha1"
-	"github.com/vshn/k8up/cfg"
+	"github.com/vshn/k8up/operator/cfg"
 )
 
 func TestScheduleHandler_mergeResourcesWithDefaults(t *testing.T) {

@@ -7,7 +7,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	k8upv1alpha1 "github.com/vshn/k8up/api/v1alpha1"
-	"github.com/vshn/k8up/handler"
+	"github.com/vshn/k8up/operator/handler"
 )
 
 func (ts *ScheduleControllerTestSuite) givenScheduleResource(schedule k8upv1alpha1.ScheduleDefinition) {

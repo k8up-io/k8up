@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/vshn/k8up/cfg"
-
 	corev1 "k8s.io/api/core/v1"
+
+	"github.com/vshn/k8up/operator/cfg"
 )
 
 type (

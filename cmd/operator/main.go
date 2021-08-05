@@ -5,23 +5,22 @@ import (
 	"os"
 	"strings"
 
-	"go.uber.org/zap/zapcore"
-	"k8s.io/apimachinery/pkg/runtime"
-	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
-	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
-	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/log/zap"
-
-	batchv1 "k8s.io/api/batch/v1"
 
 	"github.com/knadh/koanf"
 	"github.com/knadh/koanf/providers/env"
+	"go.uber.org/zap/zapcore"
+	batchv1 "k8s.io/api/batch/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
+	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
+	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	k8upv1alpha1 "github.com/vshn/k8up/api/v1alpha1"
-	"github.com/vshn/k8up/cfg"
 	"github.com/vshn/k8up/controllers"
-	"github.com/vshn/k8up/executor"
+	"github.com/vshn/k8up/operator/cfg"
+	"github.com/vshn/k8up/operator/executor"
 	// +kubebuilder:scaffold:imports
 )
 

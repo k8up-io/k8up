@@ -7,20 +7,19 @@ package executor
 import (
 	"fmt"
 
-	"k8s.io/apimachinery/pkg/types"
-
-	k8upv1alpha1 "github.com/vshn/k8up/api/v1alpha1"
-	"github.com/vshn/k8up/cfg"
-	"github.com/vshn/k8up/executor/cleaner"
-	"github.com/vshn/k8up/job"
-	"github.com/vshn/k8up/observer"
-	"github.com/vshn/k8up/queue"
-
 	"github.com/go-logr/logr"
 	"github.com/imdario/mergo"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	k8upv1alpha1 "github.com/vshn/k8up/api/v1alpha1"
+	"github.com/vshn/k8up/operator/cfg"
+	"github.com/vshn/k8up/operator/executor/cleaner"
+	"github.com/vshn/k8up/operator/job"
+	"github.com/vshn/k8up/operator/observer"
+	"github.com/vshn/k8up/operator/queue"
 )
 
 type generic struct {

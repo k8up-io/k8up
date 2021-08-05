@@ -13,7 +13,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
 	k8upv1alpha1 "github.com/vshn/k8up/api/v1alpha1"
-	"github.com/vshn/k8up/cfg"
+	"github.com/vshn/k8up/operator/cfg"
 )
 
 // fetchPreBackupPodTemplates fetches all PreBackupPods from the same namespace as the originating backup.

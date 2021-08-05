@@ -5,10 +5,10 @@ package executor
 import (
 	"time"
 
-	"github.com/vshn/k8up/observer"
-	"github.com/vshn/k8up/queue"
-
 	"k8s.io/apimachinery/pkg/api/errors"
+
+	"github.com/vshn/k8up/operator/observer"
+	"github.com/vshn/k8up/operator/queue"
 )
 
 var (
