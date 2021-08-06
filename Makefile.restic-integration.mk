@@ -14,7 +14,6 @@ restic-integration-test-setup: minio-start restic-download ## Prepare to run the
 
 .PHONY: restic-clean
 restic-integration-test-clean: minio-stop ## Clean the integration test of the restic module
-	rm -rf $(integrationtest_dir)
 
 .PHONY: minio-address
 minio-address: ## Get the address to connect to minio

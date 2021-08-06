@@ -44,7 +44,7 @@ clean-setup: kind-clean ## Clean the e2e setup (e.g. to rerun the setup)
 .PHONY: clean
 clean: clean-setup ## Remove all e2e-related resources (incl. all e2e Docker images)
 	docker images --filter "reference=$(E2E_REPO)" --format "{{.Repository }}:{{ .Tag }}" | $(xargs) docker rmi || true
-	rm -r debug node_modules || true
+	rm -rf debug node_modules || true
 
 .PHONY: help
 help: ## Show this help

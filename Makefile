@@ -103,7 +103,10 @@ docker-push: ## Push the docker image
 
 clean: export KUBECONFIG = $(KIND_KUBECONFIG)
 clean: restic-integration-test-clean e2e-clean ## Cleans up the generated resources
-	rm -r $(e2etest_dir) $(integrationtest_dir) dist/ bin/ cover.out $(BIN_FILENAME) || true
+# setup-envtest removes write permission from the files it generates, so they have to be restored in order to delete the directory
+	chmod +rwx -R -f $(integrationtest_dir) || true
+
+	rm -rf $(e2etest_dir) $(integrationtest_dir) dist/ bin/ cover.out $(BIN_FILENAME) || true
 
 .PHONY: help
 help: ## Show this help

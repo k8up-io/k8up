@@ -3,9 +3,9 @@ IMG_TAG ?= latest
 CURDIR ?= $(shell pwd)
 BIN_FILENAME ?= $(CURDIR)/$(PROJECT_ROOT_DIR)/k8up
 
-integrationtest_dir ?= $(shell pwd)/.integration-test
+integrationtest_dir ?= $(CURDIR)/$(PROJECT_ROOT_DIR)/.integration-test
 integrationtest_dir_created = $(integrationtest_dir)/.created
-e2etest_dir ?= $(shell pwd)/.integration-test
+e2etest_dir ?= $(CURDIR)/$(PROJECT_ROOT_DIR)/.integration-test
 e2etest_dir_created = $(e2etest_dir)/.created
 
 CRD_FILE ?= k8up-crd.yaml
@@ -16,7 +16,7 @@ CRD_DOCS_REF_PATH ?= docs/modules/ROOT/pages/references/api-reference.adoc
 
 KIND_NODE_VERSION ?= v1.20.0
 KIND ?= go run sigs.k8s.io/kind
-KIND_KUBECONFIG ?= $(e2etest_dir)/kind-kubeconfig-$(KIND_NODE_VERSION)
+KIND_KUBECONFIG ?= $(CURDIR)/$(e2etest_dir)/kind-kubeconfig-$(KIND_NODE_VERSION)
 KIND_CLUSTER ?= k8up-$(KIND_NODE_VERSION)
 KIND_KUBECTL_ARGS ?= --validate=true
 

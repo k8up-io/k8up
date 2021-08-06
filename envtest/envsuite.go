@@ -61,10 +61,6 @@ func (ts *Suite) SetupSuite() {
 		ts.FailNow("The environment variable KUBEBUILDER_ASSETS is undefined. Configure your IDE to set this variable when running the integration test.")
 	}
 
-	if !strings.HasPrefix(envtestAssets, "/") {
-		envtestAssets = filepath.Join(Root, envtestAssets)
-	}
-
 	info, err := os.Stat(envtestAssets)
 	absEnvtestAssets, _ := filepath.Abs(envtestAssets)
 	ts.Require().NoErrorf(err, "'%s' does not seem to exist. Check KUBEBUILDER_ASSETS and make sure you run `make integration-test` before you run this test in your IDE.", absEnvtestAssets)
@@ -116,7 +112,8 @@ func registerCRDs(ts *Suite) {
 
 func (ts *Suite) TearDownSuite() {
 	err := ts.Env.Stop()
-	ts.Require().NoError(err)
+	ts.Require().NoErrorf(err, "error while stopping test environment")
+	ts.Logger.Info("test environment stopped")
 }
 
 type AssertFunc func(timedCtx context.Context) (done bool, err error)
