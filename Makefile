@@ -102,7 +102,7 @@ docker-push: ## Push the docker image
 	docker push $(K8UP_DOCKER_IMG) $(WRESTIC_DOCKER_IMG) $(K8UP_QUAY_IMG) $(WRESTIC_QUAY_IMG)
 
 clean: export KUBECONFIG = $(KIND_KUBECONFIG)
-clean: restic-integration-test-clean e2e-clean ## Cleans up the generated resources
+clean: restic-integration-test-clean e2e-clean docs-clean ## Cleans up the generated resources
 # setup-envtest removes write permission from the files it generates, so they have to be restored in order to delete the directory
 	chmod +rwx -R -f $(integrationtest_dir) || true
 
@@ -129,13 +129,6 @@ $(integrationtest_dir_created):
 	# directory may update when content in it is created/updated,
 	# which would cause a rebuild / re-initialization of dependants
 	@touch $(integrationtest_dir_created)
-
-$(e2e_dir_created):
-	mkdir -p $(e2e_dir)
-	# a marker file must be created, because the date of the
-	# directory may update when content in it is created/updated,
-	# which would cause a rebuild / re-initialization of dependants
-	@touch $(e2e_dir_created)
 
 ###
 ### KIND

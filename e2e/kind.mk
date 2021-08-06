@@ -6,7 +6,7 @@ curl_args ?= --location --fail --silent --show-error
 
 .PHONY: kind-setup
 kind-setup: export KUBECONFIG = $(KIND_KUBECONFIG)
-kind-setup: $(kind_marker) ## Creates the kind cluster
+kind-setup: $(kind_marker) $(e2etest_dir_created) ## Creates the kind cluster
 
 .PHONY: kind-clean
 kind-clean: export KUBECONFIG = $(KIND_KUBECONFIG)

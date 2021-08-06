@@ -29,7 +29,6 @@ docs-clean: ## Cleans Antora artifacts
 
 .PHONY: docs-check
 docs-check: ## Runs vale against the docs to check style
-	#$(vale_cmd) && cd docs && python check_orphans.py
 	$(vale_cmd)
 
 .PHONY: docs-syntax

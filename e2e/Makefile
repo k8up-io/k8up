@@ -35,7 +35,7 @@ kind-e2e-image: kind-setup ## Load the e2e container image onto e2e cluster
 
 .PHONY: setup
 setup: export KUBECONFIG = $(KIND_KUBECONFIG)
-setup: $(bats) kind-setup ## Run the e2e setup
+setup: $(bats) $(e2etest_dir_created) kind-setup ## Run the e2e setup
 
 .PHONY: clean-setup
 clean-setup: export KUBECONFIG = $(KIND_KUBECONFIG)
@@ -53,6 +53,13 @@ help: ## Show this help
 ###
 ### Artifacts
 ###
+
+$(e2etest_dir_created):
+	mkdir -p $(e2etest_dir)
+	# a marker file must be created, because the date of the
+	# directory may update when content in it is created/updated,
+	# which would cause a rebuild / re-initialization of dependants
+	@touch $(e2etest_dir_created)
 
 $(bats):
 	@npm install
