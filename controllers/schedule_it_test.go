@@ -11,6 +11,7 @@ import (
 
 	k8upv1alpha1 "github.com/vshn/k8up/api/v1alpha1"
 	"github.com/vshn/k8up/controllers"
+	"github.com/vshn/k8up/envtest"
 	"github.com/vshn/k8up/operator/cfg"
 	"github.com/vshn/k8up/operator/handler"
 	"github.com/vshn/k8up/operator/scheduler"
@@ -18,7 +19,7 @@ import (
 
 type (
 	ScheduleControllerTestSuite struct {
-		EnvTestSuite
+		envtest.Suite
 		reconciler              *controllers.ScheduleReconciler
 		givenSchedule           *k8upv1alpha1.Schedule
 		givenEffectiveSchedules []k8upv1alpha1.EffectiveSchedule

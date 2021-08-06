@@ -1,6 +1,6 @@
 // +build integration
 
-package controllers_test
+package envtest
 
 import (
 	"context"
@@ -38,7 +38,7 @@ import (
 
 var InvalidNSNameCharacters = regexp.MustCompile("[^a-z0-9-]")
 
-type EnvTestSuite struct {
+type Suite struct {
 	suite.Suite
 
 	NS     string
@@ -50,22 +50,38 @@ type EnvTestSuite struct {
 	Scheme *runtime.Scheme
 }
 
-func (ts *EnvTestSuite) SetupSuite() {
+func (ts *Suite) SetupSuite() {
 	ts.Logger = zapr.NewLogger(zaptest.NewLogger(ts.T()))
 	log.SetLogger(ts.Logger)
 
 	ts.Ctx = context.Background()
 
-	testbinDir := filepath.Join("..", "testbin", "bin")
-	info, err := os.Stat(testbinDir)
-	absTestbinDir, _ := filepath.Abs(testbinDir)
-	ts.Require().NoErrorf(err, "'%s' does not seem to exist. Make sure you run `make integration-test` before you run this test in your IDE.", absTestbinDir)
-	ts.Require().Truef(info.IsDir(), "'%s' does not seem to be a directory. Make sure you run `make integration-test` before you run this test in your IDE.", absTestbinDir)
+	envtestAssets, ok := os.LookupEnv("KUBEBUILDER_ASSETS")
+	if !ok {
+		ts.FailNow("The environment variable KUBEBUILDER_ASSETS is undefined. Configure your IDE to set this variable when running the integration test.")
+	}
+
+	if !strings.HasPrefix(envtestAssets, "/") {
+		envtestAssets = filepath.Join(Root, envtestAssets)
+	}
+
+	info, err := os.Stat(envtestAssets)
+	absEnvtestAssets, _ := filepath.Abs(envtestAssets)
+	ts.Require().NoErrorf(err, "'%s' does not seem to exist. Check KUBEBUILDER_ASSETS and make sure you run `make integration-test` before you run this test in your IDE.", absEnvtestAssets)
+	ts.Require().Truef(info.IsDir(), "'%s' does not seem to be a directory. Check KUBEBUILDER_ASSETS and make sure you run `make integration-test` before you run this test in your IDE.", absEnvtestAssets)
+
+	crds := filepath.Join(Root, "config", "crd", "apiextensions.k8s.io", "v1", "base")
+	absCrds, _ := filepath.Abs(crds)
+	info, err = os.Stat(crds)
+	ts.Require().NoErrorf(err, "'%s' does not seem to exist. Make sure to set the working directory to the project root.", absCrds)
+	ts.Require().Truef(info.IsDir(), "'%s' does not seem to be a directory. Make sure to set the working directory to the project root.", absCrds)
+
+	ts.Logger.Info("envtest directories", "crd", absCrds, "binary assets", absEnvtestAssets)
 
 	testEnv := &envtest.Environment{
 		ErrorIfCRDPathMissing: true,
-		CRDDirectoryPaths:     []string{filepath.Join("..", "config", "crd", "apiextensions.k8s.io", "v1", "base")},
-		BinaryAssetsDirectory: testbinDir,
+		CRDDirectoryPaths:     []string{crds},
+		BinaryAssetsDirectory: envtestAssets,
 	}
 
 	config, err := testEnv.Start()
@@ -87,7 +103,7 @@ func (ts *EnvTestSuite) SetupSuite() {
 	ts.Client = k8sClient
 }
 
-func registerCRDs(ts *EnvTestSuite) {
+func registerCRDs(ts *Suite) {
 	ts.Scheme = runtime.NewScheme()
 	ts.Require().NoError(appsv1.AddToScheme(ts.Scheme))
 	ts.Require().NoError(batchv1.AddToScheme(ts.Scheme))
@@ -98,14 +114,14 @@ func registerCRDs(ts *EnvTestSuite) {
 	// +kubebuilder:scaffold:scheme
 }
 
-func (ts *EnvTestSuite) TearDownSuite() {
+func (ts *Suite) TearDownSuite() {
 	err := ts.Env.Stop()
 	ts.Require().NoError(err)
 }
 
 type AssertFunc func(timedCtx context.Context) (done bool, err error)
 
-func (ts *EnvTestSuite) RepeatedAssert(timeout time.Duration, interval time.Duration, failureMsg string, assertFunc AssertFunc) {
+func (ts *Suite) RepeatedAssert(timeout time.Duration, interval time.Duration, failureMsg string, assertFunc AssertFunc) {
 	timedCtx, cancel := context.WithTimeout(ts.Ctx, timeout)
 	defer cancel()
 
@@ -131,7 +147,7 @@ func (ts *EnvTestSuite) RepeatedAssert(timeout time.Duration, interval time.Dura
 }
 
 // NewNS instantiates a new Namespace object with the given name.
-func (ts *EnvTestSuite) NewNS(nsName string) *corev1.Namespace {
+func (ts *Suite) NewNS(nsName string) *corev1.Namespace {
 	ts.Assert().Emptyf(validation.IsDNS1123Label(nsName), "'%s' does not appear to be a valid name for a namespace", nsName)
 
 	return &corev1.Namespace{
@@ -141,15 +157,15 @@ func (ts *EnvTestSuite) NewNS(nsName string) *corev1.Namespace {
 	}
 }
 
-// EnsureNS creates a new Namespace object using EnvTestSuite.Client.
-func (ts *EnvTestSuite) EnsureNS(nsName string) {
+// EnsureNS creates a new Namespace object using Suite.Client.
+func (ts *Suite) EnsureNS(nsName string) {
 	ns := ts.NewNS(nsName)
 	ts.T().Logf("creating namespace '%s'", nsName)
 	ts.Require().NoError(ts.Client.Create(ts.Ctx, ns))
 }
 
 // EnsureResources ensures that the given resources are existing in the suite. Each error will fail the test.
-func (ts *EnvTestSuite) EnsureResources(resources ...client.Object) {
+func (ts *Suite) EnsureResources(resources ...client.Object) {
 	for _, resource := range resources {
 		ts.T().Logf("creating resource '%s/%s'", resource.GetNamespace(), resource.GetName())
 		ts.Require().NoError(ts.Client.Create(ts.Ctx, resource))
@@ -157,7 +173,7 @@ func (ts *EnvTestSuite) EnsureResources(resources ...client.Object) {
 }
 
 // UpdateResources ensures that the given resources are updated in the suite. Each error will fail the test.
-func (ts *EnvTestSuite) UpdateResources(resources ...client.Object) {
+func (ts *Suite) UpdateResources(resources ...client.Object) {
 	for _, resource := range resources {
 		ts.T().Logf("updating resource '%s/%s'", resource.GetNamespace(), resource.GetName())
 		ts.Require().NoError(ts.Client.Update(ts.Ctx, resource))
@@ -165,7 +181,7 @@ func (ts *EnvTestSuite) UpdateResources(resources ...client.Object) {
 }
 
 // UpdateStatus ensures that the Status property of the given resources are updated in the suite. Each error will fail the test.
-func (ts *EnvTestSuite) UpdateStatus(resources ...client.Object) {
+func (ts *Suite) UpdateStatus(resources ...client.Object) {
 	for _, resource := range resources {
 		ts.T().Logf("updating status '%s/%s'", resource.GetNamespace(), resource.GetName())
 		ts.Require().NoError(ts.Client.Status().Update(ts.Ctx, resource))
@@ -174,7 +190,7 @@ func (ts *EnvTestSuite) UpdateStatus(resources ...client.Object) {
 
 // SetCondition sets the given condition and updates the status.
 // Errors will fail the test.
-func (ts *EnvTestSuite) SetCondition(
+func (ts *Suite) SetCondition(
 	resource client.Object,
 	conditions *[]metav1.Condition,
 	cType k8upv1a1.ConditionType,
@@ -191,7 +207,7 @@ func (ts *EnvTestSuite) SetCondition(
 }
 
 // DeleteResources deletes the given resources are updated from the suite. Each error will fail the test.
-func (ts *EnvTestSuite) DeleteResources(resources ...client.Object) {
+func (ts *Suite) DeleteResources(resources ...client.Object) {
 	for _, resource := range resources {
 		ts.T().Logf("deleting '%s/%s'", resource.GetNamespace(), resource.GetName())
 		ts.Require().NoError(ts.Client.Delete(ts.Ctx, resource))
@@ -200,18 +216,18 @@ func (ts *EnvTestSuite) DeleteResources(resources ...client.Object) {
 
 // FetchResource fetches the given object name and stores the result in the given object.
 // Test fails on errors.
-func (ts *EnvTestSuite) FetchResource(name types.NamespacedName, object client.Object) {
+func (ts *Suite) FetchResource(name types.NamespacedName, object client.Object) {
 	ts.Require().NoError(ts.Client.Get(ts.Ctx, name, object))
 }
 
 // FetchResource fetches resources and puts the items into the given list with the given list options.
 // Test fails on errors.
-func (ts *EnvTestSuite) FetchResources(objectList client.ObjectList, opts ...client.ListOption) {
+func (ts *Suite) FetchResources(objectList client.ObjectList, opts ...client.ListOption) {
 	ts.Require().NoError(ts.Client.List(ts.Ctx, objectList, opts...))
 }
 
 // MapToRequest maps the given object into a reconcile Request.
-func (ts *EnvTestSuite) MapToRequest(object metav1.Object) ctrl.Request {
+func (ts *Suite) MapToRequest(object metav1.Object) ctrl.Request {
 	return ctrl.Request{
 		NamespacedName: types.NamespacedName{
 			Name:      object.GetName(),
@@ -221,21 +237,21 @@ func (ts *EnvTestSuite) MapToRequest(object metav1.Object) ctrl.Request {
 }
 
 // BeforeTest is invoked just before every test starts
-func (ts *EnvTestSuite) SetupTest() {
+func (ts *Suite) SetupTest() {
 	ts.NS = rand.String(8)
 	ts.EnsureNS(ts.NS)
 }
 
 // SanitizeNameForNS first converts the given name to lowercase using strings.ToLower
 // and then remove all characters but `a-z` (only lower case), `0-9` and the `-` (dash).
-func (ts *EnvTestSuite) SanitizeNameForNS(name string) string {
+func (ts *Suite) SanitizeNameForNS(name string) string {
 	return InvalidNSNameCharacters.ReplaceAllString(strings.ToLower(name), "")
 }
 
 // IsResourceExisting tries to fetch the given resource and returns true if it exists.
 // It will consider still-existing object with a deletion timestamp as non-existing.
 // Any other errors will fail the test.
-func (ts *EnvTestSuite) IsResourceExisting(ctx context.Context, obj client.Object) bool {
+func (ts *Suite) IsResourceExisting(ctx context.Context, obj client.Object) bool {
 	err := ts.Client.Get(ctx, k8upv1a1.MapToNamespacedName(obj), obj)
 	if apierrors.IsNotFound(err) {
 		return false

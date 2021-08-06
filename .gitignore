@@ -1,29 +1,16 @@
-# Created by .ignore support plugin (hsz.mobi)
-### Example user template template
-### Example user template
-
-# VSCode configs
-.vscode/
-
-# IntelliJ project files
-.idea
-*.iml
-out
-gen### Go template
 # Binaries for programs and plugins
 *.exe
 *.dll
 *.so
 *.dylib
+__debug_bin
 
 # Test binary, build with `go test -c`
 *.test
 
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
-
-# Project-local glide cache, RE: https://github.com/Masterminds/glide/issues/736
-.glide/
+coverage/
 
 # Antora related
 .asciidoctor
@@ -31,18 +18,17 @@ gen### Go template
 _public/
 _archive/
 
-*.DS_Store
-cmd/*/debug
-cmd/operator/operator
-cmd/restic/restic
-
-bin/
-dist/
 .github/release-notes.md
+
 k8up-crd*.yaml
+
 /k8up
-testbin/
+
+# Go releaser
+dist/
+
+# Test related
 node_modules/
 e2e/debug
-__debug_bin
-coverage/
+.integration-test/
+.e2e-test/

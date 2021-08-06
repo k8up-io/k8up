@@ -9,14 +9,10 @@ MAKEFLAGS += --no-builtin-variables
 
 PROJECT_ROOT_DIR = .
 include Makefile.vars.mk
+include Makefile.restic-integration.mk
 
 e2e_make := $(MAKE) -C e2e
 go_build ?= go build -o $(BIN_FILENAME) cmd/k8up/main.go
-
-setup-envtest ?= go run sigs.k8s.io/controller-runtime/tools/setup-envtest $(ENVTEST_ADDITIONAL_FLAGS)
-
-# Run tests (see https://sdk.operatorframework.io/docs/building-operators/golang/references/envtest-setup)
-ENVTEST_ASSETS_DIR=$(shell pwd)/testbin
 
 all: build ## Invokes the build target
 
@@ -24,20 +20,31 @@ all: build ## Invokes the build target
 test: ## Run tests
 	go test ./... -coverprofile cover.out
 
+.PHONY: integration-test
+# operator module {
 # See https://storage.googleapis.com/kubebuilder-tools/ for list of supported K8s versions
-#
-# A note on 1.20.2:
-# 1.20.2 is not (yet) supported, because starting the Kubernetes API controller with
-# `--insecure-port` and `--insecure-bind-address` flags is now deprecated,
-# but envtest was not updated accordingly.
-#integration-test: export ENVTEST_K8S_VERSION = 1.20.x
-integration-test: export ENVTEST_K8S_VERSION = 1.19.x
+integration-test: export ENVTEST_K8S_VERSION = 1.21.x
 integration-test: export KUBEBUILDER_ATTACH_CONTROL_PLANE_OUTPUT = $(INTEGRATION_TEST_DEBUG_OUTPUT)
-integration-test: generate $(testbin_created) ## Run integration tests with envtest
+# }
+# restic module {
+integration-test: export RESTIC_PATH = $(restic_path)
+integration-test: export RESTIC_BINARY = $(restic_path)
+integration-test: export RESTIC_PASSWORD = $(restic_password)
+integration-test: export RESTIC_REPOSITORY = s3:http://$(minio_address)/test
+integration-test: export RESTORE_S3ENDPOINT = http://$(minio_address)/restore
+integration-test: export AWS_ACCESS_KEY_ID = $(minio_root_user)
+integration-test: export AWS_SECRET_ACCESS_KEY = $(minio_root_password)
+integration-test: export RESTORE_ACCESSKEYID = $(minio_root_user)
+integration-test: export RESTORE_SECRETACCESSKEY = $(minio_root_password)
+integration-test: export BACKUP_DIR = $(backup_dir)
+integration-test: export RESTORE_DIR = $(restore_dir)
+integration-test: export STATS_URL = $(stats_url)
+# }
+integration-test: generate $(integrationtest_dir_created) restic-integration-test-setup ## Run integration tests with envtest
 	$(setup-envtest) use '$(ENVTEST_K8S_VERSION)!'
 	export KUBEBUILDER_ASSETS="$$($(setup-envtest) use -i -p path '$(ENVTEST_K8S_VERSION)!')"; \
 		env | grep KUBEBUILDER; \
-		go test -tags=integration -v ./... -coverprofile cover.out
+		go test -tags=integration -coverprofile cover.out  ./...
 
 .PHONY: build
 build: generate fmt vet $(BIN_FILENAME) ## Build manager binary
@@ -95,8 +102,8 @@ docker-push: ## Push the docker image
 	docker push $(K8UP_DOCKER_IMG) $(WRESTIC_DOCKER_IMG) $(K8UP_QUAY_IMG) $(WRESTIC_QUAY_IMG)
 
 clean: export KUBECONFIG = $(KIND_KUBECONFIG)
-clean: e2e-clean kind-clean ## Cleans up the generated resources
-	rm -r testbin/ dist/ bin/ cover.out $(BIN_FILENAME) || true
+clean: restic-integration-test-clean e2e-clean ## Cleans up the generated resources
+	rm -r $(e2etest_dir) $(integrationtest_dir) dist/ bin/ cover.out $(BIN_FILENAME) || true
 
 .PHONY: help
 help: ## Show this help
@@ -106,19 +113,26 @@ help: ## Show this help
 ### Assets
 ###
 
-$(testbin_created):
-	mkdir -p $(TESTBIN_DIR)
-	# a marker file must be created, because the date of the
-	# directory may update when content in it is created/updated,
-	# which would cause a rebuild / re-initialization of dependants
-	@touch $(testbin_created)
-
 # Build the binary without running generators
 .PHONY: $(BIN_FILENAME)
 $(BIN_FILENAME): export CGO_ENABLED = 0
 $(BIN_FILENAME): export GOOS = linux
 $(BIN_FILENAME):
 	$(go_build)
+
+$(integrationtest_dir_created):
+	mkdir -p $(integrationtest_dir)
+	# a marker file must be created, because the date of the
+	# directory may update when content in it is created/updated,
+	# which would cause a rebuild / re-initialization of dependants
+	@touch $(integrationtest_dir_created)
+
+$(e2e_dir_created):
+	mkdir -p $(e2e_dir)
+	# a marker file must be created, because the date of the
+	# directory may update when content in it is created/updated,
+	# which would cause a rebuild / re-initialization of dependants
+	@touch $(e2e_dir_created)
 
 ###
 ### KIND

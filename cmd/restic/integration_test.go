@@ -56,7 +56,6 @@ func newTestErrorChannel() chan error {
 }
 
 func (w *webhookserver) runWebServer(t *testing.T) {
-
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", func(wr http.ResponseWriter, r *http.Request) {
 		w.jsonData, _ = ioutil.ReadAll(r.Body)
@@ -117,7 +116,7 @@ func connectToS3Server(t *testing.T) *s3.Client {
 	s3client := s3.New(repo, os.Getenv("AWS_ACCESS_KEY_ID"), os.Getenv("AWS_SECRET_ACCESS_KEY"))
 
 	err := s3client.Connect()
-	require.NoError(t, err)
+	require.NoErrorf(t, err, "Unable to connect to S3 repo '%s'", repo)
 	t.Logf("Connected to S3 repo '%s'", repo)
 
 	_ = s3client.DeleteBucket()
@@ -147,9 +146,15 @@ func startWebhookWebserver(t *testing.T) *webhookserver {
 }
 
 func cleanupDirs(t *testing.T) {
+	backupDirEnv, ok := os.LookupEnv(cli.BackupDirEnv)
+	require.Truef(t, ok, "%s is not defined.", cli.BackupDirEnv)
+
+	restoreDirEnv, ok := os.LookupEnv(cli.RestoreDirEnv)
+	require.Truef(t, ok, "%s is not defined.", cli.RestoreDirEnv)
+
 	dirs := []string{
-		os.Getenv(cli.BackupDirEnv),
-		os.Getenv(cli.RestoreDirEnv),
+		backupDirEnv,
+		restoreDirEnv,
 	}
 
 	for _, dir := range dirs {
@@ -172,7 +177,8 @@ func createTestFiles(t *testing.T) {
 		err = ioutil.WriteFile(file, []byte(testfileContent), os.ModePerm)
 		require.NoError(t, err)
 
-		t.Logf("Created '%s'", file)
+		abs, _ := filepath.Abs(file)
+		t.Logf("Created '%s'", abs)
 	}
 }
 
@@ -191,7 +197,7 @@ func testBackup(t *testing.T) *testEnvironment {
 	env := initTest(t)
 
 	resticCli := env.resticCli
-	err := run(nil, resticCli, env.log)
+	err := run(context.Background(), resticCli, env.log)
 	require.NoError(t, err)
 
 	return env
@@ -245,7 +251,7 @@ func TestRestore(t *testing.T) {
 	restore = true
 	restoreType = "s3"
 
-	err := run(nil, env.resticCli, env.log)
+	err := run(context.Background(), env.resticCli, env.log)
 	require.NoError(t, err)
 
 	webhookData := cli.RestoreStats{}
@@ -277,7 +283,7 @@ func TestRestoreDisk(t *testing.T) {
 
 	_ = os.Setenv("TRIM_RESTOREPATH", "false")
 
-	err := run(nil, env.resticCli, env.log)
+	err := run(context.Background(), env.resticCli, env.log)
 	require.NoError(t, err)
 
 	restoredir := os.Getenv(cli.RestoreDirEnv)
@@ -295,7 +301,7 @@ func TestArchive(t *testing.T) {
 	archive = true
 	restoreType = "s3"
 
-	err := run(nil, env.resticCli, env.log)
+	err := run(context.Background(), env.resticCli, env.log)
 	require.NoError(t, err)
 
 	testCheckS3Restore(t)
