@@ -40,7 +40,7 @@ trim_ansi_codes() {
 # @param {string} The debug message.
 # @return 0
 debug() {
-	debug_filename=$(basename -- $BATS_TEST_FILENAME)
+	debug_filename=$(basename -- "$BATS_TEST_FILENAME")
 	mkdir -p /tmp/detik
 	echo -e "$1" >> "/tmp/detik/$debug_filename.debug"
 }
@@ -49,7 +49,7 @@ debug() {
 # Deletes the file that contains debug messages for a given test.
 # @return 0
 reset_debug() {
-	debug_filename=$(basename -- $BATS_TEST_FILENAME)
+	debug_filename=$(basename -- "$BATS_TEST_FILENAME")
 	rm -f "/tmp/detik/$debug_filename.debug"
 }
 
@@ -61,7 +61,7 @@ detik_debug() {
 
 	if [[ "$DEBUG_DETIK" == "true" ]]; then
 		debug "$1"
-        fi
+  fi
 }
 
 
