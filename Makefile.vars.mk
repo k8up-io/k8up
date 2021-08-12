@@ -14,7 +14,7 @@ CRD_ROOT_DIR ?= config/crd/apiextensions.k8s.io
 CRD_SPEC_VERSION ?= v1
 CRD_DOCS_REF_PATH ?= docs/modules/ROOT/pages/references/api-reference.adoc
 
-KIND_NODE_VERSION ?= v1.20.0
+KIND_NODE_VERSION ?= v1.21.2
 KIND ?= go run sigs.k8s.io/kind
 KIND_KUBECONFIG ?= $(e2etest_dir)/kind-kubeconfig-$(KIND_NODE_VERSION)
 KIND_CLUSTER ?= k8up-$(KIND_NODE_VERSION)
