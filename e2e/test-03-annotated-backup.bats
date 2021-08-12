@@ -28,7 +28,10 @@ DEBUG_DETIK="true"
 
 	run restic snapshots 2>/dev/null
 
-	echo "Restic output: '${output}'"
+	echo "Restic output:"
+	echo "---BEGIN output---"
+	echo "${output}"
+	echo "---END---"
 
 	echo -n "Number of Snapshots >= 1? "
 	jq -e 'length >= 1' <<< "${output}"          # Ensure that there was actually a backup created

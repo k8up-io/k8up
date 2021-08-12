@@ -211,7 +211,7 @@ expect_file_in_container() {
 	echo "Testing if file '${expected_file}' contains '${expected_content}' in container '${container}' of pod '${pod}':"
 
 	for cmd in "${commands[@]}"; do
-		echo "> by running the command \`sh -c '${cmd}'\`."
+		echo "> by running the command \`sh -c \"${cmd}\"\`."
 		kubectl exec \
 			"${pod}" \
 			--container "${container}" \
