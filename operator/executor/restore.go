@@ -38,7 +38,7 @@ func (r *RestoreExecutor) GetConcurrencyLimit() int {
 func (r *RestoreExecutor) Execute() error {
 	restore, ok := r.Obj.(*k8upv1alpha1.Restore)
 	if !ok {
-		return errors.New("object is not a prune")
+		return errors.New("object is not a restore")
 	}
 
 	if restore.GetStatus().Started {
