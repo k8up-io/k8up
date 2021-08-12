@@ -26,10 +26,9 @@ DEBUG_DETIK="true"
 
 	wait_until backup/k8up-k8up-backup completed
 
-	run restic snapshots 2>/dev/null
+	run restic_snapshots
 
-	echo "Restic output:"
-	echo "---BEGIN output---"
+	echo "---BEGIN restic_snapshots output---"
 	echo "${output}"
 	echo "---END---"
 

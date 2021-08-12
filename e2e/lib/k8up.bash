@@ -74,6 +74,15 @@ restic() {
 		--json
 }
 
+restic_snapshots() {
+	# Filters non-json output.
+	# Workaround for bug in kubectl v1.13.12, because
+	# 'kubectl run' will always output 'pod "xyz" deleted',
+	# despite '--quiet'
+	restic snapshots 2>/dev/null \
+	| grep -e '^[\[{]'
+}
+
 replace_in_file() {
 	require_args 3 ${#}
 
@@ -211,7 +220,7 @@ expect_file_in_container() {
 	echo "Testing if file '${expected_file}' contains '${expected_content}' in container '${container}' of pod '${pod}':"
 
 	for cmd in "${commands[@]}"; do
-		echo "> by running the command \`sh -c \"${cmd}\"\`."
+		echo "> by running the command \`sh -c '${cmd}'\`."
 		kubectl exec \
 			"${pod}" \
 			--container "${container}" \

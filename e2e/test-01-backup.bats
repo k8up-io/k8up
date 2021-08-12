@@ -26,9 +26,11 @@ DEBUG_DETIK="true"
 
 	wait_until backup/k8up-k8up-backup completed
 
-	run restic snapshots 2>/dev/null
+	run restic_snapshots
 
-	echo "Restic output: '${output}'"
+	echo "---BEGIN restic_snapshots output---"
+	echo "${output}"
+	echo "---END---"
 
 	echo -n "Number of Snapshots >= 1? "
 	jq -e 'length >= 1' <<< "${output}"          # Ensure that there was actually a backup created
