@@ -11,7 +11,7 @@ jobs:
     strategy:
       matrix:
         include:
-        - kind-node-version: v1.20.0
+        - kind-node-version: v1.21.2
           crd-spec-version: v1
         - kind-node-version: v1.13.12 # we cannot go lower than that because of Kind, see https://github.com/kubernetes-sigs/kind/issues/1853
           crd-spec-version: v1beta1
