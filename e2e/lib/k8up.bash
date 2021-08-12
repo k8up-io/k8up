@@ -56,16 +56,16 @@ restic() {
 	kubectl run "wrestic-$(timestamp)" \
 		--rm \
 		--attach \
-		--restart=Never \
+		--restart Never \
 		--wait \
 		--namespace "${DETIK_CLIENT_NAMESPACE-"k8up-system"}" \
 		--image "${WRESTIC_IMAGE}" \
 		--env "AWS_ACCESS_KEY_ID=myaccesskey" \
 		--env "AWS_SECRET_KEY=mysecretkey" \
 		--env "RESTIC_PASSWORD=myreposecret" \
-		--pod-running-timeout=10s \
-		--timeout=3s \
-		--quiet=true \
+		--pod-running-timeout 10s \
+		--timeout 3s \
+		--quiet \
 		--command -- \
 		restic \
 		--no-cache \
