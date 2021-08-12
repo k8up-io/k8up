@@ -28,6 +28,10 @@ jobs:
         key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
         restore-keys: |
           ${{ runner.os }}-go-
+    - uses: azure/setup-kubectl@v1
+      with:
+        version: ${{ matrix.kind-node-version }}
+      id: install
     - name: Run e2e tests
       run: make crd e2e-test -e CRD_SPEC_VERSION=${{ matrix.crd-spec-version }} -e KIND_NODE_VERSION=${{ matrix.kind-node-version }} -e KIND_KUBECTL_ARGS=--validate=false -e bats_args="--report-formatter junit"
     - name: Publish Test Report
