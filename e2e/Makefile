@@ -56,9 +56,9 @@ help: ## Show this help
 
 $(e2etest_dir_created):
 	mkdir -p $(e2etest_dir)
-	# a marker file must be created, because the date of the
-	# directory may update when content in it is created/updated,
-	# which would cause a rebuild / re-initialization of dependants
+# a marker file must be created, because the date of the
+# directory may update when content in it is created/updated,
+# which would cause a rebuild / re-initialization of dependants
 	@touch $(e2etest_dir_created)
 
 $(bats):
