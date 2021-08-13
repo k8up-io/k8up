@@ -71,16 +71,11 @@ restic() {
 		--no-cache \
 		--repo "s3:http://minio.minio.svc.cluster.local:9000/backup" \
 		"${@}" \
-		--json
-}
-
-restic_snapshots() {
-	# Filters non-json output.
+		--json \
+	| sed 's/^pod .*//'
 	# Workaround for bug in kubectl v1.13.12, because
 	# 'kubectl run' will always output 'pod "xyz" deleted',
 	# despite '--quiet'
-	restic snapshots 2>/dev/null \
-	| grep -e '^[\[{]'
 }
 
 replace_in_file() {
