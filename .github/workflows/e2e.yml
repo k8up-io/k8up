@@ -13,7 +13,7 @@ jobs:
         include:
         - kind-node-version: v1.21.2
           crd-spec-version: v1
-        - kind-node-version: v1.13.12 # we cannot go lower than that because of Kind, see https://github.com/kubernetes-sigs/kind/issues/1853
+        - kind-node-version: v1.18.19
           crd-spec-version: v1beta1
     steps:
     - uses: actions/checkout@v2

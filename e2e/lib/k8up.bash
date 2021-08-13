@@ -71,11 +71,7 @@ restic() {
 		--no-cache \
 		--repo "s3:http://minio.minio.svc.cluster.local:9000/backup" \
 		"${@}" \
-		--json \
-	| sed 's/^pod .*//'
-	# Workaround for bug in kubectl v1.13.12, because
-	# 'kubectl run' will always output 'pod "xyz" deleted',
-	# despite '--quiet'
+		--json
 }
 
 replace_in_file() {
