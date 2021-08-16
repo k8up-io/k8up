@@ -28,5 +28,10 @@ FROM k8up as wrestic
 WORKDIR /app
 ENTRYPOINT ["./wrestic"]
 
+## wrestic root compatibility shim
+FROM wrestic as wrestic-root
+
+USER 0
+
 ## Default build shall not contain the wrestic compatibility stuff
 FROM k8up as default
