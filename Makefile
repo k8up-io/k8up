@@ -6,6 +6,7 @@ MAKEFLAGS += --no-builtin-rules
 MAKEFLAGS += --no-builtin-variables
 .SUFFIXES:
 .SECONDARY:
+.DEFAULT_GOAL := all
 
 PROJECT_ROOT_DIR = .
 include Makefile.vars.mk
@@ -53,8 +54,8 @@ build: generate fmt vet $(BIN_FILENAME) ## Build manager binary
 run: export BACKUP_ENABLE_LEADER_ELECTION = $(ENABLE_LEADER_ELECTION)
 run: export K8UP_DEBUG = true
 run: export BACKUP_OPERATOR_NAMESPACE = default
-run: fmt vet ## Run against the configured Kubernetes cluster in ~/.kube/config
-	go run ./cmd/k8up/main.go
+run: fmt vet ## Run against the configured Kubernetes cluster in ~/.kube/config. Use ARGS to pass arguments to the command, e.g. `make run ARGS="--help"`
+	go run ./cmd/k8up/main.go $(ARGS)
 
 .PHONY: install
 install: generate ## Install CRDs into a cluster
