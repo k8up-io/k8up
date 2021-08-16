@@ -34,6 +34,7 @@ setup() {
 	debug ""
 }
 
+# Runs before each test file
 setup_file() {
 	reset_debug
 	clear_pv_data
@@ -46,6 +47,7 @@ teardown() {
 clear_pv_data() {
 	rm -rfv ./debug/data/pvc-subject
 	mkdir -p ./debug/data/pvc-subject
+	chmod -R a+rw ./debug/data/pvc-subject
 }
 
 kustomize() {
