@@ -19,8 +19,8 @@ snapshot:
 
 dockers:
 - image_templates:
-  - "docker.io/vshn/k8up:{{ .Version }}"
-  - "quay.io/vshn/k8up:{{ .Version }}"
+  - "docker.io/vshn/k8up:v{{ .Version }}"
+  - "quay.io/vshn/k8up:v{{ .Version }}"
 
   # For prereleases, updating `latest` and the floating tags of the major
   # version does not make sense. Only the image for the exact version should
@@ -35,8 +35,8 @@ dockers:
   extra_files:
     - wrestic/wrestic.sh
 - image_templates:
-  - "docker.io/vshn/wrestic:{{ .Version }}-nonroot"
-  - "quay.io/vshn/wrestic:{{ .Version }}-nonroot"
+  - "docker.io/vshn/wrestic:v{{ .Version }}-nonroot"
+  - "quay.io/vshn/wrestic:v{{ .Version }}-nonroot"
 
   # For prereleases, updating `latest` and the floating tags of the major
   # version does not make sense. Only the image for the exact version should
@@ -51,8 +51,8 @@ dockers:
   extra_files:
   - wrestic/wrestic.sh
 - image_templates:
-  - "docker.io/vshn/wrestic:{{ .Version }}"
-  - "quay.io/vshn/wrestic:{{ .Version }}"
+  - "docker.io/vshn/wrestic:v{{ .Version }}"
+  - "quay.io/vshn/wrestic:v{{ .Version }}"
 
   # For prereleases, updating `latest` and the floating tags of the major
   # version does not make sense. Only the image for the exact version should
