@@ -41,11 +41,11 @@ dockers:
   # For prereleases, updating `latest` and the floating tags of the major
   # version does not make sense. Only the image for the exact version should
   # be pushed.
-  - "{{ if not .Prerelease }}docker.io/vshn/wrestic:v{{ .Major }}{{ end }}-nonroot"
-  - "{{ if not .Prerelease }}quay.io/vshn/wrestic:v{{ .Major }}{{ end }}-nonroot"
+  - "{{ if not .Prerelease }}docker.io/vshn/wrestic:v{{ .Major }}-nonroot{{ end }}"
+  - "{{ if not .Prerelease }}quay.io/vshn/wrestic:v{{ .Major }}-nonroot{{ end }}"
 
-  - "{{ if not .Prerelease }}docker.io/vshn/wrestic:latest{{ end }}-nonroot"
-  - "{{ if not .Prerelease }}quay.io/vshn/wrestic:latest{{ end }}-nonroot"
+  - "{{ if not .Prerelease }}docker.io/vshn/wrestic:latest-nonroot{{ end }}"
+  - "{{ if not .Prerelease }}quay.io/vshn/wrestic:latest-nonroot{{ end }}"
   build_flag_templates:
   - "--target=wrestic"
   extra_files:
