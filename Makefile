@@ -6,7 +6,7 @@ MAKEFLAGS += --no-builtin-rules
 MAKEFLAGS += --no-builtin-variables
 .SUFFIXES:
 .SECONDARY:
-.DEFAULT_GOAL := all
+.DEFAULT_GOAL := help
 
 PROJECT_ROOT_DIR = .
 include Makefile.vars.mk
