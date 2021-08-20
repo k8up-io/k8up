@@ -100,7 +100,10 @@ docker-build: $(BIN_FILENAME) ## Build the docker image
 
 .PHONY: docker-push
 docker-push: ## Push the docker image
-	docker push $(K8UP_DOCKER_IMG) $(WRESTIC_DOCKER_IMG) $(K8UP_QUAY_IMG) $(WRESTIC_QUAY_IMG)
+	docker push $(K8UP_DOCKER_IMG)
+	docker push $(K8UP_QUAY_IMG)
+	docker push $(WRESTIC_DOCKER_IMG)
+	docker push $(WRESTIC_QUAY_IMG)
 
 clean: export KUBECONFIG = $(KIND_KUBECONFIG)
 clean: restic-integration-test-clean e2e-clean docs-clean ## Cleans up the generated resources
