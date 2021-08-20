@@ -38,7 +38,7 @@ func (c *Config) SetConditionFalseWithMessage(condition k8upv1alpha1.ConditionTy
 // patchConditions patches the Status object on the K8s controller with the given Conditions
 func (c *Config) patchConditions(conditionStatus metav1.ConditionStatus, reason k8upv1alpha1.ConditionReason, message string, conditions ...k8upv1alpha1.ConditionType) {
 	runtimeObject := c.Obj.GetRuntimeObject()
-	patch := client.MergeFrom(runtimeObject.DeepCopyObject())
+	patch := client.MergeFrom(runtimeObject.DeepCopyObject().(client.Object))
 
 	status := c.Obj.GetStatus()
 

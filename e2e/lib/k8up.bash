@@ -34,6 +34,7 @@ setup() {
 	debug ""
 }
 
+# Runs before each test file
 setup_file() {
 	reset_debug
 	clear_pv_data
@@ -46,6 +47,7 @@ teardown() {
 clear_pv_data() {
 	rm -rfv ./debug/data/pvc-subject
 	mkdir -p ./debug/data/pvc-subject
+	chmod -R a+rw ./debug/data/pvc-subject
 }
 
 kustomize() {
@@ -64,11 +66,12 @@ restic() {
 		--env "AWS_SECRET_KEY=mysecretkey" \
 		--env "RESTIC_PASSWORD=myreposecret" \
 		--pod-running-timeout 10s \
-		--quiet=true \
+		--timeout 3s \
+		--quiet \
 		--command -- \
 		restic \
 		--no-cache \
-		-r "s3:http://minio.minio.svc.cluster.local:9000/backup" \
+		--repo "s3:http://minio.minio.svc.cluster.local:9000/backup" \
 		"${@}" \
 		--json
 }

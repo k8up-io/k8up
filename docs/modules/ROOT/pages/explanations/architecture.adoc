@@ -2,8 +2,8 @@
 
 K8up consists of two parts:
 
-* Kubernetes Operator: https://github.com/vshn/k8up[K8up]
-* Restic wrapper: https://github.com/vshn/wrestic/[wrestic]
+* Kubernetes Operator: https://github.com/vshn/k8up/tree/master/operator[K8up]
+* Restic wrapper: https://github.com/vshn/k8up/tree/master/restic[wrestic]
 
 == High Level Description
 

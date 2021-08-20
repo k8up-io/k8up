@@ -25,7 +25,7 @@ lint() {
 		handle_error "'$1' does not exist or is not a regular file."
 		return 1
 	fi
-	
+
 	# Make the regular expression case-insensitive
 	shopt -s nocasematch;
 
@@ -38,24 +38,24 @@ lint() {
 
 		# Increase the line number
 		current_line_number=$((current_line_number + 1))
-		
+
 		# Debug
 		detik_debug "Read line $current_line_number: $line"
-		
+
 		# Skip empty lines and comments
-		if [[ ! -n "$line" ]] || [[ "$line" =~ ^[[:space:]]*#.* ]]; then
+		if [[ -z "$line" ]] || [[ "$line" =~ ^[[:space:]]*#.* ]]; then
 			if [[ "$multi_line" == "0" ]]; then
 				handle_error "Incomplete multi-line statement at $current_line_number."
-				$current_line=""
+				current_line=""
 			fi
 			continue
 		fi
-		
+
 		# Is this line a part of a multi-line statement?
 		was_multi_line="$multi_line"
 		[[ "$line" =~ ^.*\\$ ]]
 		multi_line="$?"
-		
+
 		# Do we need to update the user line number?
 		if [[ "$was_multi_line" != "0" ]]; then
 			user_line_number="$current_line_number"
@@ -69,7 +69,7 @@ lint() {
 		else
 			current_line="$line"
 		fi
-		
+
 		# When we have a complete line...
 		if [[ "$multi_line" != "0" ]]; then
 			check_line "$current_line" "$user_line_number"
@@ -84,7 +84,7 @@ lint() {
 	else
 		echo "$verified_entries_count DETIK queries were verified."
 	fi
-	
+
 	if [[ "$errors_count" == "1" ]]; then
 		echo "1 DETIK query was found to be invalid or malformed."
 	else
@@ -93,7 +93,7 @@ lint() {
 
 	# Prepare the result
 	res="$errors_count"
-	
+
 	# Reset global variables
 	errors_count=0
 	verified_entries_count=0
@@ -115,29 +115,29 @@ check_line() {
 	line="$1"
 	line_number="$2"
 	context="Current line: $line"
-	
+
 	line=$(echo "$line" | sed -e 's/"[[:space:]]*"//g')
 	line=$(trim "$line")
 	context="$context\nPurged line:  $line"
-	
+
 	# Basic case: "run try", "run verify", "try", "verify" alone
 	if [[ "$line" =~ ^(run[[:space:]]+)?try$ ]] || [[ "$line" =~ ^(run[[:space:]]+)?verify$ ]]; then
 		verified_entries_count=$((verified_entries_count + 1))
 		handle_error "Empty statement at line $line_number." "$context"
-	
+
 	# We have "try" or "run try" followed by something
 	elif [[ "$line" =~ $lint_try_regex ]]; then
 		verified_entries_count=$((verified_entries_count + 1))
-		
+
 		part=$(clean_regex_part "${BASH_REMATCH[2]}")
 		context="$context\nRegex part:  $part"
 
 		verify_against_pattern "$part" "$try_regex_verify"
 		p_verify="$?"
-		
+
 		verify_against_pattern "$part" "$try_regex_find"
 		p_find="$?"
-		
+
 		# detik_debug "p_verify=$p_verify, p_find=$p_find, part=$part"
 		if [[ "$p_verify" != "0" ]] && [[ "$p_find" != "0" ]]; then
 			handle_error "Invalid TRY statement at line $line_number." "$context"
@@ -146,19 +146,19 @@ check_line() {
 	# We have "verify" or "run verify" followed by something
 	elif [[ "$line" =~ $lint_verify_regex ]]; then
 		verified_entries_count=$((verified_entries_count + 1))
-		
+
 		part=$(clean_regex_part "${BASH_REMATCH[2]}")
 		context="$context\nRegex part:  $part"
 
 		verify_against_pattern "$part" "$verify_regex_count_is"
 		p_is="$?"
-		
+
 		verify_against_pattern "$part" "$verify_regex_count_are"
 		p_are="$?"
-		
+
 		verify_against_pattern "$part" "$verify_regex_property_is"
 		p_prop="$?"
-		
+
 		# detik_debug "p_is=$p_is, p_are=$p_are, p_prop=$p_prop, part=$part"
 		if [[ "$p_is" != "0" ]] && [[ "$p_are" != "0" ]]  && [[ "$p_prop" != "0" ]] ; then
 			handle_error "Invalid VERIFY statement at line $line_number." "$context"
@@ -187,12 +187,12 @@ remove_surrounding_quotes() {
 	# Starting and ending with a quote? Remove them.
 	if [[ "$1" =~ ^\"(.*)\"$ ]]; then
 		echo "${BASH_REMATCH[1]}"
-	
+
 	# Otherwise, ignore it
 	else
 		echo "$1"
 	fi
-	
+
 	return 0
 }
 
@@ -209,7 +209,7 @@ remove_surrounding_quotes() {
 # @param {string} The line to verify
 # @param {string} The pattern
 # @return
-#	0 if everyhing went fine
+#	0 if everything went fine
 #	not-zero in case of error
 verify_against_pattern() {
 
@@ -225,7 +225,7 @@ verify_against_pattern() {
 		[[ "$line" =~ $pattern ]]
 		code="$?"
 	fi
-	
+
 	return "$code"
 }
 

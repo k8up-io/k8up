@@ -71,7 +71,6 @@ type Configuration struct {
 
 	// Enabling this will ensure there is only one active controller manager.
 	EnableLeaderElection bool   `koanf:"enable-leader-election"`
-	LogLevel             string `koanf:"log-level"`
 	OperatorNamespace    string `koanf:"operator-namespace"`
 
 	// Allows to pass options to restic, see https://restic.readthedocs.io/en/stable/manual_rest.html?highlight=--option#usage-help

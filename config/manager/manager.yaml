@@ -18,6 +18,8 @@ spec:
       containers:
       - name: k8up
         image: quay.io/vshn/k8up:latest
+        args:
+          - operator
         env:
           - name: BACKUP_OPERATOR_NAMESPACE
             valueFrom:

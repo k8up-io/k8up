@@ -1,3 +1,5 @@
+// +build integration
+
 package envtest
 
 import (
@@ -28,7 +30,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
 	"sigs.k8s.io/controller-runtime/pkg/log"
-
 	// +kubebuilder:scaffold:imports
 
 	k8upv1a1 "github.com/vshn/k8up/api/v1alpha1"
@@ -55,16 +56,28 @@ func (ts *Suite) SetupSuite() {
 
 	ts.Ctx = context.Background()
 
-	testbinDir := filepath.Join(Root, "testbin", "bin")
-	info, err := os.Stat(testbinDir)
-	absTestbinDir, _ := filepath.Abs(testbinDir)
-	ts.Require().NoErrorf(err, "'%s' does not seem to exist. Make sure you run `make integration-test` before you run this test in your IDE.", absTestbinDir)
-	ts.Require().Truef(info.IsDir(), "'%s' does not seem to be a directory. Make sure you run `make integration-test` before you run this test in your IDE.", absTestbinDir)
+	envtestAssets, ok := os.LookupEnv("KUBEBUILDER_ASSETS")
+	if !ok {
+		ts.FailNow("The environment variable KUBEBUILDER_ASSETS is undefined. Configure your IDE to set this variable when running the integration test.")
+	}
+
+	info, err := os.Stat(envtestAssets)
+	absEnvtestAssets, _ := filepath.Abs(envtestAssets)
+	ts.Require().NoErrorf(err, "'%s' does not seem to exist. Check KUBEBUILDER_ASSETS and make sure you run `make integration-test` before you run this test in your IDE.", absEnvtestAssets)
+	ts.Require().Truef(info.IsDir(), "'%s' does not seem to be a directory. Check KUBEBUILDER_ASSETS and make sure you run `make integration-test` before you run this test in your IDE.", absEnvtestAssets)
+
+	crds := filepath.Join(Root, "config", "crd", "apiextensions.k8s.io", "v1", "base")
+	absCrds, _ := filepath.Abs(crds)
+	info, err = os.Stat(crds)
+	ts.Require().NoErrorf(err, "'%s' does not seem to exist. Make sure to set the working directory to the project root.", absCrds)
+	ts.Require().Truef(info.IsDir(), "'%s' does not seem to be a directory. Make sure to set the working directory to the project root.", absCrds)
+
+	ts.Logger.Info("envtest directories", "crd", absCrds, "binary assets", absEnvtestAssets)
 
 	testEnv := &envtest.Environment{
 		ErrorIfCRDPathMissing: true,
-		CRDDirectoryPaths:     []string{filepath.Join(Root, "config", "crd", "apiextensions.k8s.io", "v1", "base")},
-		BinaryAssetsDirectory: testbinDir,
+		CRDDirectoryPaths:     []string{crds},
+		BinaryAssetsDirectory: envtestAssets,
 	}
 
 	config, err := testEnv.Start()
@@ -99,7 +112,8 @@ func registerCRDs(ts *Suite) {
 
 func (ts *Suite) TearDownSuite() {
 	err := ts.Env.Stop()
-	ts.Require().NoError(err)
+	ts.Require().NoErrorf(err, "error while stopping test environment")
+	ts.Logger.Info("test environment stopped")
 }
 
 type AssertFunc func(timedCtx context.Context) (done bool, err error)
