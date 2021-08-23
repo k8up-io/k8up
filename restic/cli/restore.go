@@ -212,22 +212,28 @@ func (r *Restic) parsePath(paths []string) string {
 }
 
 func (r *Restic) s3Restore(log logr.Logger, snapshot Snapshot, stats *RestoreStats) error {
-
 	log.Info("S3 chosen as restore destination")
+
+	restoreS3Endpoint, s3AccessKey, s3SecretKey, err := r.getS3FromEnv()
+	if err != nil {
+		log.Error(err, "unable to load S3 information")
+		return err
+	}
 
 	snapDate := snapshot.Time.Format(time.RFC3339)
 	PVCName := r.parsePath(snapshot.Paths)
 	fileName := fmt.Sprintf("backup-%v-%v-%v.tar.gz", snapshot.Hostname, PVCName, snapDate)
-	stats.RestoreLocation = fmt.Sprintf("%s/%s", os.Getenv(RestoreS3EndpointEnv), fileName)
+
+	stats.RestoreLocation = fmt.Sprintf("%s/%s", restoreS3Endpoint, fileName)
 	stats.SnapshotID = snapshot.ID
 
-	s3Client := s3.New(os.Getenv(RestoreS3EndpointEnv), os.Getenv(RestoreS3AccessKeyIDEnv), os.Getenv(RestoreS3SecretAccessKey))
-	err := s3Client.Connect()
+	errorChannel, uploadWritePipe, err := r.startS3Upload(fileName, restoreS3Endpoint, s3AccessKey, s3SecretKey)
 	if err != nil {
 		return err
 	}
 
-	uploadReadPipe, uploadWritePipe := io.Pipe()
+	zipWriter := gzip.NewWriter(uploadWritePipe)
+	finalWriter := io.WriteCloser(zipWriter)
 
 	latestSnap, err := r.getLatestSnapshot(snapshot.ID, log)
 	if err != nil {
@@ -236,14 +242,8 @@ func (r *Restic) s3Restore(log logr.Logger, snapshot Snapshot, stats *RestoreSta
 
 	snapRoot, tarHeader := r.getSnapshotRoot(latestSnap, log, stats)
 
-	zipWriter := gzip.NewWriter(uploadWritePipe)
-
-	errorChannel := r.startS3Upload(fileName, uploadReadPipe, s3Client)
-
-	finalWriter := io.WriteCloser(zipWriter)
-
 	// If it's an stdin backup we restore we'll only have to write one header
-	// as stdin backups only contain one vritual file.
+	// as stdin backups only contain one virtual file.
 	if tarHeader != nil {
 		tw := tar.NewWriter(zipWriter)
 		err := tw.WriteHeader(tarHeader)
@@ -254,6 +254,18 @@ func (r *Restic) s3Restore(log logr.Logger, snapshot Snapshot, stats *RestoreSta
 		defer tw.Close()
 	}
 
+	r.doRestore(log, latestSnap, snapRoot, finalWriter, fileName)
+	defer log.Info("restore finished")
+
+	err = r.closeRestoreWriters(finalWriter, zipWriter, uploadWritePipe)
+	if err != nil {
+		return err
+	}
+
+	return <-errorChannel
+}
+
+func (r *Restic) doRestore(log logr.Logger, latestSnap Snapshot, snapRoot string, finalWriter io.WriteCloser, fileName string) {
 	opts := CommandOptions{
 		Path:   r.resticPath,
 		Args:   r.globalFlags.ApplyToCommand("dump", latestSnap.ID, snapRoot),
@@ -265,8 +277,9 @@ func (r *Restic) s3Restore(log logr.Logger, snapshot Snapshot, stats *RestoreSta
 
 	cmd := NewCommand(r.ctx, log, opts)
 	cmd.Run()
-	defer log.Info("restore finished")
+}
 
+func (r *Restic) closeRestoreWriters(finalWriter io.WriteCloser, zipWriter *gzip.Writer, uploadWritePipe *io.PipeWriter) (err error) {
 	// We need to close the writers in a specific order
 	err = finalWriter.Close()
 	if err != nil {
@@ -278,17 +291,23 @@ func (r *Restic) s3Restore(log logr.Logger, snapshot Snapshot, stats *RestoreSta
 	}
 
 	// Send EOF so minio client knows it's finished
-	// or else the chanel will block forever
+	// or else the channel will block forever
 	err = uploadWritePipe.Close()
 	if err != nil {
 		return err
 	}
-
-	return <-errorChannel
-
+	return nil
 }
 
-func (r *Restic) startS3Upload(fileName string, uploadReadPipe io.Reader, s3Client *s3.Client) chan error {
+func (r *Restic) startS3Upload(fileName string, restoreS3Endpoint, s3AccessKey, s3SecretKey string) (chan error, *io.PipeWriter, error) {
+	s3Client := s3.New(restoreS3Endpoint, s3AccessKey, s3SecretKey)
+	err := s3Client.Connect()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	uploadReadPipe, uploadWritePipe := io.Pipe()
+
 	errorChannel := make(chan error)
 	go func() {
 		errorChannel <- s3Client.Upload(s3.UploadObject{
@@ -296,7 +315,23 @@ func (r *Restic) startS3Upload(fileName string, uploadReadPipe io.Reader, s3Clie
 			ObjectStream: uploadReadPipe,
 		})
 	}()
-	return errorChannel
+	return errorChannel, uploadWritePipe, nil
+}
+
+func (r *Restic) getS3FromEnv() (restoreS3Endpoint string, s3AccessKey string, s3SecretKey string, err error) {
+	restoreS3Endpoint, ok := os.LookupEnv(RestoreS3EndpointEnv)
+	if !ok {
+		return restoreS3Endpoint, s3AccessKey, s3SecretKey, fmt.Errorf("the environment variable '%s' is undefined, but it is required", RestoreS3EndpointEnv)
+	}
+	s3AccessKey, ok = os.LookupEnv(RestoreS3AccessKeyIDEnv)
+	if !ok {
+		return restoreS3Endpoint, s3AccessKey, s3SecretKey, fmt.Errorf("the environment variable '%s' is undefined, but it is required", RestoreS3AccessKeyIDEnv)
+	}
+	s3SecretKey, ok = os.LookupEnv(RestoreS3SecretAccessKey)
+	if !ok {
+		return restoreS3Endpoint, s3AccessKey, s3SecretKey, fmt.Errorf("the environment variable '%s' is undefined, but it is required", RestoreS3SecretAccessKey)
+	}
+	return restoreS3Endpoint, s3AccessKey, s3SecretKey, nil
 }
 
 // getSnapshotRoot will return the correct root to trigger the restore. If the
