@@ -75,6 +75,27 @@ func resticMain(c *cli.Context) error {
 }
 
 func run(ctx context.Context, resticCLI *resticCli.Restic, mainLogger logr.Logger) error {
+	if err := resticInitialization(resticCLI, mainLogger); err != nil {
+		return err
+	}
+
+	if err := waitForEndOfConcurringOperations(resticCLI, mainLogger); err != nil {
+		return err
+	}
+
+	err := doNonBackupTasks(resticCLI, mainLogger)
+	if err != nil {
+		return err
+	}
+
+	if prune || check || restore || archive {
+		return nil
+	}
+
+	return doBackup(ctx, resticCLI, mainLogger)
+}
+
+func resticInitialization(resticCLI *resticCli.Restic, mainLogger logr.Logger) error {
 	if err := resticCLI.Init(); err != nil {
 		mainLogger.Error(err, "failed to initialise the repository")
 		return err
@@ -90,34 +111,60 @@ func run(ctx context.Context, resticCLI *resticCli.Restic, mainLogger logr.Logge
 		mainLogger.Error(err, "failed to list snapshots")
 		os.Exit(1)
 	}
+	return nil
+}
 
+func waitForEndOfConcurringOperations(resticCLI *resticCli.Restic, mainLogger logr.Logger) error {
 	if prune || check {
 		if err := resticCLI.Wait(); err != nil {
 			mainLogger.Error(err, "failed to list repository locks")
 			return err
 		}
 	}
+	return nil
+}
 
-	skipBackup := false
+func doNonBackupTasks(resticCLI *resticCli.Restic, mainLogger logr.Logger) error {
+	if err := doPrune(resticCLI, mainLogger); err != nil {
+		return err
+	}
 
+	if err := doCheck(resticCLI, mainLogger); err != nil {
+		return err
+	}
+
+	if err := doRestore(resticCLI, mainLogger); err != nil {
+		return err
+	}
+
+	if err := doArchive(resticCLI, mainLogger); err != nil {
+		return err
+	}
+	return nil
+}
+
+func doPrune(resticCLI *resticCli.Restic, mainLogger logr.Logger) error {
 	if prune {
-		skipBackup = true
 		if err := resticCLI.Prune(tags); err != nil {
 			mainLogger.Error(err, "prune job failed")
 			return err
 		}
 	}
+	return nil
+}
 
+func doCheck(resticCLI *resticCli.Restic, mainLogger logr.Logger) error {
 	if check {
-		skipBackup = true
 		if err := resticCLI.Check(); err != nil {
 			mainLogger.Error(err, "check job failed")
 			return err
 		}
 	}
+	return nil
+}
 
+func doRestore(resticCLI *resticCli.Restic, mainLogger logr.Logger) error {
 	if restore {
-		skipBackup = true
 		if err := resticCLI.Restore(restoreSnap, resticCli.RestoreOptions{
 			RestoreType:   resticCli.RestoreType(restoreType),
 			RestoreDir:    os.Getenv(resticCli.RestoreDirEnv),
@@ -133,19 +180,20 @@ func run(ctx context.Context, resticCLI *resticCli.Restic, mainLogger logr.Logge
 			return err
 		}
 	}
+	return nil
+}
 
+func doArchive(resticCLI *resticCli.Restic, mainLogger logr.Logger) error {
 	if archive {
-		skipBackup = true
 		if err := resticCLI.Archive(restoreFilter, verifyRestore, tags); err != nil {
 			mainLogger.Error(err, "archive job failed")
 			return err
 		}
 	}
+	return nil
+}
 
-	if skipBackup {
-		return nil
-	}
-
+func doBackup(ctx context.Context, resticCLI *resticCli.Restic, mainLogger logr.Logger) error {
 	err := backupAnnotatedPods(ctx, resticCLI, mainLogger)
 	if err != nil {
 		mainLogger.Error(err, "backup job failed", "step", "backup of annotated pods")
@@ -158,19 +206,11 @@ func run(ctx context.Context, resticCLI *resticCli.Restic, mainLogger logr.Logge
 		mainLogger.Error(err, "backup job failed", "step", "backup of dir failed", "dir", getBackupDir())
 		return err
 	}
-
 	return nil
 }
 
 func backupAnnotatedPods(ctx context.Context, resticCLI *resticCli.Restic, mainLogger logr.Logger) error {
-	commandAnnotation := os.Getenv(commandEnv)
-	if commandAnnotation == "" {
-		commandAnnotation = "k8up.syn.tools/backupcommand"
-	}
-	fileextAnnotation := os.Getenv(fileextEnv)
-	if fileextAnnotation == "" {
-		fileextAnnotation = "k8up.syn.tools/file-extension"
-	}
+	commandAnnotation, fileextAnnotation, hostname := getVarsFromEnvOrDefault()
 
 	_, serviceErr := os.Stat("/var/run/secrets/kubernetes.io")
 	_, kubeconfigErr := os.Stat(kubernetes.Kubeconfig)
@@ -180,29 +220,57 @@ func backupAnnotatedPods(ctx context.Context, resticCLI *resticCli.Restic, mainL
 		return nil
 	}
 
-	podLister := kubernetes.NewPodLister(ctx, commandAnnotation, fileextAnnotation, os.Getenv(resticCli.Hostname), mainLogger)
+	podLister := kubernetes.NewPodLister(ctx, commandAnnotation, fileextAnnotation, hostname, mainLogger)
 	podList, err := podLister.ListPods()
-
 	if err != nil {
-		mainLogger.Error(err, "could not list pods", "namespace", os.Getenv(resticCli.Hostname))
+		mainLogger.Error(err, "could not list pods", "namespace", hostname)
 		return nil
 	}
 
 	for _, pod := range podList {
-		data, err := kubernetes.PodExec(pod, mainLogger)
-		if err != nil {
-			mainLogger.Error(errors.New("error occurred during data stream from k8s"), "pod execution was interrupted")
-			return err
-		}
-		filename := fmt.Sprintf("/%s-%s", os.Getenv(resticCli.Hostname), pod.ContainerName)
-		err = resticCLI.StdinBackup(data, filename, pod.FileExtension, tags)
-		if err != nil {
-			mainLogger.Error(err, "backup commands failed")
+		if err := backupAnnotatedPod(pod, mainLogger, hostname, resticCLI); err != nil {
 			return err
 		}
 	}
 
 	return nil
+}
+
+func backupAnnotatedPod(pod kubernetes.BackupPod, mainLogger logr.Logger, hostname string, resticCLI *resticCli.Restic) error {
+	data, err := kubernetes.PodExec(pod, mainLogger)
+	if err != nil {
+		mainLogger.Error(errors.New("error occurred during data stream from k8s"), "pod execution was interrupted")
+		return err
+	}
+	filename := fmt.Sprintf("/%s-%s", hostname, pod.ContainerName)
+	err = resticCLI.StdinBackup(data, filename, pod.FileExtension, tags)
+	if err != nil {
+		mainLogger.Error(err, "backup commands failed")
+		return err
+	}
+	return nil
+}
+
+func getVarsFromEnvOrDefault() (string, string, string) {
+	commandAnnotation, ok := os.LookupEnv(commandEnv)
+	if !ok {
+		commandAnnotation = "k8up.syn.tools/backupcommand"
+	}
+	fileextAnnotation, ok := os.LookupEnv(fileextEnv)
+	if !ok {
+		fileextAnnotation = "k8up.syn.tools/file-extension"
+	}
+
+	var hostname string
+	hostname, ok = os.LookupEnv(resticCli.Hostname)
+	if !ok {
+		h, err := os.Hostname()
+		if err != nil {
+			hostname = "unknown-hostname"
+		}
+		hostname = h
+	}
+	return commandAnnotation, fileextAnnotation, hostname
 }
 
 func cancelOnTermination(cancel context.CancelFunc, mainLogger logr.Logger) {
