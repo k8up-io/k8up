@@ -57,80 +57,98 @@ func newPromMetrics() *PromMetrics {
 		"namespace",
 	}
 
-	errors := prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Namespace: Namespace,
-		Subsystem: Subsystem,
-		Name:      "last_errors",
-		Help:      "How many errors the backup or check had",
-	}, labels)
+	return &PromMetrics{
+		Errors:             errorsGaugeVec(labels),
+		AvailableSnapshots: availableSnapshotsGauge(),
+		NewFiles:           newFilesGaugeVec(labels),
+		ChangedFiles:       changedFiledGaugeVec(labels),
+		UnmodifiedFiles:    unmodifiedFilesGaugeVec(labels),
+		NewDirs:            newDirsGaugeVec(labels),
+		ChangedDirs:        changedDirsGaugeVec(labels),
+		UnmodifiedDirs:     unmodifiedDirsGaugeVec(labels),
+		DataTransferred:    dataTransferredGaugeVec(labels),
+	}
+}
 
-	availableSnapshots := prometheus.NewGauge(prometheus.GaugeOpts{
-		Namespace: Namespace,
-		Subsystem: Subsystem,
-		Name:      "available_snapshots",
-		Help:      "How many snapshots are available",
-	})
-
-	newFiles := prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Namespace: Namespace,
-		Subsystem: Subsystem,
-		Name:      "new_files_during_backup",
-		Help:      "How many new files were backed up during the last backup",
-	}, labels)
-
-	changedFiles := prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Namespace: Namespace,
-		Subsystem: Subsystem,
-		Name:      "changed_files_during_backup",
-		Help:      "How many changed files were backed up during the last backup",
-	}, labels)
-
-	unmodifiedFiles := prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Namespace: Namespace,
-		Subsystem: Subsystem,
-		Name:      "unmodified_files_during_backup",
-		Help:      "How many files were skipped due to no modifications",
-	}, labels)
-
-	newDirs := prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Namespace: Namespace,
-		Subsystem: Subsystem,
-		Name:      "new_directories_during_backup",
-		Help:      "How many new directories were backed up during the last backup",
-	}, labels)
-
-	changedDirs := prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Namespace: Namespace,
-		Subsystem: Subsystem,
-		Name:      "changed_directories_during_backup",
-		Help:      "How many changed directories were backed up during the last backup",
-	}, labels)
-
-	unmodifiedDirs := prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Namespace: Namespace,
-		Subsystem: Subsystem,
-		Name:      "unmodified_directories_during_backup",
-		Help:      "How many directories were skipped due to no modifications",
-	}, labels)
-
-	dataTransferred := prometheus.NewGaugeVec(prometheus.GaugeOpts{
+func dataTransferredGaugeVec(labels []string) *prometheus.GaugeVec {
+	return prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Namespace: Namespace,
 		Subsystem: Subsystem,
 		Name:      "data_transferred_during_backup",
 		Help:      "Amount of data transferred during last backup",
 	}, labels)
+}
 
-	return &PromMetrics{
-		Errors:             errors,
-		AvailableSnapshots: availableSnapshots,
-		NewFiles:           newFiles,
-		ChangedFiles:       changedFiles,
-		UnmodifiedFiles:    unmodifiedFiles,
-		NewDirs:            newDirs,
-		ChangedDirs:        changedDirs,
-		UnmodifiedDirs:     unmodifiedDirs,
-		DataTransferred:    dataTransferred,
-	}
+func unmodifiedDirsGaugeVec(labels []string) *prometheus.GaugeVec {
+	return prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Namespace: Namespace,
+		Subsystem: Subsystem,
+		Name:      "unmodified_directories_during_backup",
+		Help:      "How many directories were skipped due to no modifications",
+	}, labels)
+}
+
+func changedDirsGaugeVec(labels []string) *prometheus.GaugeVec {
+	return prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Namespace: Namespace,
+		Subsystem: Subsystem,
+		Name:      "changed_directories_during_backup",
+		Help:      "How many changed directories were backed up during the last backup",
+	}, labels)
+}
+
+func newDirsGaugeVec(labels []string) *prometheus.GaugeVec {
+	return prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Namespace: Namespace,
+		Subsystem: Subsystem,
+		Name:      "new_directories_during_backup",
+		Help:      "How many new directories were backed up during the last backup",
+	}, labels)
+}
+
+func unmodifiedFilesGaugeVec(labels []string) *prometheus.GaugeVec {
+	return prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Namespace: Namespace,
+		Subsystem: Subsystem,
+		Name:      "unmodified_files_during_backup",
+		Help:      "How many files were skipped due to no modifications",
+	}, labels)
+}
+
+func changedFiledGaugeVec(labels []string) *prometheus.GaugeVec {
+	return prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Namespace: Namespace,
+		Subsystem: Subsystem,
+		Name:      "changed_files_during_backup",
+		Help:      "How many changed files were backed up during the last backup",
+	}, labels)
+}
+
+func newFilesGaugeVec(labels []string) *prometheus.GaugeVec {
+	return prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Namespace: Namespace,
+		Subsystem: Subsystem,
+		Name:      "new_files_during_backup",
+		Help:      "How many new files were backed up during the last backup",
+	}, labels)
+}
+
+func availableSnapshotsGauge() prometheus.Gauge {
+	return prometheus.NewGauge(prometheus.GaugeOpts{
+		Namespace: Namespace,
+		Subsystem: Subsystem,
+		Name:      "available_snapshots",
+		Help:      "How many snapshots are available",
+	})
+}
+
+func errorsGaugeVec(labels []string) *prometheus.GaugeVec {
+	return prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Namespace: Namespace,
+		Subsystem: Subsystem,
+		Name:      "last_errors",
+		Help:      "How many errors the backup or check had",
+	}, labels)
 }
 
 // please ensure that there's a current list of snapshots in the restic instance before calling this.
@@ -170,7 +188,7 @@ func (r *RawMetrics) prometheus() *PromMetrics {
 	return metrics
 }
 
-func (b *BackupStats) ToJson() []byte {
+func (b *BackupStats) ToJSON() []byte {
 	jsonData, _ := json.Marshal(b)
 	return jsonData
 }
@@ -223,7 +241,7 @@ type RestoreStats struct {
 	RestoredFiles   []string `json:"restored_files,omitempty"`
 }
 
-func (r *RestoreStats) ToJson() []byte {
+func (r *RestoreStats) ToJSON() []byte {
 	jsonData, _ := json.Marshal(r)
 	return jsonData
 }

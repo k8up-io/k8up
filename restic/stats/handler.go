@@ -68,7 +68,7 @@ func (h *Handler) SendWebhook(hook cli.WebhookProvider) error {
 
 	webhookLogger.Info("sending webhooks", "url", h.webhookURL)
 
-	data := hook.ToJson()
+	data := hook.ToJSON()
 
 	if len(data) <= 0 {
 		return fmt.Errorf("webhook data is empty")
