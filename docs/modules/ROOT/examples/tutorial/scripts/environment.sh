@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 export KUBECONFIG=""
 export RESTIC_REPOSITORY=s3:$(minikube service minio --url)/backups/
 export RESTIC_PASSWORD=p@ssw0rd
