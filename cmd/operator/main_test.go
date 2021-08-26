@@ -43,7 +43,7 @@ func Test_loadEnvironmentVariables(t *testing.T) {
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
 			require.NoError(t, os.Setenv(tt.givenKey, tt.givenValue))
-			loadEnvironmentVariables()
+			loadEnvironmentVariables(nil)
 			tt.assertConfig(t, cfg.Config)
 		})
 	}

@@ -2,7 +2,6 @@ package restic
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"os"
 	"os/signal"
@@ -79,11 +78,11 @@ func run(ctx context.Context, resticCLI *resticCli.Restic, mainLogger logr.Logge
 		return err
 	}
 
-	if err := waitForEndOfConcurringOperations(resticCLI, mainLogger); err != nil {
+	if err := waitForEndOfConcurringOperations(resticCLI); err != nil {
 		return err
 	}
 
-	err := doNonBackupTasks(resticCLI, mainLogger)
+	err := doNonBackupTasks(resticCLI)
 	if err != nil {
 		return err
 	}
@@ -97,8 +96,7 @@ func run(ctx context.Context, resticCLI *resticCli.Restic, mainLogger logr.Logge
 
 func resticInitialization(resticCLI *resticCli.Restic, mainLogger logr.Logger) error {
 	if err := resticCLI.Init(); err != nil {
-		mainLogger.Error(err, "failed to initialise the repository")
-		return err
+		return fmt.Errorf("failed to initialise the restic repository: %w", err)
 	}
 
 	if err := resticCLI.Unlock(false); err != nil {
@@ -108,62 +106,58 @@ func resticInitialization(resticCLI *resticCli.Restic, mainLogger logr.Logger) e
 	// This builds up the cache without any other side effect. So it won't block
 	// during any stdin backups or such.
 	if err := resticCLI.Snapshots(nil); err != nil {
-		mainLogger.Error(err, "failed to list snapshots")
-		os.Exit(1)
+		return fmt.Errorf("failed to list snapshots: %w", err)
 	}
 	return nil
 }
 
-func waitForEndOfConcurringOperations(resticCLI *resticCli.Restic, mainLogger logr.Logger) error {
+func waitForEndOfConcurringOperations(resticCLI *resticCli.Restic) error {
 	if prune || check {
 		if err := resticCLI.Wait(); err != nil {
-			mainLogger.Error(err, "failed to list repository locks")
-			return err
+			return fmt.Errorf("failed to list repository locks: %w", err)
 		}
 	}
 	return nil
 }
 
-func doNonBackupTasks(resticCLI *resticCli.Restic, mainLogger logr.Logger) error {
-	if err := doPrune(resticCLI, mainLogger); err != nil {
+func doNonBackupTasks(resticCLI *resticCli.Restic) error {
+	if err := doPrune(resticCLI); err != nil {
 		return err
 	}
 
-	if err := doCheck(resticCLI, mainLogger); err != nil {
+	if err := doCheck(resticCLI); err != nil {
 		return err
 	}
 
-	if err := doRestore(resticCLI, mainLogger); err != nil {
+	if err := doRestore(resticCLI); err != nil {
 		return err
 	}
 
-	if err := doArchive(resticCLI, mainLogger); err != nil {
+	if err := doArchive(resticCLI); err != nil {
 		return err
 	}
 	return nil
 }
 
-func doPrune(resticCLI *resticCli.Restic, mainLogger logr.Logger) error {
+func doPrune(resticCLI *resticCli.Restic) error {
 	if prune {
 		if err := resticCLI.Prune(tags); err != nil {
-			mainLogger.Error(err, "prune job failed")
-			return err
+			return fmt.Errorf("prune job failed: %w", err)
 		}
 	}
 	return nil
 }
 
-func doCheck(resticCLI *resticCli.Restic, mainLogger logr.Logger) error {
+func doCheck(resticCLI *resticCli.Restic) error {
 	if check {
 		if err := resticCLI.Check(); err != nil {
-			mainLogger.Error(err, "check job failed")
-			return err
+			return fmt.Errorf("check job failed: %w", err)
 		}
 	}
 	return nil
 }
 
-func doRestore(resticCLI *resticCli.Restic, mainLogger logr.Logger) error {
+func doRestore(resticCLI *resticCli.Restic) error {
 	if restore {
 		if err := resticCLI.Restore(restoreSnap, resticCli.RestoreOptions{
 			RestoreType:   resticCli.RestoreType(restoreType),
@@ -176,18 +170,16 @@ func doRestore(resticCLI *resticCli.Restic, mainLogger logr.Logger) error {
 				SecretKey: os.Getenv(resticCli.RestoreS3AccessKeyIDEnv),
 			},
 		}, tags); err != nil {
-			mainLogger.Error(err, "restore job failed")
-			return err
+			return fmt.Errorf("restore job failed: %w", err)
 		}
 	}
 	return nil
 }
 
-func doArchive(resticCLI *resticCli.Restic, mainLogger logr.Logger) error {
+func doArchive(resticCLI *resticCli.Restic) error {
 	if archive {
 		if err := resticCLI.Archive(restoreFilter, verifyRestore, tags); err != nil {
-			mainLogger.Error(err, "archive job failed")
-			return err
+			return fmt.Errorf("archive job failed: %w", err)
 		}
 	}
 	return nil
@@ -196,15 +188,14 @@ func doArchive(resticCLI *resticCli.Restic, mainLogger logr.Logger) error {
 func doBackup(ctx context.Context, resticCLI *resticCli.Restic, mainLogger logr.Logger) error {
 	err := backupAnnotatedPods(ctx, resticCLI, mainLogger)
 	if err != nil {
-		mainLogger.Error(err, "backup job failed", "step", "backup of annotated pods")
-		return err
+		return fmt.Errorf("backup of annotated pods failed: %w", err)
 	}
 	mainLogger.Info("backups of annotated jobs have finished successfully")
 
-	err = resticCLI.Backup(getBackupDir(), tags)
+	backupDir := getBackupDir()
+	err = resticCLI.Backup(backupDir, tags)
 	if err != nil {
-		mainLogger.Error(err, "backup job failed", "step", "backup of dir failed", "dir", getBackupDir())
-		return err
+		return fmt.Errorf("backup job failed in dir '%s': %w", backupDir, err)
 	}
 	return nil
 }
@@ -224,7 +215,7 @@ func backupAnnotatedPods(ctx context.Context, resticCLI *resticCli.Restic, mainL
 	podList, err := podLister.ListPods()
 	if err != nil {
 		mainLogger.Error(err, "could not list pods", "namespace", hostname)
-		return nil
+		return fmt.Errorf("could not list pods: %w", err)
 	}
 
 	for _, pod := range podList {
@@ -239,14 +230,12 @@ func backupAnnotatedPods(ctx context.Context, resticCLI *resticCli.Restic, mainL
 func backupAnnotatedPod(pod kubernetes.BackupPod, mainLogger logr.Logger, hostname string, resticCLI *resticCli.Restic) error {
 	data, err := kubernetes.PodExec(pod, mainLogger)
 	if err != nil {
-		mainLogger.Error(errors.New("error occurred during data stream from k8s"), "pod execution was interrupted")
-		return err
+		return fmt.Errorf("error occurred during data stream from k8s: %w", err)
 	}
 	filename := fmt.Sprintf("/%s-%s", hostname, pod.ContainerName)
 	err = resticCLI.StdinBackup(data, filename, pod.FileExtension, tags)
 	if err != nil {
-		mainLogger.Error(err, "backup commands failed")
-		return err
+		return fmt.Errorf("backup commands failed: %w", err)
 	}
 	return nil
 }
