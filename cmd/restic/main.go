@@ -78,7 +78,7 @@ func run(ctx context.Context, resticCLI *resticCli.Restic, mainLogger logr.Logge
 		return err
 	}
 
-	if err := waitForEndOfConcurringOperations(resticCLI); err != nil {
+	if err := waitForEndOfConcurrentOperations(resticCLI); err != nil {
 		return err
 	}
 
@@ -111,7 +111,7 @@ func resticInitialization(resticCLI *resticCli.Restic, mainLogger logr.Logger) e
 	return nil
 }
 
-func waitForEndOfConcurringOperations(resticCLI *resticCli.Restic) error {
+func waitForEndOfConcurrentOperations(resticCLI *resticCli.Restic) error {
 	if prune || check {
 		if err := resticCLI.Wait(); err != nil {
 			return fmt.Errorf("failed to list repository locks: %w", err)
