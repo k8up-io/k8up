@@ -82,13 +82,8 @@ func run(ctx context.Context, resticCLI *resticCli.Restic, mainLogger logr.Logge
 		return err
 	}
 
-	err := doNonBackupTasks(resticCLI)
-	if err != nil {
-		return err
-	}
-
 	if prune || check || restore || archive {
-		return nil
+		return doNonBackupTasks(resticCLI)
 	}
 
 	return doBackup(ctx, resticCLI, mainLogger)
