@@ -254,7 +254,8 @@ func (r *Restic) s3Restore(log logr.Logger, snapshot Snapshot, stats *RestoreSta
 		defer tw.Close()
 	}
 
-	r.doRestore(log, latestSnap, snapRoot, finalWriter, fileName)
+	log.Info("starting restore", "s3 filename", fileName)
+	r.doRestore(log, latestSnap, snapRoot, finalWriter)
 	defer log.Info("restore finished")
 
 	err = r.closeRestoreWriters(finalWriter, gzipWriter, uploadWritePipe)
@@ -265,15 +266,13 @@ func (r *Restic) s3Restore(log logr.Logger, snapshot Snapshot, stats *RestoreSta
 	return <-errorChannel
 }
 
-func (r *Restic) doRestore(log logr.Logger, latestSnap Snapshot, snapRoot string, finalWriter io.WriteCloser, fileName string) {
+func (r *Restic) doRestore(log logr.Logger, latestSnap Snapshot, snapRoot string, finalWriter io.WriteCloser) {
 	opts := CommandOptions{
 		Path:   r.resticPath,
 		Args:   r.globalFlags.ApplyToCommand("dump", latestSnap.ID, snapRoot),
 		StdOut: finalWriter,
 		StdErr: logging.NewErrorWriter(log.WithName("restic")),
 	}
-
-	log.Info("starting restore", "s3 filename", fileName)
 
 	cmd := NewCommand(r.ctx, log, opts)
 	cmd.Run()
