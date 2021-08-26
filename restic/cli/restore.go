@@ -232,8 +232,8 @@ func (r *Restic) s3Restore(log logr.Logger, snapshot Snapshot, stats *RestoreSta
 		return err
 	}
 
-	zipWriter := gzip.NewWriter(uploadWritePipe)
-	finalWriter := io.WriteCloser(zipWriter)
+	gzipWriter := gzip.NewWriter(uploadWritePipe)
+	finalWriter := io.WriteCloser(gzipWriter)
 
 	latestSnap, err := r.getLatestSnapshot(snapshot.ID, log)
 	if err != nil {
@@ -245,7 +245,7 @@ func (r *Restic) s3Restore(log logr.Logger, snapshot Snapshot, stats *RestoreSta
 	// If it's an stdin backup we restore we'll only have to write one header
 	// as stdin backups only contain one virtual file.
 	if tarHeader != nil {
-		tw := tar.NewWriter(zipWriter)
+		tw := tar.NewWriter(gzipWriter)
 		err := tw.WriteHeader(tarHeader)
 		if err != nil {
 			return err
@@ -257,7 +257,7 @@ func (r *Restic) s3Restore(log logr.Logger, snapshot Snapshot, stats *RestoreSta
 	r.doRestore(log, latestSnap, snapRoot, finalWriter, fileName)
 	defer log.Info("restore finished")
 
-	err = r.closeRestoreWriters(finalWriter, zipWriter, uploadWritePipe)
+	err = r.closeRestoreWriters(finalWriter, gzipWriter, uploadWritePipe)
 	if err != nil {
 		return err
 	}
