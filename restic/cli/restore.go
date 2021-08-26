@@ -220,10 +220,20 @@ func (r *Restic) parsePath(paths []string) string {
 func (r *Restic) s3Restore(log logr.Logger, snapshot Snapshot, stats *RestoreStats) error {
 	log.Info("S3 chosen as restore destination")
 
+	errorChannel, err := r.s3Upload(log, snapshot, stats)
+	if err != nil {
+		return err
+	}
+
+	s3TransmissionError := <-errorChannel
+	return s3TransmissionError
+}
+
+func (r *Restic) s3Upload(log logr.Logger, snapshot Snapshot, stats *RestoreStats) (chan error, error) {
 	restoreS3Endpoint, s3AccessKey, s3SecretKey, err := r.getS3FromEnv()
 	if err != nil {
 		log.Error(err, "unable to load S3 information")
-		return err
+		return nil, err
 	}
 
 	snapDate := snapshot.Time.Format(time.RFC3339)
@@ -233,18 +243,26 @@ func (r *Restic) s3Restore(log logr.Logger, snapshot Snapshot, stats *RestoreSta
 	stats.RestoreLocation = fmt.Sprintf("%s/%s", restoreS3Endpoint, fileName)
 	stats.SnapshotID = snapshot.ID
 
-	errorChannel, s3writer, err := r.startS3Upload(fileName, restoreS3Endpoint, s3AccessKey, s3SecretKey)
+	errorChannel, s3writer, err := r.s3Connect(fileName, restoreS3Endpoint, s3AccessKey, s3SecretKey)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	defer func(uploadWritePipe *io.PipeWriter) {
-		err := uploadWritePipe.Close()
+	defer func(log logr.Logger, s3writer *io.PipeWriter) {
+		err := s3writer.Close()
 		if err != nil {
-			r.logger.Error(err, "unable to close the s3writer")
+			log.Error(err, "unable to close the s3writer")
 		}
-	}(s3writer)
+	}(log, s3writer)
 
-	latestSnap, err := r.getLatestSnapshot(snapshot.ID, log)
+	err = r.s3Transmission(log, stats, s3writer)
+	if err != nil {
+		return nil, err
+	}
+	return errorChannel, nil
+}
+
+func (r *Restic) s3Transmission(log logr.Logger, stats *RestoreStats, s3writer *io.PipeWriter) error {
+	latestSnap, err := r.getLatestSnapshot(stats.SnapshotID, log)
 	if err != nil {
 		return err
 	}
@@ -255,18 +273,18 @@ func (r *Restic) s3Restore(log logr.Logger, snapshot Snapshot, stats *RestoreSta
 	if err != nil {
 		return err
 	}
-	defer func(finalWriter io.WriteCloser) {
-		err := finalWriter.Close()
+	defer func(log logr.Logger, tgzWriter io.WriteCloser) {
+		err := tgzWriter.Close()
 		if err != nil {
-			r.logger.Error(err, "Unable to close the tgzWriter")
+			log.Error(err, "Unable to close the tgzWriter")
 		}
-	}(tgzWriter)
+	}(log, tgzWriter)
 
-	log.Info("starting restore", "s3 filename", fileName)
+	log.Info("starting restore", "s3 filename", stats.RestoreLocation)
 	r.doRestore(log, latestSnap, snapRoot, tgzWriter)
-	defer log.Info("restore finished")
+	log.Info("restore finished")
 
-	return <-errorChannel
+	return nil
 }
 
 func (r *Restic) tgzWriter(uploadWritePipe *io.PipeWriter, tarHeader *tar.Header) (io.WriteCloser, error) {
@@ -299,7 +317,7 @@ func (r *Restic) doRestore(log logr.Logger, latestSnap Snapshot, snapRoot string
 	cmd.Run()
 }
 
-func (r *Restic) startS3Upload(fileName string, restoreS3Endpoint, s3AccessKey, s3SecretKey string) (chan error, *io.PipeWriter, error) {
+func (r *Restic) s3Connect(fileName string, restoreS3Endpoint, s3AccessKey, s3SecretKey string) (chan error, *io.PipeWriter, error) {
 	s3Client := s3.New(restoreS3Endpoint, s3AccessKey, s3SecretKey)
 	err := s3Client.Connect()
 	if err != nil {
