@@ -55,7 +55,15 @@ run: export BACKUP_ENABLE_LEADER_ELECTION = $(ENABLE_LEADER_ELECTION)
 run: export K8UP_DEBUG = true
 run: export BACKUP_OPERATOR_NAMESPACE = default
 run: fmt vet ## Run against the configured Kubernetes cluster in ~/.kube/config. Use ARGS to pass arguments to the command, e.g. `make run ARGS="--help"`
-	go run ./cmd/k8up/main.go $(ARGS)
+	go run ./cmd/k8up/main.go $(CMD) $(ARGS)
+
+.PHONY: run-operator  ## Run the operator module against the configured Kubernetes cluster in ~/.kube/config. Use ARGS to pass arguments to the command, e.g. `make run ARGS="--help"`
+run-operator: CMD := operator
+run-operator: run
+
+.PHONY: run-restic  ## Run the restic module. Use ARGS to pass arguments to the command, e.g. `make run ARGS="--help"`
+run-restic: CMD := restic
+run-restic: run
 
 .PHONY: install
 install: generate ## Install CRDs into a cluster

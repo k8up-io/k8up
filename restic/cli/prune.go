@@ -41,11 +41,12 @@ func (r *Restic) Prune(tags ArrayOpts) error {
 		args = append(args, keepTagsArg, keepTags)
 	}
 
+	resticPruneLogger := prunelogger.WithName("restic")
 	opts := CommandOptions{
 		Path:   r.resticPath,
 		Args:   r.globalFlags.ApplyToCommand("forget", args...),
-		StdOut: logging.NewInfoWriter(prunelogger.WithName("restic")),
-		StdErr: logging.NewErrorWriter(prunelogger.WithName("restic")),
+		StdOut: logging.NewInfoWriter(resticPruneLogger),
+		StdErr: logging.NewErrorWriter(resticPruneLogger),
 	}
 
 	if len(tags) > 0 {

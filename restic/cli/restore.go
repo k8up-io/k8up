@@ -166,11 +166,12 @@ func (r *Restic) folderRestore(restoreDir string, snapshot Snapshot, restoreFilt
 		args = append(args, "--verify")
 	}
 
+	resticRestoreLogger := log.WithName("restic")
 	opts := CommandOptions{
 		Path:   r.resticPath,
 		Args:   r.globalFlags.ApplyToCommand("restore", args...),
-		StdOut: logging.NewInfoWriter(log.WithName("restic")),
-		StdErr: logging.NewErrorWriter(log.WithName("restic")),
+		StdOut: logging.NewInfoWriter(resticRestoreLogger),
+		StdErr: logging.NewErrorWriter(resticRestoreLogger),
 	}
 
 	cmd := NewCommand(r.ctx, log, opts)

@@ -50,7 +50,7 @@ type BackupStatus struct {
 type SummaryFunc func(summary BackupSummary, errorCount int, folder string, startTimestamp, endTimestamp int64)
 
 // PercentageFunc should format and print the given float.
-type PercentageFunc func(logr.InfoLogger, float64)
+type PercentageFunc func(logr.Logger, float64)
 
 type BackupOutputParser struct {
 	log            logr.Logger
@@ -77,14 +77,14 @@ func New(out outFunc) io.Writer {
 	return &writer{out}
 }
 
-// NewInfoWriter creates a writer which directly writes to the given logger using info level.
-// It ensures that each line is handled seperately. This avoids mangled lines when parsing
+// NewInfoWriter creates a writer with the name "stdout" which directly writes to the given logger using info level.
+// It ensures that each line is handled separately. This avoids mangled lines when parsing
 // JSON outputs.
-func NewInfoWriter(l logr.InfoLogger) io.Writer {
+func NewInfoWriter(l logr.Logger) io.Writer {
 	return New((&LogInfoPrinter{l}).out)
 }
 
-// NewInfoWriter creates a writer which directly writes to the given logger using error level.
+// NewErrorWriter creates a writer with the name "stderr" which directly writes to the given logger using info level.
 // It ensures that each line is handled seperately. This avoids mangled lines when parsing
 // JSON outputs.
 func NewErrorWriter(l logr.Logger) io.Writer {
@@ -107,11 +107,11 @@ func (w writer) Write(p []byte) (int, error) {
 }
 
 type LogInfoPrinter struct {
-	log logr.InfoLogger
+	log logr.Logger
 }
 
 func (l *LogInfoPrinter) out(s string) {
-	l.log.Info(s)
+	l.log.WithName("stdout").Info(s)
 }
 
 type LogErrPrinter struct {
@@ -119,7 +119,7 @@ type LogErrPrinter struct {
 }
 
 func (l *LogErrPrinter) out(s string) {
-	l.Log.Error(fmt.Errorf("error during command"), s)
+	l.Log.WithName("stderr").Info(s)
 }
 
 func NewBackupOutputParser(logger logr.Logger, folderName string, summaryFunc SummaryFunc) io.Writer {
@@ -163,11 +163,11 @@ func (b *BackupOutputParser) out(s string) {
 	}
 }
 
-func PrintPercentage(logger logr.InfoLogger, p float64) {
+func PrintPercentage(logger logr.Logger, p float64) {
 	percent := p * 100
 	logger.Info("progress of backup", "percentage", fmt.Sprintf("%.2f%%", percent))
 }
 
-func IgnorePercentage(_ logr.InfoLogger, _ float64) {
+func IgnorePercentage(_ logr.Logger, _ float64) {
 	// NOOP
 }
