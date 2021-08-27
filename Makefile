@@ -57,13 +57,13 @@ run: export BACKUP_OPERATOR_NAMESPACE = default
 run: fmt vet ## Run against the configured Kubernetes cluster in ~/.kube/config. Use ARGS to pass arguments to the command, e.g. `make run ARGS="--help"`
 	go run ./cmd/k8up/main.go $(CMD) $(ARGS)
 
-.PHONY: run-operator  ## Run the operator module against the configured Kubernetes cluster in ~/.kube/config. Use ARGS to pass arguments to the command, e.g. `make run ARGS="--help"`
+.PHONY: run-operator
 run-operator: CMD := operator
-run-operator: run
+run-operator: run  ## Run the operator module against the configured Kubernetes cluster in ~/.kube/config. Use ARGS to pass arguments to the command, e.g. `make run ARGS="--help"`
 
-.PHONY: run-restic  ## Run the restic module. Use ARGS to pass arguments to the command, e.g. `make run ARGS="--help"`
+.PHONY: run-restic
 run-restic: CMD := restic
-run-restic: run
+run-restic: run  ## Run the restic module. Use ARGS to pass arguments to the command, e.g. `make run ARGS="--help"`
 
 .PHONY: install
 install: generate ## Install CRDs into a cluster
@@ -156,7 +156,7 @@ kind-clean: ## Removes the kind instance if it exists.
 
 .PHONY: kind-run
 kind-run: export KUBECONFIG = $(KIND_KUBECONFIG)
-kind-run: kind-setup install run ## Runs the operator on the local host but configured for the kind cluster
+kind-run: kind-setup install run-operator ## Runs the operator on the local host but configured for the kind cluster
 
 kind-e2e-image: docker-build
 	$(e2e_make) kind-e2e-image
