@@ -17,6 +17,7 @@ import (
 
 	"github.com/go-logr/logr"
 
+	"github.com/vshn/k8up/common"
 	"github.com/vshn/k8up/restic/logging"
 	"github.com/vshn/k8up/restic/s3"
 )
@@ -290,7 +291,7 @@ func (r *Restic) tgzWriter(uploadWritePipe *io.PipeWriter, tarHeader *tar.Header
 		return gzipWriter, nil
 	}
 
-	tgzWriter := NewTarGzipWriter(uploadWritePipe)
+	tgzWriter := common.NewTarGzipWriter(uploadWritePipe)
 	err := tgzWriter.WriteHeader(tarHeader)
 	if err != nil {
 		_ = tgzWriter.Close()
