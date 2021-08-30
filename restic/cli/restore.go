@@ -4,6 +4,7 @@ import (
 	"archive/tar"
 	"bytes"
 	"compress/gzip"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -220,21 +221,13 @@ func (r *Restic) parsePath(paths []string) string {
 
 func (r *Restic) s3Restore(log logr.Logger, snapshot Snapshot, stats *RestoreStats) error {
 	log.Info("S3 chosen as restore destination")
+	cleanupCtx, cleanup := context.WithCancel(r.ctx)
+	defer cleanup()
 
-	errorChannel, err := r.s3Upload(log, snapshot, stats)
-	if err != nil {
-		return err
-	}
-
-	s3TransmissionError := <-errorChannel
-	return s3TransmissionError
-}
-
-func (r *Restic) s3Upload(log logr.Logger, snapshot Snapshot, stats *RestoreStats) (chan error, error) {
 	restoreS3Endpoint, s3AccessKey, s3SecretKey, err := r.getS3FromEnv()
 	if err != nil {
 		log.Error(err, "unable to load S3 information")
-		return nil, err
+		return err
 	}
 
 	snapDate := snapshot.Time.Format(time.RFC3339)
@@ -244,22 +237,25 @@ func (r *Restic) s3Upload(log logr.Logger, snapshot Snapshot, stats *RestoreStat
 	stats.RestoreLocation = fmt.Sprintf("%s/%s", restoreS3Endpoint, fileName)
 	stats.SnapshotID = snapshot.ID
 
-	errorChannel, s3writer, err := r.s3Connect(fileName, restoreS3Endpoint, s3AccessKey, s3SecretKey)
+	s3TransmissionErrorChannel, s3writer, err := r.s3Connect(r.ctx, fileName, restoreS3Endpoint, s3AccessKey, s3SecretKey)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	defer func(log logr.Logger, s3writer *io.PipeWriter) {
+	go func(ctx context.Context, log logr.Logger, s3writer *io.PipeWriter) {
+		<-ctx.Done() // whenever cleanup() is called or the parent context is cancelled
 		err := s3writer.Close()
 		if err != nil {
 			log.Error(err, "unable to close the s3writer")
 		}
-	}(log, s3writer)
+	}(cleanupCtx, log, s3writer)
 
 	err = r.s3Transmission(log, stats, s3writer)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	return errorChannel, nil
+
+	cleanup()
+	return <-s3TransmissionErrorChannel
 }
 
 func (r *Restic) s3Transmission(log logr.Logger, stats *RestoreStats, s3writer *io.PipeWriter) error {
@@ -316,9 +312,9 @@ func (r *Restic) doRestore(log logr.Logger, latestSnap Snapshot, snapRoot string
 	cmd.Run()
 }
 
-func (r *Restic) s3Connect(fileName string, restoreS3Endpoint, s3AccessKey, s3SecretKey string) (chan error, *io.PipeWriter, error) {
+func (r *Restic) s3Connect(ctx context.Context, fileName, restoreS3Endpoint, s3AccessKey, s3SecretKey string) (chan error, *io.PipeWriter, error) {
 	s3Client := s3.New(restoreS3Endpoint, s3AccessKey, s3SecretKey)
-	err := s3Client.Connect()
+	err := s3Client.Connect(ctx)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -327,10 +323,12 @@ func (r *Restic) s3Connect(fileName string, restoreS3Endpoint, s3AccessKey, s3Se
 
 	errorChannel := make(chan error)
 	go func() {
-		errorChannel <- s3Client.Upload(s3.UploadObject{
-			Name:         fileName,
-			ObjectStream: uploadReadPipe,
-		})
+		errorChannel <- s3Client.Upload(
+			ctx,
+			s3.UploadObject{
+				Name:         fileName,
+				ObjectStream: uploadReadPipe,
+			})
 	}()
 	return errorChannel, uploadWritePipe, nil
 }

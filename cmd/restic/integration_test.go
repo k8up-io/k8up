@@ -112,18 +112,19 @@ func initTest(t *testing.T) *testEnvironment {
 }
 
 func connectToS3Server(t *testing.T) *s3.Client {
+	ctx := context.Background()
 	repo := getS3Repo()
 	s3client := s3.New(repo, os.Getenv("AWS_ACCESS_KEY_ID"), os.Getenv("AWS_SECRET_ACCESS_KEY"))
 
-	err := s3client.Connect()
+	err := s3client.Connect(ctx)
 	require.NoErrorf(t, err, "Unable to connect to S3 repo '%s'", repo)
 	t.Logf("Connected to S3 repo '%s'", repo)
 
-	_ = s3client.DeleteBucket()
+	_ = s3client.DeleteBucket(ctx)
 	t.Logf("Ensured that the bucket '%s' does not exist", repo)
 
 	t.Cleanup(func() {
-		_ = s3client.DeleteBucket()
+		_ = s3client.DeleteBucket(ctx)
 		t.Logf("Removing the bucket '%s'", repo)
 	})
 	return s3client
@@ -204,15 +205,16 @@ func testBackup(t *testing.T) *testEnvironment {
 }
 
 func testCheckS3Restore(t *testing.T) {
+	ctx := context.Background()
 	s3c := s3.New(os.Getenv("RESTORE_S3ENDPOINT"), os.Getenv("RESTORE_ACCESSKEYID"), os.Getenv("RESTORE_SECRETACCESSKEY"))
-	err := s3c.Connect()
+	err := s3c.Connect(ctx)
 	require.NoError(t, err)
-	files, err := s3c.ListObjects()
+	files, err := s3c.ListObjects(ctx)
 	require.NoError(t, err)
 
 	for _, file := range files {
 		if strings.Contains(file.Key, "backup-test") {
-			file, err := s3c.Get(file.Key)
+			file, err := s3c.Get(ctx, file.Key)
 			require.NoError(t, err)
 			gzpReader, err := gzip.NewReader(file)
 			require.NoError(t, err)
