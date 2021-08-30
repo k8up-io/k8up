@@ -277,7 +277,7 @@ func (r *Restic) s3Transmission(log logr.Logger, stats *RestoreStats, s3writer *
 	defer func(log logr.Logger, tgzWriter io.WriteCloser) {
 		err := tgzWriter.Close()
 		if err != nil {
-			log.Error(err, "Unable to close the tgzWriter")
+			log.Error(err, "Unable to close the TarGzipWriter")
 		}
 	}(log, tgzWriter)
 
@@ -289,21 +289,19 @@ func (r *Restic) s3Transmission(log logr.Logger, stats *RestoreStats, s3writer *
 }
 
 func (r *Restic) tgzWriter(uploadWritePipe *io.PipeWriter, tarHeader *tar.Header) (io.WriteCloser, error) {
-	gzipWriter := gzip.NewWriter(uploadWritePipe)
-
-	// If it's a STDIN backup, when we restore we'll only have to write one header,
-	// as STDIN backups only contain one (virtual) file.
-	if tarHeader != nil {
-		tw := tar.NewWriter(gzipWriter)
-		err := tw.WriteHeader(tarHeader)
-		if err != nil {
-			return nil, fmt.Errorf("unable to write the given tar-header: %w", err)
-		}
-
-		return tw, nil
+	if tarHeader == nil {
+		gzipWriter := gzip.NewWriter(uploadWritePipe)
+		return gzipWriter, nil
 	}
 
-	return gzipWriter, nil
+	tgzWriter := NewTarGzipWriter(uploadWritePipe)
+	err := tgzWriter.WriteHeader(tarHeader)
+	if err != nil {
+		_ = tgzWriter.Close()
+		return nil, fmt.Errorf("unable to write the given tar header: %w", err)
+	}
+
+	return tgzWriter, nil
 }
 
 func (r *Restic) doRestore(log logr.Logger, latestSnap Snapshot, snapRoot string, finalWriter io.WriteCloser) {
