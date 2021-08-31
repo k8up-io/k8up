@@ -33,7 +33,7 @@ func (t *TarGzipWriter) WriteHeader(hdr *tar.Header) error {
 }
 
 // Write adds content to the current file in the tar gzip archive; see tar.Writer.
-func (t *TarGzipWriter) Write(p []byte) (n int, err error) {
+func (t *TarGzipWriter) Write(p []byte) (int, error) {
 	return t.tarWriter.Write(p)
 }
 
