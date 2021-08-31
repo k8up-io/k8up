@@ -30,7 +30,7 @@ WRESTIC_E2E_IMG = $(E2E_REPO)/wrestic:$(E2E_TAG)
 
 BATS_FILES ?= .
 
-KUSTOMIZE ?= go run sigs.k8s.io/kustomize/kustomize/v3
+KUSTOMIZE ?= go run sigs.k8s.io/kustomize/kustomize/v4
 
 # Image URL to use all building/pushing image targets
 K8UP_DOCKER_IMG ?= docker.io/vshn/k8up:$(IMG_TAG)

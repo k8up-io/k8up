@@ -51,7 +51,7 @@ clear_pv_data() {
 }
 
 kustomize() {
-	go run sigs.k8s.io/kustomize/kustomize/v3 "${@}"
+	go run sigs.k8s.io/kustomize/kustomize/v4 "${@}"
 }
 
 restic() {
