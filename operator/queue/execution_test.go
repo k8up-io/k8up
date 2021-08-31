@@ -21,7 +21,7 @@ func (m *mockExecutor) Exclusive() bool {
 	return m.exclusive
 }
 func (m *mockExecutor) Logger() logr.Logger {
-	return nil
+	return logr.Discard()
 }
 func (m *mockExecutor) GetRepository() string {
 	return m.repository
