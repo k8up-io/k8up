@@ -4,6 +4,7 @@ import (
 	"archive/tar"
 	"bytes"
 	"compress/gzip"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -16,6 +17,7 @@ import (
 
 	"github.com/go-logr/logr"
 
+	"github.com/vshn/k8up/common"
 	"github.com/vshn/k8up/restic/logging"
 	"github.com/vshn/k8up/restic/s3"
 )
@@ -146,7 +148,13 @@ func (r *Restic) folderRestore(restoreDir string, snapshot Snapshot, restoreFilt
 		if err != nil {
 			return err
 		}
-		defer os.RemoveAll(linkedDir)
+
+		defer func(path string) {
+			err := os.RemoveAll(path)
+			if err != nil {
+				log.Error(err, "unable to clean up the files", "path", path)
+			}
+		}(linkedDir)
 	} else {
 		linkedDir = restoreDir
 	}
@@ -160,11 +168,12 @@ func (r *Restic) folderRestore(restoreDir string, snapshot Snapshot, restoreFilt
 		args = append(args, "--verify")
 	}
 
+	resticRestoreLogger := log.WithName("restic")
 	opts := CommandOptions{
 		Path:   r.resticPath,
 		Args:   r.globalFlags.ApplyToCommand("restore", args...),
-		StdOut: logging.NewInfoWriter(log.WithName("restic")),
-		StdErr: logging.NewErrorWriter(log.WithName("restic")),
+		StdOut: logging.NewInfoWriter(resticRestoreLogger),
+		StdErr: logging.NewErrorWriter(resticRestoreLogger),
 	}
 
 	cmd := NewCommand(r.ctx, log, opts)
@@ -212,48 +221,87 @@ func (r *Restic) parsePath(paths []string) string {
 }
 
 func (r *Restic) s3Restore(log logr.Logger, snapshot Snapshot, stats *RestoreStats) error {
-
 	log.Info("S3 chosen as restore destination")
+	cleanupCtx, cleanup := context.WithCancel(r.ctx)
+	defer cleanup()
+
+	restoreS3Endpoint, s3AccessKey, s3SecretKey, err := r.getS3FromEnv()
+	if err != nil {
+		log.Error(err, "unable to load S3 information")
+		return err
+	}
 
 	snapDate := snapshot.Time.Format(time.RFC3339)
 	PVCName := r.parsePath(snapshot.Paths)
 	fileName := fmt.Sprintf("backup-%v-%v-%v.tar.gz", snapshot.Hostname, PVCName, snapDate)
-	stats.RestoreLocation = fmt.Sprintf("%s/%s", os.Getenv(RestoreS3EndpointEnv), fileName)
+
+	stats.RestoreLocation = fmt.Sprintf("%s/%s", restoreS3Endpoint, fileName)
 	stats.SnapshotID = snapshot.ID
 
-	s3Client := s3.New(os.Getenv(RestoreS3EndpointEnv), os.Getenv(RestoreS3AccessKeyIDEnv), os.Getenv(RestoreS3SecretAccessKey))
-	err := s3Client.Connect()
+	s3TransmissionErrorChannel, s3writer, err := r.s3Connect(r.ctx, fileName, restoreS3Endpoint, s3AccessKey, s3SecretKey)
+	if err != nil {
+		return err
+	}
+	go func(ctx context.Context, log logr.Logger, s3writer *io.PipeWriter) {
+		<-ctx.Done() // whenever cleanup() is called or the parent context is cancelled
+		err := s3writer.Close()
+		if err != nil {
+			log.Error(err, "unable to close the s3writer")
+		}
+	}(cleanupCtx, log, s3writer)
+
+	err = r.s3Transmission(log, stats, s3writer)
 	if err != nil {
 		return err
 	}
 
-	uploadReadPipe, uploadWritePipe := io.Pipe()
+	cleanup()
+	return <-s3TransmissionErrorChannel
+}
 
-	latestSnap, err := r.getLatestSnapshot(snapshot.ID, log)
+func (r *Restic) s3Transmission(log logr.Logger, stats *RestoreStats, s3writer *io.PipeWriter) error {
+	latestSnap, err := r.getLatestSnapshot(stats.SnapshotID, log)
 	if err != nil {
 		return err
 	}
 
 	snapRoot, tarHeader := r.getSnapshotRoot(latestSnap, log, stats)
 
-	zipWriter := gzip.NewWriter(uploadWritePipe)
-
-	errorChannel := r.startS3Upload(fileName, uploadReadPipe, s3Client)
-
-	finalWriter := io.WriteCloser(zipWriter)
-
-	// If it's an stdin backup we restore we'll only have to write one header
-	// as stdin backups only contain one vritual file.
-	if tarHeader != nil {
-		tw := tar.NewWriter(zipWriter)
-		err := tw.WriteHeader(tarHeader)
+	tgzWriter, err := r.tgzWriter(s3writer, tarHeader)
+	if err != nil {
+		return err
+	}
+	defer func(log logr.Logger, tgzWriter io.WriteCloser) {
+		err := tgzWriter.Close()
 		if err != nil {
-			return err
+			log.Error(err, "Unable to close the TarGzipWriter")
 		}
-		finalWriter = tw
-		defer tw.Close()
+	}(log, tgzWriter)
+
+	log.Info("starting restore", "s3 filename", stats.RestoreLocation)
+	r.doRestore(log, latestSnap, snapRoot, tgzWriter)
+	log.Info("restore finished")
+
+	return nil
+}
+
+func (r *Restic) tgzWriter(uploadWritePipe *io.PipeWriter, tarHeader *tar.Header) (io.WriteCloser, error) {
+	if tarHeader == nil {
+		gzipWriter := gzip.NewWriter(uploadWritePipe)
+		return gzipWriter, nil
 	}
 
+	tgzWriter := common.NewTarGzipWriter(uploadWritePipe)
+	err := tgzWriter.WriteHeader(tarHeader)
+	if err != nil {
+		_ = tgzWriter.Close()
+		return nil, fmt.Errorf("unable to write the given tar header: %w", err)
+	}
+
+	return tgzWriter, nil
+}
+
+func (r *Restic) doRestore(log logr.Logger, latestSnap Snapshot, snapRoot string, finalWriter io.WriteCloser) {
 	opts := CommandOptions{
 		Path:   r.resticPath,
 		Args:   r.globalFlags.ApplyToCommand("dump", latestSnap.ID, snapRoot),
@@ -261,48 +309,50 @@ func (r *Restic) s3Restore(log logr.Logger, snapshot Snapshot, stats *RestoreSta
 		StdErr: logging.NewErrorWriter(log.WithName("restic")),
 	}
 
-	log.Info("starting restore", "s3 filename", fileName)
-
 	cmd := NewCommand(r.ctx, log, opts)
 	cmd.Run()
-	defer log.Info("restore finished")
-
-	// We need to close the writers in a specific order
-	err = finalWriter.Close()
-	if err != nil {
-		return err
-	}
-	err = zipWriter.Close()
-	if err != nil {
-		return err
-	}
-
-	// Send EOF so minio client knows it's finished
-	// or else the chanel will block forever
-	err = uploadWritePipe.Close()
-	if err != nil {
-		return err
-	}
-
-	return <-errorChannel
-
 }
 
-func (r *Restic) startS3Upload(fileName string, uploadReadPipe io.Reader, s3Client *s3.Client) chan error {
+func (r *Restic) s3Connect(ctx context.Context, fileName, restoreS3Endpoint, s3AccessKey, s3SecretKey string) (chan error, *io.PipeWriter, error) {
+	s3Client := s3.New(restoreS3Endpoint, s3AccessKey, s3SecretKey)
+	err := s3Client.Connect(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	uploadReadPipe, uploadWritePipe := io.Pipe()
+
 	errorChannel := make(chan error)
 	go func() {
-		errorChannel <- s3Client.Upload(s3.UploadObject{
-			Name:         fileName,
-			ObjectStream: uploadReadPipe,
-		})
+		errorChannel <- s3Client.Upload(
+			ctx,
+			s3.UploadObject{
+				Name:         fileName,
+				ObjectStream: uploadReadPipe,
+			})
 	}()
-	return errorChannel
+	return errorChannel, uploadWritePipe, nil
+}
+
+func (r *Restic) getS3FromEnv() (restoreS3Endpoint string, s3AccessKey string, s3SecretKey string, err error) {
+	restoreS3Endpoint, ok := os.LookupEnv(RestoreS3EndpointEnv)
+	if !ok {
+		return restoreS3Endpoint, s3AccessKey, s3SecretKey, fmt.Errorf("the environment variable '%s' is undefined, but it is required", RestoreS3EndpointEnv)
+	}
+	s3AccessKey, ok = os.LookupEnv(RestoreS3AccessKeyIDEnv)
+	if !ok {
+		return restoreS3Endpoint, s3AccessKey, s3SecretKey, fmt.Errorf("the environment variable '%s' is undefined, but it is required", RestoreS3AccessKeyIDEnv)
+	}
+	s3SecretKey, ok = os.LookupEnv(RestoreS3SecretAccessKey)
+	if !ok {
+		return restoreS3Endpoint, s3AccessKey, s3SecretKey, fmt.Errorf("the environment variable '%s' is undefined, but it is required", RestoreS3SecretAccessKey)
+	}
+	return restoreS3Endpoint, s3AccessKey, s3SecretKey, nil
 }
 
 // getSnapshotRoot will return the correct root to trigger the restore. If the
 // snapshot was done as a stdin backup it will also return a tar header.
 func (r *Restic) getSnapshotRoot(snapshot Snapshot, log logr.Logger, stats *RestoreStats) (string, *tar.Header) {
-
 	buf := bytes.Buffer{}
 
 	opts := CommandOptions{
@@ -313,14 +363,9 @@ func (r *Restic) getSnapshotRoot(snapshot Snapshot, log logr.Logger, stats *Rest
 
 	cmd := NewCommand(r.ctx, log, opts)
 	cmd.Run()
+	capturedStdOut := buf.String()
 
-	// A backup from stdin will always contain exactly one file when executing ls.
-	// This logic will also work if it's not a stdin backup. For the sake of the
-	// dump this is the same case.
-	split := strings.Split(buf.String(), "\n")
-
-	amountOfFiles, lastNode := r.countFileNodes(split, stats)
-
+	amountOfFiles, lastNode := r.extractFileNodes(capturedStdOut, stats)
 	if amountOfFiles == 1 {
 		return lastNode.Path, r.getTarHeaderFromFileNode(lastNode)
 	}
@@ -341,10 +386,15 @@ func (r *Restic) getTarHeaderFromFileNode(file *fileNode) *tar.Header {
 	}
 }
 
-func (r *Restic) countFileNodes(rawJSON []string, stats *RestoreStats) (int, *fileNode) {
+func (r *Restic) extractFileNodes(capturedStdOut string, stats *RestoreStats) (int, *fileNode) {
+	// A backup from stdin will always contain exactly one file when executing ls.
+	// This logic will also work if it's not a stdin backup. For the sake of the
+	// dump this is the same case.
+	stdOutLines := strings.Split(capturedStdOut, "\n")
+
 	count := 0
 	lastNode := &fileNode{}
-	for _, fileJSON := range rawJSON {
+	for _, fileJSON := range stdOutLines {
 		node := &fileNode{}
 		err := json.Unmarshal([]byte(fileJSON), node)
 		if err != nil {

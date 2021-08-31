@@ -4,6 +4,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/go-logr/logr"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -43,7 +44,7 @@ func Test_loadEnvironmentVariables(t *testing.T) {
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
 			require.NoError(t, os.Setenv(tt.givenKey, tt.givenValue))
-			loadEnvironmentVariables()
+			_ = loadEnvironmentVariables(logr.Discard())
 			tt.assertConfig(t, cfg.Config)
 		})
 	}

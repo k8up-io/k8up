@@ -6,18 +6,19 @@ import (
 
 // Check will check the repository for errors
 func (r *Restic) Check() error {
-	checklogger := r.logger.WithName("check")
+	checkLogger := r.logger.WithName("check")
 
-	checklogger.Info("checking repository")
+	checkLogger.Info("checking repository")
 
+	resticCheckLogger := checkLogger.WithName("restic")
 	opts := CommandOptions{
 		Path:   r.resticPath,
 		Args:   r.globalFlags.ApplyToCommand("check"),
-		StdOut: logging.NewInfoWriter(checklogger.WithName("restic")),
-		StdErr: logging.NewErrorWriter(checklogger.WithName("restic")),
+		StdOut: logging.NewInfoWriter(resticCheckLogger),
+		StdErr: logging.NewErrorWriter(resticCheckLogger),
 	}
 
-	cmd := NewCommand(r.ctx, checklogger, opts)
+	cmd := NewCommand(r.ctx, checkLogger, opts)
 	cmd.Run()
 
 	return cmd.FatalError

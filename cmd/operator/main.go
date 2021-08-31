@@ -2,9 +2,9 @@ package operator
 
 import (
 	"fmt"
-	"os"
 	"strings"
 
+	"github.com/go-logr/logr"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 
 	"github.com/knadh/koanf"
@@ -39,7 +39,11 @@ func operatorMain(c *cli.Context) error {
 	operatorLog.Info("initializing")
 
 	executor.GetExecutor()
-	loadEnvironmentVariables()
+
+	err := loadEnvironmentVariables(operatorLog)
+	if err != nil {
+		return err
+	}
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:             k8upScheme(),
@@ -50,7 +54,7 @@ func operatorMain(c *cli.Context) error {
 	})
 	if err != nil {
 		operatorLog.Error(err, "unable to initialize operator mode", "step", "manager")
-		return err
+		return fmt.Errorf("unable to initialize controller runtime: %w", err)
 	}
 
 	for name, reconciler := range map[string]controllers.ReconcilerSetup{
@@ -64,14 +68,14 @@ func operatorMain(c *cli.Context) error {
 	} {
 		if err := reconciler.SetupWithManager(mgr, ctrl.Log.WithName("controllers").WithName(name)); err != nil {
 			operatorLog.Error(err, "unable to initialize operator mode", "step", "controller", "controller", name)
-			return err
+			return fmt.Errorf("unable to setup reconciler: %w", err)
 		}
 	}
 	// +kubebuilder:scaffold:builder
 
 	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {
 		operatorLog.Error(err, "unable to initialize operator mode", "step", "signal_handler")
-		return err
+		return fmt.Errorf("unable to setup signal handler: %w", err)
 	}
 
 	return nil
@@ -86,25 +90,31 @@ func k8upScheme() *runtime.Scheme {
 	return scheme
 }
 
-func loadEnvironmentVariables() {
+func loadEnvironmentVariables(log logr.Logger) error {
 	operatorKoanf := koanf.New(".")
 	prefix := "BACKUP_"
+
 	// Load environment variables
-	err := operatorKoanf.Load(env.Provider(prefix, ".", func(s string) string {
+	err := operatorKoanf.Load(env.Provider(prefix, ".", keyNameMapper(prefix)), nil)
+	if err != nil {
+		log.Error(err, "could not load environment variables")
+	}
+
+	err = operatorKoanf.UnmarshalWithConf("", &cfg.Config, koanf.UnmarshalConf{Tag: "koanf", FlatPaths: true})
+	if err != nil {
+		log.Error(err, "could not merge defaults with settings from environment variables")
+	}
+	if err := cfg.Config.ValidateSyntax(); err != nil {
+		return fmt.Errorf("settings invalid: %w", err)
+	}
+	return nil
+}
+
+func keyNameMapper(prefix string) func(string) string {
+	return func(s string) string {
 		s = strings.TrimPrefix(s, prefix)
 		s = strings.ToLower(s)
 		s = strings.Replace(s, "_", "-", -1)
 		return s
-	}), nil)
-	if err != nil {
-		_, _ = fmt.Fprintf(os.Stderr, "could not load environment variables: %v\n", err)
-	}
-
-	if err := operatorKoanf.UnmarshalWithConf("", &cfg.Config, koanf.UnmarshalConf{Tag: "koanf", FlatPaths: true}); err != nil {
-		_, _ = fmt.Fprintf(os.Stderr, "could not merge defaults with settings from environment variables: %v\n", err)
-	}
-	if err := cfg.Config.ValidateSyntax(); err != nil {
-		_, _ = fmt.Fprintf(os.Stderr, "settings invalid: %v\n", err)
-		os.Exit(2)
 	}
 }

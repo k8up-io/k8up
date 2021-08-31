@@ -12,5 +12,5 @@ type PrometheusProvider interface {
 }
 
 type WebhookProvider interface {
-	ToJson() []byte
+	ToJSON() []byte
 }
