@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/go-logr/logr"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
@@ -29,7 +30,7 @@ type VolumeMountExpectation struct {
 }
 
 func newConfig() *job.Config {
-	cfg := job.NewConfig(context.TODO(), nil, nil, &k8upv1a1.Restore{}, testScheme, "")
+	cfg := job.NewConfig(context.TODO(), nil, logr.Discard(), &k8upv1a1.Restore{}, testScheme, "")
 	return &cfg
 }
 
