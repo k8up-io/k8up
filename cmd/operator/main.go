@@ -35,8 +35,9 @@ var (
 )
 
 func operatorMain(c *cli.Context) error {
-	operatorLog := cmd.Logger(c, "operator")
+	operatorLog := cmd.AppLogger(c).WithName("operator")
 	operatorLog.Info("initializing")
+	ctrl.SetLogger(operatorLog)
 
 	executor.GetExecutor()
 
@@ -66,7 +67,7 @@ func operatorMain(c *cli.Context) error {
 		"Prune":    &controllers.PruneReconciler{},
 		"Job":      &controllers.JobReconciler{},
 	} {
-		if err := reconciler.SetupWithManager(mgr, ctrl.Log.WithName("controllers").WithName(name)); err != nil {
+		if err := reconciler.SetupWithManager(mgr, operatorLog.WithName("controllers").WithName(name)); err != nil {
 			operatorLog.Error(err, "unable to initialize operator mode", "step", "controller", "controller", name)
 			return fmt.Errorf("unable to setup reconciler: %w", err)
 		}
