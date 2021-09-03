@@ -24,10 +24,34 @@ const (
 )
 
 var (
-	check   bool
-	prune   bool
-	restore bool
-	archive bool
+	// Config contains the values of the user-provided configuration of the restic module.
+	Config = &Configuration{}
+	// Command is the definition of the command line interface of the restic module.
+	Command = &cli.Command{
+		Name:        "restic",
+		Description: "Start k8up in restic mode",
+		Category:    "backup",
+		Action:      resticMain,
+		Flags: []cli.Flag{
+			&cli.BoolFlag{Destination: &Config.doCheck, Name: "check", Usage: "Set if the container should run a check"},
+			&cli.BoolFlag{Destination: &Config.doPrune, Name: "prune", Usage: "Set if the container should run a prune"},
+			&cli.BoolFlag{Destination: &Config.doRestore, Name: "restore", Usage: "Whether or not a restore should be done"},
+			&cli.BoolFlag{Destination: &Config.verifyRestore, Name: "verifyRestore", Usage: "If the restore should get verified, only for PVCs restore"},
+			&cli.BoolFlag{Destination: &Config.doArchive, Name: "archive"},
+			&cli.StringFlag{Destination: &Config.restoreSnap, Name: "restoreSnap", Usage: "Snapshot ID, if empty takes the latest snapshot"},
+			&cli.StringFlag{Destination: &Config.restoreType, Name: "restoreType", Usage: "Type of this restore, folder or S3"},
+			&cli.StringFlag{Destination: &Config.restoreFilter, Name: "restoreFilter", Usage: "Simple filter to define what should get restored. For example the PVC name"},
+			&cli.StringSliceFlag{Name: "tag", Usage: "List of tags to consider for given operation"},
+		},
+	}
+)
+
+// Configuration contains all the configurable values for the restic module.
+type Configuration struct {
+	doCheck   bool
+	doPrune   bool
+	doRestore bool
+	doArchive bool
 
 	verifyRestore bool
 	restoreSnap   string
@@ -35,33 +59,13 @@ var (
 	restoreFilter string
 
 	tags resticCli.ArrayOpts
-)
-
-var (
-	Command = &cli.Command{
-		Name:        "restic",
-		Description: "Start k8up in restic mode",
-		Category:    "backup",
-		Action:      resticMain,
-		Flags: []cli.Flag{
-			&cli.BoolFlag{Destination: &check, Name: "check", Usage: "Set if the container should run a check"},
-			&cli.BoolFlag{Destination: &prune, Name: "prune", Usage: "Set if the container should run a prune"},
-			&cli.BoolFlag{Destination: &restore, Name: "restore", Usage: "Whether or not a restore should be done"},
-			&cli.BoolFlag{Destination: &verifyRestore, Name: "verifyRestore", Usage: "If the restore should get verified, only for PVCs restore"},
-			&cli.BoolFlag{Destination: &archive, Name: "archive"},
-			&cli.StringFlag{Destination: &restoreSnap, Name: "restoreSnap", Usage: "Snapshot ID, if empty takes the latest snapshot"},
-			&cli.StringFlag{Destination: &restoreType, Name: "restoreType", Usage: "Type of this restore, folder or S3"},
-			&cli.StringFlag{Destination: &restoreFilter, Name: "restoreFilter", Usage: "Simple filter to define what should get restored. For example the PVC name"},
-			&cli.StringSliceFlag{Name: "tag", Usage: "List of tags to consider for given operation"},
-		},
-	}
-)
+}
 
 func resticMain(c *cli.Context) error {
 	resticLog := cmd.AppLogger(c).WithName("wrestic")
 	resticLog.Info("initializing")
 
-	tags = c.StringSlice("tag")
+	Config.tags = c.StringSlice("tag")
 
 	ctx, cancel := context.WithCancel(c.Context)
 	cancelOnTermination(cancel, resticLog)
@@ -82,7 +86,7 @@ func run(ctx context.Context, resticCLI *resticCli.Restic, mainLogger logr.Logge
 		return err
 	}
 
-	if prune || check || restore || archive {
+	if Config.doPrune || Config.doCheck || Config.doRestore || Config.doArchive {
 		return doNonBackupTasks(resticCLI)
 	}
 
@@ -107,7 +111,7 @@ func resticInitialization(resticCLI *resticCli.Restic, mainLogger logr.Logger) e
 }
 
 func waitForEndOfConcurrentOperations(resticCLI *resticCli.Restic) error {
-	if prune || check {
+	if Config.doPrune || Config.doCheck {
 		if err := resticCLI.Wait(); err != nil {
 			return fmt.Errorf("failed to list repository locks: %w", err)
 		}
@@ -135,8 +139,8 @@ func doNonBackupTasks(resticCLI *resticCli.Restic) error {
 }
 
 func doPrune(resticCLI *resticCli.Restic) error {
-	if prune {
-		if err := resticCLI.Prune(tags); err != nil {
+	if Config.doPrune {
+		if err := resticCLI.Prune(Config.tags); err != nil {
 			return fmt.Errorf("prune job failed: %w", err)
 		}
 	}
@@ -144,7 +148,7 @@ func doPrune(resticCLI *resticCli.Restic) error {
 }
 
 func doCheck(resticCLI *resticCli.Restic) error {
-	if check {
+	if Config.doCheck {
 		if err := resticCLI.Check(); err != nil {
 			return fmt.Errorf("check job failed: %w", err)
 		}
@@ -153,18 +157,18 @@ func doCheck(resticCLI *resticCli.Restic) error {
 }
 
 func doRestore(resticCLI *resticCli.Restic) error {
-	if restore {
-		if err := resticCLI.Restore(restoreSnap, resticCli.RestoreOptions{
-			RestoreType:   resticCli.RestoreType(restoreType),
+	if Config.doRestore {
+		if err := resticCLI.Restore(Config.restoreSnap, resticCli.RestoreOptions{
+			RestoreType:   resticCli.RestoreType(Config.restoreType),
 			RestoreDir:    os.Getenv(resticCli.RestoreDirEnv),
-			RestoreFilter: restoreFilter,
-			Verify:        verifyRestore,
+			RestoreFilter: Config.restoreFilter,
+			Verify:        Config.verifyRestore,
 			S3Destination: resticCli.S3Bucket{
 				Endpoint:  os.Getenv(resticCli.RestoreS3EndpointEnv),
 				AccessKey: os.Getenv(resticCli.RestoreS3AccessKeyIDEnv),
 				SecretKey: os.Getenv(resticCli.RestoreS3AccessKeyIDEnv),
 			},
-		}, tags); err != nil {
+		}, Config.tags); err != nil {
 			return fmt.Errorf("restore job failed: %w", err)
 		}
 	}
@@ -172,8 +176,8 @@ func doRestore(resticCLI *resticCli.Restic) error {
 }
 
 func doArchive(resticCLI *resticCli.Restic) error {
-	if archive {
-		if err := resticCLI.Archive(restoreFilter, verifyRestore, tags); err != nil {
+	if Config.doArchive {
+		if err := resticCLI.Archive(Config.restoreFilter, Config.verifyRestore, Config.tags); err != nil {
 			return fmt.Errorf("archive job failed: %w", err)
 		}
 	}
@@ -188,7 +192,7 @@ func doBackup(ctx context.Context, resticCLI *resticCli.Restic, mainLogger logr.
 	mainLogger.Info("backups of annotated jobs have finished successfully")
 
 	backupDir := getBackupDir()
-	err = resticCLI.Backup(backupDir, tags)
+	err = resticCLI.Backup(backupDir, Config.tags)
 	if err != nil {
 		return fmt.Errorf("backup job failed in dir '%s': %w", backupDir, err)
 	}
@@ -228,7 +232,7 @@ func backupAnnotatedPod(pod kubernetes.BackupPod, mainLogger logr.Logger, hostna
 		return fmt.Errorf("error occurred during data stream from k8s: %w", err)
 	}
 	filename := fmt.Sprintf("/%s-%s", hostname, pod.ContainerName)
-	err = resticCLI.StdinBackup(data, filename, pod.FileExtension, tags)
+	err = resticCLI.StdinBackup(data, filename, pod.FileExtension, Config.tags)
 	if err != nil {
 		return fmt.Errorf("backup commands failed: %w", err)
 	}

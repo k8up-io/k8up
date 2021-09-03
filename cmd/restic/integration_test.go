@@ -99,7 +99,7 @@ func initTest(t *testing.T) *testEnvironment {
 
 	webhook := startWebhookWebserver(t)
 	s3client := connectToS3Server(t)
-	resetFlags()
+	Config = &Configuration{}
 
 	return &testEnvironment{
 		finishC:   newTestErrorChannel(),
@@ -184,17 +184,6 @@ func createTestFiles(t *testing.T) {
 	}
 }
 
-func resetFlags() {
-	check = false
-	prune = false
-	restore = false
-	restoreSnap = ""
-	verifyRestore = false
-	restoreType = ""
-	restoreFilter = ""
-	archive = false
-}
-
 func testBackup(t *testing.T) *testEnvironment {
 	env := initTest(t)
 
@@ -251,8 +240,10 @@ func TestRestore(t *testing.T) {
 	env := testBackup(t)
 	defer env.webhook.srv.Shutdown(context.TODO())
 
-	restore = true
-	restoreType = "s3"
+	Config = &Configuration{
+		restoreType: "s3",
+		doRestore:   true,
+	}
 
 	err := run(context.Background(), env.resticCli, env.log)
 	require.NoError(t, err)
@@ -281,8 +272,10 @@ func TestBackup(t *testing.T) {
 func TestRestoreDisk(t *testing.T) {
 	env := testBackup(t)
 
-	restore = true
-	restoreType = "folder"
+	Config = &Configuration{
+		doRestore:   true,
+		restoreType: "folder",
+	}
 
 	_ = os.Setenv("TRIM_RESTOREPATH", "false")
 
@@ -301,8 +294,10 @@ func TestRestoreDisk(t *testing.T) {
 func TestArchive(t *testing.T) {
 	env := testBackup(t)
 
-	archive = true
-	restoreType = "s3"
+	Config = &Configuration{
+		doArchive:   true,
+		restoreType: "s3",
+	}
 
 	err := run(context.Background(), env.resticCli, env.log)
 	require.NoError(t, err)

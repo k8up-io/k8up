@@ -33,6 +33,8 @@ const (
 )
 
 var (
+	// Config contains the values of the user-provided configuration of the operator module,
+	// combined with the default values as defined in operator.Command.
 	Config = &Configuration{}
 )
 

@@ -25,6 +25,7 @@ import (
 const leaderElectionID = "d2ab61da.syn.tools"
 
 var (
+	// Command is the definition of the command line interface of the operator module.
 	Command = &cli.Command{
 		Name:        "operator",
 		Description: "Start k8up in operator mode",
