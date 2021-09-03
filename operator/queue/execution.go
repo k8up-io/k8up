@@ -10,8 +10,9 @@ import (
 	"github.com/go-logr/logr"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
-	"github.com/vshn/k8up/api/v1alpha1"
 	"sigs.k8s.io/controller-runtime/pkg/metrics"
+
+	"github.com/vshn/k8up/api/v1alpha1"
 )
 
 var (

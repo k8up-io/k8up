@@ -10,7 +10,6 @@ require (
 	github.com/go-logr/logr v0.4.0
 	github.com/go-logr/zapr v0.4.0
 	github.com/imdario/mergo v0.3.12
-	github.com/knadh/koanf v1.2.1
 	github.com/minio/minio-go/v7 v7.0.13
 	github.com/prometheus/client_golang v1.11.0
 	github.com/robfig/cron/v3 v3.0.1

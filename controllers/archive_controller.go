@@ -45,7 +45,7 @@ func (r *ArchiveReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		return ctrl.Result{}, nil
 	}
 
-	repository := cfg.GetGlobalRepository()
+	repository := cfg.Config.GetGlobalRepository()
 	if archive.Spec.Backend != nil {
 		repository = archive.Spec.Backend.String()
 	}

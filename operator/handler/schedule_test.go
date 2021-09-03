@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 
@@ -99,7 +98,7 @@ func TestScheduleHandler_mergeResourcesWithDefaults(t *testing.T) {
 			},
 		},
 	}
-	cfg.Config = cfg.NewDefaultConfig()
+	cfg.Config = &cfg.Configuration{}
 	cfg.Config.OperatorNamespace = "irrelevant-but-required"
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
@@ -107,7 +106,6 @@ func TestScheduleHandler_mergeResourcesWithDefaults(t *testing.T) {
 			cfg.Config.GlobalCPUResourceRequest = tt.globalCPUResourceRequest
 			cfg.Config.GlobalMemoryResourceLimit = tt.globalMemoryResourceLimit
 			cfg.Config.GlobalMemoryResourceRequest = tt.globalMemoryResourceRequest
-			require.NoError(t, cfg.Config.ValidateSyntax())
 			schedule := ScheduleHandler{schedule: &k8upv1alpha1.Schedule{Spec: k8upv1alpha1.ScheduleSpec{
 				ResourceRequirementsTemplate: tt.givenScheduleTemplate,
 			}}}
@@ -168,12 +166,11 @@ func TestScheduleHandler_mergeBackendWithDefaults(t *testing.T) {
 			expectedBackend:      newS3Backend("https://resource-url", "resource-bucket"),
 		},
 	}
-	cfg.Config = cfg.NewDefaultConfig()
+	cfg.Config = &cfg.Configuration{}
 	cfg.Config.OperatorNamespace = "irrelevant-but-required"
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
 			cfg.Config.GlobalS3Bucket = tt.globalS3Bucket
-			require.NoError(t, cfg.Config.ValidateSyntax())
 			schedule := ScheduleHandler{schedule: &k8upv1alpha1.Schedule{Spec: k8upv1alpha1.ScheduleSpec{
 				Backend: &tt.givenScheduleBackend,
 			}}}

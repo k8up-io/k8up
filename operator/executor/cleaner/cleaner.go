@@ -93,5 +93,8 @@ func getOrDefault(n *int, defaultN int) int {
 	if n == nil {
 		return defaultN
 	}
+	if *n < 0 {
+		return 0
+	}
 	return *n
 }

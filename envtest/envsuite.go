@@ -34,6 +34,7 @@ import (
 	// +kubebuilder:scaffold:imports
 
 	k8upv1a1 "github.com/vshn/k8up/api/v1alpha1"
+	"github.com/vshn/k8up/operator/cfg"
 	"github.com/vshn/k8up/operator/executor"
 )
 
@@ -54,6 +55,7 @@ type Suite struct {
 func (ts *Suite) SetupSuite() {
 	ts.Logger = zapr.NewLogger(zaptest.NewLogger(ts.T()))
 	log.SetLogger(ts.Logger)
+	cfg.Config = defaultConfiguration()
 
 	ts.Ctx = context.Background()
 
@@ -256,4 +258,24 @@ func (ts *Suite) IsResourceExisting(ctx context.Context, obj client.Object) bool
 	}
 	ts.Assert().NoError(err)
 	return obj.GetDeletionTimestamp() == nil
+}
+
+// defaultConfiguration retrieves the config with sane defaults
+func defaultConfiguration() *cfg.Configuration {
+	return &cfg.Configuration{
+		MountPath:                        "/data",
+		BackupAnnotation:                 "k8up.syn.tools/backup",
+		BackupCommandAnnotation:          "k8up.syn.tools/backupcommand",
+		FileExtensionAnnotation:          "k8up.syn.tools/file-extension",
+		ServiceAccount:                   "pod-executor",
+		BackupCheckSchedule:              "0 0 * * 0",
+		GlobalFailedJobsHistoryLimit:     3,
+		GlobalSuccessfulJobsHistoryLimit: 3,
+		BackupImage:                      "quay.io/vshn/wrestic:latest",
+		PodExecRoleName:                  "pod-executor",
+		RestartPolicy:                    "OnFailure",
+		MetricsBindAddress:               ":8080",
+		PodFilter:                        "backupPod=true",
+		EnableLeaderElection:             true,
+	}
 }

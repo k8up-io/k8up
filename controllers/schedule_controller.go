@@ -51,7 +51,7 @@ func (r *ScheduleReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 		return ctrl.Result{Requeue: true, RequeueAfter: requeueAfter}, err
 	}
 
-	repository := cfg.GetGlobalRepository()
+	repository := cfg.Config.GetGlobalRepository()
 	if schedule.Spec.Backend != nil {
 		repository = schedule.Spec.Backend.String()
 	}
