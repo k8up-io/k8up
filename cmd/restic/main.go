@@ -58,7 +58,7 @@ var (
 )
 
 func resticMain(c *cli.Context) error {
-	resticLog := cmd.Logger(c, "wrestic")
+	resticLog := cmd.AppLogger(c).WithName("wrestic")
 	resticLog.Info("initializing")
 
 	tags = c.StringSlice("tag")
@@ -68,7 +68,7 @@ func resticMain(c *cli.Context) error {
 
 	statHandler := stats.NewHandler(os.Getenv(promURLEnv), os.Getenv(resticCli.Hostname), os.Getenv(webhookURLEnv), resticLog)
 
-	resticCLI := resticCli.New(ctx, resticLog, statHandler)
+	resticCLI := resticCli.New(ctx, resticLog.WithName("restic"), statHandler)
 
 	return run(c.Context, resticCLI, resticLog)
 }

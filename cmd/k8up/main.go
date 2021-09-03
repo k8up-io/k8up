@@ -5,8 +5,12 @@ import (
 	"log"
 	"os"
 	"runtime"
+	"time"
 
+	"github.com/go-logr/logr"
 	"github.com/urfave/cli/v2"
+	"go.uber.org/zap/zapcore"
+	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	"github.com/vshn/k8up/cmd"
 	"github.com/vshn/k8up/cmd/operator"
@@ -27,9 +31,11 @@ func main() {
 	}
 }
 
-func mainAction(c *cli.Context) error {
-	setupLog := cmd.Logger(c, "k8up")
-	setupLog.WithValues(
+func before(c *cli.Context) error {
+	logger := newLogger("k8up", c.Bool("debug"))
+	cmd.SetAppLogger(c, logger)
+
+	logger.WithValues(
 		"version", version,
 		"date", date,
 		"commit", commit,
@@ -42,16 +48,24 @@ func mainAction(c *cli.Context) error {
 }
 
 func app() *cli.App {
-	cli.VersionPrinter = func(c *cli.Context) {
-		fmt.Printf("version=%s revision=%s date=%s\n", c.App.Version, commit, date)
+	cli.VersionPrinter = func(_ *cli.Context) {
+		fmt.Printf("version=%s revision=%s date=%s\n", version, commit, date)
+	}
+
+	compiled, err := time.Parse(time.RFC3339, date)
+	if err != nil {
+		compiled = time.Time{}
 	}
 
 	return &cli.App{
-		Name:                 "k8up",
-		Version:              version,
-		Copyright:            "(c) 2021 VSHN AG",
+		Name:      "k8up",
+		Version:   version,
+		Compiled:  compiled,
+		Copyright: "(c) 2021 VSHN AG",
+
 		EnableBashCompletion: true,
-		Before:               mainAction,
+
+		Before: before,
 		Flags: []cli.Flag{
 			&cli.BoolFlag{
 				Name:        "debug",
@@ -66,4 +80,13 @@ func app() *cli.App {
 			restic.Command,
 		},
 	}
+}
+
+func newLogger(name string, debug bool) logr.Logger {
+	level := zapcore.InfoLevel
+	if debug {
+		level = zapcore.DebugLevel
+	}
+	logger := zap.New(zap.UseDevMode(true), zap.Level(level))
+	return logger.WithName(name)
 }

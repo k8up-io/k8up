@@ -13,7 +13,7 @@ include Makefile.vars.mk
 include Makefile.restic-integration.mk
 
 e2e_make := $(MAKE) -C e2e
-go_build ?= go build -o $(BIN_FILENAME) cmd/k8up/main.go
+go_build ?= go build -o $(BIN_FILENAME) $(K8UP_MAIN_GO)
 
 all: build ## Invokes the build target
 
@@ -55,15 +55,15 @@ run: export BACKUP_ENABLE_LEADER_ELECTION = $(ENABLE_LEADER_ELECTION)
 run: export K8UP_DEBUG = true
 run: export BACKUP_OPERATOR_NAMESPACE = default
 run: fmt vet ## Run against the configured Kubernetes cluster in ~/.kube/config. Use ARGS to pass arguments to the command, e.g. `make run ARGS="--help"`
-	go run ./cmd/k8up/main.go $(CMD) $(ARGS)
+	go run $(K8UP_MAIN_GO) $(ARGS) $(CMD) $(CMD_ARGS)
 
 .PHONY: run-operator
 run-operator: CMD := operator
-run-operator: run  ## Run the operator module against the configured Kubernetes cluster in ~/.kube/config. Use ARGS to pass arguments to the command, e.g. `make run ARGS="--help"`
+run-operator: run  ## Run the operator module against the configured Kubernetes cluster in ~/.kube/config. Use ARGS to pass arguments to the command, e.g. `make run-operator ARGS="--debug" CMD_ARGS="--help"`
 
 .PHONY: run-restic
 run-restic: CMD := restic
-run-restic: run  ## Run the restic module. Use ARGS to pass arguments to the command, e.g. `make run ARGS="--help"`
+run-restic: run  ## Run the restic module. Use ARGS to pass arguments to the command, e.g. `make run-restic ARGS="--debug" CMD_ARGS="--check"`
 
 .PHONY: install
 install: generate ## Install CRDs into a cluster
