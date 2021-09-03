@@ -7,48 +7,14 @@ The Operator can be configured in two ways:
 
 == Environment Variables
 
-You need to define `BACKUP_OPERATOR_NAMESPACE`, but everything else can be left to their default values.
+You need to define `BACKUP_OPERATOR_NAMESPACE` (or `--operator-namespace` respectively), but everything else can be left to their default values.
 
-`BACKUP_ANNOTATION`:: the annotation to be used for filtering, by default: `k8up.syn.tools/backup`
-`BACKUP_BACKUPCOMMANDANNOTATION`:: set the annotation name that identify the backup commands on Pods, by default: `k8up.syn.tools/backupcommand`
-`BACKUP_CHECKSCHEDULE`:: the default check schedule, by default: `0 0 * * 0`
-`BACKUP_DATAPATH`:: to which path the PVCs should get mounted in the backup container, by default: `/data`
-`BACKUP_ENABLE_LEADER_ELECTION`:: enable leader election within the operator Pod, default: `true`
-`BACKUP_FILEEXTENSIONANNOTATION`:: set the annotation name where the file extension is stored for backup commands, default `k8up.syn.tools/file-extension`
-`BACKUP_GLOBALACCESSKEYID`:: set the S3 access key id to be used globally
-`BACKUP_GLOBAL_CONCURRENT_ARCHIVE_JOBS_LIMIT`:: set the limit of concurrent archive jobs
-`BACKUP_GLOBAL_CONCURRENT_BACKUP_JOBS_LIMIT`:: set the limit of concurrent backup jobs
-`BACKUP_GLOBAL_CONCURRENT_CHECK_JOBS_LIMIT`:: set the limit of concurrent check jobs
-`BACKUP_GLOBAL_CONCURRENT_PRUNE_JOBS_LIMIT`:: set the limit of concurrent prune jobs
-`BACKUP_GLOBAL_CONCURRENT_RESTORE_JOBS_LIMIT`:: set the limit of concurrent restore jobs
-`BACKUP_GLOBAL_CPU_LIMIT`:: set the CPU limit for scheduled jobs
-`BACKUP_GLOBAL_CPU_REQUEST`:: set the CPU request for scheduled jobs
-`BACKUP_GLOBALKEEPJOBS`:: set the number of old jobs to keep when cleaning up, applies to all job types
-`BACKUP_GLOBAL_FAILED_JOBS_HISTORY_LIMIT`:: set the number of old, failed jobs to keep when cleaning up, applies to all job types, default: `3`
-`BACKUP_GLOBAL_SUCCESSFUL_JOBS_HISTORY_LIMIT`:: set the number of old, successful jobs to keep when cleaning up, applies to all job types, default: `3`
-`BACKUP_GLOBAL_MEMORY_LIMIT`:: set the memory limit for scheduled jobs
-`BACKUP_GLOBAL_MEMORY_REQUEST`:: set the memory request for scheduled jobs
-`BACKUP_GLOBALREPOPASSWORD`:: set the restic repository password to be used globally
-`BACKUP_GLOBALRESTORES3ACCESKEYID`:: set the global restore S3 accessKeyID for restores
-`BACKUP_GLOBALRESTORES3BUCKET`:: set the global restore S3 bucket for restores
-`BACKUP_GLOBALRESTORES3ENDPOINT`:: set the global restore S3 endpoint for the restores (needs the scheme [http/https]
-`BACKUP_GLOBALRESTORES3SECRETACCESSKEY`:: set the global restore S3 SecretAccessKey for restores
-`BACKUP_GLOBALS3BUCKET`:: set the S3 bucket to be used globally
-`BACKUP_GLOBALS3ENDPOINT`:: set the S3 endpoint to be used globally
-`BACKUP_GLOBALSECRETACCESSKEY`:: set the S3 secret access key to be used globally
-`BACKUP_GLOBALSTATSURL`:: set the URL of wrestic to post additional metrics globally, default `""`
-`BACKUP_IMAGE`:: URL of the restic image, default: `quay.io/vshn/wrestic:latest`
-`BACKUP_JOBNAME`:: names for the backup job objects in OpenShift, default: `backupjob`
-`BACKUP_LOG_LEVEL`:: Set to "debug" to enable verbose logging, default: `info`
-`BACKUP_METRICS_BINDADDRESS`:: set the bind address for the prometheus endpoint, default: `:8080`
-`BACKUP_OPERATOR_NAMESPACE`:: set the namespace in which the K8up operator itself runs, *required!*
-`BACKUP_PODEXECACCOUNTNAME`:: set the service account name that should be used for the pod command execution, default: `pod-executor`
-`BACKUP_PODEXECROLENAME`:: set the role name that should be used for pod command execution, default `pod-executor`
-`BACKUP_PODFILTER`:: the filter used to find the backup pods, default: `backupPod=true`
-`BACKUP_PODNAME`:: names for the backup pod objects in OpenShift, default: `backupjob-pod`
-`BACKUP_PROMURL`:: set the operator wide default prometheus push gateway, default `\http://127.0.0.1/`
-`BACKUP_RESTARTPOLICY`:: set the RestartPolicy for the backup jobs. According to the https://kubernetes.io/docs/concepts/workloads/controllers/jobs-run-to-completion/[docs] this should be `OnFailure` for jobs that terminate, default: `OnFailure`
-`BACKUP_RESTIC_OPTIONS`:: pass https://restic.readthedocs.io/en/stable/manual_rest.html?highlight=--option#usage-help[custom options to restic]
+See `k8up operator --help` for all the options:
+
+[source,txt]
+----
+include::usage/operator.txt[]
+----
 
 == Global Settings
 

@@ -1,0 +1,24 @@
+NAME:
+   main restic - 
+
+USAGE:
+   main restic [command options] [arguments...]
+
+CATEGORY:
+   backup
+
+DESCRIPTION:
+   Start k8up in restic mode
+
+OPTIONS:
+   --check                Set if the container should run a check (default: false)
+   --prune                Set if the container should run a prune (default: false)
+   --restore              Whether or not a restore should be done (default: false)
+   --verifyRestore        If the restore should get verified, only for PVCs restore (default: false)
+   --archive              (default: false)
+   --restoreSnap value    Snapshot ID, if empty takes the latest snapshot
+   --restoreType value    Type of this restore, folder or S3
+   --restoreFilter value  Simple filter to define what should get restored. For example the PVC name
+   --tag value            List of tags to consider for given operation
+   --help, -h             show help (default: false)
+   
