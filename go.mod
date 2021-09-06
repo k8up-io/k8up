@@ -6,7 +6,6 @@ require (
 	// When updating crd-ref-docs, verify that there were no changes from Elastic to hostile licenses.
 	github.com/elastic/crd-ref-docs v0.0.7
 	github.com/firepear/qsplit/v2 v2.5.0
-	github.com/go-logr/glogr v0.1.0
 	github.com/go-logr/logr v0.4.0
 	github.com/go-logr/zapr v0.4.0
 	github.com/imdario/mergo v0.3.12
@@ -53,7 +52,6 @@ require (
 	github.com/gobuffalo/flect v0.2.2 // indirect
 	github.com/goccy/go-yaml v1.1.5 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
-	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b // indirect
 	github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/go-cmp v0.5.5 // indirect

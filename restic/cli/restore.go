@@ -11,20 +11,22 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"time"
 
 	"github.com/go-logr/logr"
 
 	"github.com/vshn/k8up/common"
+	"github.com/vshn/k8up/restic/cfg"
 	"github.com/vshn/k8up/restic/logging"
 	"github.com/vshn/k8up/restic/s3"
 )
 
 const (
-	FolderRestore RestoreType = "folder"
-	S3Restore     RestoreType = "s3"
+	// FolderRestore indicates that a restore to a folder should be performed.
+	FolderRestore RestoreType = cfg.RestoreTypeFolder
+	// S3Restore indicates that a restore to a S3 endpoint should be performed.
+	S3Restore RestoreType = cfg.RestoreTypeS3
 )
 
 // RestoreType defines the type for a restore.
@@ -138,13 +140,8 @@ func (r *Restic) getLatestSnapshot(snapshotID string, log logr.Logger) (Snapshot
 
 func (r *Restic) folderRestore(restoreDir string, snapshot Snapshot, restoreFilter string, verify bool, log logr.Logger) error {
 	var linkedDir string
-	var trim bool
-	trim, err := strconv.ParseBool(os.Getenv("TRIM_RESTOREPATH"))
-	if err != nil {
-		trim = true
-	}
-	if trim {
-		linkedDir, err = r.linkRestorePaths(snapshot, restoreDir)
+	if cfg.Config.RestoreTrimPath {
+		restoreRoot, err := r.linkRestorePaths(snapshot, restoreDir, log)
 		if err != nil {
 			return err
 		}
@@ -154,10 +151,18 @@ func (r *Restic) folderRestore(restoreDir string, snapshot Snapshot, restoreFilt
 			if err != nil {
 				log.Error(err, "unable to clean up the files", "path", path)
 			}
-		}(linkedDir)
+		}(restoreRoot)
+		linkedDir = restoreRoot
 	} else {
 		linkedDir = restoreDir
 	}
+
+	log.Info("folder restore",
+		"restoreDir", restoreDir,
+		"trimPath", cfg.Config.RestoreTrimPath,
+		"linkedDir", linkedDir,
+		"restoreFilter", restoreFilter,
+		"snapshotID", snapshot.ID)
 
 	args := []string{snapshot.ID, "--target", linkedDir}
 	if restoreFilter != "" {
@@ -188,12 +193,11 @@ func (r *Restic) folderRestore(restoreDir string, snapshot Snapshot, restoreFilt
 // returns that temp path as the string used for the actual restore.This way the
 // root of the backed up PVC will be the root of the restored PVC thus creating
 // a carbon copy of the original and ready to be used again.
-func (r *Restic) linkRestorePaths(snapshot Snapshot, restoreDir string) (string, error) {
+func (r *Restic) linkRestorePaths(snapshot Snapshot, restoreDir string, log logr.Logger) (string, error) {
 	// wrestic snapshots only every contain exactly one path
-	splitted := strings.Split(snapshot.Paths[0], "/")
-
+	snapshotPath := snapshot.Paths[0]
+	splitted := strings.Split(snapshotPath, "/")
 	joined := filepath.Join(splitted[:3]...)
-
 	restoreRoot := filepath.Join(os.TempDir(), "wresticRestore")
 
 	absolute := filepath.Join(restoreRoot, joined)
@@ -225,20 +229,14 @@ func (r *Restic) s3Restore(log logr.Logger, snapshot Snapshot, stats *RestoreSta
 	cleanupCtx, cleanup := context.WithCancel(r.ctx)
 	defer cleanup()
 
-	restoreS3Endpoint, s3AccessKey, s3SecretKey, err := r.getS3FromEnv()
-	if err != nil {
-		log.Error(err, "unable to load S3 information")
-		return err
-	}
-
 	snapDate := snapshot.Time.Format(time.RFC3339)
 	PVCName := r.parsePath(snapshot.Paths)
 	fileName := fmt.Sprintf("backup-%v-%v-%v.tar.gz", snapshot.Hostname, PVCName, snapDate)
 
-	stats.RestoreLocation = fmt.Sprintf("%s/%s", restoreS3Endpoint, fileName)
+	stats.RestoreLocation = fmt.Sprintf("%s/%s", cfg.Config.RestoreS3Endpoint, fileName)
 	stats.SnapshotID = snapshot.ID
 
-	s3TransmissionErrorChannel, s3writer, err := r.s3Connect(r.ctx, fileName, restoreS3Endpoint, s3AccessKey, s3SecretKey)
+	s3TransmissionErrorChannel, s3writer, err := r.s3Connect(r.ctx, fileName)
 	if err != nil {
 		return err
 	}
@@ -313,8 +311,8 @@ func (r *Restic) doRestore(log logr.Logger, latestSnap Snapshot, snapRoot string
 	cmd.Run()
 }
 
-func (r *Restic) s3Connect(ctx context.Context, fileName, restoreS3Endpoint, s3AccessKey, s3SecretKey string) (chan error, *io.PipeWriter, error) {
-	s3Client := s3.New(restoreS3Endpoint, s3AccessKey, s3SecretKey)
+func (r *Restic) s3Connect(ctx context.Context, fileName string) (chan error, *io.PipeWriter, error) {
+	s3Client := s3.New(cfg.Config.RestoreS3Endpoint, cfg.Config.RestoreS3AccessKey, cfg.Config.RestoreS3SecretKey)
 	err := s3Client.Connect(ctx)
 	if err != nil {
 		return nil, nil, err
@@ -332,22 +330,6 @@ func (r *Restic) s3Connect(ctx context.Context, fileName, restoreS3Endpoint, s3A
 			})
 	}()
 	return errorChannel, uploadWritePipe, nil
-}
-
-func (r *Restic) getS3FromEnv() (restoreS3Endpoint string, s3AccessKey string, s3SecretKey string, err error) {
-	restoreS3Endpoint, ok := os.LookupEnv(RestoreS3EndpointEnv)
-	if !ok {
-		return restoreS3Endpoint, s3AccessKey, s3SecretKey, fmt.Errorf("the environment variable '%s' is undefined, but it is required", RestoreS3EndpointEnv)
-	}
-	s3AccessKey, ok = os.LookupEnv(RestoreS3AccessKeyIDEnv)
-	if !ok {
-		return restoreS3Endpoint, s3AccessKey, s3SecretKey, fmt.Errorf("the environment variable '%s' is undefined, but it is required", RestoreS3AccessKeyIDEnv)
-	}
-	s3SecretKey, ok = os.LookupEnv(RestoreS3SecretAccessKey)
-	if !ok {
-		return restoreS3Endpoint, s3AccessKey, s3SecretKey, fmt.Errorf("the environment variable '%s' is undefined, but it is required", RestoreS3SecretAccessKey)
-	}
-	return restoreS3Endpoint, s3AccessKey, s3SecretKey, nil
 }
 
 // getSnapshotRoot will return the correct root to trigger the restore. If the

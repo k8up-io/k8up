@@ -2,8 +2,8 @@ package cli
 
 import (
 	"fmt"
-	"os"
 
+	"github.com/vshn/k8up/restic/cfg"
 	"github.com/vshn/k8up/restic/kubernetes"
 	"github.com/vshn/k8up/restic/logging"
 )
@@ -18,7 +18,7 @@ func (r *Restic) StdinBackup(data *kubernetes.ExecData, filename, fileExt string
 	outputWriter := logging.NewStdinBackupOutputParser(stdinlogger.WithName("progress"), filename+fileExt, r.sendBackupStats)
 
 	flags := Combine(r.globalFlags, Flags{
-		"--host":           {os.Getenv(Hostname)},
+		"--host":           {cfg.Config.Hostname},
 		"--json":           {},
 		"--stdin":          {},
 		"--stdin-filename": {fmt.Sprintf("%s%s", filename, fileExt)},

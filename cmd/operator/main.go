@@ -71,9 +71,9 @@ var (
 			&cli.StringFlag{Destination: &cfg.Config.RestartPolicy, Name: "restartpolicy", EnvVars: []string{"BACKUP_RESTARTPOLICY"}, Value: "OnFailure", Usage: "set the RestartPolicy for the backup jobs. According to https://kubernetes.io/docs/concepts/workloads/controllers/jobs-run-to-completion/, this should be 'OnFailure' for jobs that terminate"},
 			&cli.StringFlag{Destination: &cfg.Config.PodFilter, Name: "podfilter", EnvVars: []string{"BACKUP_PODFILTER"}, Value: "backupPod=true", Usage: "the filter used to find the backup pods"},
 			&cli.StringFlag{Destination: &cfg.Config.ServiceAccount, Name: "podexecaccountname", Aliases: []string{"serviceaccount"}, EnvVars: []string{"BACKUP_PODEXECACCOUNTNAME"}, Value: "pod-executor", Usage: "set the service account name that should be used for the pod command execution"},
-			&cli.StringFlag{Destination: &cfg.Config.PodExecRoleName, Name: "podexecrolename", EnvVars: []string{"BACKUP_PODEXECROLENAME"}, Usage: "set the role name that should be used for pod command execution"},
+			&cli.StringFlag{Destination: &cfg.Config.PodExecRoleName, Name: "podexecrolename", EnvVars: []string{"BACKUP_PODEXECROLENAME"}, Value: "pod-executor", Usage: "set the role name that should be used for pod command execution"},
 
-			&cli.BoolFlag{Destination: &cfg.Config.EnableLeaderElection, Name: "enable-leader-election", EnvVars: []string{"BACKUP_ENABLE_LEADER_ELECTION"}, Value: true, Usage: "enable leader election within the operator Pod"},
+			&cli.BoolFlag{Destination: &cfg.Config.EnableLeaderElection, Name: "enable-leader-election", EnvVars: []string{"BACKUP_ENABLE_LEADER_ELECTION"}, Value: true, DefaultText: "enabled", Usage: "enable leader election within the operator Pod"},
 			&cli.StringFlag{Destination: &cfg.Config.BackupCheckSchedule, Name: "checkschedule", EnvVars: []string{"BACKUP_CHECKSCHEDULE"}, Value: "0 0 * * 0", Usage: "the default check schedule"},
 			&cli.StringFlag{Destination: &cfg.Config.OperatorNamespace, Name: "operator-namespace", EnvVars: []string{"BACKUP_OPERATOR_NAMESPACE"}, Required: true, Usage: "set the namespace in which the K8up operator itself runs"},
 		},

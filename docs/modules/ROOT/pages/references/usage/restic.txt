@@ -11,14 +11,34 @@ DESCRIPTION:
    Start k8up in restic mode
 
 OPTIONS:
-   --check                Set if the container should run a check (default: false)
-   --prune                Set if the container should run a prune (default: false)
-   --restore              Whether or not a restore should be done (default: false)
-   --verifyRestore        If the restore should get verified, only for PVCs restore (default: false)
-   --archive              (default: false)
-   --restoreSnap value    Snapshot ID, if empty takes the latest snapshot
-   --restoreType value    Type of this restore, folder or S3
-   --restoreFilter value  Simple filter to define what should get restored. For example the PVC name
-   --tag value            List of tags to consider for given operation
-   --help, -h             show help (default: false)
+   --check                               Set if the container should run a check (default: false)
+   --prune                               Set if the container should run a prune (default: false)
+   --restore                             Whether or not a restore should be done (default: false)
+   --archive                             (default: false)
+   --tag value                           List of tags to consider for given operation
+   --backupCommandAnnotation value       Defines the command to invoke when doing a backup via STDOUT. [$BACKUPCOMMAND_ANNOTATION]
+   --fileExtensionAnnotation value       Defines the file extension to use for STDOUT backups. [$FILEEXTENSION_ANNOTATION]
+   --promURL value                       Sets the URL of a prometheus push gateway to report metrics. [$PROM_URL]
+   --webhookURL value, --statsURL value  Sets the URL of a server which will retrieve a webhook after the action completes. [$STATS_URL]
+   --backupDir value                     Set from which directory the backup should be performed. (default: "/data") [$BACKUP_DIR]
+   --restoreDir value                    Set to which directory the restore should be performed. (default: "/data") [$RESTORE_DIR]
+   --restoreFilter value                 Simple filter to define what should get restored. For example the PVC name
+   --restoreSnap value                   Snapshot ID, if empty takes the latest snapshot
+   --restoreType value                   Type of this restore, folder or S3
+   --restoreS3AccessKey value            Type of this restore, folder or S3 [$RESTORE_ACCESSKEYID]
+   --restoreS3SecretKey value            Type of this restore, folder or S3 [$RESTORE_SECRETACCESSKEY]
+   --restoreS3Endpoint value             Type of this restore, folder or S3 [$RESTORE_S3ENDPOINT]
+   --verifyRestore                       If the restore should get verified, only for PVCs restore (default: false)
+   --trimRestorePath                     If set, strips the value of --restoreDir from the lefts side of the remote restore path value (default: false) [$TRIM_RESTOREPATH]
+   --resticBin value                     The path to the restic binary. (default: "/usr/local/bin/restic") [$RESTIC_BINARY]
+   --resticRepository value              The restic repository to perform the action with [$RESTIC_REPOSITORY]
+   --resticOptions value                 Additional options to pass to restic in the format 'key=value,key2=value2' [$RESTIC_OPTIONS]
+   --keepLatest value                    While pruning, keep at the latest snapshot (default: 0) [$KEEP_LAST, $KEEP_LATEST]
+   --keepHourly value                    While pruning, keep hourly snapshots (default: 0) [$KEEP_HOURLY]
+   --keepDaily value                     While pruning, keep daily snapshots (default: 0) [$KEEP_DAILY]
+   --keepWeekly value                    While pruning, keep weekly snapshots (default: 0) [$KEEP_WEEKLY]
+   --keepMonthly value                   While pruning, keep monthly snapshots (default: 0) [$KEEP_MONTHLY]
+   --keepYearly value                    While pruning, keep yearly snapshots (default: 0) [$KEEP_YEARLY]
+   --keepTags                            While pruning, keep tagged snapshots (default: false) [$KEEP_TAG, $KEEP_TAGS]
+   --help, -h                            show help (default: false)
    

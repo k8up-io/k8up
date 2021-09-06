@@ -3,11 +3,16 @@ package cli
 import (
 	"encoding/json"
 	"io/ioutil"
-	"os"
 
 	"github.com/prometheus/client_golang/prometheus"
 
+	"github.com/vshn/k8up/restic/cfg"
 	"github.com/vshn/k8up/restic/logging"
+)
+
+const (
+	prometheusNamespace = "baas"
+	prometheusSubsystem = "backup_restic"
 )
 
 // RawMetrics contains the raw metrics that can be obtained at the end of a
@@ -72,8 +77,8 @@ func newPromMetrics() *PromMetrics {
 
 func dataTransferredGaugeVec(labels []string) *prometheus.GaugeVec {
 	return prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Namespace: Namespace,
-		Subsystem: Subsystem,
+		Namespace: prometheusNamespace,
+		Subsystem: prometheusSubsystem,
 		Name:      "data_transferred_during_backup",
 		Help:      "Amount of data transferred during last backup",
 	}, labels)
@@ -81,8 +86,8 @@ func dataTransferredGaugeVec(labels []string) *prometheus.GaugeVec {
 
 func unmodifiedDirsGaugeVec(labels []string) *prometheus.GaugeVec {
 	return prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Namespace: Namespace,
-		Subsystem: Subsystem,
+		Namespace: prometheusNamespace,
+		Subsystem: prometheusSubsystem,
 		Name:      "unmodified_directories_during_backup",
 		Help:      "How many directories were skipped due to no modifications",
 	}, labels)
@@ -90,8 +95,8 @@ func unmodifiedDirsGaugeVec(labels []string) *prometheus.GaugeVec {
 
 func changedDirsGaugeVec(labels []string) *prometheus.GaugeVec {
 	return prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Namespace: Namespace,
-		Subsystem: Subsystem,
+		Namespace: prometheusNamespace,
+		Subsystem: prometheusSubsystem,
 		Name:      "changed_directories_during_backup",
 		Help:      "How many changed directories were backed up during the last backup",
 	}, labels)
@@ -99,8 +104,8 @@ func changedDirsGaugeVec(labels []string) *prometheus.GaugeVec {
 
 func newDirsGaugeVec(labels []string) *prometheus.GaugeVec {
 	return prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Namespace: Namespace,
-		Subsystem: Subsystem,
+		Namespace: prometheusNamespace,
+		Subsystem: prometheusSubsystem,
 		Name:      "new_directories_during_backup",
 		Help:      "How many new directories were backed up during the last backup",
 	}, labels)
@@ -108,8 +113,8 @@ func newDirsGaugeVec(labels []string) *prometheus.GaugeVec {
 
 func unmodifiedFilesGaugeVec(labels []string) *prometheus.GaugeVec {
 	return prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Namespace: Namespace,
-		Subsystem: Subsystem,
+		Namespace: prometheusNamespace,
+		Subsystem: prometheusSubsystem,
 		Name:      "unmodified_files_during_backup",
 		Help:      "How many files were skipped due to no modifications",
 	}, labels)
@@ -117,8 +122,8 @@ func unmodifiedFilesGaugeVec(labels []string) *prometheus.GaugeVec {
 
 func changedFiledGaugeVec(labels []string) *prometheus.GaugeVec {
 	return prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Namespace: Namespace,
-		Subsystem: Subsystem,
+		Namespace: prometheusNamespace,
+		Subsystem: prometheusSubsystem,
 		Name:      "changed_files_during_backup",
 		Help:      "How many changed files were backed up during the last backup",
 	}, labels)
@@ -126,8 +131,8 @@ func changedFiledGaugeVec(labels []string) *prometheus.GaugeVec {
 
 func newFilesGaugeVec(labels []string) *prometheus.GaugeVec {
 	return prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Namespace: Namespace,
-		Subsystem: Subsystem,
+		Namespace: prometheusNamespace,
+		Subsystem: prometheusSubsystem,
 		Name:      "new_files_during_backup",
 		Help:      "How many new files were backed up during the last backup",
 	}, labels)
@@ -135,8 +140,8 @@ func newFilesGaugeVec(labels []string) *prometheus.GaugeVec {
 
 func availableSnapshotsGauge() prometheus.Gauge {
 	return prometheus.NewGauge(prometheus.GaugeOpts{
-		Namespace: Namespace,
-		Subsystem: Subsystem,
+		Namespace: prometheusNamespace,
+		Subsystem: prometheusSubsystem,
 		Name:      "available_snapshots",
 		Help:      "How many snapshots are available",
 	})
@@ -144,8 +149,8 @@ func availableSnapshotsGauge() prometheus.Gauge {
 
 func errorsGaugeVec(labels []string) *prometheus.GaugeVec {
 	return prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Namespace: Namespace,
-		Subsystem: Subsystem,
+		Namespace: prometheusNamespace,
+		Subsystem: prometheusSubsystem,
 		Name:      "last_errors",
 		Help:      "How many errors the backup or check had",
 	}, labels)
@@ -164,7 +169,7 @@ func (r *Restic) parseSummary(summary logging.BackupSummary, errorCount int, fol
 		MountedPVCs:           r.getMountedFolders(),
 		availableSnapshots:    float64(len(r.snapshots)),
 		Folder:                folder,
-		hostname:              os.Getenv(Hostname),
+		hostname:              cfg.Config.Hostname,
 		BackupStartTimestamp:  float64(startTimestamp),
 		BackupEndTimestamp:    float64(endTimestamp),
 		runningBackupDuration: summary.TotalDuration,
@@ -212,20 +217,13 @@ func (p *PromMetrics) ToProm() []prometheus.Collector {
 }
 
 func (r *Restic) getMountedFolders() []string {
-
-	folders := []string{}
-
-	backupDir := os.Getenv(BackupDirEnv)
-	if backupDir == "" {
-		backupDir = "/data"
-	}
-
-	files, err := ioutil.ReadDir(backupDir)
+	files, err := ioutil.ReadDir(cfg.Config.BackupDir)
 	if err != nil {
 		r.logger.WithName("MountCollector").Error(err, "can't list mounted folders for stats")
-		return folders
+		return []string{}
 	}
 
+	folders := make([]string, 0)
 	for _, f := range files {
 		if f.IsDir() {
 			folders = append(folders, f.Name())

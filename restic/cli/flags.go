@@ -36,7 +36,7 @@ func Combine(first, second Flags) Flags {
 // ApplyToCommand applies the globalFlags to the given command and it's arguments, such that `newArgs = [command, globalFlags..., commandArgs...]`,
 // in order the returning array to be passed to the `restic` process.
 func (f Flags) ApplyToCommand(command string, commandArgs ...string) []string {
-	args := []string{}
+	args := make([]string, 0)
 	if command != "" {
 		args = append(args, command)
 	}
@@ -53,7 +53,7 @@ func expand(flag string, values []string) []string {
 		return []string{flag}
 	}
 
-	args := []string{}
+	args := make([]string, 0)
 	for _, value := range values {
 		args = append(args, flag, value)
 	}

@@ -10,6 +10,7 @@ import (
 
 	"github.com/go-logr/logr"
 
+	"github.com/vshn/k8up/restic/cfg"
 	"github.com/vshn/k8up/restic/kubernetes"
 	"github.com/vshn/k8up/restic/logging"
 )
@@ -54,7 +55,7 @@ func (r *Restic) folderBackup(folder string, backuplogger logr.Logger, tags Arra
 	backuplogger.Info("starting backup for folder", "foldername", path.Base(folder))
 
 	flags := Combine(r.globalFlags, Flags{
-		"--host": {os.Getenv(Hostname)},
+		"--host": {cfg.Config.Hostname},
 		"--json": {},
 	})
 
@@ -81,7 +82,7 @@ func (r *Restic) sendBackupStats(summary logging.BackupSummary, errorCount int, 
 
 	currentStats := &BackupStats{
 		BackupMetrics: metrics,
-		Name:          os.Getenv(Hostname),
+		Name:          cfg.Config.Hostname,
 		BucketName:    r.bucket,
 	}
 
@@ -102,7 +103,7 @@ func (r *Restic) sendPostWebhook() {
 	}
 	stats := &BackupStats{
 		BucketName: r.bucket,
-		Name:       os.Getenv(Hostname),
+		Name:       cfg.Config.Hostname,
 		Snapshots:  r.snapshots,
 	}
 

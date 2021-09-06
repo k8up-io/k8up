@@ -2,23 +2,19 @@ package kubernetes
 
 import (
 	"fmt"
-	"os"
-	"path/filepath"
 
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
-)
 
-var (
-	Kubeconfig = filepath.Join(os.Getenv("HOME"), ".kube", "config")
+	"github.com/vshn/k8up/restic/cfg"
 )
 
 func getClientConfig() (*rest.Config, error) {
 	config, err := rest.InClusterConfig()
 	if err != nil {
 		err1 := err
-		config, err = clientcmd.BuildConfigFromFlags("", Kubeconfig)
+		config, err = clientcmd.BuildConfigFromFlags("", cfg.Config.KubeConfig)
 		if err != nil {
 			err = fmt.Errorf("InClusterConfig as well as BuildConfigFromFlags Failed. Error in InClusterConfig: %+v\nError in BuildConfigFromFlags: %+v", err1, err)
 			return nil, err
