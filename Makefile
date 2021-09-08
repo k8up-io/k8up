@@ -47,7 +47,7 @@ integration-test: generate $(integrationtest_dir_created) restic-integration-tes
 		go test -tags=integration -coverprofile cover.out  ./...
 
 .PHONY: build
-build: generate fmt vet $(BIN_FILENAME) ## Build manager binary
+build: generate fmt vet $(BIN_FILENAME) docs-update-usage ## Build manager binary
 
 .PHONY: run
 run: export BACKUP_ENABLE_LEADER_ELECTION = $(ENABLE_LEADER_ELECTION)

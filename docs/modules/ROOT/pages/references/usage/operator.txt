@@ -40,8 +40,8 @@ OPTIONS:
    --restartpolicy value                               set the RestartPolicy for the backup jobs. According to https://kubernetes.io/docs/concepts/workloads/controllers/jobs-run-to-completion/, this should be 'OnFailure' for jobs that terminate (default: "OnFailure") [$BACKUP_RESTARTPOLICY]
    --podfilter value                                   the filter used to find the backup pods (default: "backupPod=true") [$BACKUP_PODFILTER]
    --podexecaccountname value, --serviceaccount value  set the service account name that should be used for the pod command execution (default: "pod-executor") [$BACKUP_PODEXECACCOUNTNAME]
-   --podexecrolename value                             set the role name that should be used for pod command execution [$BACKUP_PODEXECROLENAME]
-   --enable-leader-election                            enable leader election within the operator Pod (default: true) [$BACKUP_ENABLE_LEADER_ELECTION]
+   --podexecrolename value                             set the role name that should be used for pod command execution (default: "pod-executor") [$BACKUP_PODEXECROLENAME]
+   --enable-leader-election                            enable leader election within the operator Pod (default: enabled) [$BACKUP_ENABLE_LEADER_ELECTION]
    --checkschedule value                               the default check schedule (default: "0 0 * * 0") [$BACKUP_CHECKSCHEDULE]
    --operator-namespace value                          set the namespace in which the K8up operator itself runs [$BACKUP_OPERATOR_NAMESPACE]
    --help, -h                                          show help (default: false)
