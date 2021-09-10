@@ -8,10 +8,9 @@ import (
 
 func Test_Configuration_GetGlobalFailedJobsHistoryLimit(t *testing.T) {
 	t.Run("GlobalKeepJobsIfNotSet", func(t *testing.T) {
-		i := 17
 		c := Configuration{
 			GlobalFailedJobsHistoryLimit: -5,
-			GlobalKeepJobs:               &i,
+			GlobalKeepJobs:               17,
 		}
 		assert.Equal(t, 17, c.GetGlobalFailedJobsHistoryLimit())
 	})
@@ -22,10 +21,9 @@ func Test_Configuration_GetGlobalFailedJobsHistoryLimit(t *testing.T) {
 		assert.Equal(t, 17, c.GetGlobalFailedJobsHistoryLimit())
 	})
 	t.Run("LimitsNegativeValuesToZero", func(t *testing.T) {
-		i := -17
 		c := Configuration{
 			GlobalFailedJobsHistoryLimit: -5,
-			GlobalKeepJobs:               &i,
+			GlobalKeepJobs:               -17,
 		}
 		assert.Equal(t, 0, c.GetGlobalFailedJobsHistoryLimit())
 	})
@@ -33,10 +31,9 @@ func Test_Configuration_GetGlobalFailedJobsHistoryLimit(t *testing.T) {
 
 func Test_Configuration_GetGlobalSuccessfulJobsHistoryLimit(t *testing.T) {
 	t.Run("GlobalKeepJobsIfNotSet", func(t *testing.T) {
-		i := 17
 		c := Configuration{
 			GlobalSuccessfulJobsHistoryLimit: -2,
-			GlobalKeepJobs:                   &i,
+			GlobalKeepJobs:                   17,
 		}
 		assert.Equal(t, 17, c.GetGlobalSuccessfulJobsHistoryLimit())
 	})
@@ -47,10 +44,9 @@ func Test_Configuration_GetGlobalSuccessfulJobsHistoryLimit(t *testing.T) {
 		assert.Equal(t, 17, c.GetGlobalSuccessfulJobsHistoryLimit())
 	})
 	t.Run("LimitsNegativeValuesToZero", func(t *testing.T) {
-		i := -17
 		c := Configuration{
-			GlobalSuccessfulJobsHistoryLimit: i,
-			GlobalKeepJobs:                   &i,
+			GlobalSuccessfulJobsHistoryLimit: -2,
+			GlobalKeepJobs:                   -17,
 		}
 		assert.Equal(t, 0, c.GetGlobalSuccessfulJobsHistoryLimit())
 	})

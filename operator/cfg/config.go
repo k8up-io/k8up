@@ -47,7 +47,7 @@ type Configuration struct {
 	ServiceAccount                   string
 	BackupCheckSchedule              string
 	GlobalAccessKey                  string
-	GlobalKeepJobs                   *int
+	GlobalKeepJobs                   int
 	GlobalFailedJobsHistoryLimit     int
 	GlobalSuccessfulJobsHistoryLimit int
 	GlobalRepoPassword               string
@@ -120,12 +120,12 @@ func (c Configuration) GetGlobalRepository() string {
 // GetGlobalFailedJobsHistoryLimit returns the global failed jobs history limit.
 // Returns global KeepJobs if unspecified.
 func (c Configuration) GetGlobalFailedJobsHistoryLimit() int {
-	if c.GlobalKeepJobs == nil {
+	if c.GlobalKeepJobs < 0 {
 		return maxInt(0, c.GlobalFailedJobsHistoryLimit)
 	}
 
 	if c.GlobalFailedJobsHistoryLimit < 0 {
-		return maxInt(0, *c.GlobalKeepJobs)
+		return maxInt(0, c.GlobalKeepJobs)
 	}
 	return maxInt(0, c.GlobalFailedJobsHistoryLimit)
 }
@@ -133,12 +133,12 @@ func (c Configuration) GetGlobalFailedJobsHistoryLimit() int {
 // GetGlobalSuccessfulJobsHistoryLimit returns the global successful jobs history limit.
 // Returns global KeepJobs if unspecified.
 func (c Configuration) GetGlobalSuccessfulJobsHistoryLimit() int {
-	if c.GlobalKeepJobs == nil {
+	if c.GlobalKeepJobs < 0 {
 		return maxInt(0, c.GlobalSuccessfulJobsHistoryLimit)
 	}
 
 	if c.GlobalSuccessfulJobsHistoryLimit < 0 {
-		return maxInt(0, *c.GlobalKeepJobs)
+		return maxInt(0, c.GlobalKeepJobs)
 	}
 	return maxInt(0, c.GlobalSuccessfulJobsHistoryLimit)
 }
