@@ -113,8 +113,12 @@ func (c *Configuration) validatePrune() error {
 		if val == "" {
 			continue
 		}
-		if _, err := time.ParseDuration(val); err != nil {
+		d, err := time.ParseDuration(val)
+		if err != nil {
 			return fmt.Errorf("the duration '%s' of the argument %s is not valid: %w", val, arg, err)
+		}
+		if d <= 0 {
+			return fmt.Errorf("the duration '%s' of the argument %s must not be negative", val, arg)
 		}
 	}
 	return nil

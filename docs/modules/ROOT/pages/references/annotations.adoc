@@ -5,11 +5,11 @@ Users can influence some aspects of K8up by defining annotations on certain reso
 [NOTE]
 ====
 These annotations can have different names in your cluster, depending on how K8up is configured.
-See xref:references/config-reference.adoc[Configuration reference]
+See xref:references/operator-config-reference.adoc[Operator Configuration reference]
 ====
 
 |===
-|Annotation |Description |Accepted Values |Applicable Resources |xref:references/config-reference.adoc[Configuration Option]
+|Annotation |Description |Accepted Values |Applicable Resources |xref:references/operator-config-reference.adoc[Configuration Option]
 
 |`k8up.syn.tools/backup`
 |If defined, this influences whether this pod shall be backed up (`true`) or not (`false`)

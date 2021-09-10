@@ -105,6 +105,7 @@ ifdef::backend-pdf[]
 :leveloffset: +1
 endif::[]
 
-include::modules/ROOT/pages/references/config-reference.adoc[]
+include::modules/ROOT/pages/references/operator-config-reference.adoc[]
+include::modules/ROOT/pages/references/restic-config-reference.adoc[]
 
 include::modules/ROOT/pages/references/object-specifications.adoc[]

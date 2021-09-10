@@ -7,15 +7,54 @@ K8up consists of two parts:
 
 == High Level Description
 
-A cluster wide Kubernetes Operator is responsible for processing the `Backup` objects and handle
-the backup schedules. When it's time to do a backup, the operator scans the namespace for matching
-PVCs and creates a backup job in the corresponding namespace, while mounting the matching PVCs under
-`/data/<pvcname>`. Restic then backups the data from this location to the configured endpoint.
+`k8up operator` is deployed as a cluster wide Kubernetes Operator.
+It is responsible for processing the `Backup` resources and to satisfy the defined `Schedule` resources.
+When it's time to do a backup, the operator scans the namespace for matching PVCs and creates a backup job in the corresponding namespace.
+It mounts the matching PVCs under `/data/<pvcname>`.
+Restic then backups the data from this location to the configured endpoint.
 
-== Internal Architecture
+== Operator Architecture
 
 The following diagram shows a high-level architecture of K8up internals.
 This is mainly aimed at developers helping to understand the code.
 But it could be interesting for anyone trying to understand an issue they may face with K8up.
 
 image::architecture.drawio.svg[]
+
+=== Schedules
+
+The `Schedule` is defined by the user.
+It contains rules, when to archive, backup, check or prune.
+Whenever it's time to do one of these actions, the operator will create a corresponding object in the cluster.
+For example, if a _backup_ needs to be performed, a new instance of the `Backup` custom resource is created.
+
+There is an `EffectiveSchedule` object for each `Schedule` object.
+It is not meant to be edited by users.
+It contains the effective times of the scheduled actions.
+The reason is that the schedule specification xref:references/schedule-specification.adoc[can contain such schedules as `@yearly`].
+The `EffectiveSchedule` stores the actual time when such schedules actually happen.
+
+=== Backup, Prune, Archive, Check, Restore
+
+These custom resources are usually created by a `Schedule`, but users may create them as well.
+The exception is the `Restore` custom resource, which is always created manually by a user.
+
+Whenever a new instance of one of these custom resources is detected, a corresponding `Job` is created.
+The `Job` will contain at least one `Pod`.
+The `Pod` will contain a single container with the `k8up` image.
+The image is invoked as `k8up restic`.
+
+All the relevant parameters are extracted by the `k8up operator` from the specific action objects, from the schedule or from the global configuration of `k8up operator`.
+These parameters are then passed to `k8up restic` as command line arguments and as environment variables.
+
+The `k8up operator` also ensures that the relevant `PVC` is mounted into the `Job`, usually as `/data/<pvc-name>`.
+
+=== Restic Job
+
+The `Job` that runs `k8up restic` contains the logic to perform the requested actions using the underlying https://restic.net/[`restic`] binary.
+It uses the same Docker image as the `k8up operator`.
+
+While `k8up operator` is usually running for a long time, `k8up restic` will do the job it is tasked to do and then exit.
+It also does not modify any resources in the Kubernetes cluster or leave permanent traces.
+But it will look for `Pod` resources xref:references/annotations.adoc[that are annotated].
+And it will also create one-off containers in the `Pod` resources it finds that are annotated with `k8up.syn.tools/backupcommand` in order to run the respective backup command and collect it's output.
