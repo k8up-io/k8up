@@ -13,7 +13,7 @@ See `k8up operator --help` for all the options:
 
 [source,txt]
 ----
-include::usage/operator.txt[]
+include::example$usage/k8up.txt[]
 ----
 
 == Global Settings
