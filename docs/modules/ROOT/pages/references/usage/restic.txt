@@ -40,5 +40,11 @@ OPTIONS:
    --keepMonthly value                   While pruning, keep monthly snapshots (default: 0) [$KEEP_MONTHLY]
    --keepYearly value                    While pruning, keep yearly snapshots (default: 0) [$KEEP_YEARLY]
    --keepTags                            While pruning, keep tagged snapshots (default: false) [$KEEP_TAG, $KEEP_TAGS]
+   --keepWithinHourly value              While pruning, keep hourly snapshots within the given duration, e.g. '2y5m7d3h' [$KEEP_WITHIN_HOURLY]
+   --keepWithinDaily value               While pruning, keep daily snapshots within the given duration, e.g. '2y5m7d3h' [$KEEP_WITHIN_DAILY]
+   --keepWithinWeekly value              While pruning, keep weekly snapshots within the given duration, e.g. '2y5m7d3h' [$KEEP_WITHIN_WEEKLY]
+   --keepWithinMonthly value             While pruning, keep monthly snapshots within the given duration, e.g. '2y5m7d3h' [$KEEP_WITHIN_MONTHLY]
+   --keepWithinYearly value              While pruning, keep yearly snapshots within the given duration, e.g. '2y5m7d3h' [$KEEP_WITHIN_YEARLY]
+   --keepWithin value                    While pruning, keep tagged snapshots within the given duration, e.g. '2y5m7d3h' [$KEEP_WITHIN]
    --help, -h                            show help (default: false)
    

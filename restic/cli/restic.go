@@ -10,16 +10,6 @@ import (
 	"github.com/vshn/k8up/restic/cfg"
 )
 
-const (
-	keepLastArg    = "--keep-last"
-	keepHourlyArg  = "--keep-hourly"
-	keepDailyArg   = "--keep-daily"
-	keepWeeklyArg  = "--keep-weekly"
-	keepMonthlyArg = "--keep-monthly"
-	keepYearlyArg  = "--keep-yearly"
-	keepTagsArg    = "--keep-tag"
-)
-
 type ArrayOpts []string
 
 func (a *ArrayOpts) String() string {

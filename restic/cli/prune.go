@@ -14,22 +14,36 @@ func (r *Restic) Prune(tags ArrayOpts) error {
 	prunelogger.Info("pruning repository")
 
 	args := []string{"--prune"}
-	keepN := map[string]*int{
-		keepLastArg:    cfg.Config.PruneKeepLast,
-		keepHourlyArg:  cfg.Config.PruneKeepHourly,
-		keepDailyArg:   cfg.Config.PruneKeepDaily,
-		keepWeeklyArg:  cfg.Config.PruneKeepWeekly,
-		keepMonthlyArg: cfg.Config.PruneKeepMonthly,
-		keepYearlyArg:  cfg.Config.PruneKeepYearly,
+	keepN := map[string]int{
+		"--keep-last":    cfg.Config.PruneKeepLast,
+		"--keep-hourly":  cfg.Config.PruneKeepHourly,
+		"--keep-daily":   cfg.Config.PruneKeepDaily,
+		"--keep-weekly":  cfg.Config.PruneKeepWeekly,
+		"--keep-monthly": cfg.Config.PruneKeepMonthly,
+		"--keep-yearly":  cfg.Config.PruneKeepYearly,
 	}
 	for argName, argVal := range keepN {
-		if argVal != nil {
-			args = append(args, argName, fmt.Sprintf("%d", *argVal))
+		if argVal > 0 {
+			args = append(args, argName, fmt.Sprintf("%d", argVal))
+		}
+	}
+
+	keepWithin := map[string]string{
+		"--keep-within":         cfg.Config.PruneKeepWithin,
+		"--keep-within-hourly":  cfg.Config.PruneKeepWithinHourly,
+		"--keep-within-daily":   cfg.Config.PruneKeepWithinDaily,
+		"--keep-within-weekly":  cfg.Config.PruneKeepWithinWeekly,
+		"--keep-within-monthly": cfg.Config.PruneKeepWithinMonthly,
+		"--keep-within-yearly":  cfg.Config.PruneKeepWithinYearly,
+	}
+	for argName, argVal := range keepWithin {
+		if argVal != "" {
+			args = append(args, argName, argVal)
 		}
 	}
 
 	if cfg.Config.PruneKeepTags {
-		args = append(args, keepTagsArg)
+		args = append(args, "--keep-tag")
 	}
 
 	resticPruneLogger := prunelogger.WithName("restic")

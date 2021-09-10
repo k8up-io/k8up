@@ -67,13 +67,20 @@ var (
 			&cli.StringFlag{Destination: &cfg.Config.ResticRepository, Name: "resticRepository", EnvVars: []string{"RESTIC_REPOSITORY"}, Usage: "The restic repository to perform the action with", Required: true},
 			&cli.StringFlag{Destination: &cfg.Config.ResticOptions, Name: "resticOptions", EnvVars: []string{"RESTIC_OPTIONS"}, Usage: "Additional options to pass to restic in the format 'key=value,key2=value2'"},
 
-			&cli.IntFlag{Destination: cfg.Config.PruneKeepLast, Name: "keepLatest", EnvVars: []string{"KEEP_LAST", "KEEP_LATEST"}, Usage: "While pruning, keep at the latest snapshot"},
-			&cli.IntFlag{Destination: cfg.Config.PruneKeepHourly, Name: "keepHourly", EnvVars: []string{"KEEP_HOURLY"}, Usage: "While pruning, keep hourly snapshots"},
-			&cli.IntFlag{Destination: cfg.Config.PruneKeepDaily, Name: "keepDaily", EnvVars: []string{"KEEP_DAILY"}, Usage: "While pruning, keep daily snapshots"},
-			&cli.IntFlag{Destination: cfg.Config.PruneKeepWeekly, Name: "keepWeekly", EnvVars: []string{"KEEP_WEEKLY"}, Usage: "While pruning, keep weekly snapshots"},
-			&cli.IntFlag{Destination: cfg.Config.PruneKeepMonthly, Name: "keepMonthly", EnvVars: []string{"KEEP_MONTHLY"}, Usage: "While pruning, keep monthly snapshots"},
-			&cli.IntFlag{Destination: cfg.Config.PruneKeepYearly, Name: "keepYearly", EnvVars: []string{"KEEP_YEARLY"}, Usage: "While pruning, keep yearly snapshots"},
+			&cli.IntFlag{Destination: &cfg.Config.PruneKeepLast, Name: "keepLatest", EnvVars: []string{"KEEP_LAST", "KEEP_LATEST"}, Usage: "While pruning, keep at the latest snapshot"},
+			&cli.IntFlag{Destination: &cfg.Config.PruneKeepHourly, Name: "keepHourly", EnvVars: []string{"KEEP_HOURLY"}, Usage: "While pruning, keep hourly snapshots"},
+			&cli.IntFlag{Destination: &cfg.Config.PruneKeepDaily, Name: "keepDaily", EnvVars: []string{"KEEP_DAILY"}, Usage: "While pruning, keep daily snapshots"},
+			&cli.IntFlag{Destination: &cfg.Config.PruneKeepWeekly, Name: "keepWeekly", EnvVars: []string{"KEEP_WEEKLY"}, Usage: "While pruning, keep weekly snapshots"},
+			&cli.IntFlag{Destination: &cfg.Config.PruneKeepMonthly, Name: "keepMonthly", EnvVars: []string{"KEEP_MONTHLY"}, Usage: "While pruning, keep monthly snapshots"},
+			&cli.IntFlag{Destination: &cfg.Config.PruneKeepYearly, Name: "keepYearly", EnvVars: []string{"KEEP_YEARLY"}, Usage: "While pruning, keep yearly snapshots"},
 			&cli.BoolFlag{Destination: &cfg.Config.PruneKeepTags, Name: "keepTags", EnvVars: []string{"KEEP_TAG", "KEEP_TAGS"}, Usage: "While pruning, keep tagged snapshots"},
+
+			&cli.StringFlag{Destination: &cfg.Config.PruneKeepWithinHourly, Name: "keepWithinHourly", EnvVars: []string{"KEEP_WITHIN_HOURLY"}, Usage: "While pruning, keep hourly snapshots within the given duration, e.g. '2y5m7d3h'"},
+			&cli.StringFlag{Destination: &cfg.Config.PruneKeepWithinDaily, Name: "keepWithinDaily", EnvVars: []string{"KEEP_WITHIN_DAILY"}, Usage: "While pruning, keep daily snapshots within the given duration, e.g. '2y5m7d3h'"},
+			&cli.StringFlag{Destination: &cfg.Config.PruneKeepWithinWeekly, Name: "keepWithinWeekly", EnvVars: []string{"KEEP_WITHIN_WEEKLY"}, Usage: "While pruning, keep weekly snapshots within the given duration, e.g. '2y5m7d3h'"},
+			&cli.StringFlag{Destination: &cfg.Config.PruneKeepWithinMonthly, Name: "keepWithinMonthly", EnvVars: []string{"KEEP_WITHIN_MONTHLY"}, Usage: "While pruning, keep monthly snapshots within the given duration, e.g. '2y5m7d3h'"},
+			&cli.StringFlag{Destination: &cfg.Config.PruneKeepWithinYearly, Name: "keepWithinYearly", EnvVars: []string{"KEEP_WITHIN_YEARLY"}, Usage: "While pruning, keep yearly snapshots within the given duration, e.g. '2y5m7d3h'"},
+			&cli.StringFlag{Destination: &cfg.Config.PruneKeepWithin, Name: "keepWithin", EnvVars: []string{"KEEP_WITHIN"}, Usage: "While pruning, keep tagged snapshots within the given duration, e.g. '2y5m7d3h'"},
 		},
 	}
 )
