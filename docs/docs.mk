@@ -18,7 +18,7 @@ hunspell_cmd ?= $(docker_cmd) run $(docker_opts) --volume "$${PWD}":/spell vshn/
 htmltest_cmd ?= $(docker_cmd) run $(docker_opts) --volume "$${PWD}"/_public:/test wjdp/htmltest:v0.12.0
 preview_cmd ?= $(docker_cmd) run --rm --publish 35729:35729 --publish 2020:2020 --volume "${PWD}":/preview/antora vshn/antora-preview:2.3.8 --antora=docs --style=k8up
 
-docs_usage_dir ?= docs/modules/ROOT/pages/references/usage
+docs_usage_dir ?= docs/modules/ROOT/examples/usage
 
 .PHONY: docs-all
 docs-all: docs-update-usage docs-html docs-pdf ## Generate HTML and PDF docs
