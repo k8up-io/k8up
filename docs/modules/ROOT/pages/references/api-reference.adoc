@@ -242,7 +242,7 @@ BackupSpec defines a single backup. It must contain all inforomation to connect 
 | *`failedJobsHistoryLimit`* __integer__ | FailedJobsHistoryLimit amount of failed jobs to keep for later analysis. KeepJobs is used property is not specified.
 | *`successfulJobsHistoryLimit`* __integer__ | SuccessfulJobsHistoryLimit amount of successful jobs to keep for later analysis. KeepJobs is used property is not specified.
 | *`promURL`* __string__ | PromURL sets a prometheus push URL where the backup container send metrics to
-| *`statsURL`* __string__ | StatsURL sets an arbitrary URL where the wrestic container posts metrics and information about the snapshots to. This is in addition to the prometheus pushgateway.
+| *`statsURL`* __string__ | StatsURL sets an arbitrary URL where the restic container posts metrics and information about the snapshots to. This is in addition to the prometheus pushgateway.
 | *`tags`* __string array__ | Tags is a list of arbitrary tags that get added to the backup via Restic's tagging system
 |===
 

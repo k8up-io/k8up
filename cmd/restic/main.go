@@ -86,7 +86,7 @@ var (
 )
 
 func resticMain(c *cli.Context) error {
-	resticLog := cmd.AppLogger(c).WithName("wrestic")
+	resticLog := cmd.AppLogger(c).WithName("restic")
 	resticLog.Info("initializing")
 
 	cfg.Config.Tags = c.StringSlice("tag")

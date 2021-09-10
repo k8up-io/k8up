@@ -258,7 +258,7 @@ This will trigger a single prune run, and delete the snapshots according to the 
 This one needs to run exclusively on the repository.
 No other jobs must run on the same repository while this one is still running.
 The Operator ensures that the prune will run exclusively on the repository when run on a schedule.
-If manually triggering a prune the wrestic locking will kick in and prevent it from damaging the repository.
+If manually triggering, a prune the restic locking will kick in and prevent it from damaging the repository.
 It will also fail the whole Pod in that case.
 
 [source,yaml]
@@ -402,7 +402,7 @@ Settings:
 
 Settings:
 
-* `mountPath`: MountPath inside wrestic
+* `mountPath`: MountPath inside the restic container
 
 === Swift
 
@@ -454,7 +454,7 @@ spec:
 
 === Settings
 
-* `backupCommand`: command that should get executed within the pod. *Attention* the command should output its data to stdout so that wrestic can pick it up correctly
+* `backupCommand`: command that should get executed within the pod. *Attention* the command should output its data to stdout so that `k8up restic` can pick it up correctly
 * `fileExtension`: as this leverages the stdin backup capabilities of Restic it will generate a virtual file. That file name is by default just the name of the PreBackup pod. But to make restores easier you can define a file extension, that gets appended to the filename. For example: ".sql" for a mysql dump
 * `pod`: pod is default `podTemplateSpec` of https://kubernetes.io/docs/concepts/workloads/pods/pod-overview/#pod-templates[Kubernetes].
 

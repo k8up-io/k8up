@@ -28,8 +28,8 @@ minio-delete-config:
 .PHONY: minio-restart
 minio-restart: minio-stop minio-start ## Restart minio
 
-minio-set-alias: minio-start ## Set the alias 'wrestic' in mc to the minio server
-	@mc alias set wrestic "http://$(minio_address)" "$(minio_root_user)" "$(minio_root_password)"
+minio-set-alias: minio-start ## Set the alias 'restic' in mc to the minio server
+	@mc alias set restic "http://$(minio_address)" "$(minio_root_user)" "$(minio_root_password)"
 
 .PHONY: minio-start
 minio-start: minio-check $(minio_pid) ## Run minio

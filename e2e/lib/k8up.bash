@@ -54,13 +54,13 @@ kustomize() {
 }
 
 restic() {
-	kubectl run "wrestic-$(timestamp)" \
+	kubectl run "restic-$(timestamp)" \
 		--rm \
 		--attach \
 		--restart Never \
 		--wait \
 		--namespace "${DETIK_CLIENT_NAMESPACE-"k8up-system"}" \
-		--image "${WRESTIC_IMAGE}" \
+		--image "${E2E_IMAGE}" \
 		--env "AWS_ACCESS_KEY_ID=myaccesskey" \
 		--env "AWS_SECRET_KEY=mysecretkey" \
 		--env "RESTIC_PASSWORD=myreposecret" \
@@ -100,7 +100,6 @@ prepare() {
 	kustomize build "${definition_dir}" -o "${target_file}"
 
 	replace_in_file "${target_file}" E2E_IMAGE "'${E2E_IMAGE}'"
-	replace_in_file "${target_file}" WRESTIC_IMAGE "'${WRESTIC_IMAGE}'"
 	replace_in_file "${target_file}" ID "$(id -u)"
 	replace_in_file "${target_file}" BACKUP_ENABLE_LEADER_ELECTION "'${BACKUP_ENABLE_LEADER_ELECTION}'"
 	replace_in_file "${target_file}" BACKUP_FILE_NAME "${BACKUP_FILE_NAME}"

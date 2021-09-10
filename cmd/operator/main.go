@@ -22,7 +22,11 @@ import (
 	// +kubebuilder:scaffold:imports
 )
 
-const leaderElectionID = "d2ab61da.syn.tools"
+const (
+	leaderElectionID = "d2ab61da.syn.tools"
+	argCommandRestic = "command-restic"
+	argResticOptions = "restic-options"
+)
 
 var (
 	// Command is the definition of the command line interface of the operator module.
@@ -60,11 +64,12 @@ var (
 			&cli.StringFlag{Destination: &cfg.Config.GlobalMemoryResourceRequest, Name: "global-memory-request", EnvVars: []string{"BACKUP_GLOBAL_MEMORY_REQUEST"}, Usage: "set the memory request for scheduled jobs"},
 			&cli.StringFlag{Destination: &cfg.Config.GlobalMemoryResourceLimit, Name: "global-memory-limit", EnvVars: []string{"BACKUP_GLOBAL_MEMORY_LIMIT"}, Usage: "set the memory limit for scheduled jobs"},
 
-			&cli.StringFlag{Destination: &cfg.Config.BackupImage, Name: "image", EnvVars: []string{"BACKUP_IMAGE"}, Value: "quay.io/vshn/wrestic:latest", Usage: "URL of the restic image"},
-			&cli.StringSliceFlag{Name: "restic-options", EnvVars: []string{"BACKUP_RESTIC_OPTIONS"}, Usage: "Pass custom restic options in the form 'key=value,key2=value2'. See https://restic.readthedocs.io/en/stable/manual_rest.html?highlight=--option#usage-help"},
+			&cli.StringFlag{Destination: &cfg.Config.BackupImage, Name: "image", EnvVars: []string{"BACKUP_IMAGE"}, Value: "quay.io/vshn/k8up:latest", Usage: "URL of the restic image"},
+			&cli.StringSliceFlag{Name: argCommandRestic, EnvVars: []string{"BACKUP_COMMAND_RESTIC"}, Value: cli.NewStringSlice("/usr/local/bin/k8up", "restic"), Usage: "The command that is executed for restic backups."},
+			&cli.StringSliceFlag{Name: argResticOptions, EnvVars: []string{"BACKUP_RESTIC_OPTIONS"}, Usage: "Pass custom restic options in the form 'key=value,key2=value2'. See https://restic.readthedocs.io/en/stable/manual_rest.html?highlight=--option#usage-help"},
 			&cli.StringFlag{Destination: &cfg.Config.MountPath, Name: "datapath", Aliases: []string{"mountpath"}, EnvVars: []string{"BACKUP_DATAPATH"}, Value: "/data", Usage: "to which path the PVCs should get mounted in the backup container"},
 
-			&cli.StringFlag{Destination: &cfg.Config.GlobalStatsURL, Name: "globalstatsurl", EnvVars: []string{"BACKUP_GLOBALSTATSURL"}, Usage: "set the URL of wrestic to post additional metrics globally"},
+			&cli.StringFlag{Destination: &cfg.Config.GlobalStatsURL, Name: "globalstatsurl", EnvVars: []string{"BACKUP_GLOBALSTATSURL"}, Usage: "set the URL to post metrics globally"},
 			&cli.StringFlag{Destination: &cfg.Config.MetricsBindAddress, Name: "metrics-bindaddress", EnvVars: []string{"BACKUP_METRICS_BINDADDRESS"}, Value: ":8080", Usage: "set the bind address for the prometheus endpoint"},
 			&cli.StringFlag{Destination: &cfg.Config.PromURL, Name: "promurl", EnvVars: []string{"BACKUP_PROMURL"}, Value: "http://127.0.0.1/", Usage: "set the operator wide default prometheus push gateway"},
 
@@ -85,7 +90,8 @@ func operatorMain(c *cli.Context) error {
 	operatorLog.Info("initializing")
 	ctrl.SetLogger(operatorLog)
 
-	cfg.Config.ResticOptions = strings.Join(c.StringSlice("restic-options"), ",")
+	cfg.Config.BackupCommandRestic = c.StringSlice(argCommandRestic)
+	cfg.Config.ResticOptions = strings.Join(c.StringSlice(argResticOptions), ",")
 
 	executor.GetExecutor()
 
