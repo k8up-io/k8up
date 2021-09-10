@@ -18,9 +18,19 @@ hunspell_cmd ?= $(docker_cmd) run $(docker_opts) --volume "$${PWD}":/spell vshn/
 htmltest_cmd ?= $(docker_cmd) run $(docker_opts) --volume "$${PWD}"/_public:/test wjdp/htmltest:v0.12.0
 preview_cmd ?= $(docker_cmd) run --rm --publish 35729:35729 --publish 2020:2020 --volume "${PWD}":/preview/antora vshn/antora-preview:2.3.8 --antora=docs --style=k8up
 
+docs_usage_dir ?= docs/modules/ROOT/pages/references/usage
+
 .PHONY: docs-all
-docs-all: docs-html docs-pdf ## Generate HTML and PDF docs
-docs-documents: docs-pdf docs-manpage docs-kindle docs-epub ## Generate downloadable docs
+docs-all: docs-update-usage docs-html docs-pdf ## Generate HTML and PDF docs
+
+.PHONY: docs-documents
+docs-documents: docs-update-usage docs-pdf docs-manpage docs-kindle docs-epub ## Generate downloadable docs
+
+.PHONY: docs-update-usage
+docs-update-usage: ## Generates dumps from `k8up --help`, which are then included as part of the docs
+	go run $(K8UP_MAIN_GO) --help > "$(docs_usage_dir)/k8up.txt"
+	go run $(K8UP_MAIN_GO) restic --help > "$(docs_usage_dir)/restic.txt"
+	go run $(K8UP_MAIN_GO) operator --help > "$(docs_usage_dir)/operator.txt"
 
 # This will clean the Antora Artifacts, not the npm artifacts
 .PHONY: docs-clean

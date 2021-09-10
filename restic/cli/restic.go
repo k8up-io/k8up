@@ -2,48 +2,12 @@ package cli
 
 import (
 	"context"
-	"os"
 	"path"
 	"strings"
 
 	"github.com/go-logr/logr"
-)
 
-const (
-	// prometheus
-	Namespace = "baas"
-	Subsystem = "backup_restic"
-
-	// general
-	Hostname = "HOSTNAME"
-
-	// Env variable names
-	keepLastEnv       = "KEEP_LAST"
-	keepHourlyEnv     = "KEEP_HOURLY"
-	keepDailyEnv      = "KEEP_DAILY"
-	keepWeeklyEnv     = "KEEP_WEEKLY"
-	keepMonthlyEnv    = "KEEP_MONTHLY"
-	keepYearlyEnv     = "KEEP_YEARLY"
-	keepTagEnv        = "KEEP_TAG"
-	BackupDirEnv      = "BACKUP_DIR"
-	resticLocationEnv = "RESTIC_BINARY"
-	resticRepository  = "RESTIC_REPOSITORY"
-	resticOptions     = "RESTIC_OPTIONS"
-
-	// Flags for restic
-	keepLastArg    = "--keep-last"
-	keepHourlyArg  = "--keep-hourly"
-	keepDailyArg   = "--keep-daily"
-	keepWeeklyArg  = "--keep-weekly"
-	keepMonthlyArg = "--keep-monthly"
-	keepYearlyArg  = "--keep-yearly"
-	keepTagsArg    = "--keep-tag"
-
-	// Restore
-	RestoreS3EndpointEnv     = "RESTORE_S3ENDPOINT"
-	RestoreS3AccessKeyIDEnv  = "RESTORE_ACCESSKEYID"
-	RestoreS3SecretAccessKey = "RESTORE_SECRETACCESSKEY"
-	RestoreDirEnv            = "RESTORE_DIR"
+	"github.com/vshn/k8up/restic/cfg"
 )
 
 type ArrayOpts []string
@@ -53,7 +17,7 @@ func (a *ArrayOpts) String() string {
 }
 
 func (a *ArrayOpts) BuildArgs() []string {
-	argList := []string{}
+	argList := make([]string, 0)
 	for _, elem := range *a {
 		argList = append(argList, "--tag", elem)
 	}
@@ -79,30 +43,19 @@ type Restic struct {
 
 // New returns a new Restic reference
 func New(ctx context.Context, logger logr.Logger, statsHandler StatsHandler) *Restic {
-	bin, found := os.LookupEnv(resticLocationEnv)
-	if !found {
-		bin = "/usr/local/bin/restic"
-	}
-
-	repository, found := os.LookupEnv(resticRepository)
-	if !found {
-		logger.Info(resticRepository + " is undefined")
-	}
-
 	globalFlags := Flags{}
 
-	optionString, found := os.LookupEnv(resticOptions)
-	options := strings.Split(optionString, ",")
-	if found {
+	options := strings.Split(cfg.Config.ResticOptions, ",")
+	if len(options) > 0 {
 		logger.Info("using the following restic options", "options", options)
 		globalFlags.AddFlag("--option", options...)
 	}
 
 	return &Restic{
 		logger:       logger,
-		resticPath:   bin,
+		resticPath:   cfg.Config.ResticBin,
 		ctx:          ctx,
-		bucket:       path.Base(repository),
+		bucket:       path.Base(cfg.Config.ResticRepository),
 		globalFlags:  globalFlags,
 		statsHandler: statsHandler,
 	}

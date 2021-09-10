@@ -44,7 +44,7 @@ func (r *PruneReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		return ctrl.Result{}, nil
 	}
 
-	repository := cfg.GetGlobalRepository()
+	repository := cfg.Config.GetGlobalRepository()
 	if prune.Spec.Backend != nil {
 		repository = prune.Spec.Backend.String()
 	}

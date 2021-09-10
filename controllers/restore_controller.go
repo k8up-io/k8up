@@ -44,7 +44,7 @@ func (r *RestoreReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		return ctrl.Result{}, nil
 	}
 
-	repository := cfg.GetGlobalRepository()
+	repository := cfg.Config.GetGlobalRepository()
 	if restore.Spec.Backend != nil {
 		repository = restore.Spec.Backend.String()
 	}

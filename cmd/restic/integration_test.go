@@ -17,11 +17,13 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/go-logr/glogr"
 	"github.com/go-logr/logr"
+	"github.com/go-logr/zapr"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/zap/zaptest"
 
+	"github.com/vshn/k8up/restic/cfg"
 	"github.com/vshn/k8up/restic/cli"
 	"github.com/vshn/k8up/restic/s3"
 	"github.com/vshn/k8up/restic/stats"
@@ -50,6 +52,7 @@ type testEnvironment struct {
 	resticCli *cli.Restic
 	log       logr.Logger
 	stats     *stats.Handler
+	ctx       context.Context
 }
 
 func newTestErrorChannel() chan error {
@@ -87,9 +90,25 @@ func getS3Repo() string {
 }
 
 func initTest(t *testing.T) *testEnvironment {
-	mainLogger := glogr.New().WithName("wrestic")
-	statHandler := stats.NewHandler(os.Getenv(promURLEnv), os.Getenv(cli.Hostname), os.Getenv(webhookURLEnv), mainLogger)
-	resticCli := cli.New(context.TODO(), mainLogger, statHandler)
+	ctx := context.Background()
+
+	cfg.Config = &cfg.Configuration{
+		Hostname:   os.Getenv("HOSTNAME"),
+		PromURL:    os.Getenv("PROM_URL"),
+		WebhookURL: os.Getenv("STATS_URL"),
+
+		RestoreS3Endpoint:  os.Getenv("RESTORE_S3ENDPOINT"),
+		RestoreS3AccessKey: os.Getenv("RESTORE_ACCESSKEYID"),
+		RestoreS3SecretKey: os.Getenv("RESTORE_SECRETACCESSKEY"),
+
+		ResticBin:  os.Getenv("RESTIC_BINARY"),
+		BackupDir:  os.Getenv("BACKUP_DIR"),
+		RestoreDir: os.Getenv("RESTORE_DIR"),
+	}
+
+	mainLogger := zapr.NewLogger(zaptest.NewLogger(t))
+	statHandler := stats.NewHandler(cfg.Config.PromURL, cfg.Config.Hostname, cfg.Config.WebhookURL, mainLogger)
+	resticCli := cli.New(ctx, mainLogger, statHandler)
 
 	cleanupDirs(t)
 	createTestFiles(t)
@@ -97,9 +116,8 @@ func initTest(t *testing.T) *testEnvironment {
 		cleanupDirs(t)
 	})
 
-	webhook := startWebhookWebserver(t)
-	s3client := connectToS3Server(t)
-	resetFlags()
+	webhook := startWebhookWebserver(t, ctx)
+	s3client := connectToS3Server(t, ctx)
 
 	return &testEnvironment{
 		finishC:   newTestErrorChannel(),
@@ -109,11 +127,11 @@ func initTest(t *testing.T) *testEnvironment {
 		resticCli: resticCli,
 		log:       mainLogger,
 		stats:     statHandler,
+		ctx:       ctx,
 	}
 }
 
-func connectToS3Server(t *testing.T) *s3.Client {
-	ctx := context.Background()
+func connectToS3Server(t *testing.T, ctx context.Context) *s3.Client {
 	repo := getS3Repo()
 	s3client := s3.New(repo, os.Getenv("AWS_ACCESS_KEY_ID"), os.Getenv("AWS_SECRET_ACCESS_KEY"))
 
@@ -131,7 +149,7 @@ func connectToS3Server(t *testing.T) *s3.Client {
 	return s3client
 }
 
-func startWebhookWebserver(t *testing.T) *webhookserver {
+func startWebhookWebserver(t *testing.T, ctx context.Context) *webhookserver {
 	webhook := &webhookserver{}
 	webhook.runWebServer(t)
 	t.Logf("Started webserver on '%s'", webhook.srv.Addr)
@@ -142,17 +160,17 @@ func startWebhookWebserver(t *testing.T) *webhookserver {
 		}
 
 		t.Logf("Stopping the webserver on '%s'", webhook.srv.Addr)
-		webhook.srv.Shutdown(context.Background())
+		webhook.srv.Shutdown(ctx)
 	})
 	return webhook
 }
 
 func cleanupDirs(t *testing.T) {
-	backupDirEnv, ok := os.LookupEnv(cli.BackupDirEnv)
-	require.Truef(t, ok, "%s is not defined.", cli.BackupDirEnv)
+	backupDirEnv, ok := os.LookupEnv(backupDirEnvKey)
+	require.Truef(t, ok, "%s is not defined.", backupDirEnv)
 
-	restoreDirEnv, ok := os.LookupEnv(cli.RestoreDirEnv)
-	require.Truef(t, ok, "%s is not defined.", cli.RestoreDirEnv)
+	restoreDirEnv, ok := os.LookupEnv(restoreDirEnvKey)
+	require.Truef(t, ok, "%s is not defined.", restoreDirEnv)
 
 	dirs := []string{
 		backupDirEnv,
@@ -166,7 +184,7 @@ func cleanupDirs(t *testing.T) {
 }
 
 func createTestFiles(t *testing.T) {
-	baseDir := os.Getenv(cli.BackupDirEnv)
+	baseDir := os.Getenv(backupDirEnvKey)
 
 	testDirs := []string{"PVC1", "PVC2"}
 	for _, subDir := range testDirs {
@@ -184,29 +202,17 @@ func createTestFiles(t *testing.T) {
 	}
 }
 
-func resetFlags() {
-	check = false
-	prune = false
-	restore = false
-	restoreSnap = ""
-	verifyRestore = false
-	restoreType = ""
-	restoreFilter = ""
-	archive = false
-}
-
 func testBackup(t *testing.T) *testEnvironment {
 	env := initTest(t)
 
 	resticCli := env.resticCli
-	err := run(context.Background(), resticCli, env.log)
+	err := run(env.ctx, resticCli, env.log)
 	require.NoError(t, err)
 
 	return env
 }
 
-func testCheckS3Restore(t *testing.T) {
-	ctx := context.Background()
+func testCheckS3Restore(t *testing.T, ctx context.Context) {
 	s3c := s3.New(os.Getenv("RESTORE_S3ENDPOINT"), os.Getenv("RESTORE_ACCESSKEYID"), os.Getenv("RESTORE_SECRETACCESSKEY"))
 	err := s3c.Connect(ctx)
 	require.NoError(t, err)
@@ -249,12 +255,12 @@ func testCheckS3Restore(t *testing.T) {
 
 func TestRestore(t *testing.T) {
 	env := testBackup(t)
-	defer env.webhook.srv.Shutdown(context.TODO())
+	defer env.webhook.srv.Shutdown(env.ctx)
 
-	restore = true
-	restoreType = "s3"
+	cfg.Config.DoRestore = true
+	cfg.Config.RestoreType = cfg.RestoreTypeS3
 
-	err := run(context.Background(), env.resticCli, env.log)
+	err := run(env.ctx, env.resticCli, env.log)
 	require.NoError(t, err)
 
 	webhookData := cli.RestoreStats{}
@@ -265,7 +271,7 @@ func TestRestore(t *testing.T) {
 		t.Errorf("No restore webhooks detected!")
 	}
 
-	testCheckS3Restore(t)
+	testCheckS3Restore(t, env.ctx)
 }
 
 func TestBackup(t *testing.T) {
@@ -281,16 +287,16 @@ func TestBackup(t *testing.T) {
 func TestRestoreDisk(t *testing.T) {
 	env := testBackup(t)
 
-	restore = true
-	restoreType = "folder"
+	cfg.Config.DoRestore = true
+	cfg.Config.RestoreType = cfg.RestoreTypeFolder
 
 	_ = os.Setenv("TRIM_RESTOREPATH", "false")
 
-	err := run(context.Background(), env.resticCli, env.log)
+	err := run(env.ctx, env.resticCli, env.log)
 	require.NoError(t, err)
 
-	restoredir := os.Getenv(cli.RestoreDirEnv)
-	backupdir := os.Getenv(cli.BackupDirEnv)
+	restoredir := os.Getenv(restoreDirEnvKey)
+	backupdir := os.Getenv(backupDirEnvKey)
 	restoreFilePath := filepath.Join(restoredir, backupdir, "PVC2/test.txt")
 	contents, err := ioutil.ReadFile(restoreFilePath)
 	require.NoError(t, err)
@@ -301,11 +307,11 @@ func TestRestoreDisk(t *testing.T) {
 func TestArchive(t *testing.T) {
 	env := testBackup(t)
 
-	archive = true
-	restoreType = "s3"
+	cfg.Config.DoArchive = true
+	cfg.Config.RestoreType = cfg.RestoreTypeS3
 
-	err := run(context.Background(), env.resticCli, env.log)
+	err := run(env.ctx, env.resticCli, env.log)
 	require.NoError(t, err)
 
-	testCheckS3Restore(t)
+	testCheckS3Restore(t, env.ctx)
 }

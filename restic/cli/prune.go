@@ -1,8 +1,9 @@
 package cli
 
 import (
-	"os"
+	"fmt"
 
+	"github.com/vshn/k8up/restic/cfg"
 	"github.com/vshn/k8up/restic/logging"
 )
 
@@ -13,32 +14,36 @@ func (r *Restic) Prune(tags ArrayOpts) error {
 	prunelogger.Info("pruning repository")
 
 	args := []string{"--prune"}
-	if last := os.Getenv(keepLastEnv); last != "" {
-		args = append(args, keepLastArg, last)
+	keepN := map[string]int{
+		"--keep-last":    cfg.Config.PruneKeepLast,
+		"--keep-hourly":  cfg.Config.PruneKeepHourly,
+		"--keep-daily":   cfg.Config.PruneKeepDaily,
+		"--keep-weekly":  cfg.Config.PruneKeepWeekly,
+		"--keep-monthly": cfg.Config.PruneKeepMonthly,
+		"--keep-yearly":  cfg.Config.PruneKeepYearly,
+	}
+	for argName, argVal := range keepN {
+		if argVal > 0 {
+			args = append(args, argName, fmt.Sprintf("%d", argVal))
+		}
 	}
 
-	if hourly := os.Getenv(keepHourlyEnv); hourly != "" {
-		args = append(args, keepHourlyArg, hourly)
+	keepWithin := map[string]string{
+		"--keep-within":         cfg.Config.PruneKeepWithin,
+		"--keep-within-hourly":  cfg.Config.PruneKeepWithinHourly,
+		"--keep-within-daily":   cfg.Config.PruneKeepWithinDaily,
+		"--keep-within-weekly":  cfg.Config.PruneKeepWithinWeekly,
+		"--keep-within-monthly": cfg.Config.PruneKeepWithinMonthly,
+		"--keep-within-yearly":  cfg.Config.PruneKeepWithinYearly,
+	}
+	for argName, argVal := range keepWithin {
+		if argVal != "" {
+			args = append(args, argName, argVal)
+		}
 	}
 
-	if daily := os.Getenv(keepDailyEnv); daily != "" {
-		args = append(args, keepDailyArg, daily)
-	}
-
-	if weekly := os.Getenv(keepWeeklyEnv); weekly != "" {
-		args = append(args, keepWeeklyArg, weekly)
-	}
-
-	if monthly := os.Getenv(keepMonthlyEnv); monthly != "" {
-		args = append(args, keepMonthlyArg, monthly)
-	}
-
-	if yearly := os.Getenv(keepYearlyEnv); yearly != "" {
-		args = append(args, keepYearlyArg, yearly)
-	}
-
-	if keepTags := os.Getenv(keepTagEnv); keepTags != "" {
-		args = append(args, keepTagsArg, keepTags)
+	if cfg.Config.PruneKeepTags {
+		args = append(args, "--keep-tag")
 	}
 
 	resticPruneLogger := prunelogger.WithName("restic")
