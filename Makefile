@@ -96,7 +96,7 @@ vet: ## Run go vet against code
 	go vet ./...
 
 .PHONY: lint
-lint: fmt vet ## Invokes the fmt and vet targets
+lint: fmt vet docs-update-usage ## Invokes the fmt and vet targets
 	@echo 'Check for uncommitted changes ...'
 	git diff --exit-code
 
