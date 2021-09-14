@@ -90,6 +90,11 @@ func (c *Check) GetResources() corev1.ResourceRequirements {
 	return c.Spec.Resources
 }
 
+// GetSecurityContext returns the security context
+func (c *Check) GetSecurityContext() *corev1.PodSecurityContext {
+	return c.Spec.SecurityContext
+}
+
 // GetFailedJobsHistoryLimit returns failed jobs history limit.
 // Returns KeepJobs if unspecified.
 func (c *Check) GetFailedJobsHistoryLimit() *int {

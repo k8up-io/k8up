@@ -35,7 +35,7 @@ type ScheduleSpec struct {
 	ResourceRequirementsTemplate corev1.ResourceRequirements `json:"resourceRequirementsTemplate,omitempty"`
 
 	// SecurityContext describes the security context with which actions (such as backups) shall be executed.
-	SecurityContext corev1.PodSecurityContext `json:"securityContext,omitempty"`
+	SecurityContext *corev1.PodSecurityContext `json:"securityContext,omitempty"`
 }
 
 // ScheduleDefinition is the actual cron-type expression that defines the interval of the actions.
@@ -142,8 +142,14 @@ func (s *Schedule) SetStatus(status Status) {
 	s.Status.Conditions = status.Conditions
 }
 
+// GetResources returns the resource requirements
 func (s *Schedule) GetResources() corev1.ResourceRequirements {
 	return s.Spec.ResourceRequirementsTemplate
+}
+
+// GetSecurityContext returns the security context
+func (s *Schedule) GetSecurityContext() *corev1.PodSecurityContext {
+	return s.Spec.SecurityContext
 }
 
 // GetFailedJobsHistoryLimit returns failed jobs history limit.

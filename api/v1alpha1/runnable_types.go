@@ -13,5 +13,5 @@ type RunnableSpec struct {
 	Resources corev1.ResourceRequirements `json:"resources,omitempty"`
 
 	// SecurityContext describes the security context with which this action shall be executed.
-	SecurityContext corev1.PodSecurityContext `json:"securityContext,omitempty"`
+	SecurityContext *corev1.PodSecurityContext `json:"securityContext,omitempty"`
 }

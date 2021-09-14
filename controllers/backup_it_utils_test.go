@@ -61,6 +61,17 @@ func (ts *BackupTestSuite) newBackup() *k8upv1a1.Backup {
 	}
 }
 
+func (ts *BackupTestSuite) newBackupWithSecurityContext() *k8upv1a1.Backup {
+	runAsNonRoot := true
+	sc := &corev1.PodSecurityContext{
+		RunAsNonRoot: &runAsNonRoot,
+	}
+
+	backup := ts.newBackup()
+	backup.Spec.SecurityContext = sc
+	return backup
+}
+
 func (ts *BackupTestSuite) whenReconciling(object metav1.Object) controllerruntime.Result {
 	req := ts.MapToRequest(object)
 	result, err := ts.Controller.Reconcile(ts.Ctx, req)
@@ -69,7 +80,7 @@ func (ts *BackupTestSuite) whenReconciling(object metav1.Object) controllerrunti
 	return result
 }
 
-func (ts *BackupTestSuite) expectABackupJobEventually() {
+func (ts *BackupTestSuite) expectABackupJobEventually() (foundJob *batchv1.Job) {
 	ts.RepeatedAssert(3*time.Second, time.Second, "Jobs not found", func(timedCtx context.Context) (done bool, err error) {
 		jobs := new(batchv1.JobList)
 		err = ts.Client.List(timedCtx, jobs, client.InNamespace(ts.NS))
@@ -80,11 +91,15 @@ func (ts *BackupTestSuite) expectABackupJobEventually() {
 
 		if jobsLen > 0 {
 			assert.Len(ts.T(), jobs.Items, 1)
+			foundJob = &jobs.Items[0]
 			return true, err
 		}
 
-		return
+		return false, err
 	})
+
+	ts.Require().NotNil(foundJob)
+	return foundJob
 }
 
 func (ts *BackupTestSuite) expectAPreBackupDeploymentEventually() {
