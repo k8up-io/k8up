@@ -2,6 +2,10 @@
 
 For users, `k8up restic` can only be configured through the respective xref:references/object-specifications.adoc[Custom Resources `Schedule`, `Backup`, `Check`, `Prune`, `Archive` and `Restore`] and through xref:references/operator-config-reference.adoc[the _global_ properties of the `k8up operator`].
 
+[NOTE]
+  The `k8up restic` module used to be a component called _wrestic_.
+  Their repositories were merged in 2021.
+
 == Arguments and Environment Variables
 
 The required arguments depend on the actions that should be performed.
