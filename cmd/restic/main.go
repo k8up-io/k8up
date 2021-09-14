@@ -36,10 +36,10 @@ var (
 		Category:    "backup",
 		Action:      resticMain,
 		Flags: []cli.Flag{
-			&cli.BoolFlag{Destination: &cfg.Config.DoCheck, Name: "check", Usage: "Set if the container should run a check"},
-			&cli.BoolFlag{Destination: &cfg.Config.DoPrune, Name: "prune", Usage: "Set if the container should run a prune"},
-			&cli.BoolFlag{Destination: &cfg.Config.DoRestore, Name: "restore", Usage: "Whether or not a restore should be done"},
-			&cli.BoolFlag{Destination: &cfg.Config.DoArchive, Name: "archive"},
+			&cli.BoolFlag{Destination: &cfg.Config.DoCheck, Name: "check", Usage: "Set, if the container should do a check"},
+			&cli.BoolFlag{Destination: &cfg.Config.DoPrune, Name: "prune", Usage: "Set, if the container should do a prune"},
+			&cli.BoolFlag{Destination: &cfg.Config.DoRestore, Name: "restore", Usage: "Set, if the container should attempt a restore"},
+			&cli.BoolFlag{Destination: &cfg.Config.DoArchive, Name: "archive", Usage: "Set, if the container should do an archive"},
 
 			&cli.StringSliceFlag{Name: "tag", Usage: "List of tags to consider for given operation"},
 

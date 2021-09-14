@@ -11,10 +11,10 @@ DESCRIPTION:
    Start k8up in restic mode
 
 OPTIONS:
-   --check                               Set if the container should run a check (default: false)
-   --prune                               Set if the container should run a prune (default: false)
-   --restore                             Whether or not a restore should be done (default: false)
-   --archive                             (default: false)
+   --check                               Set, if the container should do a check (default: false)
+   --prune                               Set, if the container should do a prune (default: false)
+   --restore                             Set, if the container should attempt a restore (default: false)
+   --archive                             Set, if the container should do an archive (default: false)
    --tag value                           List of tags to consider for given operation
    --backupCommandAnnotation value       Defines the command to invoke when doing a backup via STDOUT. [$BACKUPCOMMAND_ANNOTATION]
    --fileExtensionAnnotation value       Defines the file extension to use for STDOUT backups. [$FILEEXTENSION_ANNOTATION]

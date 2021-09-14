@@ -1,11 +1,11 @@
-= Configuration Reference
+= Operator Configuration Reference
 
-The Operator can be configured in two ways:
+The `k8up operator` can be configured in two ways:
 
 . Per namespace backups. Optimal for shared clusters.
 . Global settings with namespaced schedules. Optimal for private clusters.
 
-== Environment Variables
+== Arguments and Environment Variables
 
 You need to define `BACKUP_OPERATOR_NAMESPACE` (or `--operator-namespace` respectively), but everything else can be left to their default values.
 
@@ -13,7 +13,7 @@ See `k8up operator --help` for all the options:
 
 [source,txt]
 ----
-include::example$usage/k8up.txt[]
+include::example$usage/operator.txt[]
 ----
 
 == Global Settings

@@ -28,7 +28,7 @@ In that case K8up needs to be started with the following environment variable:
 BACKUP_GLOBAL_MEMORY_LIMIT=200M
 ----
 
-TIP: See xref:references/config-reference.adoc[Config reference] to see which environment variables are supported.
+TIP: See xref:references/operator-config-reference.adoc[Operator Config reference] to see which environment variables are supported.
 
 
 Following example is a simple `Schedule` example without further resource specs.
