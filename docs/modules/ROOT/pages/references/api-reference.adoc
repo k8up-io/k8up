@@ -570,7 +570,7 @@ PruneList contains a list of Prune
 [id="{anchor_prefix}-github-com-vshn-k8up-api-v1alpha1-pruneschedule"]
 === PruneSchedule 
 
-
+PruneSchedule manages the schedules for the prunes
 
 .Appears In:
 ****
@@ -765,6 +765,7 @@ RunnableSpec defines the fields that are necessary on the specs of all actions t
 | Field | Description
 | *`backend`* __xref:{anchor_prefix}-github-com-vshn-k8up-api-v1alpha1-backend[$$Backend$$]__ | Backend contains the restic repo where the job should backup to.
 | *`resources`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#resourcerequirements-v1-core[$$ResourceRequirements$$]__ | Resources describes the compute resource requirements (cpu, memory, etc.)
+| *`securityContext`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#podsecuritycontext-v1-core[$$PodSecurityContext$$]__ | SecurityContext describes the security context with which this action shall be executed.
 |===
 
 
@@ -897,6 +898,7 @@ ScheduleSpec defines the schedules for the various job types.
 | *`failedJobsHistoryLimit`* __integer__ | FailedJobsHistoryLimit amount of failed jobs to keep for later analysis. KeepJobs is used property is not specified.
 | *`successfulJobsHistoryLimit`* __integer__ | SuccessfulJobsHistoryLimit amount of successful jobs to keep for later analysis. KeepJobs is used property is not specified.
 | *`resourceRequirementsTemplate`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#resourcerequirements-v1-core[$$ResourceRequirements$$]__ | ResourceRequirementsTemplate describes the compute resource requirements (cpu, memory, etc.)
+| *`securityContext`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#podsecuritycontext-v1-core[$$PodSecurityContext$$]__ | SecurityContext describes the security context with which actions (such as backups) shall be executed.
 |===
 
 

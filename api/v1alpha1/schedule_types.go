@@ -33,6 +33,9 @@ type ScheduleSpec struct {
 
 	// ResourceRequirementsTemplate describes the compute resource requirements (cpu, memory, etc.)
 	ResourceRequirementsTemplate corev1.ResourceRequirements `json:"resourceRequirementsTemplate,omitempty"`
+
+	// SecurityContext describes the security context with which actions (such as backups) shall be executed.
+	SecurityContext corev1.PodSecurityContext `json:"securityContext,omitempty"`
 }
 
 // ScheduleDefinition is the actual cron-type expression that defines the interval of the actions.
@@ -68,6 +71,7 @@ type CheckSchedule struct {
 	*ScheduleCommon `json:",inline"`
 }
 
+// PruneSchedule manages the schedules for the prunes
 type PruneSchedule struct {
 	PruneSpec       `json:",inline"`
 	*ScheduleCommon `json:",inline"`
