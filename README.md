@@ -23,7 +23,7 @@ It's source is available in the `docs/` directory.
 
 ## Contributing
 
-K8up is written using the [Operator SDK](https://sdk.operatorframework.io/docs).
+K8up is written using [Kubebuilder](https://github.com/kubernetes-sigs/kubebuilder).
 
 You'll need:
 
