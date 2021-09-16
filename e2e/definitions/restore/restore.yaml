@@ -21,3 +21,5 @@ spec:
       secretAccessKeySecretRef:
         name: k8up-backup-credentials
         key: password
+  podSecurityContext:
+    runAsUser: $ID
