@@ -45,7 +45,7 @@ Name:         demo-backup
 Namespace:    default
 Labels:       <none>
 Annotations:  <none>
-API Version:  backup.appuio.ch/v1alpha1
+API Version:  k8up.io/v1alpha1
 Kind:         Backup
 Metadata:
   # [clipped for brevity]

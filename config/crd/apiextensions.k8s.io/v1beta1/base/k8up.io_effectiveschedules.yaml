@@ -6,7 +6,7 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.5.0
   creationTimestamp: null
-  name: effectiveschedules.backup.appuio.ch
+  name: effectiveschedules.k8up.io
 spec:
   additionalPrinterColumns:
   - JSONPath: .spec.scheduleRefs[0].namespace
@@ -28,7 +28,7 @@ spec:
   - JSONPath: .metadata.creationTimestamp
     name: Age
     type: date
-  group: backup.appuio.ch
+  group: k8up.io
   names:
     kind: EffectiveSchedule
     listKind: EffectiveScheduleList

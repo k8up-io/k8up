@@ -6,9 +6,9 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.5.0
   creationTimestamp: null
-  name: prebackuppods.backup.appuio.ch
+  name: prebackuppods.k8up.io
 spec:
-  group: backup.appuio.ch
+  group: k8up.io
   names:
     kind: PreBackupPod
     listKind: PreBackupPodList

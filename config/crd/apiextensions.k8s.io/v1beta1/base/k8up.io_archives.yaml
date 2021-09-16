@@ -6,7 +6,7 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.5.0
   creationTimestamp: null
-  name: backups.backup.appuio.ch
+  name: archives.k8up.io
 spec:
   additionalPrinterColumns:
   - JSONPath: .metadata.ownerReferences[?(@.kind == "Schedule")].name
@@ -17,25 +17,21 @@ spec:
     description: Status of Completion
     name: Completion
     type: string
-  - JSONPath: .status.conditions[?(@.type == "PreBackupPodReady")].reason
-    description: Status of PreBackupPods
-    name: PreBackup
-    type: string
   - JSONPath: .metadata.creationTimestamp
     name: Age
     type: date
-  group: backup.appuio.ch
+  group: k8up.io
   names:
-    kind: Backup
-    listKind: BackupList
-    plural: backups
-    singular: backup
+    kind: Archive
+    listKind: ArchiveList
+    plural: archives
+    singular: archive
   scope: Namespaced
   subresources:
     status: {}
   validation:
     openAPIV3Schema:
-      description: Backup is the Schema for the backups API
+      description: Archive is the Schema for the archives API
       properties:
         apiVersion:
           description: 'APIVersion defines the versioned schema of this representation
@@ -50,10 +46,7 @@ spec:
         metadata:
           type: object
         spec:
-          description: BackupSpec defines a single backup. It must contain all inforomation
-            to connect to the backup repository when applied. If used with defaults
-            or schedules the operator will ensure that the defaults are applied before
-            creating the object on the API.
+          description: ArchiveSpec defines the desired state of Archive.
           properties:
             backend:
               description: Backend contains the restic repo where the job should backup
@@ -451,10 +444,6 @@ spec:
                       type: string
                   type: object
               type: object
-            promURL:
-              description: PromURL sets a prometheus push URL where the backup container
-                send metrics to
-              type: string
             resources:
               description: Resources describes the compute resource requirements (cpu,
                 memory, etc.)
@@ -482,10 +471,71 @@ spec:
                     value. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
                   type: object
               type: object
-            statsURL:
-              description: StatsURL sets an arbitrary URL where the restic container
-                posts metrics and information about the snapshots to. This is in addition
-                to the prometheus pushgateway.
+            restoreFilter:
+              type: string
+            restoreMethod:
+              description: RestoreMethod contains how and where the restore should
+                happen all the settings are mutual exclusive.
+              properties:
+                folder:
+                  properties:
+                    claimName:
+                      description: 'ClaimName is the name of a PersistentVolumeClaim
+                        in the same namespace as the pod using this volume. More info:
+                        https://kubernetes.io/docs/concepts/storage/persistent-volumes#persistentvolumeclaims'
+                      type: string
+                    readOnly:
+                      description: Will force the ReadOnly setting in VolumeMounts.
+                        Default false.
+                      type: boolean
+                  required:
+                  - claimName
+                  type: object
+                s3:
+                  properties:
+                    accessKeyIDSecretRef:
+                      description: SecretKeySelector selects a key of a Secret.
+                      properties:
+                        key:
+                          description: The key of the secret to select from.  Must
+                            be a valid secret key.
+                          type: string
+                        name:
+                          description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                            TODO: Add other useful fields. apiVersion, kind, uid?'
+                          type: string
+                        optional:
+                          description: Specify whether the Secret or its key must
+                            be defined
+                          type: boolean
+                      required:
+                      - key
+                      type: object
+                    bucket:
+                      type: string
+                    endpoint:
+                      type: string
+                    secretAccessKeySecretRef:
+                      description: SecretKeySelector selects a key of a Secret.
+                      properties:
+                        key:
+                          description: The key of the secret to select from.  Must
+                            be a valid secret key.
+                          type: string
+                        name:
+                          description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                            TODO: Add other useful fields. apiVersion, kind, uid?'
+                          type: string
+                        optional:
+                          description: Specify whether the Secret or its key must
+                            be defined
+                          type: boolean
+                      required:
+                      - key
+                      type: object
+                  type: object
+              type: object
+            snapshot:
               type: string
             successfulJobsHistoryLimit:
               description: SuccessfulJobsHistoryLimit amount of successful jobs to

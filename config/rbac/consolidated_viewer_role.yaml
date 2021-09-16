@@ -8,7 +8,7 @@ metadata:
     rbac.authorization.k8s.io/aggregate-to-view: "true"
 rules:
 - apiGroups:
-  - backup.appuio.ch
+  - k8up.io
   resources:
   - "*"
   verbs:

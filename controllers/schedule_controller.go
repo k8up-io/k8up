@@ -25,10 +25,10 @@ type ScheduleReconciler struct {
 	Scheme *runtime.Scheme
 }
 
-// +kubebuilder:rbac:groups=backup.appuio.ch,resources=schedules,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=backup.appuio.ch,resources=schedules/status;schedules/finalizers,verbs=get;update;patch
-// +kubebuilder:rbac:groups=backup.appuio.ch,resources=effectiveschedules,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=backup.appuio.ch,resources=effectiveschedules/finalizers,verbs=update
+// +kubebuilder:rbac:groups=k8up.io,resources=schedules,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=k8up.io,resources=schedules/status;schedules/finalizers,verbs=get;update;patch
+// +kubebuilder:rbac:groups=k8up.io,resources=effectiveschedules,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=k8up.io,resources=effectiveschedules/finalizers,verbs=update
 
 // Reconcile is the entrypoint to manage the given resource.
 func (r *ScheduleReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {

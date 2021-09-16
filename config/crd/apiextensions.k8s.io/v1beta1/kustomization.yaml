@@ -2,15 +2,15 @@
 # since it depends on service name and namespace that are out of this kustomize package.
 # It should be run by config/default
 resources:
-- base/backup.appuio.ch_schedules.yaml
-- base/backup.appuio.ch_backups.yaml
-- base/backup.appuio.ch_restores.yaml
-- base/backup.appuio.ch_archives.yaml
-- base/backup.appuio.ch_checks.yaml
-- base/backup.appuio.ch_prunes.yaml
-- base/backup.appuio.ch_snapshots.yaml
-- base/backup.appuio.ch_prebackuppods.yaml
-- base/backup.appuio.ch_effectiveschedules.yaml
+- base/k8up.io_schedules.yaml
+- base/k8up.io_backups.yaml
+- base/k8up.io_restores.yaml
+- base/k8up.io_archives.yaml
+- base/k8up.io_checks.yaml
+- base/k8up.io_prunes.yaml
+- base/k8up.io_snapshots.yaml
+- base/k8up.io_prebackuppods.yaml
+- base/k8up.io_effectiveschedules.yaml
 # +kubebuilder:scaffold:crdkustomizeresource
 
 # the following config is for teaching kustomize how to do kustomization for CRDs.

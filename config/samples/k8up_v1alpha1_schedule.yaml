@@ -1,5 +1,5 @@
 ---
-apiVersion: backup.appuio.ch/v1alpha1
+apiVersion: k8up.io/v1alpha1
 kind: Schedule
 metadata:
   name: schedule-test

@@ -9,11 +9,11 @@ This is a https://github.com/elastic/crd-ref-docs[generated] API documentation.
 TIP: A more sophisticated documentation is available under https://doc.crds.dev/github.com/vshn/k8up.
 
 .Packages
-- xref:{anchor_prefix}-backup-appuio-ch-v1alpha1[$$backup.appuio.ch/v1alpha1$$]
+- xref:{anchor_prefix}-k8up-io-v1alpha1[$$k8up.io/v1alpha1$$]
 
 
-[id="{anchor_prefix}-backup-appuio-ch-v1alpha1"]
-== backup.appuio.ch/v1alpha1
+[id="{anchor_prefix}-k8up-io-v1alpha1"]
+== k8up.io/v1alpha1
 
 
 .Resource Types
@@ -51,7 +51,7 @@ Archive is the Schema for the archives API
 [cols="25a,75a", options="header"]
 |===
 | Field | Description
-| *`apiVersion`* __string__ | `backup.appuio.ch/v1alpha1`
+| *`apiVersion`* __string__ | `k8up.io/v1alpha1`
 | *`kind`* __string__ | `Archive`
 | *`metadata`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#objectmeta-v1-meta[$$ObjectMeta$$]__ | Refer to Kubernetes API documentation for fields of `metadata`.
 
@@ -69,7 +69,7 @@ ArchiveList contains a list of Archive
 [cols="25a,75a", options="header"]
 |===
 | Field | Description
-| *`apiVersion`* __string__ | `backup.appuio.ch/v1alpha1`
+| *`apiVersion`* __string__ | `k8up.io/v1alpha1`
 | *`kind`* __string__ | `ArchiveList`
 | *`metadata`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#listmeta-v1-meta[$$ListMeta$$]__ | Refer to Kubernetes API documentation for fields of `metadata`.
 
@@ -178,7 +178,7 @@ Backup is the Schema for the backups API
 [cols="25a,75a", options="header"]
 |===
 | Field | Description
-| *`apiVersion`* __string__ | `backup.appuio.ch/v1alpha1`
+| *`apiVersion`* __string__ | `k8up.io/v1alpha1`
 | *`kind`* __string__ | `Backup`
 | *`metadata`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#objectmeta-v1-meta[$$ObjectMeta$$]__ | Refer to Kubernetes API documentation for fields of `metadata`.
 
@@ -196,7 +196,7 @@ BackupList contains a list of Backup
 [cols="25a,75a", options="header"]
 |===
 | Field | Description
-| *`apiVersion`* __string__ | `backup.appuio.ch/v1alpha1`
+| *`apiVersion`* __string__ | `k8up.io/v1alpha1`
 | *`kind`* __string__ | `BackupList`
 | *`metadata`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#listmeta-v1-meta[$$ListMeta$$]__ | Refer to Kubernetes API documentation for fields of `metadata`.
 
@@ -262,7 +262,7 @@ Check is the Schema for the checks API
 [cols="25a,75a", options="header"]
 |===
 | Field | Description
-| *`apiVersion`* __string__ | `backup.appuio.ch/v1alpha1`
+| *`apiVersion`* __string__ | `k8up.io/v1alpha1`
 | *`kind`* __string__ | `Check`
 | *`metadata`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#objectmeta-v1-meta[$$ObjectMeta$$]__ | Refer to Kubernetes API documentation for fields of `metadata`.
 
@@ -280,7 +280,7 @@ CheckList contains a list of Check
 [cols="25a,75a", options="header"]
 |===
 | Field | Description
-| *`apiVersion`* __string__ | `backup.appuio.ch/v1alpha1`
+| *`apiVersion`* __string__ | `k8up.io/v1alpha1`
 | *`kind`* __string__ | `CheckList`
 | *`metadata`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#listmeta-v1-meta[$$ListMeta$$]__ | Refer to Kubernetes API documentation for fields of `metadata`.
 
@@ -342,7 +342,7 @@ EffectiveSchedule is the Schema to persist schedules generated from Randomized s
 [cols="25a,75a", options="header"]
 |===
 | Field | Description
-| *`apiVersion`* __string__ | `backup.appuio.ch/v1alpha1`
+| *`apiVersion`* __string__ | `k8up.io/v1alpha1`
 | *`kind`* __string__ | `EffectiveSchedule`
 | *`metadata`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#objectmeta-v1-meta[$$ObjectMeta$$]__ | Refer to Kubernetes API documentation for fields of `metadata`.
 
@@ -360,7 +360,7 @@ EffectiveScheduleList contains a list of EffectiveSchedule
 [cols="25a,75a", options="header"]
 |===
 | Field | Description
-| *`apiVersion`* __string__ | `backup.appuio.ch/v1alpha1`
+| *`apiVersion`* __string__ | `k8up.io/v1alpha1`
 | *`kind`* __string__ | `EffectiveScheduleList`
 | *`metadata`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#listmeta-v1-meta[$$ListMeta$$]__ | Refer to Kubernetes API documentation for fields of `metadata`.
 
@@ -483,7 +483,7 @@ PreBackupPod is the Schema for the prebackuppods API
 [cols="25a,75a", options="header"]
 |===
 | Field | Description
-| *`apiVersion`* __string__ | `backup.appuio.ch/v1alpha1`
+| *`apiVersion`* __string__ | `k8up.io/v1alpha1`
 | *`kind`* __string__ | `PreBackupPod`
 | *`metadata`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#objectmeta-v1-meta[$$ObjectMeta$$]__ | Refer to Kubernetes API documentation for fields of `metadata`.
 
@@ -501,7 +501,7 @@ PreBackupPodList contains a list of PreBackupPod
 [cols="25a,75a", options="header"]
 |===
 | Field | Description
-| *`apiVersion`* __string__ | `backup.appuio.ch/v1alpha1`
+| *`apiVersion`* __string__ | `k8up.io/v1alpha1`
 | *`kind`* __string__ | `PreBackupPodList`
 | *`metadata`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#listmeta-v1-meta[$$ListMeta$$]__ | Refer to Kubernetes API documentation for fields of `metadata`.
 
@@ -541,7 +541,7 @@ Prune is the Schema for the prunes API
 [cols="25a,75a", options="header"]
 |===
 | Field | Description
-| *`apiVersion`* __string__ | `backup.appuio.ch/v1alpha1`
+| *`apiVersion`* __string__ | `k8up.io/v1alpha1`
 | *`kind`* __string__ | `Prune`
 | *`metadata`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#objectmeta-v1-meta[$$ObjectMeta$$]__ | Refer to Kubernetes API documentation for fields of `metadata`.
 
@@ -559,7 +559,7 @@ PruneList contains a list of Prune
 [cols="25a,75a", options="header"]
 |===
 | Field | Description
-| *`apiVersion`* __string__ | `backup.appuio.ch/v1alpha1`
+| *`apiVersion`* __string__ | `k8up.io/v1alpha1`
 | *`kind`* __string__ | `PruneList`
 | *`metadata`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#listmeta-v1-meta[$$ListMeta$$]__ | Refer to Kubernetes API documentation for fields of `metadata`.
 
@@ -633,7 +633,7 @@ Restore is the Schema for the restores API
 [cols="25a,75a", options="header"]
 |===
 | Field | Description
-| *`apiVersion`* __string__ | `backup.appuio.ch/v1alpha1`
+| *`apiVersion`* __string__ | `k8up.io/v1alpha1`
 | *`kind`* __string__ | `Restore`
 | *`metadata`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#objectmeta-v1-meta[$$ObjectMeta$$]__ | Refer to Kubernetes API documentation for fields of `metadata`.
 
@@ -651,7 +651,7 @@ RestoreList contains a list of Restore
 [cols="25a,75a", options="header"]
 |===
 | Field | Description
-| *`apiVersion`* __string__ | `backup.appuio.ch/v1alpha1`
+| *`apiVersion`* __string__ | `k8up.io/v1alpha1`
 | *`kind`* __string__ | `RestoreList`
 | *`metadata`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#listmeta-v1-meta[$$ListMeta$$]__ | Refer to Kubernetes API documentation for fields of `metadata`.
 
@@ -795,7 +795,7 @@ Schedule is the Schema for the schedules API
 [cols="25a,75a", options="header"]
 |===
 | Field | Description
-| *`apiVersion`* __string__ | `backup.appuio.ch/v1alpha1`
+| *`apiVersion`* __string__ | `k8up.io/v1alpha1`
 | *`kind`* __string__ | `Schedule`
 | *`metadata`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#objectmeta-v1-meta[$$ObjectMeta$$]__ | Refer to Kubernetes API documentation for fields of `metadata`.
 
@@ -848,7 +848,7 @@ ScheduleList contains a list of Schedule
 [cols="25a,75a", options="header"]
 |===
 | Field | Description
-| *`apiVersion`* __string__ | `backup.appuio.ch/v1alpha1`
+| *`apiVersion`* __string__ | `k8up.io/v1alpha1`
 | *`kind`* __string__ | `ScheduleList`
 | *`metadata`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#listmeta-v1-meta[$$ListMeta$$]__ | Refer to Kubernetes API documentation for fields of `metadata`.
 
@@ -919,7 +919,7 @@ Snapshot is the Schema for the snapshots API
 [cols="25a,75a", options="header"]
 |===
 | Field | Description
-| *`apiVersion`* __string__ | `backup.appuio.ch/v1alpha1`
+| *`apiVersion`* __string__ | `k8up.io/v1alpha1`
 | *`kind`* __string__ | `Snapshot`
 | *`metadata`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#objectmeta-v1-meta[$$ObjectMeta$$]__ | Refer to Kubernetes API documentation for fields of `metadata`.
 
@@ -937,7 +937,7 @@ SnapshotList contains a list of Snapshot
 [cols="25a,75a", options="header"]
 |===
 | Field | Description
-| *`apiVersion`* __string__ | `backup.appuio.ch/v1alpha1`
+| *`apiVersion`* __string__ | `k8up.io/v1alpha1`
 | *`kind`* __string__ | `SnapshotList`
 | *`metadata`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#listmeta-v1-meta[$$ListMeta$$]__ | Refer to Kubernetes API documentation for fields of `metadata`.
 

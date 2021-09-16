@@ -6,7 +6,7 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.5.0
   creationTimestamp: null
-  name: prunes.backup.appuio.ch
+  name: checks.k8up.io
 spec:
   additionalPrinterColumns:
   - JSONPath: .metadata.ownerReferences[?(@.kind == "Schedule")].name
@@ -20,18 +20,18 @@ spec:
   - JSONPath: .metadata.creationTimestamp
     name: Age
     type: date
-  group: backup.appuio.ch
+  group: k8up.io
   names:
-    kind: Prune
-    listKind: PruneList
-    plural: prunes
-    singular: prune
+    kind: Check
+    listKind: CheckList
+    plural: checks
+    singular: check
   scope: Namespaced
   subresources:
     status: {}
   validation:
     openAPIV3Schema:
-      description: Prune is the Schema for the prunes API
+      description: Check is the Schema for the checks API
       properties:
         apiVersion:
           description: 'APIVersion defines the versioned schema of this representation
@@ -46,8 +46,8 @@ spec:
         metadata:
           type: object
         spec:
-          description: PruneSpec needs to contain the repository information as well
-            as the desired retention policies.
+          description: CheckSpec defines the desired state of Check. It needs to contain
+            the repository information.
           properties:
             backend:
               description: Backend contains the restic repo where the job should backup
@@ -445,6 +445,10 @@ spec:
                       type: string
                   type: object
               type: object
+            promURL:
+              description: PromURL sets a prometheus push URL where the backup container
+                send metrics to
+              type: string
             resources:
               description: Resources describes the compute resource requirements (cpu,
                 memory, etc.)
@@ -471,40 +475,6 @@ spec:
                     to Limits if that is explicitly specified, otherwise to an implementation-defined
                     value. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
                   type: object
-              type: object
-            retention:
-              description: Retention sets how many backups should be kept after a
-                forget and prune
-              properties:
-                hostnames:
-                  description: Hostnames is a filter on what hostnames the policy
-                    should be applied
-                  items:
-                    type: string
-                  type: array
-                keepDaily:
-                  type: integer
-                keepHourly:
-                  type: integer
-                keepLast:
-                  type: integer
-                keepMonthly:
-                  type: integer
-                keepTags:
-                  items:
-                    type: string
-                  type: array
-                keepWeekly:
-                  type: integer
-                keepYearly:
-                  type: integer
-                tags:
-                  description: Tags is a filter on what tags the policy should be
-                    applied DO NOT CONFUSE THIS WITH KeepTags OR YOU'LL have a bad
-                    time
-                  items:
-                    type: string
-                  type: array
               type: object
             successfulJobsHistoryLimit:
               description: SuccessfulJobsHistoryLimit amount of successful jobs to

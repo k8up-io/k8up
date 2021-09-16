@@ -6,14 +6,14 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.5.0
   creationTimestamp: null
-  name: archives.backup.appuio.ch
+  name: restores.k8up.io
 spec:
-  group: backup.appuio.ch
+  group: k8up.io
   names:
-    kind: Archive
-    listKind: ArchiveList
-    plural: archives
-    singular: archive
+    kind: Restore
+    listKind: RestoreList
+    plural: restores
+    singular: restore
   scope: Namespaced
   versions:
   - additionalPrinterColumns:
@@ -31,7 +31,7 @@ spec:
     name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: Archive is the Schema for the archives API
+        description: Restore is the Schema for the restores API
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -46,7 +46,8 @@ spec:
           metadata:
             type: object
           spec:
-            description: ArchiveSpec defines the desired state of Archive.
+            description: RestoreSpec can either contain an S3 restore point or a local
+              one. For the local one you need to define an existing PVC.
             properties:
               backend:
                 description: Backend contains the restic repo where the job should

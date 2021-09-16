@@ -8,7 +8,7 @@ For this you can create a restore object:
 
 [source,yaml]
 ----
-apiVersion: backup.appuio.ch/v1alpha1
+apiVersion: k8up.io/v1alpha1
 kind: Restore
 metadata:
   name: restore-test
@@ -73,7 +73,7 @@ Then create a restore job
 
 [source,yaml]
 ----
-apiVersion: backup.appuio.ch/v1alpha1
+apiVersion: k8up.io/v1alpha1
 kind: Restore
 metadata:
   name: restore-test-mfw

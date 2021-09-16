@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: List
 items:
-- apiVersion: backup.appuio.ch/v1alpha1
+- apiVersion: k8up.io/v1alpha1
   kind: EffectiveSchedule
   metadata:
     name: backup-dll789k5qql624wx
@@ -12,7 +12,7 @@ items:
       namespace: default
     generatedSchedule: 4 * * * *
     jobType: backup
-- apiVersion: backup.appuio.ch/v1alpha1
+- apiVersion: k8up.io/v1alpha1
   kind: EffectiveSchedule
   metadata:
     name: check-qhmm4xmgsrwmj4dh
