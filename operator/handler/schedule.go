@@ -99,6 +99,7 @@ func (s *ScheduleHandler) createJobList() scheduler.JobList {
 func (s *ScheduleHandler) mergeWithDefaults(specInstance *k8upv1alpha1.RunnableSpec) {
 	s.mergeResourcesWithDefaults(specInstance)
 	s.mergeBackendWithDefaults(specInstance)
+	s.mergeSecurityContextWithDefaults(specInstance)
 }
 
 func (s *ScheduleHandler) mergeResourcesWithDefaults(specInstance *k8upv1alpha1.RunnableSpec) {
@@ -120,6 +121,17 @@ func (s *ScheduleHandler) mergeBackendWithDefaults(specInstance *k8upv1alpha1.Ru
 
 	if err := mergo.Merge(specInstance.Backend, s.schedule.Spec.Backend); err != nil {
 		s.Log.Info("could not merge the schedule's backend with the resource's backend", "err", err.Error(), "schedule", s.Obj.GetMetaObject().GetName(), "namespace", s.Obj.GetMetaObject().GetNamespace())
+	}
+}
+
+func (s *ScheduleHandler) mergeSecurityContextWithDefaults(specInstance *k8upv1alpha1.RunnableSpec) {
+	if specInstance.PodSecurityContext == nil {
+		specInstance.PodSecurityContext = s.schedule.Spec.PodSecurityContext.DeepCopy()
+		return
+	}
+
+	if err := mergo.Merge(specInstance.PodSecurityContext, s.schedule.Spec.PodSecurityContext); err != nil {
+		s.Log.Info("could not merge the schedule's security context with the resource's security context", "err", err.Error(), "schedule", s.Obj.GetMetaObject().GetName(), "namespace", s.Obj.GetMetaObject().GetNamespace())
 	}
 }
 

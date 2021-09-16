@@ -33,6 +33,9 @@ type ScheduleSpec struct {
 
 	// ResourceRequirementsTemplate describes the compute resource requirements (cpu, memory, etc.)
 	ResourceRequirementsTemplate corev1.ResourceRequirements `json:"resourceRequirementsTemplate,omitempty"`
+
+	// PodSecurityContext describes the security context with which actions (such as backups) shall be executed.
+	PodSecurityContext *corev1.PodSecurityContext `json:"podSecurityContext,omitempty"`
 }
 
 // ScheduleDefinition is the actual cron-type expression that defines the interval of the actions.
@@ -68,6 +71,7 @@ type CheckSchedule struct {
 	*ScheduleCommon `json:",inline"`
 }
 
+// PruneSchedule manages the schedules for the prunes
 type PruneSchedule struct {
 	PruneSpec       `json:",inline"`
 	*ScheduleCommon `json:",inline"`
@@ -138,8 +142,14 @@ func (s *Schedule) SetStatus(status Status) {
 	s.Status.Conditions = status.Conditions
 }
 
+// GetResources returns the resource requirements
 func (s *Schedule) GetResources() corev1.ResourceRequirements {
 	return s.Spec.ResourceRequirementsTemplate
+}
+
+// GetPodSecurityContext returns the pod security context
+func (s *Schedule) GetPodSecurityContext() *corev1.PodSecurityContext {
+	return s.Spec.PodSecurityContext
 }
 
 // GetFailedJobsHistoryLimit returns failed jobs history limit.

@@ -49,6 +49,17 @@ func (ts *BackupTestSuite) Test_GivenBackup_ExpectBackupJob() {
 	ts.expectABackupJobEventually()
 }
 
+func (ts *BackupTestSuite) Test_GivenBackupWithSecurityContext_ExpectBackupJobWithSecurityContext() {
+	ts.BackupResource = ts.newBackupWithSecurityContext()
+	ts.EnsureResources(ts.BackupResource)
+	result := ts.whenReconciling(ts.BackupResource)
+	ts.Require().GreaterOrEqual(result.RequeueAfter, 30*time.Second)
+
+	job := ts.expectABackupJobEventually()
+	ts.Assert().NotNil(job.Spec.Template.Spec.SecurityContext)
+	ts.Assert().Equal(*ts.BackupResource.Spec.PodSecurityContext, *job.Spec.Template.Spec.SecurityContext)
+}
+
 func (ts *BackupTestSuite) Test_GivenPreBackupPods_ExpectPreBackupDeployment() {
 	ts.EnsureResources(ts.BackupResource, ts.newPreBackupPod())
 

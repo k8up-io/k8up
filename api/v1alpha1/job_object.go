@@ -17,7 +17,10 @@ type JobObject interface {
 	GetType() JobType
 	// GetJobName returns the name of the underlying batch/v1 job.
 	GetJobName() string
+	// GetResources returns the specified resource requirements
 	GetResources() corev1.ResourceRequirements
+	// GetPodSecurityContext returns the specified pod security context
+	GetPodSecurityContext() *corev1.PodSecurityContext
 }
 
 // +k8s:deepcopy-gen=false
