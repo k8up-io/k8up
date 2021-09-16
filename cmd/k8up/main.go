@@ -42,6 +42,8 @@ func before(c *cli.Context) error {
 		"go_os", runtime.GOOS,
 		"go_arch", runtime.GOARCH,
 		"go_version", runtime.Version(),
+		"uid", os.Getuid(),
+		"gid", os.Getgid(),
 	).Info("Starting k8up…")
 
 	return nil

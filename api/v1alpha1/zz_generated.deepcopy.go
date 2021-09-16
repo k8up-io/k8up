@@ -1041,8 +1041,8 @@ func (in *RunnableSpec) DeepCopyInto(out *RunnableSpec) {
 		(*in).DeepCopyInto(*out)
 	}
 	in.Resources.DeepCopyInto(&out.Resources)
-	if in.SecurityContext != nil {
-		in, out := &in.SecurityContext, &out.SecurityContext
+	if in.PodSecurityContext != nil {
+		in, out := &in.PodSecurityContext, &out.PodSecurityContext
 		*out = new(v1.PodSecurityContext)
 		(*in).DeepCopyInto(*out)
 	}
@@ -1221,8 +1221,8 @@ func (in *ScheduleSpec) DeepCopyInto(out *ScheduleSpec) {
 		**out = **in
 	}
 	in.ResourceRequirementsTemplate.DeepCopyInto(&out.ResourceRequirementsTemplate)
-	if in.SecurityContext != nil {
-		in, out := &in.SecurityContext, &out.SecurityContext
+	if in.PodSecurityContext != nil {
+		in, out := &in.PodSecurityContext, &out.PodSecurityContext
 		*out = new(v1.PodSecurityContext)
 		(*in).DeepCopyInto(*out)
 	}

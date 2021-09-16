@@ -19,8 +19,8 @@ type JobObject interface {
 	GetJobName() string
 	// GetResources returns the specified resource requirements
 	GetResources() corev1.ResourceRequirements
-	// GetSecurityContext returns the specified security context
-	GetSecurityContext() *corev1.PodSecurityContext
+	// GetPodSecurityContext returns the specified pod security context
+	GetPodSecurityContext() *corev1.PodSecurityContext
 }
 
 // +k8s:deepcopy-gen=false

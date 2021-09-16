@@ -125,12 +125,12 @@ func (s *ScheduleHandler) mergeBackendWithDefaults(specInstance *k8upv1alpha1.Ru
 }
 
 func (s *ScheduleHandler) mergeSecurityContextWithDefaults(specInstance *k8upv1alpha1.RunnableSpec) {
-	if specInstance.SecurityContext == nil {
-		specInstance.SecurityContext = s.schedule.Spec.SecurityContext.DeepCopy()
+	if specInstance.PodSecurityContext == nil {
+		specInstance.PodSecurityContext = s.schedule.Spec.PodSecurityContext.DeepCopy()
 		return
 	}
 
-	if err := mergo.Merge(specInstance.SecurityContext, s.schedule.Spec.SecurityContext); err != nil {
+	if err := mergo.Merge(specInstance.PodSecurityContext, s.schedule.Spec.PodSecurityContext); err != nil {
 		s.Log.Info("could not merge the schedule's security context with the resource's security context", "err", err.Error(), "schedule", s.Obj.GetMetaObject().GetName(), "namespace", s.Obj.GetMetaObject().GetNamespace())
 	}
 }

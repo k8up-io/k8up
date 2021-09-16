@@ -57,7 +57,7 @@ func (ts *BackupTestSuite) Test_GivenBackupWithSecurityContext_ExpectBackupJobWi
 
 	job := ts.expectABackupJobEventually()
 	ts.Assert().NotNil(job.Spec.Template.Spec.SecurityContext)
-	ts.Assert().Equal(*ts.BackupResource.Spec.SecurityContext, *job.Spec.Template.Spec.SecurityContext)
+	ts.Assert().Equal(*ts.BackupResource.Spec.PodSecurityContext, *job.Spec.Template.Spec.SecurityContext)
 }
 
 func (ts *BackupTestSuite) Test_GivenPreBackupPods_ExpectPreBackupDeployment() {

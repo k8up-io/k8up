@@ -70,7 +70,7 @@ func GenerateGenericJob(obj k8upv1alpha1.JobObject, config Config) (*batchv1.Job
 							Resources: config.Obj.GetResources(),
 						},
 					},
-					SecurityContext: obj.GetSecurityContext(),
+					SecurityContext: obj.GetPodSecurityContext(),
 				},
 			},
 		},

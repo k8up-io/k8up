@@ -109,9 +109,9 @@ func (p *Prune) GetResources() corev1.ResourceRequirements {
 	return p.Spec.Resources
 }
 
-// GetSecurityContext returns the security context
-func (p *Prune) GetSecurityContext() *corev1.PodSecurityContext {
-	return p.Spec.SecurityContext
+// GetPodSecurityContext returns the pod security context
+func (p *Prune) GetPodSecurityContext() *corev1.PodSecurityContext {
+	return p.Spec.PodSecurityContext
 }
 
 // GetFailedJobsHistoryLimit returns failed jobs history limit.

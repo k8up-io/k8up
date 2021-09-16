@@ -303,70 +303,9 @@ spec:
                   \n Deprecated: Use FailedJobsHistoryLimit and SuccessfulJobsHistoryLimit
                   respectively."
                 type: integer
-              resources:
-                description: Resources describes the compute resource requirements
-                  (cpu, memory, etc.)
-                properties:
-                  limits:
-                    additionalProperties:
-                      anyOf:
-                      - type: integer
-                      - type: string
-                      pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
-                      x-kubernetes-int-or-string: true
-                    description: 'Limits describes the maximum amount of compute resources
-                      allowed. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
-                    type: object
-                  requests:
-                    additionalProperties:
-                      anyOf:
-                      - type: integer
-                      - type: string
-                      pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
-                      x-kubernetes-int-or-string: true
-                    description: 'Requests describes the minimum amount of compute
-                      resources required. If Requests is omitted for a container,
-                      it defaults to Limits if that is explicitly specified, otherwise
-                      to an implementation-defined value. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
-                    type: object
-                type: object
-              retention:
-                description: Retention sets how many backups should be kept after
-                  a forget and prune
-                properties:
-                  hostnames:
-                    description: Hostnames is a filter on what hostnames the policy
-                      should be applied
-                    items:
-                      type: string
-                    type: array
-                  keepDaily:
-                    type: integer
-                  keepHourly:
-                    type: integer
-                  keepLast:
-                    type: integer
-                  keepMonthly:
-                    type: integer
-                  keepTags:
-                    items:
-                      type: string
-                    type: array
-                  keepWeekly:
-                    type: integer
-                  keepYearly:
-                    type: integer
-                  tags:
-                    description: Tags is a filter on what tags the policy should be
-                      applied DO NOT CONFUSE THIS WITH KeepTags OR YOU'LL have a bad
-                      time
-                    items:
-                      type: string
-                    type: array
-                type: object
-              securityContext:
-                description: SecurityContext describes the security context with which
-                  this action shall be executed.
+              podSecurityContext:
+                description: PodSecurityContext describes the security context with
+                  which this action shall be executed.
                 properties:
                   fsGroup:
                     description: "A special supplemental group that applies to all
@@ -507,6 +446,67 @@ spec:
                           value specified in SecurityContext takes precedence.
                         type: string
                     type: object
+                type: object
+              resources:
+                description: Resources describes the compute resource requirements
+                  (cpu, memory, etc.)
+                properties:
+                  limits:
+                    additionalProperties:
+                      anyOf:
+                      - type: integer
+                      - type: string
+                      pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                      x-kubernetes-int-or-string: true
+                    description: 'Limits describes the maximum amount of compute resources
+                      allowed. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
+                    type: object
+                  requests:
+                    additionalProperties:
+                      anyOf:
+                      - type: integer
+                      - type: string
+                      pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                      x-kubernetes-int-or-string: true
+                    description: 'Requests describes the minimum amount of compute
+                      resources required. If Requests is omitted for a container,
+                      it defaults to Limits if that is explicitly specified, otherwise
+                      to an implementation-defined value. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
+                    type: object
+                type: object
+              retention:
+                description: Retention sets how many backups should be kept after
+                  a forget and prune
+                properties:
+                  hostnames:
+                    description: Hostnames is a filter on what hostnames the policy
+                      should be applied
+                    items:
+                      type: string
+                    type: array
+                  keepDaily:
+                    type: integer
+                  keepHourly:
+                    type: integer
+                  keepLast:
+                    type: integer
+                  keepMonthly:
+                    type: integer
+                  keepTags:
+                    items:
+                      type: string
+                    type: array
+                  keepWeekly:
+                    type: integer
+                  keepYearly:
+                    type: integer
+                  tags:
+                    description: Tags is a filter on what tags the policy should be
+                      applied DO NOT CONFUSE THIS WITH KeepTags OR YOU'LL have a bad
+                      time
+                    items:
+                      type: string
+                    type: array
                 type: object
               successfulJobsHistoryLimit:
                 description: SuccessfulJobsHistoryLimit amount of successful jobs

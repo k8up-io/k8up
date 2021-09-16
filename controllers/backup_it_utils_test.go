@@ -68,7 +68,7 @@ func (ts *BackupTestSuite) newBackupWithSecurityContext() *k8upv1a1.Backup {
 	}
 
 	backup := ts.newBackup()
-	backup.Spec.SecurityContext = sc
+	backup.Spec.PodSecurityContext = sc
 	return backup
 }
 

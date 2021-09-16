@@ -308,40 +308,9 @@ spec:
                 Deprecated: Use FailedJobsHistoryLimit and SuccessfulJobsHistoryLimit
                 respectively."
               type: integer
-            promURL:
-              description: PromURL sets a prometheus push URL where the backup container
-                send metrics to
-              type: string
-            resources:
-              description: Resources describes the compute resource requirements (cpu,
-                memory, etc.)
-              properties:
-                limits:
-                  additionalProperties:
-                    anyOf:
-                    - type: integer
-                    - type: string
-                    pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
-                    x-kubernetes-int-or-string: true
-                  description: 'Limits describes the maximum amount of compute resources
-                    allowed. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
-                  type: object
-                requests:
-                  additionalProperties:
-                    anyOf:
-                    - type: integer
-                    - type: string
-                    pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
-                    x-kubernetes-int-or-string: true
-                  description: 'Requests describes the minimum amount of compute resources
-                    required. If Requests is omitted for a container, it defaults
-                    to Limits if that is explicitly specified, otherwise to an implementation-defined
-                    value. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
-                  type: object
-              type: object
-            securityContext:
-              description: SecurityContext describes the security context with which
-                this action shall be executed.
+            podSecurityContext:
+              description: PodSecurityContext describes the security context with
+                which this action shall be executed.
               properties:
                 fsGroup:
                   description: "A special supplemental group that applies to all containers
@@ -480,6 +449,37 @@ spec:
                         If set in both SecurityContext and PodSecurityContext, the
                         value specified in SecurityContext takes precedence.
                       type: string
+                  type: object
+              type: object
+            promURL:
+              description: PromURL sets a prometheus push URL where the backup container
+                send metrics to
+              type: string
+            resources:
+              description: Resources describes the compute resource requirements (cpu,
+                memory, etc.)
+              properties:
+                limits:
+                  additionalProperties:
+                    anyOf:
+                    - type: integer
+                    - type: string
+                    pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                    x-kubernetes-int-or-string: true
+                  description: 'Limits describes the maximum amount of compute resources
+                    allowed. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
+                  type: object
+                requests:
+                  additionalProperties:
+                    anyOf:
+                    - type: integer
+                    - type: string
+                    pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                    x-kubernetes-int-or-string: true
+                  description: 'Requests describes the minimum amount of compute resources
+                    required. If Requests is omitted for a container, it defaults
+                    to Limits if that is explicitly specified, otherwise to an implementation-defined
+                    value. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
                   type: object
               type: object
             statsURL:

@@ -301,100 +301,9 @@ spec:
                 Deprecated: Use FailedJobsHistoryLimit and SuccessfulJobsHistoryLimit
                 respectively."
               type: integer
-            resources:
-              description: Resources describes the compute resource requirements (cpu,
-                memory, etc.)
-              properties:
-                limits:
-                  additionalProperties:
-                    anyOf:
-                    - type: integer
-                    - type: string
-                    pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
-                    x-kubernetes-int-or-string: true
-                  description: 'Limits describes the maximum amount of compute resources
-                    allowed. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
-                  type: object
-                requests:
-                  additionalProperties:
-                    anyOf:
-                    - type: integer
-                    - type: string
-                    pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
-                    x-kubernetes-int-or-string: true
-                  description: 'Requests describes the minimum amount of compute resources
-                    required. If Requests is omitted for a container, it defaults
-                    to Limits if that is explicitly specified, otherwise to an implementation-defined
-                    value. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
-                  type: object
-              type: object
-            restoreFilter:
-              type: string
-            restoreMethod:
-              description: RestoreMethod contains how and where the restore should
-                happen all the settings are mutual exclusive.
-              properties:
-                folder:
-                  properties:
-                    claimName:
-                      description: 'ClaimName is the name of a PersistentVolumeClaim
-                        in the same namespace as the pod using this volume. More info:
-                        https://kubernetes.io/docs/concepts/storage/persistent-volumes#persistentvolumeclaims'
-                      type: string
-                    readOnly:
-                      description: Will force the ReadOnly setting in VolumeMounts.
-                        Default false.
-                      type: boolean
-                  required:
-                  - claimName
-                  type: object
-                s3:
-                  properties:
-                    accessKeyIDSecretRef:
-                      description: SecretKeySelector selects a key of a Secret.
-                      properties:
-                        key:
-                          description: The key of the secret to select from.  Must
-                            be a valid secret key.
-                          type: string
-                        name:
-                          description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                            TODO: Add other useful fields. apiVersion, kind, uid?'
-                          type: string
-                        optional:
-                          description: Specify whether the Secret or its key must
-                            be defined
-                          type: boolean
-                      required:
-                      - key
-                      type: object
-                    bucket:
-                      type: string
-                    endpoint:
-                      type: string
-                    secretAccessKeySecretRef:
-                      description: SecretKeySelector selects a key of a Secret.
-                      properties:
-                        key:
-                          description: The key of the secret to select from.  Must
-                            be a valid secret key.
-                          type: string
-                        name:
-                          description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                            TODO: Add other useful fields. apiVersion, kind, uid?'
-                          type: string
-                        optional:
-                          description: Specify whether the Secret or its key must
-                            be defined
-                          type: boolean
-                      required:
-                      - key
-                      type: object
-                  type: object
-              type: object
-            securityContext:
-              description: SecurityContext describes the security context with which
-                this action shall be executed.
+            podSecurityContext:
+              description: PodSecurityContext describes the security context with
+                which this action shall be executed.
               properties:
                 fsGroup:
                   description: "A special supplemental group that applies to all containers
@@ -533,6 +442,97 @@ spec:
                         If set in both SecurityContext and PodSecurityContext, the
                         value specified in SecurityContext takes precedence.
                       type: string
+                  type: object
+              type: object
+            resources:
+              description: Resources describes the compute resource requirements (cpu,
+                memory, etc.)
+              properties:
+                limits:
+                  additionalProperties:
+                    anyOf:
+                    - type: integer
+                    - type: string
+                    pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                    x-kubernetes-int-or-string: true
+                  description: 'Limits describes the maximum amount of compute resources
+                    allowed. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
+                  type: object
+                requests:
+                  additionalProperties:
+                    anyOf:
+                    - type: integer
+                    - type: string
+                    pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                    x-kubernetes-int-or-string: true
+                  description: 'Requests describes the minimum amount of compute resources
+                    required. If Requests is omitted for a container, it defaults
+                    to Limits if that is explicitly specified, otherwise to an implementation-defined
+                    value. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
+                  type: object
+              type: object
+            restoreFilter:
+              type: string
+            restoreMethod:
+              description: RestoreMethod contains how and where the restore should
+                happen all the settings are mutual exclusive.
+              properties:
+                folder:
+                  properties:
+                    claimName:
+                      description: 'ClaimName is the name of a PersistentVolumeClaim
+                        in the same namespace as the pod using this volume. More info:
+                        https://kubernetes.io/docs/concepts/storage/persistent-volumes#persistentvolumeclaims'
+                      type: string
+                    readOnly:
+                      description: Will force the ReadOnly setting in VolumeMounts.
+                        Default false.
+                      type: boolean
+                  required:
+                  - claimName
+                  type: object
+                s3:
+                  properties:
+                    accessKeyIDSecretRef:
+                      description: SecretKeySelector selects a key of a Secret.
+                      properties:
+                        key:
+                          description: The key of the secret to select from.  Must
+                            be a valid secret key.
+                          type: string
+                        name:
+                          description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                            TODO: Add other useful fields. apiVersion, kind, uid?'
+                          type: string
+                        optional:
+                          description: Specify whether the Secret or its key must
+                            be defined
+                          type: boolean
+                      required:
+                      - key
+                      type: object
+                    bucket:
+                      type: string
+                    endpoint:
+                      type: string
+                    secretAccessKeySecretRef:
+                      description: SecretKeySelector selects a key of a Secret.
+                      properties:
+                        key:
+                          description: The key of the secret to select from.  Must
+                            be a valid secret key.
+                          type: string
+                        name:
+                          description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                            TODO: Add other useful fields. apiVersion, kind, uid?'
+                          type: string
+                        optional:
+                          description: Specify whether the Secret or its key must
+                            be defined
+                          type: boolean
+                      required:
+                      - key
+                      type: object
                   type: object
               type: object
             snapshot:
