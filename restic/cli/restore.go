@@ -141,7 +141,7 @@ func (r *Restic) getLatestSnapshot(snapshotID string, log logr.Logger) (Snapshot
 func (r *Restic) folderRestore(restoreDir string, snapshot Snapshot, restoreFilter string, verify bool, log logr.Logger) error {
 	var linkedDir string
 	if cfg.Config.RestoreTrimPath {
-		restoreRoot, err := r.linkRestorePaths(snapshot, restoreDir, log)
+		restoreRoot, err := r.linkRestorePaths(snapshot, restoreDir)
 		if err != nil {
 			return err
 		}
@@ -193,12 +193,12 @@ func (r *Restic) folderRestore(restoreDir string, snapshot Snapshot, restoreFilt
 // returns that temp path as the string used for the actual restore.This way the
 // root of the backed up PVC will be the root of the restored PVC thus creating
 // a carbon copy of the original and ready to be used again.
-func (r *Restic) linkRestorePaths(snapshot Snapshot, restoreDir string, log logr.Logger) (string, error) {
-	// wrestic snapshots only every contain exactly one path
+func (r *Restic) linkRestorePaths(snapshot Snapshot, restoreDir string) (string, error) {
+	// restic snapshots only every contain exactly one path
 	snapshotPath := snapshot.Paths[0]
 	splitted := strings.Split(snapshotPath, "/")
 	joined := filepath.Join(splitted[:3]...)
-	restoreRoot := filepath.Join(os.TempDir(), "wresticRestore")
+	restoreRoot := filepath.Join(os.TempDir(), "restore")
 
 	absolute := filepath.Join(restoreRoot, joined)
 	makePath := filepath.Dir(absolute)

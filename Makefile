@@ -102,15 +102,15 @@ lint: fmt vet docs-update-usage ## Invokes the fmt and vet targets
 
 .PHONY: docker-build
 docker-build: $(BIN_FILENAME) ## Build the docker image
-	docker build . --target=k8up -t $(K8UP_DOCKER_IMG) -t $(K8UP_QUAY_IMG) -t $(K8UP_E2E_IMG)
-	docker build . --target=wrestic -t $(WRESTIC_DOCKER_IMG) -t $(WRESTIC_QUAY_IMG) -t $(WRESTIC_E2E_IMG)
+	docker build . \
+		--tag $(K8UP_DOCKER_IMG) \
+		--tag $(K8UP_QUAY_IMG) \
+		--tag $(K8UP_E2E_IMG)
 
 .PHONY: docker-push
 docker-push: ## Push the docker image
 	docker push $(K8UP_DOCKER_IMG)
 	docker push $(K8UP_QUAY_IMG)
-	docker push $(WRESTIC_DOCKER_IMG)
-	docker push $(WRESTIC_QUAY_IMG)
 
 clean: export KUBECONFIG = $(KIND_KUBECONFIG)
 clean: restic-integration-test-clean e2e-clean docs-clean ## Cleans up the generated resources

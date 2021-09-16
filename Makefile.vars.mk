@@ -28,7 +28,6 @@ SHASUM ?= $(shell command -v sha1sum > /dev/null && echo "sha1sum" || echo "shas
 E2E_TAG ?= e2e_$(shell $(SHASUM) $(BIN_FILENAME) | cut -b-8)
 E2E_REPO ?= local.dev/k8up
 K8UP_E2E_IMG = $(E2E_REPO)/k8up:$(E2E_TAG)
-WRESTIC_E2E_IMG = $(E2E_REPO)/wrestic:$(E2E_TAG)
 
 BATS_FILES ?= .
 
@@ -37,8 +36,6 @@ KUSTOMIZE ?= go run sigs.k8s.io/kustomize/kustomize/v4
 # Image URL to use all building/pushing image targets
 K8UP_DOCKER_IMG ?= docker.io/vshn/k8up:$(IMG_TAG)
 K8UP_QUAY_IMG ?= quay.io/vshn/k8up:$(IMG_TAG)
-WRESTIC_DOCKER_IMG ?= docker.io/vshn/wrestic:$(IMG_TAG)
-WRESTIC_QUAY_IMG ?= quay.io/vshn/wrestic:$(IMG_TAG)
 
 # Operator Integration Test
 ENVTEST_ADDITIONAL_FLAGS ?= --bin-dir "$(integrationtest_dir)"

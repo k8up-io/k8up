@@ -1232,7 +1232,7 @@ spec:
                     that defines the interval of the actions.
                   type: string
                 statsURL:
-                  description: StatsURL sets an arbitrary URL where the wrestic container
+                  description: StatsURL sets an arbitrary URL where the restic container
                     posts metrics and information about the snapshots to. This is
                     in addition to the prometheus pushgateway.
                   type: string

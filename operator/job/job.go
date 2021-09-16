@@ -67,6 +67,7 @@ func GenerateGenericJob(obj k8upv1alpha1.JobObject, config Config) (*batchv1.Job
 						{
 							Name:      obj.GetType().String(),
 							Image:     cfg.Config.BackupImage,
+							Command:   cfg.Config.BackupCommandRestic,
 							Resources: config.Obj.GetResources(),
 						},
 					},

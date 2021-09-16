@@ -6,7 +6,7 @@ This should give you an idea what is included, but currently not documented.
 * Describe prune and check jobs and their implications (e.g. locking)
 * Webhooks with backup information
 * Prometheus Metrics of Operator
-* Prometheus Pushgateway Metrics of Wrestic
+* Prometheus Pushgateway metrics of `k8up restic`
 * K8up HA (leader election)
 * Index of possible annotations
 * Generated CRD API reference documentation

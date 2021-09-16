@@ -68,7 +68,6 @@ K8s consists of two main modules:
 - operator      Code that is otherwise related to the _operator module_,
                 but not part of the recommended Operator SDK structure.
 - restic        Code that makes up the _restic module_.
-- wrestic       A small shell script for compatibility with the legacy `wrestic` Docker image.
 
 [o]: this is part of the recommended Operator SDK structure
 ```
