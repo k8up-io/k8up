@@ -103,14 +103,12 @@ lint: fmt vet docs-update-usage ## Invokes the fmt and vet targets
 .PHONY: docker-build
 docker-build: $(BIN_FILENAME) ## Build the docker image
 	docker build . \
-		--tag $(K8UP_DOCKER_IMG) \
 		--tag $(K8UP_QUAY_IMG) \
 		--tag $(K8UP_GHCR_IMG) \
 		--tag $(K8UP_E2E_IMG)
 
 .PHONY: docker-push
 docker-push: ## Push the docker image
-	docker push $(K8UP_DOCKER_IMG)
 	docker push $(K8UP_QUAY_IMG)
 	docker push $(K8UP_GHCR_IMG)
 

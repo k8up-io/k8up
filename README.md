@@ -4,7 +4,6 @@
 [![Version](https://img.shields.io/github/v/release/k8up-io/k8up)][releases]
 [![Maintainability](https://img.shields.io/codeclimate/maintainability/k8up-io/k8up)][codeclimate]
 [![GitHub downloads](https://img.shields.io/github/downloads/k8up-io/k8up/total)][releases]
-[![Docker image](https://img.shields.io/docker/pulls/k8up-io/k8up)][dockerhub]
 [![License](https://img.shields.io/github/license/k8up-io/k8up)][license]
 
 ![K8up logo](docs/modules/ROOT/assets/images/k8up-logo.svg "K8up")
@@ -143,6 +142,5 @@ Apply them using `kubectl apply -f config/samples/somesample.yaml`
 [build]: https://github.com/k8up-io/k8up/actions?query=workflow%3ATest
 [releases]: https://github.com/k8up-io/k8up/releases
 [license]: https://github.com/k8up-io/k8up/blob/master/LICENSE
-[dockerhub]: https://hub.docker.com/r/k8up-io/k8up
 [detik]: https://github.com/bats-core/bats-detik
 [codeclimate]: https://codeclimate.com/github/k8up-io/k8up

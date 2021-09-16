@@ -7,7 +7,7 @@ It starts when a maintainer pushes a new git tag.
 This will trigger a GitHub Action which will, in turn, create:
 
 - A GitHub release with a changelog based on the merged pull requests.
-- A build of the Docker image, which is pushed to https://ghcr.io/k8up-io/k8up[GitHub Container Registry], https://quay.io/repository/k8up-io/k8up[Quay.io], https://hub.docker.com/r/k8up-io/k8up[Docker Hub].
+- A build of the Docker image, which is pushed to https://ghcr.io/k8up-io/k8up[GitHub Container Registry] and https://quay.io/repository/k8up-io/k8up[Quay.io].
 
 This process mostly relies on https://goreleaser.com/[GoReleaser].
 

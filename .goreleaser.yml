@@ -18,18 +18,15 @@ dockers:
 - image_templates:
   - "ghcr.io/k8up-io/k8up:v{{ .Version }}"
   - "quay.io/k8up-io/k8up:v{{ .Version }}"
-  - "docker.io/k8up-io/k8up:v{{ .Version }}"
 
   # For prereleases, updating `latest` and the floating tags of the major
   # version does not make sense. Only the image for the exact version should
   # be pushed.
   - "{{ if not .Prerelease }}ghcr.io/k8up-io/k8up:v{{ .Major }}{{ end }}"
   - "{{ if not .Prerelease }}quay.io/k8up-io/k8up:v{{ .Major }}{{ end }}"
-  - "{{ if not .Prerelease }}docker.io/k8up-io/k8up:v{{ .Major }}{{ end }}"
 
   - "{{ if not .Prerelease }}ghcr.io/k8up-io/k8up:latest{{ end }}"
   - "{{ if not .Prerelease }}quay.io/k8up-io/k8up:latest{{ end }}"
-  - "{{ if not .Prerelease }}docker.io/k8up-io/k8up:latest{{ end }}"
 
 release:
   prerelease: auto
