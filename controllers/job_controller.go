@@ -11,8 +11,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
-	"github.com/vshn/k8up/operator/handler"
-	"github.com/vshn/k8up/operator/job"
+	"github.com/k8up-io/k8up/operator/handler"
+	"github.com/k8up-io/k8up/operator/job"
 )
 
 // JobReconciler reconciles a Job object

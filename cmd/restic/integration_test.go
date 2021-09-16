@@ -23,10 +23,10 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap/zaptest"
 
-	"github.com/vshn/k8up/restic/cfg"
-	"github.com/vshn/k8up/restic/cli"
-	"github.com/vshn/k8up/restic/s3"
-	"github.com/vshn/k8up/restic/stats"
+	"github.com/k8up-io/k8up/restic/cfg"
+	"github.com/k8up-io/k8up/restic/cli"
+	"github.com/k8up-io/k8up/restic/s3"
+	"github.com/k8up-io/k8up/restic/stats"
 )
 
 type webhookserver struct {

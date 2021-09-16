@@ -7,7 +7,7 @@ import (
 
 	"github.com/go-logr/logr"
 
-	"github.com/vshn/k8up/restic/cfg"
+	"github.com/k8up-io/k8up/restic/cfg"
 )
 
 type ArrayOpts []string

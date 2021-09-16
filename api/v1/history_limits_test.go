@@ -3,7 +3,7 @@ package v1_test
 import (
 	"testing"
 
-	k8upv1 "github.com/vshn/k8up/api/v1"
+	k8upv1 "github.com/k8up-io/k8up/api/v1"
 
 	"github.com/stretchr/testify/assert"
 )

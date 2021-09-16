@@ -7,8 +7,8 @@ import (
 
 	"k8s.io/apimachinery/pkg/api/errors"
 
-	"github.com/vshn/k8up/operator/observer"
-	"github.com/vshn/k8up/operator/queue"
+	"github.com/k8up-io/k8up/operator/observer"
+	"github.com/k8up-io/k8up/operator/queue"
 )
 
 var (

@@ -6,8 +6,8 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 
-	"github.com/vshn/k8up/restic/cfg"
-	"github.com/vshn/k8up/restic/logging"
+	"github.com/k8up-io/k8up/restic/cfg"
+	"github.com/k8up-io/k8up/restic/logging"
 )
 
 const (

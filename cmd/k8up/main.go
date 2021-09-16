@@ -12,9 +12,9 @@ import (
 	"go.uber.org/zap/zapcore"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-	"github.com/vshn/k8up/cmd"
-	"github.com/vshn/k8up/cmd/operator"
-	"github.com/vshn/k8up/cmd/restic"
+	"github.com/k8up-io/k8up/cmd"
+	"github.com/k8up-io/k8up/cmd/operator"
+	"github.com/k8up-io/k8up/cmd/restic"
 )
 
 // Strings are populated by Goreleaser

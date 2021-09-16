@@ -11,10 +11,10 @@ import (
 	"github.com/stretchr/testify/suite"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	k8upv1 "github.com/vshn/k8up/api/v1"
-	"github.com/vshn/k8up/controllers"
-	"github.com/vshn/k8up/envtest"
-	"github.com/vshn/k8up/operator/observer"
+	k8upv1 "github.com/k8up-io/k8up/api/v1"
+	"github.com/k8up-io/k8up/controllers"
+	"github.com/k8up-io/k8up/envtest"
+	"github.com/k8up-io/k8up/operator/observer"
 )
 
 type BackupTestSuite struct {

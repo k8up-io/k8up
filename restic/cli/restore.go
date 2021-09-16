@@ -16,10 +16,10 @@ import (
 
 	"github.com/go-logr/logr"
 
-	"github.com/vshn/k8up/common"
-	"github.com/vshn/k8up/restic/cfg"
-	"github.com/vshn/k8up/restic/logging"
-	"github.com/vshn/k8up/restic/s3"
+	"github.com/k8up-io/k8up/common"
+	"github.com/k8up-io/k8up/restic/cfg"
+	"github.com/k8up-io/k8up/restic/logging"
+	"github.com/k8up-io/k8up/restic/s3"
 )
 
 const (
