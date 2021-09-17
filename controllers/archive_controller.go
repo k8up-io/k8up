@@ -11,10 +11,10 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 
-	k8upv1 "github.com/vshn/k8up/api/v1"
-	"github.com/vshn/k8up/operator/cfg"
-	"github.com/vshn/k8up/operator/handler"
-	"github.com/vshn/k8up/operator/job"
+	k8upv1 "github.com/k8up-io/k8up/api/v1"
+	"github.com/k8up-io/k8up/operator/cfg"
+	"github.com/k8up-io/k8up/operator/handler"
+	"github.com/k8up-io/k8up/operator/job"
 )
 
 // ArchiveReconciler reconciles a Archive object

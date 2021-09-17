@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/vshn/k8up/common"
+	"github.com/k8up-io/k8up/common"
 )
 
 type MockWriter struct {

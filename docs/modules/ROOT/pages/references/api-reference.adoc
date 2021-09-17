@@ -6,7 +6,7 @@
 
 This is a https://github.com/elastic/crd-ref-docs[generated] API documentation.
 
-TIP: A more sophisticated documentation is available under https://doc.crds.dev/github.com/vshn/k8up.
+TIP: A more sophisticated documentation is available under https://doc.crds.dev/github.com/k8up-io/k8up.
 
 .Packages
 - xref:{anchor_prefix}-k8up-io-v1[$$k8up.io/v1$$]
@@ -17,35 +17,35 @@ TIP: A more sophisticated documentation is available under https://doc.crds.dev/
 
 
 .Resource Types
-- xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-archive[$$Archive$$]
-- xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-archivelist[$$ArchiveList$$]
-- xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-backup[$$Backup$$]
-- xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-backuplist[$$BackupList$$]
-- xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-check[$$Check$$]
-- xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-checklist[$$CheckList$$]
-- xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-effectiveschedule[$$EffectiveSchedule$$]
-- xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-effectiveschedulelist[$$EffectiveScheduleList$$]
-- xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-prebackuppod[$$PreBackupPod$$]
-- xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-prebackuppodlist[$$PreBackupPodList$$]
-- xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-prune[$$Prune$$]
-- xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-prunelist[$$PruneList$$]
-- xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-restore[$$Restore$$]
-- xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-restorelist[$$RestoreList$$]
-- xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-schedule[$$Schedule$$]
-- xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-schedulelist[$$ScheduleList$$]
-- xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-snapshot[$$Snapshot$$]
-- xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-snapshotlist[$$SnapshotList$$]
+- xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-archive[$$Archive$$]
+- xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-archivelist[$$ArchiveList$$]
+- xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-backup[$$Backup$$]
+- xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-backuplist[$$BackupList$$]
+- xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-check[$$Check$$]
+- xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-checklist[$$CheckList$$]
+- xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-effectiveschedule[$$EffectiveSchedule$$]
+- xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-effectiveschedulelist[$$EffectiveScheduleList$$]
+- xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-prebackuppod[$$PreBackupPod$$]
+- xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-prebackuppodlist[$$PreBackupPodList$$]
+- xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-prune[$$Prune$$]
+- xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-prunelist[$$PruneList$$]
+- xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-restore[$$Restore$$]
+- xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-restorelist[$$RestoreList$$]
+- xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-schedule[$$Schedule$$]
+- xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-schedulelist[$$ScheduleList$$]
+- xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-snapshot[$$Snapshot$$]
+- xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-snapshotlist[$$SnapshotList$$]
 
 
 
-[id="{anchor_prefix}-github-com-vshn-k8up-api-v1-archive"]
+[id="{anchor_prefix}-github-com-k8up-io-k8up-api-v1-archive"]
 === Archive 
 
 Archive is the Schema for the archives API
 
 .Appears In:
 ****
-- xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-archivelist[$$ArchiveList$$]
+- xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-archivelist[$$ArchiveList$$]
 ****
 
 [cols="25a,75a", options="header"]
@@ -55,11 +55,11 @@ Archive is the Schema for the archives API
 | *`kind`* __string__ | `Archive`
 | *`metadata`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#objectmeta-v1-meta[$$ObjectMeta$$]__ | Refer to Kubernetes API documentation for fields of `metadata`.
 
-| *`spec`* __xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-archivespec[$$ArchiveSpec$$]__ | 
+| *`spec`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-archivespec[$$ArchiveSpec$$]__ | 
 |===
 
 
-[id="{anchor_prefix}-github-com-vshn-k8up-api-v1-archivelist"]
+[id="{anchor_prefix}-github-com-k8up-io-k8up-api-v1-archivelist"]
 === ArchiveList 
 
 ArchiveList contains a list of Archive
@@ -73,106 +73,106 @@ ArchiveList contains a list of Archive
 | *`kind`* __string__ | `ArchiveList`
 | *`metadata`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#listmeta-v1-meta[$$ListMeta$$]__ | Refer to Kubernetes API documentation for fields of `metadata`.
 
-| *`items`* __xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-archive[$$Archive$$]__ | 
+| *`items`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-archive[$$Archive$$]__ | 
 |===
 
 
-[id="{anchor_prefix}-github-com-vshn-k8up-api-v1-archiveschedule"]
+[id="{anchor_prefix}-github-com-k8up-io-k8up-api-v1-archiveschedule"]
 === ArchiveSchedule 
 
 ArchiveSchedule manages schedules for the archival service
 
 .Appears In:
 ****
-- xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-schedulespec[$$ScheduleSpec$$]
+- xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-schedulespec[$$ScheduleSpec$$]
 ****
 
 [cols="25a,75a", options="header"]
 |===
 | Field | Description
-| *`ArchiveSpec`* __xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-archivespec[$$ArchiveSpec$$]__ | 
-| *`ScheduleCommon`* __xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-schedulecommon[$$ScheduleCommon$$]__ | 
+| *`ArchiveSpec`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-archivespec[$$ArchiveSpec$$]__ | 
+| *`ScheduleCommon`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-schedulecommon[$$ScheduleCommon$$]__ | 
 |===
 
 
-[id="{anchor_prefix}-github-com-vshn-k8up-api-v1-archivespec"]
+[id="{anchor_prefix}-github-com-k8up-io-k8up-api-v1-archivespec"]
 === ArchiveSpec 
 
 ArchiveSpec defines the desired state of Archive.
 
 .Appears In:
 ****
-- xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-archive[$$Archive$$]
-- xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-archiveschedule[$$ArchiveSchedule$$]
+- xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-archive[$$Archive$$]
+- xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-archiveschedule[$$ArchiveSchedule$$]
 ****
 
 [cols="25a,75a", options="header"]
 |===
 | Field | Description
-| *`RestoreSpec`* __xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-restorespec[$$RestoreSpec$$]__ | 
+| *`RestoreSpec`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-restorespec[$$RestoreSpec$$]__ | 
 |===
 
 
-[id="{anchor_prefix}-github-com-vshn-k8up-api-v1-azurespec"]
+[id="{anchor_prefix}-github-com-k8up-io-k8up-api-v1-azurespec"]
 === AzureSpec 
 
 
 
 .Appears In:
 ****
-- xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-backend[$$Backend$$]
+- xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-backend[$$Backend$$]
 ****
 
 
 
-[id="{anchor_prefix}-github-com-vshn-k8up-api-v1-b2spec"]
+[id="{anchor_prefix}-github-com-k8up-io-k8up-api-v1-b2spec"]
 === B2Spec 
 
 
 
 .Appears In:
 ****
-- xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-backend[$$Backend$$]
+- xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-backend[$$Backend$$]
 ****
 
 
 
-[id="{anchor_prefix}-github-com-vshn-k8up-api-v1-backend"]
+[id="{anchor_prefix}-github-com-k8up-io-k8up-api-v1-backend"]
 === Backend 
 
 Backend allows configuring several backend implementations. It is expected that users only configure one storage type.
 
 .Appears In:
 ****
-- xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-backuptemplate[$$BackupTemplate$$]
-- xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-runnablespec[$$RunnableSpec$$]
-- xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-schedulespec[$$ScheduleSpec$$]
+- xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-backuptemplate[$$BackupTemplate$$]
+- xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-runnablespec[$$RunnableSpec$$]
+- xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-schedulespec[$$ScheduleSpec$$]
 ****
 
 [cols="25a,75a", options="header"]
 |===
 | Field | Description
 | *`repoPasswordSecretRef`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#secretkeyselector-v1-core[$$SecretKeySelector$$]__ | RepoPasswordSecretRef references a secret key to look up the restic repository password
-| *`local`* __xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-localspec[$$LocalSpec$$]__ | 
-| *`s3`* __xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-s3spec[$$S3Spec$$]__ | 
-| *`gcs`* __xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-gcsspec[$$GCSSpec$$]__ | 
-| *`azure`* __xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-azurespec[$$AzureSpec$$]__ | 
-| *`swift`* __xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-swiftspec[$$SwiftSpec$$]__ | 
-| *`b2`* __xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-b2spec[$$B2Spec$$]__ | 
-| *`rest`* __xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-restserverspec[$$RestServerSpec$$]__ | 
+| *`local`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-localspec[$$LocalSpec$$]__ | 
+| *`s3`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-s3spec[$$S3Spec$$]__ | 
+| *`gcs`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-gcsspec[$$GCSSpec$$]__ | 
+| *`azure`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-azurespec[$$AzureSpec$$]__ | 
+| *`swift`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-swiftspec[$$SwiftSpec$$]__ | 
+| *`b2`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-b2spec[$$B2Spec$$]__ | 
+| *`rest`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-restserverspec[$$RestServerSpec$$]__ | 
 |===
 
 
 
 
-[id="{anchor_prefix}-github-com-vshn-k8up-api-v1-backup"]
+[id="{anchor_prefix}-github-com-k8up-io-k8up-api-v1-backup"]
 === Backup 
 
 Backup is the Schema for the backups API
 
 .Appears In:
 ****
-- xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-backuplist[$$BackupList$$]
+- xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-backuplist[$$BackupList$$]
 ****
 
 [cols="25a,75a", options="header"]
@@ -182,11 +182,11 @@ Backup is the Schema for the backups API
 | *`kind`* __string__ | `Backup`
 | *`metadata`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#objectmeta-v1-meta[$$ObjectMeta$$]__ | Refer to Kubernetes API documentation for fields of `metadata`.
 
-| *`spec`* __xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-backupspec[$$BackupSpec$$]__ | 
+| *`spec`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-backupspec[$$BackupSpec$$]__ | 
 |===
 
 
-[id="{anchor_prefix}-github-com-vshn-k8up-api-v1-backuplist"]
+[id="{anchor_prefix}-github-com-k8up-io-k8up-api-v1-backuplist"]
 === BackupList 
 
 BackupList contains a list of Backup
@@ -200,43 +200,43 @@ BackupList contains a list of Backup
 | *`kind`* __string__ | `BackupList`
 | *`metadata`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#listmeta-v1-meta[$$ListMeta$$]__ | Refer to Kubernetes API documentation for fields of `metadata`.
 
-| *`items`* __xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-backup[$$Backup$$]__ | 
+| *`items`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-backup[$$Backup$$]__ | 
 |===
 
 
-[id="{anchor_prefix}-github-com-vshn-k8up-api-v1-backupschedule"]
+[id="{anchor_prefix}-github-com-k8up-io-k8up-api-v1-backupschedule"]
 === BackupSchedule 
 
 BackupSchedule manages schedules for the backup service
 
 .Appears In:
 ****
-- xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-schedulespec[$$ScheduleSpec$$]
+- xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-schedulespec[$$ScheduleSpec$$]
 ****
 
 [cols="25a,75a", options="header"]
 |===
 | Field | Description
-| *`BackupSpec`* __xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-backupspec[$$BackupSpec$$]__ | 
-| *`ScheduleCommon`* __xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-schedulecommon[$$ScheduleCommon$$]__ | 
+| *`BackupSpec`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-backupspec[$$BackupSpec$$]__ | 
+| *`ScheduleCommon`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-schedulecommon[$$ScheduleCommon$$]__ | 
 |===
 
 
-[id="{anchor_prefix}-github-com-vshn-k8up-api-v1-backupspec"]
+[id="{anchor_prefix}-github-com-k8up-io-k8up-api-v1-backupspec"]
 === BackupSpec 
 
 BackupSpec defines a single backup. It must contain all inforomation to connect to the backup repository when applied. If used with defaults or schedules the operator will ensure that the defaults are applied before creating the object on the API.
 
 .Appears In:
 ****
-- xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-backup[$$Backup$$]
-- xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-backupschedule[$$BackupSchedule$$]
+- xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-backup[$$Backup$$]
+- xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-backupschedule[$$BackupSchedule$$]
 ****
 
 [cols="25a,75a", options="header"]
 |===
 | Field | Description
-| *`RunnableSpec`* __xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-runnablespec[$$RunnableSpec$$]__ | 
+| *`RunnableSpec`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-runnablespec[$$RunnableSpec$$]__ | 
 | *`keepJobs`* __integer__ | KeepJobs amount of jobs to keep for later analysis. 
  Deprecated: Use FailedJobsHistoryLimit and SuccessfulJobsHistoryLimit respectively.
 | *`failedJobsHistoryLimit`* __integer__ | FailedJobsHistoryLimit amount of failed jobs to keep for later analysis. KeepJobs is used property is not specified.
@@ -249,14 +249,14 @@ BackupSpec defines a single backup. It must contain all inforomation to connect 
 
 
 
-[id="{anchor_prefix}-github-com-vshn-k8up-api-v1-check"]
+[id="{anchor_prefix}-github-com-k8up-io-k8up-api-v1-check"]
 === Check 
 
 Check is the Schema for the checks API
 
 .Appears In:
 ****
-- xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-checklist[$$CheckList$$]
+- xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-checklist[$$CheckList$$]
 ****
 
 [cols="25a,75a", options="header"]
@@ -266,11 +266,11 @@ Check is the Schema for the checks API
 | *`kind`* __string__ | `Check`
 | *`metadata`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#objectmeta-v1-meta[$$ObjectMeta$$]__ | Refer to Kubernetes API documentation for fields of `metadata`.
 
-| *`spec`* __xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-checkspec[$$CheckSpec$$]__ | 
+| *`spec`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-checkspec[$$CheckSpec$$]__ | 
 |===
 
 
-[id="{anchor_prefix}-github-com-vshn-k8up-api-v1-checklist"]
+[id="{anchor_prefix}-github-com-k8up-io-k8up-api-v1-checklist"]
 === CheckList 
 
 CheckList contains a list of Check
@@ -284,43 +284,43 @@ CheckList contains a list of Check
 | *`kind`* __string__ | `CheckList`
 | *`metadata`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#listmeta-v1-meta[$$ListMeta$$]__ | Refer to Kubernetes API documentation for fields of `metadata`.
 
-| *`items`* __xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-check[$$Check$$]__ | 
+| *`items`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-check[$$Check$$]__ | 
 |===
 
 
-[id="{anchor_prefix}-github-com-vshn-k8up-api-v1-checkschedule"]
+[id="{anchor_prefix}-github-com-k8up-io-k8up-api-v1-checkschedule"]
 === CheckSchedule 
 
 CheckSchedule manages the schedules for the checks
 
 .Appears In:
 ****
-- xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-schedulespec[$$ScheduleSpec$$]
+- xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-schedulespec[$$ScheduleSpec$$]
 ****
 
 [cols="25a,75a", options="header"]
 |===
 | Field | Description
-| *`CheckSpec`* __xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-checkspec[$$CheckSpec$$]__ | 
-| *`ScheduleCommon`* __xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-schedulecommon[$$ScheduleCommon$$]__ | 
+| *`CheckSpec`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-checkspec[$$CheckSpec$$]__ | 
+| *`ScheduleCommon`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-schedulecommon[$$ScheduleCommon$$]__ | 
 |===
 
 
-[id="{anchor_prefix}-github-com-vshn-k8up-api-v1-checkspec"]
+[id="{anchor_prefix}-github-com-k8up-io-k8up-api-v1-checkspec"]
 === CheckSpec 
 
 CheckSpec defines the desired state of Check. It needs to contain the repository information.
 
 .Appears In:
 ****
-- xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-check[$$Check$$]
-- xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-checkschedule[$$CheckSchedule$$]
+- xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-check[$$Check$$]
+- xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-checkschedule[$$CheckSchedule$$]
 ****
 
 [cols="25a,75a", options="header"]
 |===
 | Field | Description
-| *`RunnableSpec`* __xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-runnablespec[$$RunnableSpec$$]__ | 
+| *`RunnableSpec`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-runnablespec[$$RunnableSpec$$]__ | 
 | *`promURL`* __string__ | PromURL sets a prometheus push URL where the backup container send metrics to
 | *`keepJobs`* __integer__ | KeepJobs amount of jobs to keep for later analysis. 
  Deprecated: Use FailedJobsHistoryLimit and SuccessfulJobsHistoryLimit respectively.
@@ -329,14 +329,14 @@ CheckSpec defines the desired state of Check. It needs to contain the repository
 |===
 
 
-[id="{anchor_prefix}-github-com-vshn-k8up-api-v1-effectiveschedule"]
+[id="{anchor_prefix}-github-com-k8up-io-k8up-api-v1-effectiveschedule"]
 === EffectiveSchedule 
 
 EffectiveSchedule is the Schema to persist schedules generated from Randomized schedules.
 
 .Appears In:
 ****
-- xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-effectiveschedulelist[$$EffectiveScheduleList$$]
+- xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-effectiveschedulelist[$$EffectiveScheduleList$$]
 ****
 
 [cols="25a,75a", options="header"]
@@ -346,11 +346,11 @@ EffectiveSchedule is the Schema to persist schedules generated from Randomized s
 | *`kind`* __string__ | `EffectiveSchedule`
 | *`metadata`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#objectmeta-v1-meta[$$ObjectMeta$$]__ | Refer to Kubernetes API documentation for fields of `metadata`.
 
-| *`spec`* __xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-effectiveschedulespec[$$EffectiveScheduleSpec$$]__ | 
+| *`spec`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-effectiveschedulespec[$$EffectiveScheduleSpec$$]__ | 
 |===
 
 
-[id="{anchor_prefix}-github-com-vshn-k8up-api-v1-effectiveschedulelist"]
+[id="{anchor_prefix}-github-com-k8up-io-k8up-api-v1-effectiveschedulelist"]
 === EffectiveScheduleList 
 
 EffectiveScheduleList contains a list of EffectiveSchedule
@@ -364,38 +364,38 @@ EffectiveScheduleList contains a list of EffectiveSchedule
 | *`kind`* __string__ | `EffectiveScheduleList`
 | *`metadata`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#listmeta-v1-meta[$$ListMeta$$]__ | Refer to Kubernetes API documentation for fields of `metadata`.
 
-| *`items`* __xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-effectiveschedule[$$EffectiveSchedule$$]__ | 
+| *`items`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-effectiveschedule[$$EffectiveSchedule$$]__ | 
 |===
 
 
-[id="{anchor_prefix}-github-com-vshn-k8up-api-v1-effectiveschedulespec"]
+[id="{anchor_prefix}-github-com-k8up-io-k8up-api-v1-effectiveschedulespec"]
 === EffectiveScheduleSpec 
 
 EffectiveScheduleSpec defines the desired state of EffectiveSchedule
 
 .Appears In:
 ****
-- xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-effectiveschedule[$$EffectiveSchedule$$]
+- xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-effectiveschedule[$$EffectiveSchedule$$]
 ****
 
 [cols="25a,75a", options="header"]
 |===
 | Field | Description
-| *`generatedSchedule`* __xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-scheduledefinition[$$ScheduleDefinition$$]__ | GeneratedSchedule is the effective schedule that is added to Cron
-| *`originalSchedule`* __xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-scheduledefinition[$$ScheduleDefinition$$]__ | OriginalSchedule is the original user-defined schedule definition in the Schedule object.
+| *`generatedSchedule`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-scheduledefinition[$$ScheduleDefinition$$]__ | GeneratedSchedule is the effective schedule that is added to Cron
+| *`originalSchedule`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-scheduledefinition[$$ScheduleDefinition$$]__ | OriginalSchedule is the original user-defined schedule definition in the Schedule object.
 | *`jobType`* __JobType__ | JobType defines to which job type this schedule applies
-| *`scheduleRefs`* __xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-scheduleref[$$ScheduleRef$$] array__ | ScheduleRefs holds a list of schedules for which the generated schedule applies to. The list may omit entries that aren't generated from smart schedules.
+| *`scheduleRefs`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-scheduleref[$$ScheduleRef$$] array__ | ScheduleRefs holds a list of schedules for which the generated schedule applies to. The list may omit entries that aren't generated from smart schedules.
 |===
 
 
-[id="{anchor_prefix}-github-com-vshn-k8up-api-v1-env"]
+[id="{anchor_prefix}-github-com-k8up-io-k8up-api-v1-env"]
 === Env 
 
 
 
 .Appears In:
 ****
-- xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-backuptemplate[$$BackupTemplate$$]
+- xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-backuptemplate[$$BackupTemplate$$]
 ****
 
 [cols="25a,75a", options="header"]
@@ -406,14 +406,14 @@ EffectiveScheduleSpec defines the desired state of EffectiveSchedule
 |===
 
 
-[id="{anchor_prefix}-github-com-vshn-k8up-api-v1-folderrestore"]
+[id="{anchor_prefix}-github-com-k8up-io-k8up-api-v1-folderrestore"]
 === FolderRestore 
 
 
 
 .Appears In:
 ****
-- xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-restoremethod[$$RestoreMethod$$]
+- xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-restoremethod[$$RestoreMethod$$]
 ****
 
 [cols="25a,75a", options="header"]
@@ -423,14 +423,14 @@ EffectiveScheduleSpec defines the desired state of EffectiveSchedule
 |===
 
 
-[id="{anchor_prefix}-github-com-vshn-k8up-api-v1-gcsspec"]
+[id="{anchor_prefix}-github-com-k8up-io-k8up-api-v1-gcsspec"]
 === GCSSpec 
 
 
 
 .Appears In:
 ****
-- xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-backend[$$Backend$$]
+- xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-backend[$$Backend$$]
 ****
 
 
@@ -439,28 +439,28 @@ EffectiveScheduleSpec defines the desired state of EffectiveSchedule
 
 
 
-[id="{anchor_prefix}-github-com-vshn-k8up-api-v1-localspec"]
+[id="{anchor_prefix}-github-com-k8up-io-k8up-api-v1-localspec"]
 === LocalSpec 
 
 
 
 .Appears In:
 ****
-- xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-backend[$$Backend$$]
+- xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-backend[$$Backend$$]
 ****
 
 
 
 
 
-[id="{anchor_prefix}-github-com-vshn-k8up-api-v1-pod"]
+[id="{anchor_prefix}-github-com-k8up-io-k8up-api-v1-pod"]
 === Pod 
 
 Pod is a dummy struct to fix some code generation issues.
 
 .Appears In:
 ****
-- xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-prebackuppodspec[$$PreBackupPodSpec$$]
+- xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-prebackuppodspec[$$PreBackupPodSpec$$]
 ****
 
 [cols="25a,75a", options="header"]
@@ -470,14 +470,14 @@ Pod is a dummy struct to fix some code generation issues.
 |===
 
 
-[id="{anchor_prefix}-github-com-vshn-k8up-api-v1-prebackuppod"]
+[id="{anchor_prefix}-github-com-k8up-io-k8up-api-v1-prebackuppod"]
 === PreBackupPod 
 
 PreBackupPod is the Schema for the prebackuppods API
 
 .Appears In:
 ****
-- xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-prebackuppodlist[$$PreBackupPodList$$]
+- xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-prebackuppodlist[$$PreBackupPodList$$]
 ****
 
 [cols="25a,75a", options="header"]
@@ -487,11 +487,11 @@ PreBackupPod is the Schema for the prebackuppods API
 | *`kind`* __string__ | `PreBackupPod`
 | *`metadata`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#objectmeta-v1-meta[$$ObjectMeta$$]__ | Refer to Kubernetes API documentation for fields of `metadata`.
 
-| *`spec`* __xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-prebackuppodspec[$$PreBackupPodSpec$$]__ | 
+| *`spec`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-prebackuppodspec[$$PreBackupPodSpec$$]__ | 
 |===
 
 
-[id="{anchor_prefix}-github-com-vshn-k8up-api-v1-prebackuppodlist"]
+[id="{anchor_prefix}-github-com-k8up-io-k8up-api-v1-prebackuppodlist"]
 === PreBackupPodList 
 
 PreBackupPodList contains a list of PreBackupPod
@@ -505,18 +505,18 @@ PreBackupPodList contains a list of PreBackupPod
 | *`kind`* __string__ | `PreBackupPodList`
 | *`metadata`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#listmeta-v1-meta[$$ListMeta$$]__ | Refer to Kubernetes API documentation for fields of `metadata`.
 
-| *`items`* __xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-prebackuppod[$$PreBackupPod$$]__ | 
+| *`items`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-prebackuppod[$$PreBackupPod$$]__ | 
 |===
 
 
-[id="{anchor_prefix}-github-com-vshn-k8up-api-v1-prebackuppodspec"]
+[id="{anchor_prefix}-github-com-k8up-io-k8up-api-v1-prebackuppodspec"]
 === PreBackupPodSpec 
 
 PreBackupPodSpec define pods that will be launched during the backup. After the backup has finished (successfully or not), they should be removed again automatically by the operator.
 
 .Appears In:
 ****
-- xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-prebackuppod[$$PreBackupPod$$]
+- xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-prebackuppod[$$PreBackupPod$$]
 ****
 
 [cols="25a,75a", options="header"]
@@ -524,18 +524,18 @@ PreBackupPodSpec define pods that will be launched during the backup. After the 
 | Field | Description
 | *`backupCommand`* __string__ | BackupCommand will be added to the backupcommand annotation on the pod.
 | *`fileExtension`* __string__ | 
-| *`pod`* __xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-pod[$$Pod$$]__ | 
+| *`pod`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-pod[$$Pod$$]__ | 
 |===
 
 
-[id="{anchor_prefix}-github-com-vshn-k8up-api-v1-prune"]
+[id="{anchor_prefix}-github-com-k8up-io-k8up-api-v1-prune"]
 === Prune 
 
 Prune is the Schema for the prunes API
 
 .Appears In:
 ****
-- xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-prunelist[$$PruneList$$]
+- xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-prunelist[$$PruneList$$]
 ****
 
 [cols="25a,75a", options="header"]
@@ -545,11 +545,11 @@ Prune is the Schema for the prunes API
 | *`kind`* __string__ | `Prune`
 | *`metadata`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#objectmeta-v1-meta[$$ObjectMeta$$]__ | Refer to Kubernetes API documentation for fields of `metadata`.
 
-| *`spec`* __xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-prunespec[$$PruneSpec$$]__ | 
+| *`spec`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-prunespec[$$PruneSpec$$]__ | 
 |===
 
 
-[id="{anchor_prefix}-github-com-vshn-k8up-api-v1-prunelist"]
+[id="{anchor_prefix}-github-com-k8up-io-k8up-api-v1-prunelist"]
 === PruneList 
 
 PruneList contains a list of Prune
@@ -563,44 +563,44 @@ PruneList contains a list of Prune
 | *`kind`* __string__ | `PruneList`
 | *`metadata`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#listmeta-v1-meta[$$ListMeta$$]__ | Refer to Kubernetes API documentation for fields of `metadata`.
 
-| *`items`* __xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-prune[$$Prune$$]__ | 
+| *`items`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-prune[$$Prune$$]__ | 
 |===
 
 
-[id="{anchor_prefix}-github-com-vshn-k8up-api-v1-pruneschedule"]
+[id="{anchor_prefix}-github-com-k8up-io-k8up-api-v1-pruneschedule"]
 === PruneSchedule 
 
 PruneSchedule manages the schedules for the prunes
 
 .Appears In:
 ****
-- xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-schedulespec[$$ScheduleSpec$$]
+- xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-schedulespec[$$ScheduleSpec$$]
 ****
 
 [cols="25a,75a", options="header"]
 |===
 | Field | Description
-| *`PruneSpec`* __xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-prunespec[$$PruneSpec$$]__ | 
-| *`ScheduleCommon`* __xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-schedulecommon[$$ScheduleCommon$$]__ | 
+| *`PruneSpec`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-prunespec[$$PruneSpec$$]__ | 
+| *`ScheduleCommon`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-schedulecommon[$$ScheduleCommon$$]__ | 
 |===
 
 
-[id="{anchor_prefix}-github-com-vshn-k8up-api-v1-prunespec"]
+[id="{anchor_prefix}-github-com-k8up-io-k8up-api-v1-prunespec"]
 === PruneSpec 
 
 PruneSpec needs to contain the repository information as well as the desired retention policies.
 
 .Appears In:
 ****
-- xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-prune[$$Prune$$]
-- xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-pruneschedule[$$PruneSchedule$$]
+- xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-prune[$$Prune$$]
+- xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-pruneschedule[$$PruneSchedule$$]
 ****
 
 [cols="25a,75a", options="header"]
 |===
 | Field | Description
-| *`RunnableSpec`* __xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-runnablespec[$$RunnableSpec$$]__ | 
-| *`retention`* __xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-retentionpolicy[$$RetentionPolicy$$]__ | Retention sets how many backups should be kept after a forget and prune
+| *`RunnableSpec`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-runnablespec[$$RunnableSpec$$]__ | 
+| *`retention`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-retentionpolicy[$$RetentionPolicy$$]__ | Retention sets how many backups should be kept after a forget and prune
 | *`keepJobs`* __integer__ | KeepJobs amount of jobs to keep for later analysis. 
  Deprecated: Use FailedJobsHistoryLimit and SuccessfulJobsHistoryLimit respectively.
 | *`failedJobsHistoryLimit`* __integer__ | FailedJobsHistoryLimit amount of failed jobs to keep for later analysis. KeepJobs is used property is not specified.
@@ -608,26 +608,26 @@ PruneSpec needs to contain the repository information as well as the desired ret
 |===
 
 
-[id="{anchor_prefix}-github-com-vshn-k8up-api-v1-restserverspec"]
+[id="{anchor_prefix}-github-com-k8up-io-k8up-api-v1-restserverspec"]
 === RestServerSpec 
 
 
 
 .Appears In:
 ****
-- xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-backend[$$Backend$$]
+- xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-backend[$$Backend$$]
 ****
 
 
 
-[id="{anchor_prefix}-github-com-vshn-k8up-api-v1-restore"]
+[id="{anchor_prefix}-github-com-k8up-io-k8up-api-v1-restore"]
 === Restore 
 
 Restore is the Schema for the restores API
 
 .Appears In:
 ****
-- xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-restorelist[$$RestoreList$$]
+- xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-restorelist[$$RestoreList$$]
 ****
 
 [cols="25a,75a", options="header"]
@@ -637,11 +637,11 @@ Restore is the Schema for the restores API
 | *`kind`* __string__ | `Restore`
 | *`metadata`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#objectmeta-v1-meta[$$ObjectMeta$$]__ | Refer to Kubernetes API documentation for fields of `metadata`.
 
-| *`spec`* __xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-restorespec[$$RestoreSpec$$]__ | 
+| *`spec`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-restorespec[$$RestoreSpec$$]__ | 
 |===
 
 
-[id="{anchor_prefix}-github-com-vshn-k8up-api-v1-restorelist"]
+[id="{anchor_prefix}-github-com-k8up-io-k8up-api-v1-restorelist"]
 === RestoreList 
 
 RestoreList contains a list of Restore
@@ -655,63 +655,63 @@ RestoreList contains a list of Restore
 | *`kind`* __string__ | `RestoreList`
 | *`metadata`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#listmeta-v1-meta[$$ListMeta$$]__ | Refer to Kubernetes API documentation for fields of `metadata`.
 
-| *`items`* __xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-restore[$$Restore$$]__ | 
+| *`items`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-restore[$$Restore$$]__ | 
 |===
 
 
-[id="{anchor_prefix}-github-com-vshn-k8up-api-v1-restoremethod"]
+[id="{anchor_prefix}-github-com-k8up-io-k8up-api-v1-restoremethod"]
 === RestoreMethod 
 
 RestoreMethod contains how and where the restore should happen all the settings are mutual exclusive.
 
 .Appears In:
 ****
-- xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-restorespec[$$RestoreSpec$$]
+- xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-restorespec[$$RestoreSpec$$]
 ****
 
 [cols="25a,75a", options="header"]
 |===
 | Field | Description
-| *`s3`* __xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-s3spec[$$S3Spec$$]__ | 
-| *`folder`* __xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-folderrestore[$$FolderRestore$$]__ | 
+| *`s3`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-s3spec[$$S3Spec$$]__ | 
+| *`folder`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-folderrestore[$$FolderRestore$$]__ | 
 |===
 
 
-[id="{anchor_prefix}-github-com-vshn-k8up-api-v1-restoreschedule"]
+[id="{anchor_prefix}-github-com-k8up-io-k8up-api-v1-restoreschedule"]
 === RestoreSchedule 
 
 RestoreSchedule manages schedules for the restore service
 
 .Appears In:
 ****
-- xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-schedulespec[$$ScheduleSpec$$]
+- xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-schedulespec[$$ScheduleSpec$$]
 ****
 
 [cols="25a,75a", options="header"]
 |===
 | Field | Description
-| *`RestoreSpec`* __xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-restorespec[$$RestoreSpec$$]__ | 
-| *`ScheduleCommon`* __xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-schedulecommon[$$ScheduleCommon$$]__ | 
+| *`RestoreSpec`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-restorespec[$$RestoreSpec$$]__ | 
+| *`ScheduleCommon`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-schedulecommon[$$ScheduleCommon$$]__ | 
 |===
 
 
-[id="{anchor_prefix}-github-com-vshn-k8up-api-v1-restorespec"]
+[id="{anchor_prefix}-github-com-k8up-io-k8up-api-v1-restorespec"]
 === RestoreSpec 
 
 RestoreSpec can either contain an S3 restore point or a local one. For the local one you need to define an existing PVC.
 
 .Appears In:
 ****
-- xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-archivespec[$$ArchiveSpec$$]
-- xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-restore[$$Restore$$]
-- xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-restoreschedule[$$RestoreSchedule$$]
+- xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-archivespec[$$ArchiveSpec$$]
+- xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-restore[$$Restore$$]
+- xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-restoreschedule[$$RestoreSchedule$$]
 ****
 
 [cols="25a,75a", options="header"]
 |===
 | Field | Description
-| *`RunnableSpec`* __xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-runnablespec[$$RunnableSpec$$]__ | 
-| *`restoreMethod`* __xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-restoremethod[$$RestoreMethod$$]__ | 
+| *`RunnableSpec`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-runnablespec[$$RunnableSpec$$]__ | 
+| *`restoreMethod`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-restoremethod[$$RestoreMethod$$]__ | 
 | *`restoreFilter`* __string__ | 
 | *`snapshot`* __string__ | 
 | *`keepJobs`* __integer__ | KeepJobs amount of jobs to keep for later analysis. 
@@ -722,14 +722,14 @@ RestoreSpec can either contain an S3 restore point or a local one. For the local
 |===
 
 
-[id="{anchor_prefix}-github-com-vshn-k8up-api-v1-retentionpolicy"]
+[id="{anchor_prefix}-github-com-k8up-io-k8up-api-v1-retentionpolicy"]
 === RetentionPolicy 
 
 
 
 .Appears In:
 ****
-- xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-prunespec[$$PruneSpec$$]
+- xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-prunespec[$$PruneSpec$$]
 ****
 
 [cols="25a,75a", options="header"]
@@ -747,49 +747,49 @@ RestoreSpec can either contain an S3 restore point or a local one. For the local
 |===
 
 
-[id="{anchor_prefix}-github-com-vshn-k8up-api-v1-runnablespec"]
+[id="{anchor_prefix}-github-com-k8up-io-k8up-api-v1-runnablespec"]
 === RunnableSpec 
 
 RunnableSpec defines the fields that are necessary on the specs of all actions that are translated to k8s jobs eventually.
 
 .Appears In:
 ****
-- xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-backupspec[$$BackupSpec$$]
-- xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-checkspec[$$CheckSpec$$]
-- xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-prunespec[$$PruneSpec$$]
-- xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-restorespec[$$RestoreSpec$$]
+- xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-backupspec[$$BackupSpec$$]
+- xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-checkspec[$$CheckSpec$$]
+- xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-prunespec[$$PruneSpec$$]
+- xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-restorespec[$$RestoreSpec$$]
 ****
 
 [cols="25a,75a", options="header"]
 |===
 | Field | Description
-| *`backend`* __xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-backend[$$Backend$$]__ | Backend contains the restic repo where the job should backup to.
+| *`backend`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-backend[$$Backend$$]__ | Backend contains the restic repo where the job should backup to.
 | *`resources`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#resourcerequirements-v1-core[$$ResourceRequirements$$]__ | Resources describes the compute resource requirements (cpu, memory, etc.)
 | *`podSecurityContext`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#podsecuritycontext-v1-core[$$PodSecurityContext$$]__ | PodSecurityContext describes the security context with which this action shall be executed.
 |===
 
 
-[id="{anchor_prefix}-github-com-vshn-k8up-api-v1-s3spec"]
+[id="{anchor_prefix}-github-com-k8up-io-k8up-api-v1-s3spec"]
 === S3Spec 
 
 
 
 .Appears In:
 ****
-- xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-backend[$$Backend$$]
-- xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-restoremethod[$$RestoreMethod$$]
+- xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-backend[$$Backend$$]
+- xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-restoremethod[$$RestoreMethod$$]
 ****
 
 
 
-[id="{anchor_prefix}-github-com-vshn-k8up-api-v1-schedule"]
+[id="{anchor_prefix}-github-com-k8up-io-k8up-api-v1-schedule"]
 === Schedule 
 
 Schedule is the Schema for the schedules API
 
 .Appears In:
 ****
-- xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-schedulelist[$$ScheduleList$$]
+- xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-schedulelist[$$ScheduleList$$]
 ****
 
 [cols="25a,75a", options="header"]
@@ -799,46 +799,46 @@ Schedule is the Schema for the schedules API
 | *`kind`* __string__ | `Schedule`
 | *`metadata`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#objectmeta-v1-meta[$$ObjectMeta$$]__ | Refer to Kubernetes API documentation for fields of `metadata`.
 
-| *`spec`* __xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-schedulespec[$$ScheduleSpec$$]__ | 
+| *`spec`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-schedulespec[$$ScheduleSpec$$]__ | 
 |===
 
 
-[id="{anchor_prefix}-github-com-vshn-k8up-api-v1-schedulecommon"]
+[id="{anchor_prefix}-github-com-k8up-io-k8up-api-v1-schedulecommon"]
 === ScheduleCommon 
 
 ScheduleCommon contains fields every schedule needs
 
 .Appears In:
 ****
-- xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-archiveschedule[$$ArchiveSchedule$$]
-- xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-backupschedule[$$BackupSchedule$$]
-- xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-checkschedule[$$CheckSchedule$$]
-- xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-pruneschedule[$$PruneSchedule$$]
-- xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-restoreschedule[$$RestoreSchedule$$]
+- xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-archiveschedule[$$ArchiveSchedule$$]
+- xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-backupschedule[$$BackupSchedule$$]
+- xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-checkschedule[$$CheckSchedule$$]
+- xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-pruneschedule[$$PruneSchedule$$]
+- xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-restoreschedule[$$RestoreSchedule$$]
 ****
 
 [cols="25a,75a", options="header"]
 |===
 | Field | Description
-| *`schedule`* __xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-scheduledefinition[$$ScheduleDefinition$$]__ | 
+| *`schedule`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-scheduledefinition[$$ScheduleDefinition$$]__ | 
 | *`concurrentRunsAllowed`* __boolean__ | 
 |===
 
 
-[id="{anchor_prefix}-github-com-vshn-k8up-api-v1-scheduledefinition"]
+[id="{anchor_prefix}-github-com-k8up-io-k8up-api-v1-scheduledefinition"]
 === ScheduleDefinition (string) 
 
 ScheduleDefinition is the actual cron-type expression that defines the interval of the actions.
 
 .Appears In:
 ****
-- xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-effectiveschedulespec[$$EffectiveScheduleSpec$$]
-- xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-schedulecommon[$$ScheduleCommon$$]
+- xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-effectiveschedulespec[$$EffectiveScheduleSpec$$]
+- xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-schedulecommon[$$ScheduleCommon$$]
 ****
 
 
 
-[id="{anchor_prefix}-github-com-vshn-k8up-api-v1-schedulelist"]
+[id="{anchor_prefix}-github-com-k8up-io-k8up-api-v1-schedulelist"]
 === ScheduleList 
 
 ScheduleList contains a list of Schedule
@@ -852,18 +852,18 @@ ScheduleList contains a list of Schedule
 | *`kind`* __string__ | `ScheduleList`
 | *`metadata`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#listmeta-v1-meta[$$ListMeta$$]__ | Refer to Kubernetes API documentation for fields of `metadata`.
 
-| *`items`* __xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-schedule[$$Schedule$$]__ | 
+| *`items`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-schedule[$$Schedule$$]__ | 
 |===
 
 
-[id="{anchor_prefix}-github-com-vshn-k8up-api-v1-scheduleref"]
+[id="{anchor_prefix}-github-com-k8up-io-k8up-api-v1-scheduleref"]
 === ScheduleRef 
 
 ScheduleRef represents a reference to a Schedule resource
 
 .Appears In:
 ****
-- xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-effectiveschedulespec[$$EffectiveScheduleSpec$$]
+- xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-effectiveschedulespec[$$EffectiveScheduleSpec$$]
 ****
 
 [cols="25a,75a", options="header"]
@@ -874,25 +874,25 @@ ScheduleRef represents a reference to a Schedule resource
 |===
 
 
-[id="{anchor_prefix}-github-com-vshn-k8up-api-v1-schedulespec"]
+[id="{anchor_prefix}-github-com-k8up-io-k8up-api-v1-schedulespec"]
 === ScheduleSpec 
 
 ScheduleSpec defines the schedules for the various job types.
 
 .Appears In:
 ****
-- xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-schedule[$$Schedule$$]
+- xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-schedule[$$Schedule$$]
 ****
 
 [cols="25a,75a", options="header"]
 |===
 | Field | Description
-| *`restore`* __xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-restoreschedule[$$RestoreSchedule$$]__ | 
-| *`backup`* __xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-backupschedule[$$BackupSchedule$$]__ | 
-| *`archive`* __xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-archiveschedule[$$ArchiveSchedule$$]__ | 
-| *`check`* __xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-checkschedule[$$CheckSchedule$$]__ | 
-| *`prune`* __xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-pruneschedule[$$PruneSchedule$$]__ | 
-| *`backend`* __xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-backend[$$Backend$$]__ | 
+| *`restore`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-restoreschedule[$$RestoreSchedule$$]__ | 
+| *`backup`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-backupschedule[$$BackupSchedule$$]__ | 
+| *`archive`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-archiveschedule[$$ArchiveSchedule$$]__ | 
+| *`check`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-checkschedule[$$CheckSchedule$$]__ | 
+| *`prune`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-pruneschedule[$$PruneSchedule$$]__ | 
+| *`backend`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-backend[$$Backend$$]__ | 
 | *`keepJobs`* __integer__ | KeepJobs amount of jobs to keep for later analysis. 
  Deprecated: Use FailedJobsHistoryLimit and SuccessfulJobsHistoryLimit respectively.
 | *`failedJobsHistoryLimit`* __integer__ | FailedJobsHistoryLimit amount of failed jobs to keep for later analysis. KeepJobs is used property is not specified.
@@ -906,14 +906,14 @@ ScheduleSpec defines the schedules for the various job types.
 
 
 
-[id="{anchor_prefix}-github-com-vshn-k8up-api-v1-snapshot"]
+[id="{anchor_prefix}-github-com-k8up-io-k8up-api-v1-snapshot"]
 === Snapshot 
 
 Snapshot is the Schema for the snapshots API
 
 .Appears In:
 ****
-- xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-snapshotlist[$$SnapshotList$$]
+- xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-snapshotlist[$$SnapshotList$$]
 ****
 
 [cols="25a,75a", options="header"]
@@ -923,11 +923,11 @@ Snapshot is the Schema for the snapshots API
 | *`kind`* __string__ | `Snapshot`
 | *`metadata`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#objectmeta-v1-meta[$$ObjectMeta$$]__ | Refer to Kubernetes API documentation for fields of `metadata`.
 
-| *`spec`* __xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-snapshotspec[$$SnapshotSpec$$]__ | 
+| *`spec`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-snapshotspec[$$SnapshotSpec$$]__ | 
 |===
 
 
-[id="{anchor_prefix}-github-com-vshn-k8up-api-v1-snapshotlist"]
+[id="{anchor_prefix}-github-com-k8up-io-k8up-api-v1-snapshotlist"]
 === SnapshotList 
 
 SnapshotList contains a list of Snapshot
@@ -941,18 +941,18 @@ SnapshotList contains a list of Snapshot
 | *`kind`* __string__ | `SnapshotList`
 | *`metadata`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#listmeta-v1-meta[$$ListMeta$$]__ | Refer to Kubernetes API documentation for fields of `metadata`.
 
-| *`items`* __xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-snapshot[$$Snapshot$$]__ | 
+| *`items`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-snapshot[$$Snapshot$$]__ | 
 |===
 
 
-[id="{anchor_prefix}-github-com-vshn-k8up-api-v1-snapshotspec"]
+[id="{anchor_prefix}-github-com-k8up-io-k8up-api-v1-snapshotspec"]
 === SnapshotSpec 
 
 SnapshotSpec contains all information needed about a restic snapshot so it can be restored.
 
 .Appears In:
 ****
-- xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-snapshot[$$Snapshot$$]
+- xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-snapshot[$$Snapshot$$]
 ****
 
 [cols="25a,75a", options="header"]
@@ -968,14 +968,14 @@ SnapshotSpec contains all information needed about a restic snapshot so it can b
 
 
 
-[id="{anchor_prefix}-github-com-vshn-k8up-api-v1-swiftspec"]
+[id="{anchor_prefix}-github-com-k8up-io-k8up-api-v1-swiftspec"]
 === SwiftSpec 
 
 
 
 .Appears In:
 ****
-- xref:{anchor_prefix}-github-com-vshn-k8up-api-v1-backend[$$Backend$$]
+- xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-backend[$$Backend$$]
 ****
 
 

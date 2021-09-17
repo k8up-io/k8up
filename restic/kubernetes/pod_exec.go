@@ -12,7 +12,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/remotecommand"
 
-	"github.com/vshn/k8up/restic/logging"
+	"github.com/k8up-io/k8up/restic/logging"
 )
 
 type ExecData struct {

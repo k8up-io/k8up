@@ -14,11 +14,11 @@ import (
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	ctrl "sigs.k8s.io/controller-runtime"
 
-	k8upv1 "github.com/vshn/k8up/api/v1"
-	"github.com/vshn/k8up/cmd"
-	"github.com/vshn/k8up/controllers"
-	"github.com/vshn/k8up/operator/cfg"
-	"github.com/vshn/k8up/operator/executor"
+	k8upv1 "github.com/k8up-io/k8up/api/v1"
+	"github.com/k8up-io/k8up/cmd"
+	"github.com/k8up-io/k8up/controllers"
+	"github.com/k8up-io/k8up/operator/cfg"
+	"github.com/k8up-io/k8up/operator/executor"
 	// +kubebuilder:scaffold:imports
 )
 
@@ -64,7 +64,7 @@ var (
 			&cli.StringFlag{Destination: &cfg.Config.GlobalMemoryResourceRequest, Name: "global-memory-request", EnvVars: []string{"BACKUP_GLOBAL_MEMORY_REQUEST"}, Usage: "set the memory request for scheduled jobs"},
 			&cli.StringFlag{Destination: &cfg.Config.GlobalMemoryResourceLimit, Name: "global-memory-limit", EnvVars: []string{"BACKUP_GLOBAL_MEMORY_LIMIT"}, Usage: "set the memory limit for scheduled jobs"},
 
-			&cli.StringFlag{Destination: &cfg.Config.BackupImage, Name: "image", EnvVars: []string{"BACKUP_IMAGE"}, Value: "quay.io/vshn/k8up:latest", Usage: "URL of the restic image"},
+			&cli.StringFlag{Destination: &cfg.Config.BackupImage, Name: "image", EnvVars: []string{"BACKUP_IMAGE"}, Value: "ghcr.io/k8up-io/k8up:latest", Usage: "URL of the restic image"},
 			&cli.StringSliceFlag{Name: argCommandRestic, EnvVars: []string{"BACKUP_COMMAND_RESTIC"}, Value: cli.NewStringSlice("/usr/local/bin/k8up", "restic"), Usage: "The command that is executed for restic backups."},
 			&cli.StringSliceFlag{Name: argResticOptions, EnvVars: []string{"BACKUP_RESTIC_OPTIONS"}, Usage: "Pass custom restic options in the form 'key=value,key2=value2'. See https://restic.readthedocs.io/en/stable/manual_rest.html?highlight=--option#usage-help"},
 			&cli.StringFlag{Destination: &cfg.Config.MountPath, Name: "datapath", Aliases: []string{"mountpath"}, EnvVars: []string{"BACKUP_DATAPATH"}, Value: "/data", Usage: "to which path the PVCs should get mounted in the backup container"},

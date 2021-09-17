@@ -33,9 +33,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 	// +kubebuilder:scaffold:imports
 
-	k8upv1 "github.com/vshn/k8up/api/v1"
-	"github.com/vshn/k8up/operator/cfg"
-	"github.com/vshn/k8up/operator/executor"
+	k8upv1 "github.com/k8up-io/k8up/api/v1"
+	"github.com/k8up-io/k8up/operator/cfg"
+	"github.com/k8up-io/k8up/operator/executor"
 )
 
 var InvalidNSNameCharacters = regexp.MustCompile("[^a-z0-9-]")
@@ -220,7 +220,7 @@ func (ts *Suite) FetchResource(name types.NamespacedName, object client.Object) 
 	ts.Require().NoError(ts.Client.Get(ts.Ctx, name, object))
 }
 
-// FetchResource fetches resources and puts the items into the given list with the given list options.
+// FetchResources fetches resources and puts the items into the given list with the given list options.
 // Test fails on errors.
 func (ts *Suite) FetchResources(objectList client.ObjectList, opts ...client.ListOption) {
 	ts.Require().NoError(ts.Client.List(ts.Ctx, objectList, opts...))
@@ -236,7 +236,7 @@ func (ts *Suite) MapToRequest(object metav1.Object) ctrl.Request {
 	}
 }
 
-// BeforeTest is invoked just before every test starts
+// SetupTest is invoked just before every test starts
 func (ts *Suite) SetupTest() {
 	ts.NS = rand.String(8)
 	ts.EnsureNS(ts.NS)
@@ -271,7 +271,7 @@ func defaultConfiguration() *cfg.Configuration {
 		BackupCheckSchedule:              "0 0 * * 0",
 		GlobalFailedJobsHistoryLimit:     3,
 		GlobalSuccessfulJobsHistoryLimit: 3,
-		BackupImage:                      "quay.io/vshn/k8up:latest",
+		BackupImage:                      "ghcr.io/k8up-io/k8up:latest",
 		BackupCommandRestic:              []string{"/usr/local/bin/k8up", "restic"},
 		PodExecRoleName:                  "pod-executor",
 		RestartPolicy:                    "OnFailure",

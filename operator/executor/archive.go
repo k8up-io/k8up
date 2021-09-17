@@ -8,10 +8,10 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 
-	k8upv1 "github.com/vshn/k8up/api/v1"
-	"github.com/vshn/k8up/operator/cfg"
-	"github.com/vshn/k8up/operator/job"
-	"github.com/vshn/k8up/operator/observer"
+	k8upv1 "github.com/k8up-io/k8up/api/v1"
+	"github.com/k8up-io/k8up/operator/cfg"
+	"github.com/k8up-io/k8up/operator/job"
+	"github.com/k8up-io/k8up/operator/observer"
 )
 
 const archivePath = "/archive"

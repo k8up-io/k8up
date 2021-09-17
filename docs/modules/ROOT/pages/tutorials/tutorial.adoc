@@ -11,7 +11,7 @@ This situation is so common that we as https://vshn.ch/[VSHN] decided to tackle 
 
 In this tutorial you'll learn how to backup a small https://github.com/kubernetes/minikube[Minikube] cluster running on your computer. We are going to deploy https://min.io/[Minio], https://mariadb.com/[MariaDB], and https://wordpress.org/[WordPress] to this cluster. Then we'll create a blog post on our new website. Later we're going to "deface" it so that we have a valid reason to restore it safely afterwards. Through this process you get to know K8up and its basic capabilities.
 
-NOTE: All the scripts and YAML files are available in https://github.com/vshn/k8up/tree/master/docs/modules/ROOT/examples/tutorial[GitHub].
+NOTE: All the scripts and YAML files are available in https://github.com/k8up-io/k8up/tree/master/docs/modules/ROOT/examples/tutorial[GitHub].
 
 === Requirements
 
@@ -66,7 +66,7 @@ IMPORTANT: On some laptops, running Minikube on battery power severely undermine
 * `kubectl apply -k wordpress`
 
 . Install the CRDs K8up uses:
-* `kubectl apply -f https://github.com/vshn/k8up/releases/download/{k8up_version}/k8up-crd.yaml`
+* `kubectl apply -f https://github.com/k8up-io/k8up/releases/download/{k8up_version}/k8up-crd.yaml`
 
 . Install K8up in Minikube:
 * `helm repo add appuio \https://charts.appuio.ch`

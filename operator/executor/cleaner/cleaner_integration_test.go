@@ -11,10 +11,10 @@ import (
 	"k8s.io/apimachinery/pkg/util/uuid"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	k8upv1 "github.com/vshn/k8up/api/v1"
-	"github.com/vshn/k8up/envtest"
-	"github.com/vshn/k8up/operator/executor/cleaner"
-	"github.com/vshn/k8up/operator/job"
+	k8upv1 "github.com/k8up-io/k8up/api/v1"
+	"github.com/k8up-io/k8up/envtest"
+	"github.com/k8up-io/k8up/operator/executor/cleaner"
+	"github.com/k8up-io/k8up/operator/job"
 )
 
 type CleanerTestSuite struct {
@@ -95,9 +95,9 @@ func jobList(ns string, running, failed, successful int) *k8upv1.RestoreList {
 }
 
 func (ts *CleanerTestSuite) EnsureJobs(jobs *k8upv1.RestoreList) {
-	for _, job := range jobs.Items {
-		ts.EnsureResources(&job)
-		ts.UpdateStatus(&job)
+	for _, jobItem := range jobs.Items {
+		ts.EnsureResources(&jobItem)
+		ts.UpdateStatus(&jobItem)
 	}
 }
 

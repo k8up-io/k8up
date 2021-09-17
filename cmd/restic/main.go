@@ -11,11 +11,11 @@ import (
 	"github.com/urfave/cli/v2"
 	"k8s.io/client-go/tools/clientcmd"
 
-	"github.com/vshn/k8up/cmd"
-	"github.com/vshn/k8up/restic/cfg"
-	resticCli "github.com/vshn/k8up/restic/cli"
-	"github.com/vshn/k8up/restic/kubernetes"
-	"github.com/vshn/k8up/restic/stats"
+	"github.com/k8up-io/k8up/cmd"
+	"github.com/k8up-io/k8up/restic/cfg"
+	resticCli "github.com/k8up-io/k8up/restic/cli"
+	"github.com/k8up-io/k8up/restic/kubernetes"
+	"github.com/k8up-io/k8up/restic/stats"
 )
 
 const (

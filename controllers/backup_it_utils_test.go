@@ -20,8 +20,8 @@ import (
 	controllerruntime "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	k8upv1 "github.com/vshn/k8up/api/v1"
-	k8upObserver "github.com/vshn/k8up/operator/observer"
+	k8upv1 "github.com/k8up-io/k8up/api/v1"
+	k8upObserver "github.com/k8up-io/k8up/operator/observer"
 )
 
 func (ts *BackupTestSuite) newPreBackupPod() *k8upv1.PreBackupPod {

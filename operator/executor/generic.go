@@ -14,12 +14,12 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	k8upv1 "github.com/vshn/k8up/api/v1"
-	"github.com/vshn/k8up/operator/cfg"
-	"github.com/vshn/k8up/operator/executor/cleaner"
-	"github.com/vshn/k8up/operator/job"
-	"github.com/vshn/k8up/operator/observer"
-	"github.com/vshn/k8up/operator/queue"
+	k8upv1 "github.com/k8up-io/k8up/api/v1"
+	"github.com/k8up-io/k8up/operator/cfg"
+	"github.com/k8up-io/k8up/operator/executor/cleaner"
+	"github.com/k8up-io/k8up/operator/job"
+	"github.com/k8up-io/k8up/operator/observer"
+	"github.com/k8up-io/k8up/operator/queue"
 )
 
 type generic struct {

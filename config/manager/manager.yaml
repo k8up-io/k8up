@@ -17,7 +17,7 @@ spec:
         runAsUser: 65532
       containers:
       - name: k8up
-        image: quay.io/vshn/k8up:latest
+        image: ghcr.io/k8up-io/k8up:latest
         args:
           - operator
         env:
