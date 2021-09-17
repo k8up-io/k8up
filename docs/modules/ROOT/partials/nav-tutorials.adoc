@@ -1,2 +1,0 @@
-* xref:tutorials/tutorial.adoc[Introduction]
-* xref:tutorials/presentations.adoc[Presentations]
