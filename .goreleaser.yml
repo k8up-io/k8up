@@ -5,6 +5,7 @@ builds:
   - CGO_ENABLED=0 # this is needed otherwise the Docker image build is faulty
   goarch:
   - amd64
+  - arm64
   goos:
   - linux
 
@@ -15,7 +16,9 @@ snapshot:
   name_template: "{{ incpatch .Version }}-snapshot"
 
 dockers:
-- image_templates:
+- &image_template
+  id: docker-amd64
+  image_templates:
   - "ghcr.io/k8up-io/k8up:v{{ .Version }}"
   - "quay.io/k8up-io/k8up:v{{ .Version }}"
 
@@ -27,6 +30,10 @@ dockers:
 
   - "{{ if not .Prerelease }}ghcr.io/k8up-io/k8up:latest{{ end }}"
   - "{{ if not .Prerelease }}quay.io/k8up-io/k8up:latest{{ end }}"
+  goarch: amd64
+- <<: *image_template
+  id: docker-arm64
+  goarch: arm64
 
 release:
   prerelease: auto

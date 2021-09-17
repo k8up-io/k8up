@@ -130,7 +130,8 @@ help: ## Show this help
 # Build the binary without running generators
 .PHONY: $(BIN_FILENAME)
 $(BIN_FILENAME): export CGO_ENABLED = 0
-$(BIN_FILENAME): export GOOS = linux
+$(BIN_FILENAME): export GOOS = $(K8UP_GOOS)
+$(BIN_FILENAME): export GOARCH = $(K8UP_GOARCH)
 $(BIN_FILENAME):
 	$(go_build)
 

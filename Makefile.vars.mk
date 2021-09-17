@@ -1,6 +1,8 @@
 IMG_TAG ?= latest
 
 K8UP_MAIN_GO ?= cmd/k8up/main.go
+K8UP_GOOS ?= linux
+K8UP_GOARCH ?= amd64
 
 CURDIR ?= $(shell pwd)
 BIN_FILENAME ?= $(CURDIR)/$(PROJECT_ROOT_DIR)/k8up
