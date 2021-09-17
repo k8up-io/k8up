@@ -3,7 +3,7 @@
 TIP: See xref:how-tos/upgrade.adoc#upgrade_1_to_2[the upgrade instructions] for detailed instructions about how to upgrade from version `0.x` to `1.x`.
 
 https://github.com/k8up-io/k8up/releases/tag/v2.0.0[K8up v2.0] is another milestone for K8up.
-Because of the move to it's own GitHub organisation, some resources have been renamed.
+Because of the move to it's own GitHub organization, some resources have been renamed.
 This makes K8up `2.x` incompatible with previous resources.
 
 Previously, the code that invoked the `restic` binary was in its own project, which was called `wrestic`.

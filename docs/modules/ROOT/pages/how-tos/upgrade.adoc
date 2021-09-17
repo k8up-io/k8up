@@ -7,8 +7,8 @@ WARNING: Never remove the CRDs, as you might lose the respective resources!
 
 TIP: See also xref:explanations/what-has-changed-in-v2.adoc[].
 
-Only little has changed on from a user's perspective in K8up 2.x, but a lot did change under the hood nonetheless.
-Some of these changes may require you to update your configuration of K8up.
+Because of the move of K8up to it's own GitHub organization, and a cleanup of several namings, there are visible changes from a user's perspective in K8up 2.x, which require (manual) intervention for a successful upgrade.
+These changes require you to update your configuration of K8up.
 
 === Move to our own GitHub organization
 
@@ -31,7 +31,7 @@ Our reference helm chart is still at https://github.com/appuio/charts/ and was u
 
 === Wrestic Integration
 
-We have integrated the code previously known as the `wrestic` into k8up.
+We have integrated the code previously known as `wrestic` into k8up.
 This may have several consequences for you:
 
 - If you reference any `vshn/wrestic` image in your K8up configuration, then you need to update the reference to `ghcr.io/k8up-io/k8up` or `quay.io/k8up-io/k8up`.
