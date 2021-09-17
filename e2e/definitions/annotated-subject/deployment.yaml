@@ -13,8 +13,8 @@ spec:
       labels:
         app: subject
       annotations:
-        k8up.syn.tools/backupcommand: '/tmp/test.sh'
-        k8up.syn.tools/file-extension: '.txt'
+        k8up.io/backupcommand: '/tmp/test.sh'
+        k8up.io/file-extension: '.txt'
     spec:
       containers:
       - name: subject-container

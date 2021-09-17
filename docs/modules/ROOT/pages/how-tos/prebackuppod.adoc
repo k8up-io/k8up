@@ -54,7 +54,7 @@ You can also add it to any pods that are running in the namespace:
 
 [source,title="via kubectl"]
 --
-kubectl -n ${YOUR_NAMESPACE} annotate pods ${YOUR_POD_NAME} "k8up.syn.tools/backupcommand=/bin/bash -c 'mysqldump -uroot -p\"\${MARIADB_ROOT_PASSWORD}\" --all-databases'" --overwrite
+kubectl -n ${YOUR_NAMESPACE} annotate pods ${YOUR_POD_NAME} "k8up.io/backupcommand=/bin/bash -c 'mysqldump -uroot -p\"\${MARIADB_ROOT_PASSWORD}\" --all-databases'" --overwrite
 --
 
 [source,title="in the manifest"]
@@ -67,7 +67,7 @@ spec:
       labels:
         app: mariadb
       annotations:
-        k8up.syn.tools/backupcommand: /bin/bash -c 'mysqldump -uroot -p "${MARIADB_ROOT_PASSWORD}" --all-databases'
+        k8up.io/backupcommand: /bin/bash -c 'mysqldump -uroot -p "${MARIADB_ROOT_PASSWORD}" --all-databases'
 --
 ====
 

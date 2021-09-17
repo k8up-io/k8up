@@ -7,7 +7,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
-	k8upv1alpha1 "github.com/vshn/k8up/api/v1alpha1"
+	k8upv1 "github.com/vshn/k8up/api/v1alpha1"
 	"github.com/vshn/k8up/operator/cfg"
 	"github.com/vshn/k8up/operator/job"
 	"github.com/vshn/k8up/operator/scheduler"
@@ -16,16 +16,16 @@ import (
 // ScheduleHandler handles the reconciles for the schedules. Schedules are a special
 // type of k8up objects as they will only trigger jobs indirectly.
 type ScheduleHandler struct {
-	schedule           *k8upv1alpha1.Schedule
-	effectiveSchedules map[k8upv1alpha1.JobType]k8upv1alpha1.EffectiveSchedule
+	schedule           *k8upv1.Schedule
+	effectiveSchedules map[k8upv1.JobType]k8upv1.EffectiveSchedule
 	job.Config
 	requireStatusUpdate bool
 }
 
 // NewScheduleHandler will return a new ScheduleHandler.
 func NewScheduleHandler(
-	config job.Config, schedule *k8upv1alpha1.Schedule,
-	effectiveSchedules map[k8upv1alpha1.JobType]k8upv1alpha1.EffectiveSchedule) *ScheduleHandler {
+	config job.Config, schedule *k8upv1.Schedule,
+	effectiveSchedules map[k8upv1.JobType]k8upv1.EffectiveSchedule) *ScheduleHandler {
 
 	return &ScheduleHandler{
 		schedule:           schedule,
@@ -48,7 +48,7 @@ func (s *ScheduleHandler) Handle() error {
 
 	err = scheduler.GetScheduler().SyncSchedules(jobList)
 	if err != nil {
-		s.SetConditionFalseWithMessage(k8upv1alpha1.ConditionReady, k8upv1alpha1.ReasonFailed, "cannot add to cron: %v", err.Error())
+		s.SetConditionFalseWithMessage(k8upv1.ConditionReady, k8upv1.ReasonFailed, "cannot add to cron: %v", err.Error())
 		return err
 	}
 
@@ -57,10 +57,16 @@ func (s *ScheduleHandler) Handle() error {
 		return err
 	}
 
-	s.SetConditionTrue(k8upv1alpha1.ConditionReady, k8upv1alpha1.ReasonReady)
+	s.SetConditionTrue(k8upv1.ConditionReady, k8upv1.ReasonReady)
 
-	if !controllerutil.ContainsFinalizer(s.schedule, k8upv1alpha1.ScheduleFinalizerName) {
-		controllerutil.AddFinalizer(s.schedule, k8upv1alpha1.ScheduleFinalizerName)
+	if controllerutil.ContainsFinalizer(s.schedule, k8upv1.LegacyScheduleFinalizerName) {
+		controllerutil.AddFinalizer(s.schedule, k8upv1.ScheduleFinalizerName)
+		controllerutil.RemoveFinalizer(s.schedule, k8upv1.LegacyScheduleFinalizerName)
+		return s.updateSchedule()
+	}
+
+	if !controllerutil.ContainsFinalizer(s.schedule, k8upv1.ScheduleFinalizerName) {
+		controllerutil.AddFinalizer(s.schedule, k8upv1.ScheduleFinalizerName)
 		return s.updateSchedule()
 	}
 	return nil
@@ -72,14 +78,14 @@ func (s *ScheduleHandler) createJobList() scheduler.JobList {
 		Jobs:   make([]scheduler.Job, 0),
 	}
 
-	for jobType, jb := range map[k8upv1alpha1.JobType]k8upv1alpha1.ScheduleSpecInterface{
-		k8upv1alpha1.PruneType:   s.schedule.Spec.Prune,
-		k8upv1alpha1.BackupType:  s.schedule.Spec.Backup,
-		k8upv1alpha1.CheckType:   s.schedule.Spec.Check,
-		k8upv1alpha1.RestoreType: s.schedule.Spec.Restore,
-		k8upv1alpha1.ArchiveType: s.schedule.Spec.Archive,
+	for jobType, jb := range map[k8upv1.JobType]k8upv1.ScheduleSpecInterface{
+		k8upv1.PruneType:   s.schedule.Spec.Prune,
+		k8upv1.BackupType:  s.schedule.Spec.Backup,
+		k8upv1.CheckType:   s.schedule.Spec.Check,
+		k8upv1.RestoreType: s.schedule.Spec.Restore,
+		k8upv1.ArchiveType: s.schedule.Spec.Archive,
 	} {
-		if k8upv1alpha1.IsNil(jb) {
+		if k8upv1.IsNil(jb) {
 			s.cleanupEffectiveSchedules(jobType, "")
 			continue
 		}
@@ -96,13 +102,13 @@ func (s *ScheduleHandler) createJobList() scheduler.JobList {
 	return jobList
 }
 
-func (s *ScheduleHandler) mergeWithDefaults(specInstance *k8upv1alpha1.RunnableSpec) {
+func (s *ScheduleHandler) mergeWithDefaults(specInstance *k8upv1.RunnableSpec) {
 	s.mergeResourcesWithDefaults(specInstance)
 	s.mergeBackendWithDefaults(specInstance)
 	s.mergeSecurityContextWithDefaults(specInstance)
 }
 
-func (s *ScheduleHandler) mergeResourcesWithDefaults(specInstance *k8upv1alpha1.RunnableSpec) {
+func (s *ScheduleHandler) mergeResourcesWithDefaults(specInstance *k8upv1.RunnableSpec) {
 	resources := &specInstance.Resources
 
 	if err := mergo.Merge(resources, s.schedule.Spec.ResourceRequirementsTemplate); err != nil {
@@ -113,7 +119,7 @@ func (s *ScheduleHandler) mergeResourcesWithDefaults(specInstance *k8upv1alpha1.
 	}
 }
 
-func (s *ScheduleHandler) mergeBackendWithDefaults(specInstance *k8upv1alpha1.RunnableSpec) {
+func (s *ScheduleHandler) mergeBackendWithDefaults(specInstance *k8upv1.RunnableSpec) {
 	if specInstance.Backend == nil {
 		specInstance.Backend = s.schedule.Spec.Backend.DeepCopy()
 		return
@@ -124,7 +130,7 @@ func (s *ScheduleHandler) mergeBackendWithDefaults(specInstance *k8upv1alpha1.Ru
 	}
 }
 
-func (s *ScheduleHandler) mergeSecurityContextWithDefaults(specInstance *k8upv1alpha1.RunnableSpec) {
+func (s *ScheduleHandler) mergeSecurityContextWithDefaults(specInstance *k8upv1.RunnableSpec) {
 	if specInstance.PodSecurityContext == nil {
 		specInstance.PodSecurityContext = s.schedule.Spec.PodSecurityContext.DeepCopy()
 		return
@@ -142,7 +148,7 @@ func (s *ScheduleHandler) updateSchedule() error {
 	return nil
 }
 
-func (s *ScheduleHandler) createRandomSchedule(jobType k8upv1alpha1.JobType, originalSchedule k8upv1alpha1.ScheduleDefinition) (k8upv1alpha1.ScheduleDefinition, error) {
+func (s *ScheduleHandler) createRandomSchedule(jobType k8upv1.JobType, originalSchedule k8upv1.ScheduleDefinition) (k8upv1.ScheduleDefinition, error) {
 	seed := s.createSeed(s.schedule, jobType)
 	randomizedSchedule, err := randomizeSchedule(seed, originalSchedule)
 	if err != nil {
@@ -156,8 +162,8 @@ func (s *ScheduleHandler) createRandomSchedule(jobType k8upv1alpha1.JobType, ori
 // finalizeSchedule ensures that all associated resources are cleaned up.
 // It also removes the schedule definitions from internal scheduler.
 func (s *ScheduleHandler) finalizeSchedule() error {
-	namespacedName := k8upv1alpha1.MapToNamespacedName(s.schedule)
-	controllerutil.RemoveFinalizer(s.schedule, k8upv1alpha1.ScheduleFinalizerName)
+	namespacedName := k8upv1.MapToNamespacedName(s.schedule)
+	controllerutil.RemoveFinalizer(s.schedule, k8upv1.ScheduleFinalizerName)
 	scheduler.GetScheduler().RemoveSchedules(namespacedName)
 	for jobType := range s.effectiveSchedules {
 		s.cleanupEffectiveSchedules(jobType, "")

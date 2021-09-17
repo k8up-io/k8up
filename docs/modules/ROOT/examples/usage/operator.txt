@@ -8,9 +8,9 @@ DESCRIPTION:
    Start k8up in operator mode
 
 OPTIONS:
-   --annotation value                                  the annotation to be used for filtering (default: "k8up.syn.tools/backup") [$BACKUP_ANNOTATION]
-   --backupcommandannotation value                     set the annotation name that identify the backup commands on Pods (default: "k8up.syn.tools/backupcommand") [$BACKUP_BACKUPCOMMANDANNOTATION]
-   --fileextensionannotation value                     set the annotation name where the file extension is stored for backup commands (default: "k8up.syn.tools/file-extension") [$BACKUP_FILEEXTENSIONANNOTATION]
+   --annotation value                                  the annotation to be used for filtering (default: "k8up.io/backup") [$BACKUP_ANNOTATION]
+   --backupcommandannotation value                     set the annotation name that identify the backup commands on Pods (default: "k8up.io/backupcommand") [$BACKUP_BACKUPCOMMANDANNOTATION]
+   --fileextensionannotation value                     set the annotation name where the file extension is stored for backup commands (default: "k8up.io/file-extension") [$BACKUP_FILEEXTENSIONANNOTATION]
    --global-failed-jobs-history-limit value            set the number of old, failed jobs to keep when cleaning up, applies to all job types (default: 3) [$BACKUP_GLOBAL_FAILED_JOBS_HISTORY_LIMIT]
    --global-successful-jobs-history-limit value        set the number of old, successful jobs to keep when cleaning up, applies to all job types (default: 3) [$BACKUP_GLOBAL_SUCCESSFUL_JOBS_HISTORY_LIMIT]
    --global-concurrent-archive-jobs-limit value        set the limit of concurrent archive jobs (default: unlimited) [$BACKUP_GLOBAL_CONCURRENT_ARCHIVE_JOBS_LIMIT]

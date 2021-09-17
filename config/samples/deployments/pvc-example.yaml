@@ -3,7 +3,7 @@ apiVersion: v1
 metadata:
   name: myclaim
   annotations:
-    k8up.syn.tools/backup: 'true'
+    k8up.io/backup: 'true'
   namespace: myproject
 spec:
   accessModes:

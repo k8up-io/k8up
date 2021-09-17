@@ -108,7 +108,9 @@ type ScheduleList struct {
 
 const (
 	// ScheduleFinalizerName is a Finalizer added to resources that need cleanup cron schedules before deleting them.
-	ScheduleFinalizerName = "k8up.syn.tools/schedule"
+	ScheduleFinalizerName = "k8up.io/schedule"
+	// Deprecated: LegacyScheduleFinalizerName is a Finalizer added to resources that need cleanup cron schedules before deleting them.
+	LegacyScheduleFinalizerName = "k8up.syn.tools/schedule"
 )
 
 func init() {

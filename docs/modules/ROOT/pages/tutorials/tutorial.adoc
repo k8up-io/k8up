@@ -152,7 +152,7 @@ irrecoverably lost.
 Removing locks...
 created new cache in /root/.cache/restic
 successfully removed locks
-Listing all pods with annotation k8up.syn.tools/backupcommand in namespace default
+Listing all pods with annotation k8up.io/backupcommand in namespace default
 Listing snapshots
 snapshots command:
 0 Snapshots
@@ -305,7 +305,7 @@ spec:
   template:
     metadata:
       annotations:
-        k8up.syn.tools/backupcommand: appuio.ch/backupcommand: /bin/bash -c 'mysqldump -uroot -p"${MARIADB_ROOT_PASSWORD}" --all-databases'
+        k8up.io/backupcommand: appuio.ch/backupcommand: /bin/bash -c 'mysqldump -uroot -p"${MARIADB_ROOT_PASSWORD}" --all-databases'
 ....
 
 Thus the restoration procedure is different.

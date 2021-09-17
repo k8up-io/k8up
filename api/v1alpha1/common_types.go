@@ -80,7 +80,9 @@ const (
 	ReasonWaiting ConditionReason = "Waiting"
 
 	// LabelK8upType is the label key that identifies the job type
-	LabelK8upType = "k8up.syn.tools/type"
+	LabelK8upType = "k8up.io/type"
+	// Deprecated: LegacyLabelK8upType is the former label key that identified the job type
+	LegacyLabelK8upType = "k8up.syn.tools/type"
 	// LabelManagedBy identifies the tool being used to manage the operation of a resource
 	LabelManagedBy = "app.kubernetes.io/managed-by"
 )

@@ -40,8 +40,8 @@ func (b *BackupExecutor) generateDeployments(templates []k8upv1alpha1.PreBackupP
 		}
 
 		podLabels := map[string]string{
-			"k8up.syn.tools/backupCommandPod": "true",
-			"k8up.syn.tools/preBackupPod":     template.Name,
+			"k8up.io/backupCommandPod": "true",
+			"k8up.io/preBackupPod":     template.Name,
 		}
 
 		template.Spec.Pod.PodTemplateSpec.ObjectMeta.Labels = podLabels
@@ -51,7 +51,7 @@ func (b *BackupExecutor) generateDeployments(templates []k8upv1alpha1.PreBackupP
 				Name:      template.GetName(),
 				Namespace: b.Obj.GetMetaObject().GetNamespace(),
 				Labels: labels.Set{
-					"k8up.syn.tools/preBackupPod": template.Name,
+					"k8up.io/preBackupPod": template.Name,
 				},
 			},
 			Spec: appsv1.DeploymentSpec{
