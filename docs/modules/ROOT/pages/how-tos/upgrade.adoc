@@ -18,6 +18,11 @@ As a result, we also updated some names.
 - In the CRD definition, what was `backup.appuio.ch` is now `k8up.io`.
   We've also updated the version from `v1alpha` to `v1`.
   So, for example, `backups.backup.appuio.ch/v1alpha1` becomes `backups.k8up.io/v1`.
+- The default values for the annotations have been changed from `k8up.syn.tools/*` to `k8up.io/*`.
+  Internally used annotations will be handled transparently.
+  But annotations, which have been added to resources (such as `k8up.syn.tools/backupcommand`) need to be updated accordingly (in the previous example to `k8up.io/backupcommand`).
+  Alternatively, you can also change the annotations back in xref:references/operator-config-reference.adoc[the operator's configuration].
+  In the previous example, you could set `BACKUP_BACKUPCOMMANDANNOTATION` to `k8up.syn.tool/backupcommand` to overwrite the new default.
 - If you directly reference our Go code in your Go code, then you will need to update the imports.
   The k8up Go module is now called https://github.com/k8up-io/k8up[`github.com/k8up-io/k8up`].
 
