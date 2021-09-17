@@ -1,2 +1,2 @@
-* xref:k8up:ROOT:tutorials/tutorial.adoc[Introduction]
-* xref:k8up:ROOT:tutorials/presentations.adoc[Presentations]
+* xref:tutorials/tutorial.adoc[Introduction]
+* xref:tutorials/presentations.adoc[Presentations]
