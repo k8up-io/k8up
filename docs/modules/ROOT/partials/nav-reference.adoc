@@ -1,7 +1,0 @@
-* xref:k8up:ROOT:references/annotations.adoc[Annotations Reference]
-* xref:k8up:ROOT:references/api-reference.adoc[API Reference]
-* xref:k8up:ROOT:references/operator-config-reference.adoc[Operator Configuration]
-* xref:k8up:ROOT:references/restic-config-reference.adoc[Restic Configuration]
-* xref:k8up:ROOT:references/object-specifications.adoc[Object Specifications]
-* xref:k8up:ROOT:references/schedule-specification.adoc[Schedule Specifications]
-* xref:k8up:ROOT:references/status.adoc[Status and Conditions]
