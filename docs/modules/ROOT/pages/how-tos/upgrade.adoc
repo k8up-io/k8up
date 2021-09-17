@@ -1,6 +1,51 @@
 = How to Upgrade K8up
 
+WARNING: Never remove the CRDs, as you might lose the respective resources!
+
+[#upgrade_1_to_2]
+== Upgrade K8up from 1.x to 2.x
+
+TIP: See also xref:explanations/what-has-changed-in-v2.adoc[].
+
+Because of the move of K8up to it's own GitHub organization, and a cleanup of several namings, there are visible changes from a user's perspective in K8up 2.x, which require (manual) intervention for a successful upgrade.
+These changes require you to update your configuration of K8up.
+
+=== Move to our own GitHub organization
+
+We have moved K8up into it's own https://github.com/k8up-io[GitHub organization].
+As a result, we also updated some names.
+
+- In the CRD definition, what was `backup.appuio.ch` is now `k8up.io`.
+  We've also updated the version from `v1alpha` to `v1`.
+  So, for example, `backups.backup.appuio.ch/v1alpha1` becomes `backups.k8up.io/v1`.
+- The default values for the annotations have been changed from `k8up.syn.tools/*` to `k8up.io/*`.
+  Internally used annotations will be handled transparently.
+  But annotations, which have been added to resources (such as `k8up.syn.tools/backupcommand`) need to be updated accordingly (in the previous example to `k8up.io/backupcommand`).
+  Alternatively, you can also change the annotations back in xref:references/operator-config-reference.adoc[the operator's configuration].
+  In the previous example, you could set `BACKUP_BACKUPCOMMANDANNOTATION` to `k8up.syn.tool/backupcommand` to overwrite the new default.
+- If you directly reference our Go code in your Go code, then you will need to update the imports.
+  The k8up Go module is now called https://github.com/k8up-io/k8up[`github.com/k8up-io/k8up`].
+
+Our docs are still at https://k8up.io.
+Our reference helm chart is still at https://github.com/appuio/charts/ and was updated accordingly.
+
+=== Wrestic Integration
+
+We have integrated the code previously known as `wrestic` into k8up.
+This may have several consequences for you:
+
+- If you reference any `vshn/wrestic` image in your K8up configuration, then you need to update the reference to `ghcr.io/k8up-io/k8up` or `quay.io/k8up-io/k8up`.
+This would usually be done in the configuration for the respective Helm chart.
+Our reference helm chart was updated accordingly.
+- If you changed the `command` (or `args`, respectively) of the `vshn/k8up` or `vshn/wrestic` Docker images, then you will need to update them.
+`k8up` becomes `k8up operator`, while `wrestic` becomes `k8up restic`.
+- If you relied on the `-nonroot` images of `vshn/wrestic`, then you need to update your configuration.
+Since version 2.0 you're able to specify a `podSecurityContext` on the `Schedule` level as well on each of the actions, like on `Backup`, `Restore` and the likes.
+
+[#upgrade_0_to_1]
 == Upgrade K8up from 0.x to 1.x
+
+TIP: See also xref:explanations/what-has-changed-in-v1.adoc[].
 
 The upgrade is generally done with the following steps:
 
@@ -8,8 +53,6 @@ The upgrade is generally done with the following steps:
 . Uninstall K8up `0.x`
 . Install K8up `1.x`
 . Verify your backups work
-
-WARNING: Do not remove the CRDs, as you might loose the resources!
 
 === Prerequisites
 

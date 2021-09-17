@@ -1,0 +1,25 @@
+= Changes in K8up v2.0
+
+TIP: See xref:how-tos/upgrade.adoc#upgrade_1_to_2[the upgrade instructions] for detailed instructions about how to upgrade from version `0.x` to `1.x`.
+
+https://github.com/k8up-io/k8up/releases/tag/v2.0.0[K8up v2.0] is another milestone for K8up.
+Because of the move to it's own GitHub organization, some resources have been renamed.
+This makes K8up `2.x` incompatible with previous resources.
+
+Previously, the code that invoked the `restic` binary was in its own project, which was called `wrestic`.
+Over time, we realised that the two components are tightly coupled.
+For users, it was not clear, whether a bug was in the _wrestic_ code or in the _k8up_ code.
+Neither was it clear to us, all the time.
+Therefore, we decided that it would be best to merge the two repositories into one.
+
+We expect this to have additional benefits.
+For one, there is only one Docker image going forward, `ghcr.io/k8up-io/k8up` (or `quay.io/k8up-io/k8up`, respectively).
+It contains all the code for both parts, the operator and the restic adapter, and they can be released together as one.
+Because often the release of one component required a release of the other component anyway.
+
+We also believe that the merge made K8up easier to comprehend.
+We hope that in the future both parts can also share more code.
+For now, their CLI interfaces have been aligned, which already helps during development.
+
+We have big plans for future versions of K8up, but they all require a solid foundation.
+We believe that K8up v2 is that solid foundation.
