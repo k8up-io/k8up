@@ -11,7 +11,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 
-	k8upv1alpha1 "github.com/vshn/k8up/api/v1alpha1"
+	k8upv1 "github.com/vshn/k8up/api/v1"
 	"github.com/vshn/k8up/operator/cfg"
 	"github.com/vshn/k8up/operator/handler"
 	"github.com/vshn/k8up/operator/job"
@@ -24,14 +24,14 @@ type RestoreReconciler struct {
 	Scheme *runtime.Scheme
 }
 
-// +kubebuilder:rbac:groups=backup.appuio.ch,resources=restores,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=backup.appuio.ch,resources=restores/status;restores/finalizers,verbs=get;update;patch
+// +kubebuilder:rbac:groups=k8up.io,resources=restores,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=k8up.io,resources=restores/status;restores/finalizers,verbs=get;update;patch
 
 // Reconcile is the entrypoint to manage the given resource.
 func (r *RestoreReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := r.Log.WithValues("restore", req.NamespacedName)
 
-	restore := &k8upv1alpha1.Restore{}
+	restore := &k8upv1.Restore{}
 	err := r.Get(ctx, req.NamespacedName, restore)
 	if err != nil {
 		if errors.IsNotFound(err) {
@@ -60,7 +60,7 @@ func (r *RestoreReconciler) SetupWithManager(mgr ctrl.Manager, l logr.Logger) er
 	r.Scheme = mgr.GetScheme()
 	r.Log = l
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&k8upv1alpha1.Restore{}).
+		For(&k8upv1.Restore{}).
 		WithEventFilter(predicate.GenerationChangedPredicate{}).
 		Complete(r)
 }

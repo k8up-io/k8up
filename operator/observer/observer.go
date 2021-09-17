@@ -13,7 +13,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/metrics"
 
-	"github.com/vshn/k8up/api/v1alpha1"
+	k8upv1 "github.com/vshn/k8up/api/v1"
 )
 
 const (
@@ -62,7 +62,7 @@ type Observer struct {
 // ObservableJob defines a batchv1.job that is being observed by the Observer.
 type ObservableJob struct {
 	Job        *batchv1.Job
-	JobType    v1alpha1.JobType
+	JobType    k8upv1.JobType
 	Event      EventType
 	Exclusive  bool
 	Repository string
@@ -218,7 +218,7 @@ func (o *Observer) IsAnyJobRunning(repository string) bool {
 
 // IsConcurrentJobsLimitReached checks if the limit of concurrent jobs by type (backup, check, etc)
 // has been reached
-func (o *Observer) IsConcurrentJobsLimitReached(jobType v1alpha1.JobType, limit int) bool {
+func (o *Observer) IsConcurrentJobsLimitReached(jobType k8upv1.JobType, limit int) bool {
 	if limit <= 0 {
 		return false
 	}
@@ -255,12 +255,12 @@ func (o *Observer) RegisterCallback(name string, callback ObservableJobCallback)
 	}
 }
 
-func incFailureCounters(namespace string, jobType v1alpha1.JobType) {
+func incFailureCounters(namespace string, jobType k8upv1.JobType) {
 	metricsFailureCounter.WithLabelValues(namespace, jobType.String()).Inc()
 	metricsTotalCounter.WithLabelValues(namespace, jobType.String()).Inc()
 }
 
-func incSuccessCounters(namespace string, jobType v1alpha1.JobType) {
+func incSuccessCounters(namespace string, jobType k8upv1.JobType) {
 	metricsSuccessCounter.WithLabelValues(namespace, jobType.String()).Inc()
 	metricsTotalCounter.WithLabelValues(namespace, jobType.String()).Inc()
 }

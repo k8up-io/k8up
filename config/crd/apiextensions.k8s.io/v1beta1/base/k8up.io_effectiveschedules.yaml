@@ -1,0 +1,95 @@
+
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.5.0
+  creationTimestamp: null
+  name: effectiveschedules.k8up.io
+spec:
+  additionalPrinterColumns:
+  - JSONPath: .spec.scheduleRefs[0].namespace
+    description: Schedule Namespace
+    name: Schedule Namespace
+    type: string
+  - JSONPath: .spec.scheduleRefs[0].name
+    description: Schedule Name
+    name: Schedule Name
+    type: string
+  - JSONPath: .spec.generatedSchedule
+    description: Generated Schedule
+    name: Generated Schedule
+    type: string
+  - JSONPath: .spec.jobType
+    description: Job Type
+    name: Job Type
+    type: string
+  - JSONPath: .metadata.creationTimestamp
+    name: Age
+    type: date
+  group: k8up.io
+  names:
+    kind: EffectiveSchedule
+    listKind: EffectiveScheduleList
+    plural: effectiveschedules
+    singular: effectiveschedule
+  scope: Namespaced
+  subresources: {}
+  validation:
+    openAPIV3Schema:
+      description: EffectiveSchedule is the Schema to persist schedules generated
+        from Randomized schedules.
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        spec:
+          description: EffectiveScheduleSpec defines the desired state of EffectiveSchedule
+          properties:
+            generatedSchedule:
+              description: GeneratedSchedule is the effective schedule that is added
+                to Cron
+              type: string
+            jobType:
+              description: JobType defines to which job type this schedule applies
+              type: string
+            originalSchedule:
+              description: OriginalSchedule is the original user-defined schedule
+                definition in the Schedule object.
+              type: string
+            scheduleRefs:
+              description: ScheduleRefs holds a list of schedules for which the generated
+                schedule applies to. The list may omit entries that aren't generated
+                from smart schedules.
+              items:
+                description: ScheduleRef represents a reference to a Schedule resource
+                properties:
+                  name:
+                    type: string
+                  namespace:
+                    type: string
+                type: object
+              type: array
+          type: object
+      type: object
+  version: v1
+  versions:
+  - name: v1
+    served: true
+    storage: true
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []

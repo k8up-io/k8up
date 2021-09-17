@@ -14,7 +14,7 @@ import (
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	ctrl "sigs.k8s.io/controller-runtime"
 
-	k8upv1alpha1 "github.com/vshn/k8up/api/v1alpha1"
+	k8upv1 "github.com/vshn/k8up/api/v1"
 	"github.com/vshn/k8up/cmd"
 	"github.com/vshn/k8up/controllers"
 	"github.com/vshn/k8up/operator/cfg"
@@ -140,7 +140,7 @@ func k8upScheme() *runtime.Scheme {
 	scheme := runtime.NewScheme()
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 	utilruntime.Must(batchv1.AddToScheme(scheme))
-	utilruntime.Must(k8upv1alpha1.AddToScheme(scheme))
+	utilruntime.Must(k8upv1.AddToScheme(scheme))
 	// +kubebuilder:scaffold:scheme
 	return scheme
 }

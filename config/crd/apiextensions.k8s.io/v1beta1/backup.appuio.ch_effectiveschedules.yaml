@@ -6,9 +6,9 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.4.1
   creationTimestamp: null
-  name: effectiveschedules.backup.appuio.ch
+  name: effectiveschedules.k8up.io
 spec:
-  group: backup.appuio.ch
+  group: k8up.io
   names:
     kind: EffectiveSchedule
     listKind: EffectiveScheduleList
@@ -99,9 +99,9 @@ spec:
               type: array
           type: object
       type: object
-  version: v1alpha1
+  version: v1
   versions:
-  - name: v1alpha1
+  - name: v1
     served: true
     storage: true
 status:

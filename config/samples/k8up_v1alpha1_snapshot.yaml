@@ -1,4 +1,0 @@
-apiVersion: backup.appuio.ch/v1alpha1
-kind: Snapshot
-metadata:
-  name: snapshot-sample

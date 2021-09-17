@@ -11,7 +11,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 
-	k8upv1alpha1 "github.com/vshn/k8up/api/v1alpha1"
+	k8upv1 "github.com/vshn/k8up/api/v1"
 	"github.com/vshn/k8up/operator/cfg"
 	"github.com/vshn/k8up/operator/handler"
 	"github.com/vshn/k8up/operator/job"
@@ -24,14 +24,14 @@ type ArchiveReconciler struct {
 	Scheme *runtime.Scheme
 }
 
-// +kubebuilder:rbac:groups=backup.appuio.ch,resources=archives,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=backup.appuio.ch,resources=archives/status;archives/finalizers,verbs=get;update;patch
+// +kubebuilder:rbac:groups=k8up.io,resources=archives,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=k8up.io,resources=archives/status;archives/finalizers,verbs=get;update;patch
 
 // Reconcile is the entrypoint to manage the given resource.
 func (r *ArchiveReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := r.Log.WithValues("archive", req.NamespacedName)
 
-	archive := &k8upv1alpha1.Archive{}
+	archive := &k8upv1.Archive{}
 	err := r.Get(ctx, req.NamespacedName, archive)
 	if err != nil {
 		if errors.IsNotFound(err) {
@@ -61,7 +61,7 @@ func (r *ArchiveReconciler) SetupWithManager(mgr ctrl.Manager, l logr.Logger) er
 	r.Scheme = mgr.GetScheme()
 	r.Log = l
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&k8upv1alpha1.Archive{}).
+		For(&k8upv1.Archive{}).
 		WithEventFilter(predicate.GenerationChangedPredicate{}).
 		Complete(r)
 }

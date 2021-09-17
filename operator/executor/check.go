@@ -7,7 +7,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 
-	k8upv1alpha1 "github.com/vshn/k8up/api/v1alpha1"
+	k8upv1 "github.com/vshn/k8up/api/v1"
 	"github.com/vshn/k8up/operator/cfg"
 	"github.com/vshn/k8up/operator/job"
 	"github.com/vshn/k8up/operator/observer"
@@ -16,7 +16,7 @@ import (
 // CheckExecutor will execute the batch.job for checks.
 type CheckExecutor struct {
 	generic
-	check *k8upv1alpha1.Check
+	check *k8upv1.Check
 }
 
 // NewCheckExecutor will return a new executor for check jobs.
@@ -38,7 +38,7 @@ func (*CheckExecutor) Exclusive() bool {
 
 // Execute creates the actual batch.job on the k8s api.
 func (c *CheckExecutor) Execute() error {
-	checkObject, ok := c.Obj.(*k8upv1alpha1.Check)
+	checkObject, ok := c.Obj.(*k8upv1.Check)
 	if !ok {
 		return stderrors.New("object is not a check")
 	}
@@ -50,7 +50,7 @@ func (c *CheckExecutor) Execute() error {
 
 	checkJob, err := job.GenerateGenericJob(c.Obj, c.Config)
 	if err != nil {
-		c.SetConditionFalseWithMessage(k8upv1alpha1.ConditionReady, k8upv1alpha1.ReasonCreationFailed, "could not get job template: %v", err)
+		c.SetConditionFalseWithMessage(k8upv1.ConditionReady, k8upv1.ReasonCreationFailed, "could not get job template: %v", err)
 		return err
 	}
 	checkJob.GetLabels()[job.K8upExclusive] = "true"
@@ -103,6 +103,6 @@ func (c *CheckExecutor) registerCheckCallback() {
 	})
 }
 
-func (c *CheckExecutor) cleanupOldChecks(name types.NamespacedName, check *k8upv1alpha1.Check) {
-	c.cleanupOldResources(&k8upv1alpha1.CheckList{}, name, check)
+func (c *CheckExecutor) cleanupOldChecks(name types.NamespacedName, check *k8upv1.Check) {
+	c.cleanupOldResources(&k8upv1.CheckList{}, name, check)
 }

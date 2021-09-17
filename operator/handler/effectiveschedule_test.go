@@ -7,39 +7,39 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-	k8upv1alpha1 "github.com/vshn/k8up/api/v1alpha1"
+	k8upv1 "github.com/vshn/k8up/api/v1"
 	"github.com/vshn/k8up/operator/job"
 )
 
 func TestScheduleHandler_findExistingSchedule(t *testing.T) {
 	tests := map[string]struct {
-		givenEffectiveSchedules map[k8upv1alpha1.JobType]k8upv1alpha1.EffectiveSchedule
-		givenJobType            k8upv1alpha1.JobType
-		expectedSchedule        k8upv1alpha1.ScheduleDefinition
+		givenEffectiveSchedules map[k8upv1.JobType]k8upv1.EffectiveSchedule
+		givenJobType            k8upv1.JobType
+		expectedSchedule        k8upv1.ScheduleDefinition
 		expectFind              bool
 	}{
 		"GivenNoExistingSchedule_WhenFind_ThenReturnEmptySchedule": {
-			givenJobType:            k8upv1alpha1.PruneType,
-			givenEffectiveSchedules: map[k8upv1alpha1.JobType]k8upv1alpha1.EffectiveSchedule{},
+			givenJobType:            k8upv1.PruneType,
+			givenEffectiveSchedules: map[k8upv1.JobType]k8upv1.EffectiveSchedule{},
 			expectedSchedule:        "",
 			expectFind:              false,
 		},
 		"GivenWrongSchedule_WhenFind_ThenReturnEmptySchedule": {
-			givenJobType: k8upv1alpha1.PruneType,
-			givenEffectiveSchedules: map[k8upv1alpha1.JobType]k8upv1alpha1.EffectiveSchedule{
-				k8upv1alpha1.BackupType: {},
+			givenJobType: k8upv1.PruneType,
+			givenEffectiveSchedules: map[k8upv1.JobType]k8upv1.EffectiveSchedule{
+				k8upv1.BackupType: {},
 			},
 			expectedSchedule: "",
 			expectFind:       false,
 		},
 		"GivenCorrectSchedule_WhenFind_ThenReturnSchedule": {
-			givenJobType: k8upv1alpha1.BackupType,
-			givenEffectiveSchedules: map[k8upv1alpha1.JobType]k8upv1alpha1.EffectiveSchedule{
-				k8upv1alpha1.BackupType: {
-					Spec: k8upv1alpha1.EffectiveScheduleSpec{
-						JobType:           k8upv1alpha1.BackupType,
+			givenJobType: k8upv1.BackupType,
+			givenEffectiveSchedules: map[k8upv1.JobType]k8upv1.EffectiveSchedule{
+				k8upv1.BackupType: {
+					Spec: k8upv1.EffectiveScheduleSpec{
+						JobType:           k8upv1.BackupType,
 						GeneratedSchedule: "1 * * * *",
-						ScheduleRefs: []k8upv1alpha1.ScheduleRef{
+						ScheduleRefs: []k8upv1.ScheduleRef{
 							{Name: "schedule", Namespace: "default"},
 						},
 						OriginalSchedule: ScheduleDailyRandom,
@@ -53,7 +53,7 @@ func TestScheduleHandler_findExistingSchedule(t *testing.T) {
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
 			s := &ScheduleHandler{
-				schedule: &k8upv1alpha1.Schedule{
+				schedule: &k8upv1.Schedule{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "schedule",
 						Namespace: "default",

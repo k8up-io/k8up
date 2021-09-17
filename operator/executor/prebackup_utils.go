@@ -12,13 +12,13 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
-	k8upv1alpha1 "github.com/vshn/k8up/api/v1alpha1"
+	k8upv1 "github.com/vshn/k8up/api/v1"
 	"github.com/vshn/k8up/operator/cfg"
 )
 
 // fetchPreBackupPodTemplates fetches all PreBackupPods from the same namespace as the originating backup.
-func (b *BackupExecutor) fetchPreBackupPodTemplates() (*k8upv1alpha1.PreBackupPodList, error) {
-	podList := &k8upv1alpha1.PreBackupPodList{}
+func (b *BackupExecutor) fetchPreBackupPodTemplates() (*k8upv1.PreBackupPodList, error) {
+	podList := &k8upv1.PreBackupPodList{}
 
 	err := b.Client.List(b.CTX, podList, client.InNamespace(b.Obj.GetMetaObject().GetNamespace()))
 	if err != nil {
@@ -29,7 +29,7 @@ func (b *BackupExecutor) fetchPreBackupPodTemplates() (*k8upv1alpha1.PreBackupPo
 }
 
 // generateDeployments creates a new PreBackupDeployment for each given PreBackupPod template.
-func (b *BackupExecutor) generateDeployments(templates []k8upv1alpha1.PreBackupPod) []*appsv1.Deployment {
+func (b *BackupExecutor) generateDeployments(templates []k8upv1.PreBackupPod) []*appsv1.Deployment {
 	deployments := make([]*appsv1.Deployment, 0)
 
 	for _, template := range templates {
@@ -77,19 +77,19 @@ func (b *BackupExecutor) generateDeployments(templates []k8upv1alpha1.PreBackupP
 // fetchOrCreatePreBackupDeployment fetches a deployment with the given name or creates it if not existing.
 // On errors, the ConditionPreBackupPodsReady will be set to false and the error is returned.
 func (b *BackupExecutor) fetchOrCreatePreBackupDeployment(deployment *appsv1.Deployment) error {
-	name := k8upv1alpha1.MapToNamespacedName(deployment)
+	name := k8upv1.MapToNamespacedName(deployment)
 	fetchErr := b.Client.Get(b.CTX, name, deployment)
 	if fetchErr != nil {
 		if !errors.IsNotFound(fetchErr) {
 			err := fmt.Errorf("error getting pre backup pod '%v': %w", name.String(), fetchErr)
-			b.SetConditionFalseWithMessage(k8upv1alpha1.ConditionPreBackupPodReady, k8upv1alpha1.ReasonRetrievalFailed, err.Error())
+			b.SetConditionFalseWithMessage(k8upv1.ConditionPreBackupPodReady, k8upv1.ReasonRetrievalFailed, err.Error())
 			return err
 		}
 
 		createErr := b.Client.Create(b.CTX, deployment)
 		if createErr != nil {
 			err := fmt.Errorf("error creating pre backup pod '%v': %w", name.String(), createErr)
-			b.SetConditionFalseWithMessage(k8upv1alpha1.ConditionPreBackupPodReady, k8upv1alpha1.ReasonCreationFailed, err.Error())
+			b.SetConditionFalseWithMessage(k8upv1.ConditionPreBackupPodReady, k8upv1.ReasonCreationFailed, err.Error())
 			return err
 		}
 		b.Log.Info("started pre backup pod", "preBackup", name.String())

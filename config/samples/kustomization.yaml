@@ -1,12 +1,12 @@
 ## Append samples you want in your CSV to this file as resources ##
 resources:
-- k8up_v1alpha1_archive.yaml
-- k8up_v1alpha1_backup.yaml
-- k8up_v1alpha1_check.yaml
-- k8up_v1alpha1_prebackuppod.yaml
-- k8up_v1alpha1_prune.yaml
-- k8up_v1alpha1_restore.yaml
-- k8up_v1alpha1_schedule.yaml
-- k8up_v1alpha1_snapshot.yaml
+- k8up_v1_archive.yaml
+- k8up_v1_backup.yaml
+- k8up_v1_check.yaml
+- k8up_v1_prebackuppod.yaml
+- k8up_v1_prune.yaml
+- k8up_v1_restore.yaml
+- k8up_v1_schedule.yaml
+- k8up_v1_snapshot.yaml
 # +kubebuilder:scaffold:manifestskustomizesamples
 - secrets.yaml

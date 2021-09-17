@@ -4,10 +4,10 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 
-	k8upv1alpha1 "github.com/vshn/k8up/api/v1alpha1"
+	k8upv1 "github.com/vshn/k8up/api/v1"
 	"github.com/vshn/k8up/operator/cfg"
 )
 
@@ -17,83 +17,83 @@ func TestScheduleHandler_mergeResourcesWithDefaults(t *testing.T) {
 		globalCPUResourceRequest    string
 		globalMemoryResourceLimit   string
 		globalMemoryResourceRequest string
-		givenScheduleTemplate       v1.ResourceRequirements
-		givenResourceTemplate       v1.ResourceRequirements
-		expectedTemplate            v1.ResourceRequirements
+		givenScheduleTemplate       corev1.ResourceRequirements
+		givenResourceTemplate       corev1.ResourceRequirements
+		expectedTemplate            corev1.ResourceRequirements
 	}{
 		"Given_NoGlobalDefaults_And_NoScheduleDefaults_When_NoSpec_Then_LeaveEmpty": {
-			expectedTemplate: v1.ResourceRequirements{},
+			expectedTemplate: corev1.ResourceRequirements{},
 		},
 		"Given_NoGlobalDefaults_And_NoScheduleDefaults_When_Spec_Then_UseSpec": {
-			givenResourceTemplate: v1.ResourceRequirements{
+			givenResourceTemplate: corev1.ResourceRequirements{
 				Requests: newCPUResourceList("50m"),
 			},
-			expectedTemplate: v1.ResourceRequirements{
+			expectedTemplate: corev1.ResourceRequirements{
 				Requests: newCPUResourceList("50m"),
 			},
 		},
 		"Given_NoGlobalDefaults_And_ScheduleDefaults_When_NoSpec_Then_ApplyScheduleDefaults": {
-			givenScheduleTemplate: v1.ResourceRequirements{
+			givenScheduleTemplate: corev1.ResourceRequirements{
 				Limits: newCPUResourceList("200m"),
 			},
-			expectedTemplate: v1.ResourceRequirements{
+			expectedTemplate: corev1.ResourceRequirements{
 				Limits: newCPUResourceList("200m"),
 			},
 		},
 		"Given_NoGlobalDefaults_And_ScheduleDefaults_When_Spec_Then_UseSpec": {
-			givenScheduleTemplate: v1.ResourceRequirements{
+			givenScheduleTemplate: corev1.ResourceRequirements{
 				Limits: newCPUResourceList("200m"),
 			},
-			givenResourceTemplate: v1.ResourceRequirements{
+			givenResourceTemplate: corev1.ResourceRequirements{
 				Limits: newCPUResourceList("50m"),
 			},
-			expectedTemplate: v1.ResourceRequirements{
+			expectedTemplate: corev1.ResourceRequirements{
 				Limits: newCPUResourceList("50m"),
 			},
 		},
 		"Given_GlobalDefaults_And_NoScheduleDefaults_When_NoSpec_Then_UseGlobalDefaults": {
 			globalMemoryResourceRequest: "10Mi",
-			givenScheduleTemplate: v1.ResourceRequirements{
+			givenScheduleTemplate: corev1.ResourceRequirements{
 				Limits: newCPUResourceList("200m"),
 			},
-			expectedTemplate: v1.ResourceRequirements{
+			expectedTemplate: corev1.ResourceRequirements{
 				Limits: newCPUResourceList("200m"),
-				Requests: v1.ResourceList{
-					v1.ResourceMemory: resource.MustParse("10Mi"),
+				Requests: corev1.ResourceList{
+					corev1.ResourceMemory: resource.MustParse("10Mi"),
 				},
 			},
 		},
 		"Given_GlobalDefaults_And_NoScheduleDefaults_When_Spec_Then_UseSpec": {
 			globalMemoryResourceRequest: "10Mi",
-			givenResourceTemplate: v1.ResourceRequirements{
-				Requests: v1.ResourceList{
-					v1.ResourceMemory: resource.MustParse("20Mi"),
+			givenResourceTemplate: corev1.ResourceRequirements{
+				Requests: corev1.ResourceList{
+					corev1.ResourceMemory: resource.MustParse("20Mi"),
 				},
 			},
-			expectedTemplate: v1.ResourceRequirements{
-				Requests: v1.ResourceList{
-					v1.ResourceMemory: resource.MustParse("20Mi"),
+			expectedTemplate: corev1.ResourceRequirements{
+				Requests: corev1.ResourceList{
+					corev1.ResourceMemory: resource.MustParse("20Mi"),
 				},
 			},
 		},
 		"Given_GlobalDefaults_And_ScheduleDefaults_When_NoSpec_Then_UseSchedule": {
 			globalCPUResourceLimit: "10m",
-			givenScheduleTemplate: v1.ResourceRequirements{
+			givenScheduleTemplate: corev1.ResourceRequirements{
 				Limits: newCPUResourceList("200m"),
 			},
-			expectedTemplate: v1.ResourceRequirements{
+			expectedTemplate: corev1.ResourceRequirements{
 				Limits: newCPUResourceList("200m"),
 			},
 		},
 		"Given_GlobalDefaults_And_ScheduleDefaults_When_Spec_Then_UseSpec": {
 			globalCPUResourceLimit: "10m",
-			givenScheduleTemplate: v1.ResourceRequirements{
+			givenScheduleTemplate: corev1.ResourceRequirements{
 				Limits: newCPUResourceList("100m"),
 			},
-			givenResourceTemplate: v1.ResourceRequirements{
+			givenResourceTemplate: corev1.ResourceRequirements{
 				Limits: newCPUResourceList("200m"),
 			},
-			expectedTemplate: v1.ResourceRequirements{
+			expectedTemplate: corev1.ResourceRequirements{
 				Limits: newCPUResourceList("200m"),
 			},
 		},
@@ -106,10 +106,10 @@ func TestScheduleHandler_mergeResourcesWithDefaults(t *testing.T) {
 			cfg.Config.GlobalCPUResourceRequest = tt.globalCPUResourceRequest
 			cfg.Config.GlobalMemoryResourceLimit = tt.globalMemoryResourceLimit
 			cfg.Config.GlobalMemoryResourceRequest = tt.globalMemoryResourceRequest
-			schedule := ScheduleHandler{schedule: &k8upv1alpha1.Schedule{Spec: k8upv1alpha1.ScheduleSpec{
+			schedule := ScheduleHandler{schedule: &k8upv1.Schedule{Spec: k8upv1.ScheduleSpec{
 				ResourceRequirementsTemplate: tt.givenScheduleTemplate,
 			}}}
-			res := &k8upv1alpha1.RunnableSpec{
+			res := &k8upv1.RunnableSpec{
 				Resources: tt.givenResourceTemplate,
 			}
 			schedule.mergeResourcesWithDefaults(res)
@@ -118,18 +118,18 @@ func TestScheduleHandler_mergeResourcesWithDefaults(t *testing.T) {
 	}
 }
 
-func newCPUResourceList(amount string) v1.ResourceList {
-	return v1.ResourceList{
-		v1.ResourceCPU: resource.MustParse(amount),
+func newCPUResourceList(amount string) corev1.ResourceList {
+	return corev1.ResourceList{
+		corev1.ResourceCPU: resource.MustParse(amount),
 	}
 }
 
 func TestScheduleHandler_mergeBackendWithDefaults(t *testing.T) {
 	tests := map[string]struct {
 		globalS3Bucket       string
-		givenScheduleBackend k8upv1alpha1.Backend
-		givenResourceBackend k8upv1alpha1.Backend
-		expectedBackend      k8upv1alpha1.Backend
+		givenScheduleBackend k8upv1.Backend
+		givenResourceBackend k8upv1.Backend
+		expectedBackend      k8upv1.Backend
 	}{
 		"Given_NoGlobalDefaults_And_NoScheduleDefaults_When_Spec_Then_UseSpec": {
 			givenResourceBackend: newS3Backend("https://resource-url", "resource-bucket"),
@@ -171,10 +171,10 @@ func TestScheduleHandler_mergeBackendWithDefaults(t *testing.T) {
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
 			cfg.Config.GlobalS3Bucket = tt.globalS3Bucket
-			schedule := ScheduleHandler{schedule: &k8upv1alpha1.Schedule{Spec: k8upv1alpha1.ScheduleSpec{
+			schedule := ScheduleHandler{schedule: &k8upv1.Schedule{Spec: k8upv1.ScheduleSpec{
 				Backend: &tt.givenScheduleBackend,
 			}}}
-			res := &k8upv1alpha1.RunnableSpec{
+			res := &k8upv1.RunnableSpec{
 				Backend: &tt.givenResourceBackend,
 			}
 			schedule.mergeBackendWithDefaults(res)
@@ -184,9 +184,9 @@ func TestScheduleHandler_mergeBackendWithDefaults(t *testing.T) {
 	}
 }
 
-func newS3Backend(endpoint, bucket string) k8upv1alpha1.Backend {
-	return k8upv1alpha1.Backend{
-		S3: &k8upv1alpha1.S3Spec{
+func newS3Backend(endpoint, bucket string) k8upv1.Backend {
+	return k8upv1.Backend{
+		S3: &k8upv1.S3Spec{
 			Endpoint: endpoint,
 			Bucket:   bucket,
 		},

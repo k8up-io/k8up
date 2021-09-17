@@ -7,7 +7,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/vshn/k8up/api/v1alpha1"
+	k8upv1 "github.com/vshn/k8up/api/v1"
 )
 
 func Test_randomizeSchedule_VerifyCronSyntax(t *testing.T) {
@@ -49,8 +49,8 @@ func Test_randomizeSchedule_VerifyCronSyntax(t *testing.T) {
 func Test_randomizeSchedule_VerifySchedules(t *testing.T) {
 	seed := "k8up-system/my-scheduled-backup@backup"
 	tests := map[string]struct {
-		schedule         v1alpha1.ScheduleDefinition
-		expectedSchedule v1alpha1.ScheduleDefinition
+		schedule         k8upv1.ScheduleDefinition
+		expectedSchedule k8upv1.ScheduleDefinition
 	}{
 		"WhenScheduleRandomHourlyGiven_ThenReturnStableRandomizedSchedule": {
 			schedule:         "@hourly-random",

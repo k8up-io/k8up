@@ -1,0 +1,78 @@
+apiVersion: k8up.io/v1
+kind: Restore
+metadata:
+  name: restore-disk
+spec:
+  restoreMethod:
+    folder:
+      claimName: restore
+
+  backend:
+    repoPasswordSecretRef:
+      name: backup-repo
+      key: password
+    s3:
+      endpoint: http://10.144.1.224:9000
+      bucket: k8up
+      accessKeyIDSecretRef:
+        name: backup-credentials
+        key: username
+      secretAccessKeySecretRef:
+        name: backup-credentials
+        key: password
+---
+apiVersion: k8up.io/v1
+kind: Restore
+metadata:
+  name: restore-s3
+spec:
+  restoreMethod:
+    s3:
+      endpoint: http://10.144.1.224:9000
+      bucket: restoremini
+      accessKeyIDSecretRef:
+        name: backup-credentials
+        key: username
+      secretAccessKeySecretRef:
+        name: backup-credentials
+        key: password
+  backend:
+    repoPasswordSecretRef:
+      name: backup-repo
+      key: password
+    s3:
+      endpoint: http://10.144.1.224:9000
+      bucket: k8up
+      accessKeyIDSecretRef:
+        name: backup-credentials
+        key: username
+      secretAccessKeySecretRef:
+        name: backup-credentials
+        key: password
+---
+apiVersion: k8up.io/v1
+kind: Restore
+metadata:
+  name: restore-s3-global
+spec:
+  restoreMethod:
+    s3: {}
+  backend:
+    s3: {}
+---
+# Here we only override the restic password and the bucket from the global
+# settings.
+apiVersion: k8up.io/v1
+kind: Restore
+metadata:
+  name: restore-s3-override
+spec:
+  restoreMethod:
+    s3:
+      bucket: k8up-restore
+  backend:
+    repoPasswordSecretRef:
+      key: repopw
+      name: repopw
+    s3:
+      bucket: k8up-namespace

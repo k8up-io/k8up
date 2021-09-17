@@ -1,0 +1,23 @@
+apiVersion: k8up.io/v1
+kind: Check
+metadata:
+  name: check-test
+spec:
+  resources:
+    requests:
+        memory: "64Mi"
+        cpu: "250m"
+  backend:
+    repoPasswordSecretRef:
+      name: backup-repo
+      key: password
+    s3:
+      endpoint: http://10.144.1.224:9000
+      bucket: k8up
+      accessKeyIDSecretRef:
+        name: backup-credentials
+        key: username
+      secretAccessKeySecretRef:
+        name: backup-credentials
+        key: password
+  promURL: http://10.144.1.224:9000

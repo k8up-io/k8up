@@ -8,7 +8,7 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 
-	k8upv1alpha1 "github.com/vshn/k8up/api/v1alpha1"
+	k8upv1 "github.com/vshn/k8up/api/v1"
 	"github.com/vshn/k8up/operator/cfg"
 	"github.com/vshn/k8up/operator/job"
 	"github.com/vshn/k8up/operator/observer"
@@ -35,7 +35,7 @@ func (a *ArchiveExecutor) GetConcurrencyLimit() int {
 
 // Execute creates the actual batch.job on the k8s api.
 func (a *ArchiveExecutor) Execute() error {
-	archive, ok := a.Obj.(*k8upv1alpha1.Archive)
+	archive, ok := a.Obj.(*k8upv1.Archive)
 	if !ok {
 		return stderrors.New("object is not a archive")
 	}
@@ -46,7 +46,7 @@ func (a *ArchiveExecutor) Execute() error {
 
 	jobObj, err := job.GenerateGenericJob(archive, a.Config)
 	if err != nil {
-		a.SetConditionFalseWithMessage(k8upv1alpha1.ConditionReady, k8upv1alpha1.ReasonCreationFailed, "could not get job template: %v", err)
+		a.SetConditionFalseWithMessage(k8upv1.ConditionReady, k8upv1.ReasonCreationFailed, "could not get job template: %v", err)
 		return err
 	}
 	jobObj.GetLabels()[job.K8upExclusive] = "true"
@@ -56,7 +56,7 @@ func (a *ArchiveExecutor) Execute() error {
 	return nil
 }
 
-func (a *ArchiveExecutor) startArchive(archiveJob *batchv1.Job, archive *k8upv1alpha1.Archive) {
+func (a *ArchiveExecutor) startArchive(archiveJob *batchv1.Job, archive *k8upv1.Archive) {
 	a.registerArchiveCallback(archive)
 	a.RegisterJobSucceededConditionCallback()
 
@@ -67,8 +67,8 @@ func (a *ArchiveExecutor) startArchive(archiveJob *batchv1.Job, archive *k8upv1a
 	if err != nil {
 		if !apierrors.IsAlreadyExists(err) {
 			a.Log.Error(err, "could not create job")
-			a.SetConditionFalseWithMessage(k8upv1alpha1.ConditionReady,
-				k8upv1alpha1.ReasonCreationFailed,
+			a.SetConditionFalseWithMessage(k8upv1.ConditionReady,
+				k8upv1.ReasonCreationFailed,
 				"could not create archive job '%v/%v': %v",
 				archiveJob.Namespace, archiveJob.Name, err)
 			return
@@ -78,14 +78,14 @@ func (a *ArchiveExecutor) startArchive(archiveJob *batchv1.Job, archive *k8upv1a
 	a.SetStarted("the job '%v/%v' was created", archiveJob.Namespace, archiveJob.Name)
 }
 
-func (a *ArchiveExecutor) registerArchiveCallback(archive *k8upv1alpha1.Archive) {
+func (a *ArchiveExecutor) registerArchiveCallback(archive *k8upv1.Archive) {
 	name := a.GetJobNamespacedName()
 	observer.GetObserver().RegisterCallback(name.String(), func(_ observer.ObservableJob) {
 		a.cleanupOldArchives(name, archive)
 	})
 }
 
-func (a *ArchiveExecutor) setupArgs(archive *k8upv1alpha1.Archive) []string {
+func (a *ArchiveExecutor) setupArgs(archive *k8upv1.Archive) []string {
 	args := []string{"-archive", "-restoreType", "s3"}
 
 	if archive.Spec.RestoreSpec != nil {
@@ -97,7 +97,7 @@ func (a *ArchiveExecutor) setupArgs(archive *k8upv1alpha1.Archive) []string {
 	return args
 }
 
-func (a *ArchiveExecutor) setupEnvVars(archive *k8upv1alpha1.Archive) []corev1.EnvVar {
+func (a *ArchiveExecutor) setupEnvVars(archive *k8upv1.Archive) []corev1.EnvVar {
 	vars := NewEnvVarConverter()
 
 	if archive.Spec.RestoreSpec != nil && archive.Spec.RestoreSpec.RestoreMethod != nil {
@@ -125,6 +125,6 @@ func (a *ArchiveExecutor) setupEnvVars(archive *k8upv1alpha1.Archive) []corev1.E
 	return vars.Convert()
 }
 
-func (a *ArchiveExecutor) cleanupOldArchives(name types.NamespacedName, archive *k8upv1alpha1.Archive) {
-	a.cleanupOldResources(&k8upv1alpha1.ArchiveList{}, name, archive)
+func (a *ArchiveExecutor) cleanupOldArchives(name types.NamespacedName, archive *k8upv1.Archive) {
+	a.cleanupOldResources(&k8upv1.ArchiveList{}, name, archive)
 }

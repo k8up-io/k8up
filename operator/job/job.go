@@ -5,7 +5,7 @@ package job
 import (
 	"context"
 
-	k8upv1alpha1 "github.com/vshn/k8up/api/v1alpha1"
+	k8upv1 "github.com/vshn/k8up/api/v1"
 	"github.com/vshn/k8up/operator/cfg"
 
 	"github.com/go-logr/logr"
@@ -31,13 +31,13 @@ type Config struct {
 	Client     client.Client
 	Log        logr.Logger
 	CTX        context.Context
-	Obj        k8upv1alpha1.JobObject
+	Obj        k8upv1.JobObject
 	Scheme     *runtime.Scheme
 	Repository string
 }
 
 // NewConfig returns a new configuration.
-func NewConfig(ctx context.Context, client client.Client, log logr.Logger, obj k8upv1alpha1.JobObject, scheme *runtime.Scheme, repository string) Config {
+func NewConfig(ctx context.Context, client client.Client, log logr.Logger, obj k8upv1.JobObject, scheme *runtime.Scheme, repository string) Config {
 	return Config{
 		Client:     client,
 		Log:        log,
@@ -49,14 +49,14 @@ func NewConfig(ctx context.Context, client client.Client, log logr.Logger, obj k
 }
 
 // GenerateGenericJob returns a generic batchv1.job for further use.
-func GenerateGenericJob(obj k8upv1alpha1.JobObject, config Config) (*batchv1.Job, error) {
+func GenerateGenericJob(obj k8upv1.JobObject, config Config) (*batchv1.Job, error) {
 	job := &batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      obj.GetJobName(),
 			Namespace: obj.GetMetaObject().GetNamespace(),
 			Labels: map[string]string{
-				K8uplabel:                  "true",
-				k8upv1alpha1.LabelK8upType: obj.GetType().String(),
+				K8uplabel:            "true",
+				k8upv1.LabelK8upType: obj.GetType().String(),
 			},
 		},
 		Spec: batchv1.JobSpec{

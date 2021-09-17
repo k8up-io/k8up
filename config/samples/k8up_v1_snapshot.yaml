@@ -1,0 +1,4 @@
+apiVersion: k8up.io/v1
+kind: Snapshot
+metadata:
+  name: snapshot-sample

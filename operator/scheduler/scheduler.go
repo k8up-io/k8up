@@ -15,7 +15,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/metrics"
 
-	k8upv1alpha1 "github.com/vshn/k8up/api/v1alpha1"
+	k8upv1 "github.com/vshn/k8up/api/v1"
 	"github.com/vshn/k8up/operator/job"
 )
 
@@ -28,9 +28,9 @@ type (
 	}
 	// Job contains all necessary information to create a schedule.
 	Job struct {
-		JobType  k8upv1alpha1.JobType
-		Schedule k8upv1alpha1.ScheduleDefinition
-		Object   k8upv1alpha1.ObjectCreator
+		JobType  k8upv1.JobType
+		Schedule k8upv1.ScheduleDefinition
+		Object   k8upv1.ObjectCreator
 	}
 	// Scheduler handles all the schedules.
 	Scheduler struct {
@@ -40,8 +40,8 @@ type (
 	}
 	scheduleRef struct {
 		EntryID  cron.EntryID
-		JobType  k8upv1alpha1.JobType
-		Schedule k8upv1alpha1.ScheduleDefinition
+		JobType  k8upv1.JobType
+		Schedule k8upv1.ScheduleDefinition
 		Command  func()
 	}
 )
@@ -117,7 +117,7 @@ func (s *Scheduler) getScheduleCallback(config job.Config, namespacedName types.
 }
 
 // HasSchedule returns true if there is a schedule that matches the given criteria, otherwise false.
-func (s *Scheduler) HasSchedule(namespacedName types.NamespacedName, schedule k8upv1alpha1.ScheduleDefinition, jobType k8upv1alpha1.JobType) bool {
+func (s *Scheduler) HasSchedule(namespacedName types.NamespacedName, schedule k8upv1.ScheduleDefinition, jobType k8upv1.JobType) bool {
 	for ns, refs := range s.registeredSchedules {
 		if ns == namespacedName.String() {
 			for _, ref := range refs {
@@ -159,13 +159,13 @@ func (s *Scheduler) RemoveSchedules(namespacedName types.NamespacedName) {
 	s.decRegisteredSchedulesGauge(namespacedName.Namespace)
 }
 
-func (s *Scheduler) createObject(jobType k8upv1alpha1.JobType, namespace string, obj k8upv1alpha1.ObjectCreator, config job.Config) {
+func (s *Scheduler) createObject(jobType k8upv1.JobType, namespace string, obj k8upv1.ObjectCreator, config job.Config) {
 
 	name := generateName(jobType, config.Obj.GetMetaObject().GetName())
 
 	rtObj := obj.CreateObject(name, namespace)
 
-	jobObject, ok := rtObj.(k8upv1alpha1.JobObject)
+	jobObject, ok := rtObj.(k8upv1.JobObject)
 	if !ok {
 		config.Log.Error(errors.New("cannot cast object"), "object is not a valid objectMeta")
 		return
@@ -183,7 +183,7 @@ func (s *Scheduler) createObject(jobType k8upv1alpha1.JobType, namespace string,
 
 }
 
-func generateName(jobType k8upv1alpha1.JobType, prefix string) string {
+func generateName(jobType k8upv1.JobType, prefix string) string {
 	lenRandom := 5
 	remainingLength := 63 - lenRandom - len(jobType) - 2
 	shortPrefix := strings.ShortenString(prefix, remainingLength)

@@ -10,7 +10,7 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 
-	k8upv1alpha1 "github.com/vshn/k8up/api/v1alpha1"
+	k8upv1 "github.com/vshn/k8up/api/v1"
 	"github.com/vshn/k8up/operator/cfg"
 	"github.com/vshn/k8up/operator/job"
 	"github.com/vshn/k8up/operator/observer"
@@ -36,7 +36,7 @@ func (r *RestoreExecutor) GetConcurrencyLimit() int {
 
 // Execute creates the actual batch.job on the k8s api.
 func (r *RestoreExecutor) Execute() error {
-	restore, ok := r.Obj.(*k8upv1alpha1.Restore)
+	restore, ok := r.Obj.(*k8upv1.Restore)
 	if !ok {
 		return errors.New("object is not a restore")
 	}
@@ -50,21 +50,21 @@ func (r *RestoreExecutor) Execute() error {
 	return nil
 }
 
-func (r *RestoreExecutor) startRestore(restore *k8upv1alpha1.Restore) {
+func (r *RestoreExecutor) startRestore(restore *k8upv1.Restore) {
 	r.registerRestoreCallback(restore)
 	r.RegisterJobSucceededConditionCallback()
 
 	restoreJob, err := r.buildRestoreObject(restore)
 	if err != nil {
 		r.Log.Error(err, "unable to build restore object")
-		r.SetConditionFalseWithMessage(k8upv1alpha1.ConditionReady, k8upv1alpha1.ReasonCreationFailed, "unable to build restore object: %v", err)
+		r.SetConditionFalseWithMessage(k8upv1.ConditionReady, k8upv1.ReasonCreationFailed, "unable to build restore object: %v", err)
 		return
 	}
 
 	if err := r.Client.Create(r.CTX, restoreJob); err != nil {
 		if !apierrors.IsAlreadyExists(err) {
 			r.Log.Error(err, "could not create job")
-			r.SetConditionFalseWithMessage(k8upv1alpha1.ConditionReady, k8upv1alpha1.ReasonCreationFailed, "could not create job: %v", err)
+			r.SetConditionFalseWithMessage(k8upv1.ConditionReady, k8upv1.ReasonCreationFailed, "could not create job: %v", err)
 			return
 		}
 	}
@@ -72,19 +72,19 @@ func (r *RestoreExecutor) startRestore(restore *k8upv1alpha1.Restore) {
 	r.SetStarted("the job '%v/%v' was created", restoreJob.Namespace, restoreJob.Name)
 }
 
-func (r *RestoreExecutor) registerRestoreCallback(restore *k8upv1alpha1.Restore) {
+func (r *RestoreExecutor) registerRestoreCallback(restore *k8upv1.Restore) {
 	name := r.GetJobNamespacedName()
 	observer.GetObserver().RegisterCallback(name.String(), func(_ observer.ObservableJob) {
 		r.cleanupOldRestores(name, restore)
 	})
 }
 
-func (r *RestoreExecutor) cleanupOldRestores(name types.NamespacedName, restore *k8upv1alpha1.Restore) {
-	r.cleanupOldResources(&k8upv1alpha1.RestoreList{}, name, restore)
+func (r *RestoreExecutor) cleanupOldRestores(name types.NamespacedName, restore *k8upv1.Restore) {
+	r.cleanupOldResources(&k8upv1.RestoreList{}, name, restore)
 
 }
 
-func (r *RestoreExecutor) buildRestoreObject(restore *k8upv1alpha1.Restore) (*batchv1.Job, error) {
+func (r *RestoreExecutor) buildRestoreObject(restore *k8upv1.Restore) (*batchv1.Job, error) {
 	j, err := job.GenerateGenericJob(restore, r.Config)
 	if err != nil {
 		return nil, err
@@ -107,7 +107,7 @@ func (r *RestoreExecutor) buildRestoreObject(restore *k8upv1alpha1.Restore) (*ba
 	return j, nil
 }
 
-func (r *RestoreExecutor) args(restore *k8upv1alpha1.Restore) ([]string, error) {
+func (r *RestoreExecutor) args(restore *k8upv1.Restore) ([]string, error) {
 	args := []string{"-restore"}
 
 	if len(restore.Spec.Tags) > 0 {
@@ -133,7 +133,7 @@ func (r *RestoreExecutor) args(restore *k8upv1alpha1.Restore) ([]string, error) 
 	return args, nil
 }
 
-func (r *RestoreExecutor) volumeConfig(restore *k8upv1alpha1.Restore) ([]corev1.Volume, []corev1.VolumeMount) {
+func (r *RestoreExecutor) volumeConfig(restore *k8upv1.Restore) ([]corev1.Volume, []corev1.VolumeMount) {
 	volumes := make([]corev1.Volume, 0)
 	if restore.Spec.RestoreMethod.S3 == nil {
 		volumes = append(volumes,
@@ -157,7 +157,7 @@ func (r *RestoreExecutor) volumeConfig(restore *k8upv1alpha1.Restore) ([]corev1.
 	return volumes, mounts
 }
 
-func (r *RestoreExecutor) setupEnvVars(restore *k8upv1alpha1.Restore) []corev1.EnvVar {
+func (r *RestoreExecutor) setupEnvVars(restore *k8upv1.Restore) []corev1.EnvVar {
 	vars := NewEnvVarConverter()
 
 	if restore.Spec.RestoreMethod.S3 != nil {

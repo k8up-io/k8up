@@ -48,7 +48,7 @@ helm -n ${ns} uninstall k8up
 +
 [source,bash]
 ----
-for crd in archives.backup.appuio.ch backups.backup.appuio.ch checks.backup.appuio.ch prebackuppods.backup.appuio.ch prunes.backup.appuio.ch restores.backup.appuio.ch schedules.backup.appuio.ch; do
+for crd in archives.k8up.io backups.k8up.io checks.k8up.io prebackuppods.k8up.io prunes.k8up.io restores.k8up.io schedules.k8up.io; do
   # Get CRD definition in YAML
   kubectl get crd "${crd}" -o yaml > "${crd}.yaml"
   # Remove all metadata properties except `metadata.name`

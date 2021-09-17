@@ -1,35 +1,35 @@
-domain: backup.appuio.ch
+domain: k8up.io
 layout: go.kubebuilder.io/v3
 projectName: k8up
 repo: github.com/vshn/k8up
 resources:
-- group: backup.appuio.ch
+- group: k8up.io
   kind: Schedule
-  version: v1alpha1
-- group: backup.appuio.ch
+  version: v1
+- group: k8up.io
   kind: Backup
-  version: v1alpha1
-- group: backup.appuio.ch
+  version: v1
+- group: k8up.io
   kind: Restore
-  version: v1alpha1
-- group: backup.appuio.ch
+  version: v1
+- group: k8up.io
   kind: Archive
-  version: v1alpha1
-- group: backup.appuio.ch
+  version: v1
+- group: k8up.io
   kind: Check
-  version: v1alpha1
-- group: backup.appuio.ch
+  version: v1
+- group: k8up.io
   kind: Prune
-  version: v1alpha1
-- group: backup.appuio.ch
+  version: v1
+- group: k8up.io
   kind: Snapshots
-  version: v1alpha1
-- group: backup.appuio.ch
+  version: v1
+- group: k8up.io
   kind: Snapshot
-  version: v1alpha1
-- group: backup.appuio.ch
+  version: v1
+- group: k8up.io
   kind: PreBackupPods
-  version: v1alpha1
+  version: v1
 version: 3-alpha
 plugins:
   go.sdk.operatorframework.io/v2: {}

@@ -11,7 +11,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 
-	k8upv1alpha1 "github.com/vshn/k8up/api/v1alpha1"
+	k8upv1 "github.com/vshn/k8up/api/v1"
 	"github.com/vshn/k8up/operator/cfg"
 	"github.com/vshn/k8up/operator/handler"
 	"github.com/vshn/k8up/operator/job"
@@ -24,10 +24,10 @@ type BackupReconciler struct {
 	Scheme *runtime.Scheme
 }
 
-// +kubebuilder:rbac:groups=backup.appuio.ch,resources=backups,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=backup.appuio.ch,resources=backups/status;backups/finalizers,verbs=get;update;patch
-// +kubebuilder:rbac:groups=backup.appuio.ch,resources=prebackuppods,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=backup.appuio.ch,resources=prebackuppods/status;prebackuppods/finalizers,verbs=get;update;patch
+// +kubebuilder:rbac:groups=k8up.io,resources=backups,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=k8up.io,resources=backups/status;backups/finalizers,verbs=get;update;patch
+// +kubebuilder:rbac:groups=k8up.io,resources=prebackuppods,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=k8up.io,resources=prebackuppods/status;prebackuppods/finalizers,verbs=get;update;patch
 // +kubebuilder:rbac:groups=apps,resources=deployments,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=batch,resources=jobs,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=core,resources=pods,verbs="*"
@@ -40,7 +40,7 @@ type BackupReconciler struct {
 func (r *BackupReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := r.Log.WithValues("backup", req.NamespacedName)
 
-	backup := &k8upv1alpha1.Backup{}
+	backup := &k8upv1.Backup{}
 	err := r.Get(ctx, req.NamespacedName, backup)
 	if err != nil {
 		if errors.IsNotFound(err) {
@@ -70,7 +70,7 @@ func (r *BackupReconciler) SetupWithManager(mgr ctrl.Manager, l logr.Logger) err
 	r.Scheme = mgr.GetScheme()
 	r.Log = l
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&k8upv1alpha1.Backup{}).
+		For(&k8upv1.Backup{}).
 		WithEventFilter(predicate.GenerationChangedPredicate{}).
 		Complete(r)
 }

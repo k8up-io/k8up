@@ -14,7 +14,7 @@ That will allow you to get access to data that's RWO and then trigger backups fo
 
 [source,yaml]
 ----
-apiVersion: backup.appuio.ch/v1alpha1
+apiVersion: k8up.io/v1
 kind: PreBackupPod
 metadata:
   name: mysqldump

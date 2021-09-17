@@ -8,7 +8,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 
-	k8upv1alpha1 "github.com/vshn/k8up/api/v1alpha1"
+	k8upv1 "github.com/vshn/k8up/api/v1"
 	"github.com/vshn/k8up/operator/cfg"
 	"github.com/vshn/k8up/operator/job"
 )
@@ -17,7 +17,7 @@ import (
 // information provided by defaults and the CRDs to ensure the backup has all information to run.
 type BackupExecutor struct {
 	generic
-	backup *k8upv1alpha1.Backup
+	backup *k8upv1.Backup
 }
 
 // NewBackupExecutor returns a new BackupExecutor.
@@ -35,7 +35,7 @@ func (b *BackupExecutor) GetConcurrencyLimit() int {
 // Execute triggers the actual batch.job creation on the cluster.
 // It will also register a callback function on the observer so the PreBackupPods can be removed after the backup has finished.
 func (b *BackupExecutor) Execute() error {
-	backupObject, ok := b.Obj.(*k8upv1alpha1.Backup)
+	backupObject, ok := b.Obj.(*k8upv1.Backup)
 	if !ok {
 		return stderrors.New("object is not a backup")
 	}
@@ -118,7 +118,7 @@ func (b *BackupExecutor) startBackup(backupJob *batchv1.Job) error {
 
 	volumes, err := b.listAndFilterPVCs(cfg.Config.BackupAnnotation)
 	if err != nil {
-		b.SetConditionFalseWithMessage(k8upv1alpha1.ConditionReady, k8upv1alpha1.ReasonRetrievalFailed, err.Error())
+		b.SetConditionFalseWithMessage(k8upv1.ConditionReady, k8upv1.ReasonRetrievalFailed, err.Error())
 		return err
 	}
 
@@ -135,5 +135,5 @@ func (b *BackupExecutor) startBackup(backupJob *batchv1.Job) error {
 }
 
 func (b *BackupExecutor) cleanupOldBackups(name types.NamespacedName) {
-	b.cleanupOldResources(&k8upv1alpha1.BackupList{}, name, b.backup)
+	b.cleanupOldResources(&k8upv1.BackupList{}, name, b.backup)
 }

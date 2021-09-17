@@ -1,3 +1,4 @@
+//go:build generate
 // +build generate
 
 package main
@@ -10,7 +11,7 @@ package main
 //go:generate go run generate.go
 
 // Generate API reference documentation
-//go:generate go run github.com/elastic/crd-ref-docs --source-path=api/v1alpha1 --config=docs/api-gen-config.yaml --renderer=asciidoctor --templates-dir=docs/api-templates --output-path=${CRD_DOCS_REF_PATH}
+//go:generate go run github.com/elastic/crd-ref-docs --source-path=api/v1 --config=docs/api-gen-config.yaml --renderer=asciidoctor --templates-dir=docs/api-templates --output-path=${CRD_DOCS_REF_PATH}
 
 import (
 	"bufio"
@@ -19,7 +20,7 @@ import (
 	"os"
 )
 
-var patchFiles = []string{"v1beta1/base/backup.appuio.ch_prebackuppods.yaml"}
+var patchFiles = []string{"v1beta1/base/k8up.io_prebackuppods.yaml"}
 
 // controller-gen 0.3 creates CRDs with apiextensions.k8s.io/v1beta1, but some generated properties aren't valid for that version
 // in K8s 1.18+. We would have to switch to apiextensions.k8s.io/v1, but that would make the CRD incompatible with OpenShift 3.11.

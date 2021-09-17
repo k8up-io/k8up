@@ -10,7 +10,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 
-	k8upv1a1 "github.com/vshn/k8up/api/v1alpha1"
+	k8upv1 "github.com/vshn/k8up/api/v1"
 	"github.com/vshn/k8up/operator/job"
 )
 
@@ -30,15 +30,15 @@ type VolumeMountExpectation struct {
 }
 
 func newConfig() *job.Config {
-	cfg := job.NewConfig(context.TODO(), nil, logr.Discard(), &k8upv1a1.Restore{}, testScheme, "")
+	cfg := job.NewConfig(context.TODO(), nil, logr.Discard(), &k8upv1.Restore{}, testScheme, "")
 	return &cfg
 }
 
-func newS3RestoreResource() *k8upv1a1.Restore {
-	return &k8upv1a1.Restore{
-		Spec: k8upv1a1.RestoreSpec{
-			RestoreMethod: &k8upv1a1.RestoreMethod{
-				S3: &k8upv1a1.S3Spec{
+func newS3RestoreResource() *k8upv1.Restore {
+	return &k8upv1.Restore{
+		Spec: k8upv1.RestoreSpec{
+			RestoreMethod: &k8upv1.RestoreMethod{
+				S3: &k8upv1.S3Spec{
 					Endpoint: "http://localhost:9000",
 					Bucket:   "test",
 					AccessKeyIDSecretRef: &corev1.SecretKeySelector{
@@ -49,9 +49,9 @@ func newS3RestoreResource() *k8upv1a1.Restore {
 					},
 				},
 			},
-			RunnableSpec: k8upv1a1.RunnableSpec{
-				Backend: &k8upv1a1.Backend{
-					S3: &k8upv1a1.S3Spec{
+			RunnableSpec: k8upv1.RunnableSpec{
+				Backend: &k8upv1.Backend{
+					S3: &k8upv1.S3Spec{
 						Endpoint: "http://localhost:9000",
 						Bucket:   "test-backend",
 						AccessKeyIDSecretRef: &corev1.SecretKeySelector{
@@ -67,11 +67,11 @@ func newS3RestoreResource() *k8upv1a1.Restore {
 	}
 }
 
-func newFolderRestoreResource() *k8upv1a1.Restore {
-	return &k8upv1a1.Restore{
-		Spec: k8upv1a1.RestoreSpec{
-			RestoreMethod: &k8upv1a1.RestoreMethod{
-				Folder: &k8upv1a1.FolderRestore{
+func newFolderRestoreResource() *k8upv1.Restore {
+	return &k8upv1.Restore{
+		Spec: k8upv1.RestoreSpec{
+			RestoreMethod: &k8upv1.RestoreMethod{
+				Folder: &k8upv1.FolderRestore{
 					PersistentVolumeClaimVolumeSource: &corev1.PersistentVolumeClaimVolumeSource{
 						ClaimName: "test",
 						ReadOnly:  false,
@@ -82,11 +82,11 @@ func newFolderRestoreResource() *k8upv1a1.Restore {
 	}
 }
 
-func newFilteredFolderRestoreResource() *k8upv1a1.Restore {
-	return &k8upv1a1.Restore{
-		Spec: k8upv1a1.RestoreSpec{
-			RestoreMethod: &k8upv1a1.RestoreMethod{
-				Folder: &k8upv1a1.FolderRestore{
+func newFilteredFolderRestoreResource() *k8upv1.Restore {
+	return &k8upv1.Restore{
+		Spec: k8upv1.RestoreSpec{
+			RestoreMethod: &k8upv1.RestoreMethod{
+				Folder: &k8upv1.FolderRestore{
 					PersistentVolumeClaimVolumeSource: &corev1.PersistentVolumeClaimVolumeSource{
 						ClaimName: "test",
 						ReadOnly:  false,
@@ -103,7 +103,7 @@ func newFilteredFolderRestoreResource() *k8upv1a1.Restore {
 func TestRestore_setupEnvVars(t *testing.T) {
 	tests := map[string]struct {
 		GivenJobConfig        *job.Config
-		GivenResource         *k8upv1a1.Restore
+		GivenResource         *k8upv1.Restore
 		ExpectedEnvVars       map[string]string
 		ExpectedSecretKeyRefs map[string]string
 	}{
@@ -169,7 +169,7 @@ func extractVarsAndSecretRefs(envVars []corev1.EnvVar) (map[string]string, map[s
 func TestRestore_volumeConfig(t *testing.T) {
 	tests := map[string]struct {
 		GivenJobConfig      *job.Config
-		GivenResource       *k8upv1a1.Restore
+		GivenResource       *k8upv1.Restore
 		ExpectedPVC         PVCExpectation
 		ExpectedVolumeMount VolumeMountExpectation
 	}{
@@ -235,7 +235,7 @@ func assertVolumes(t *testing.T, ex PVCExpectation, volumes []corev1.Volume) {
 func TestRestore_args(t *testing.T) {
 	tests := map[string]struct {
 		GivenJobConfig *job.Config
-		GivenResource  *k8upv1a1.Restore
+		GivenResource  *k8upv1.Restore
 		ExpectedArgs   []string
 	}{
 		"givenS3RestoreResource_whenArgs_expectS3RestoreType": {
