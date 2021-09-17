@@ -6,7 +6,7 @@ import (
 	"io"
 	"strings"
 
-	"github.com/vshn/k8up/restic/logging"
+	"github.com/k8up-io/k8up/restic/logging"
 )
 
 // Init initialises a repository, checks if the repositor exists and will

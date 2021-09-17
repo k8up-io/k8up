@@ -10,7 +10,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/push"
 
-	"github.com/vshn/k8up/restic/cli"
+	"github.com/k8up-io/k8up/restic/cli"
 )
 
 const (
@@ -84,7 +84,7 @@ func (h *Handler) SendWebhook(hook cli.WebhookProvider) error {
 		} else {
 			httpCode = resp.Status
 		}
-		return fmt.Errorf("Could not send webhook: %v http status code: %v", err, httpCode)
+		return fmt.Errorf("could not send webhook: %v http status code: %v", err, httpCode)
 	}
 	return nil
 }

@@ -4,8 +4,9 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	k8upv1 "github.com/vshn/k8up/api/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	k8upv1 "github.com/k8up-io/k8up/api/v1"
 )
 
 func TestJobName(t *testing.T) {

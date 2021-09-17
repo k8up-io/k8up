@@ -26,7 +26,7 @@ ENABLE_LEADER_ELECTION ?= false
 
 SHASUM ?= $(shell command -v sha1sum > /dev/null && echo "sha1sum" || echo "shasum -a1")
 E2E_TAG ?= e2e_$(shell $(SHASUM) $(BIN_FILENAME) | cut -b-8)
-E2E_REPO ?= local.dev/k8up
+E2E_REPO ?= local.dev/k8up-io
 K8UP_E2E_IMG = $(E2E_REPO)/k8up:$(E2E_TAG)
 
 BATS_FILES ?= .
@@ -34,8 +34,8 @@ BATS_FILES ?= .
 KUSTOMIZE ?= go run sigs.k8s.io/kustomize/kustomize/v4
 
 # Image URL to use all building/pushing image targets
-K8UP_DOCKER_IMG ?= docker.io/vshn/k8up:$(IMG_TAG)
-K8UP_QUAY_IMG ?= quay.io/vshn/k8up:$(IMG_TAG)
+K8UP_GHCR_IMG ?= ghcr.io/k8up-io/k8up:$(IMG_TAG)
+K8UP_QUAY_IMG ?= quay.io/k8up-io/k8up:$(IMG_TAG)
 
 # Operator Integration Test
 ENVTEST_ADDITIONAL_FLAGS ?= --bin-dir "$(integrationtest_dir)"

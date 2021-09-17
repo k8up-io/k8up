@@ -5,8 +5,8 @@ package job
 import (
 	"context"
 
-	k8upv1 "github.com/vshn/k8up/api/v1"
-	"github.com/vshn/k8up/operator/cfg"
+	k8upv1 "github.com/k8up-io/k8up/api/v1"
+	"github.com/k8up-io/k8up/operator/cfg"
 
 	"github.com/go-logr/logr"
 	batchv1 "k8s.io/api/batch/v1"

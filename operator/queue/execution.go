@@ -12,7 +12,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"sigs.k8s.io/controller-runtime/pkg/metrics"
 
-	k8upv1 "github.com/vshn/k8up/api/v1"
+	k8upv1 "github.com/k8up-io/k8up/api/v1"
 )
 
 var (
@@ -31,7 +31,7 @@ var (
 
 // Executor defines an interface for the execution queue.
 type Executor interface {
-	// Triggers the actual job
+	// Execute triggers the actual job
 	Execute() error
 	// Exclusive will return true, if the job is an
 	// exclusive job and can't be run together with
@@ -40,13 +40,13 @@ type Executor interface {
 	// Logger returns the logger in the job's context so we can
 	// Associate the logs with the actual job.
 	Logger() logr.Logger
-	// GetJobType() returns the type of the CDR that the job will execute
+	// GetJobType returns the type of the CDR that the job will execute
 	GetJobType() k8upv1.JobType
-	// GetJobNamespace() returns the namespace of the CDR that the job will execute
+	// GetJobNamespace returns the namespace of the CDR that the job will execute
 	GetJobNamespace() string
-	// GetConcurrencyLimit
+	// GetConcurrencyLimit returns the concurrency limit
 	GetConcurrencyLimit() int
-	// GetName() string
+	// GetRepository returns the name of the repository
 	GetRepository() string
 	// TODO: ability to mark job as skipped && metric for that
 }

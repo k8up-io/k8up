@@ -50,7 +50,7 @@ func patchFile(fileName string) {
 			log.Println(fmt.Sprintf("Removed 'protocol' in line %d", i))
 		case "spec:":
 			/*
-				preserveUnknownFields is explicitly needed in v1 in our case, see https://github.com/vshn/k8up/issues/281.
+				preserveUnknownFields is explicitly needed in v1 in our case, see https://github.com/k8up-io/k8up/issues/281.
 				Setting the flag in the generator CLI like "controller-gen crd:preserveUnknownFields=false ..." actually
 				doesn't write the line to YAML, thus we need to add it manually.
 			*/

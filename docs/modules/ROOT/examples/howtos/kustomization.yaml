@@ -1,6 +1,6 @@
 resources:
-- github.com/vshn/k8up/config/default?ref={page-origin-refname}
-- github.com/vshn/k8up/config/auth-proxy?ref={page-origin-refname}
+- github.com/k8up-io/k8up/config/default?ref={page-origin-refname}
+- github.com/k8up-io/k8up/config/auth-proxy?ref={page-origin-refname}
 
 namespace: my-custom-namespace
 

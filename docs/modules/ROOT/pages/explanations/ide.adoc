@@ -50,7 +50,7 @@ Example VSCode run configuration:
       "mode": "auto",
       "program": "${workspaceFolder}/cmd/operator/main.go",
       "env": {
-        "BACKUP_IMAGE": "quay.io/vshn/k8up:latest",
+        "BACKUP_IMAGE": "ghcr.io/k8up-io/k8up:latest",
         "BACKUP_GLOBALS3ENDPOINT": "http://somewhere.example.org",
         "BACKUP_GLOBALS3BUCKET": "somebucket",
         "BACKUP_GLOBALSECRETACCESSKEY": "replacewithaccesskey",

@@ -2,9 +2,9 @@
 
 Connect with the K8up community:
 
-https://github.com/vshn/k8up/discussions[Discussions]:: The project has GitHub discussions enabled where we discuss everything around K8up. Feel free to hop in there.
+https://github.com/k8up-io/k8up/discussions[Discussions]:: The project has GitHub discussions enabled where we discuss everything around K8up. Feel free to hop in there.
 https://community.appuio.ch/[Chat]:: We use the _APPUiO Community Chat_ (registration open) and are reachable in the https://community.appuio.ch/channel/k8up[#k8up] channel.
-https://github.com/vshn/k8up[GitHub]:: The source code and issue tracking is available on _GitHub_ under https://github.com/vshn/k8up[vshn/k8up].
+https://github.com/k8up-io/k8up[GitHub]:: The source code and issue tracking is available on _GitHub_ under https://github.com/k8up-io/k8up[k8up-io/k8up].
 
 [discrete]
 == Project sponsor

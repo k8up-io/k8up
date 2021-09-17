@@ -67,9 +67,9 @@ const (
 	ReasonFailed ConditionReason = "Failed"
 	// ReasonCreationFailed indicates that a dependent resource could not be created
 	ReasonCreationFailed ConditionReason = "CreationFailed"
-	// ReasonCreationFailed indicates that a dependent resource could not be created
+	// ReasonUpdateFailed indicates that a dependent resource could not be created
 	ReasonUpdateFailed ConditionReason = "UpdateFailed"
-	// ReasonCreationFailed indicates that a dependent resource could not be deleted
+	// ReasonDeletionFailed indicates that a dependent resource could not be deleted
 	ReasonDeletionFailed ConditionReason = "DeletionFailed"
 	// ReasonRetrievalFailed indicates that dependent resource(s) could not be retrieved for further processing
 	ReasonRetrievalFailed ConditionReason = "RetrievalFailed"

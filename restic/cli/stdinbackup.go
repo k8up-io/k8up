@@ -3,9 +3,9 @@ package cli
 import (
 	"fmt"
 
-	"github.com/vshn/k8up/restic/cfg"
-	"github.com/vshn/k8up/restic/kubernetes"
-	"github.com/vshn/k8up/restic/logging"
+	"github.com/k8up-io/k8up/restic/cfg"
+	"github.com/k8up-io/k8up/restic/kubernetes"
+	"github.com/k8up-io/k8up/restic/logging"
 )
 
 // StdinBackup create a snapshot with the data contained in the given reader.
