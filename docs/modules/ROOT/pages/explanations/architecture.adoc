@@ -57,4 +57,4 @@ It uses the same Docker image as the `k8up operator`.
 While `k8up operator` is usually running for a long time, `k8up restic` will do the job it is tasked to do and then exit.
 It also does not modify any resources in the Kubernetes cluster or leave permanent traces.
 But it will look for `Pod` resources xref:references/annotations.adoc[that are annotated].
-And it will also create one-off containers in the `Pod` resources it finds that are annotated with `k8up.syn.tools/backupcommand` in order to run the respective backup command and collect it's output.
+And it will also create one-off containers in the `Pod` resources it finds that are annotated with `k8up.io/backupcommand` in order to run the respective backup command and collect it's output.

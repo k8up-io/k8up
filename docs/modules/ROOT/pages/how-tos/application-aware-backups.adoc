@@ -13,7 +13,7 @@ template:
     labels:
       app: mariadb
     annotations:
-      k8up.syn.tools/backupcommand: mysqldump -uroot -psecure --all-databases
+      k8up.io/backupcommand: mysqldump -uroot -psecure --all-databases
 <SNIP>
 ----
 

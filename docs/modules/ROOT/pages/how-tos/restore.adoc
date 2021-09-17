@@ -54,7 +54,7 @@ metadata:
   #namespace: snapshot-test
   annotations:
     # set to "true" to include in future backups
-    k8up.syn.tools/backup: "false"
+    k8up.io/backup: "false"
   # Optional:
   #labels:
   #  app: multi-file-writer

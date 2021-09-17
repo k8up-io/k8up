@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   annotations:
-    k8up.syn.tools/backupcommand: mongodump --archive -uroot -pexample
+    k8up.io/backupcommand: mongodump --archive -uroot -pexample
   labels:
     app: mongodb
   name: mongodb

@@ -30,7 +30,7 @@ spec:
         app: mysql
       annotations:
         pod.alpha.kubernetes.io/initialized: "true"
-        k8up.syn.tools/backupcommand: mysqldump -uroot -psecure --all-databases
+        k8up.io/backupcommand: mysqldump -uroot -psecure --all-databases
     spec:
       securityContext:
         runAsUser: 27

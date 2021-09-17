@@ -8,13 +8,16 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
-	"github.com/vshn/k8up/api/v1alpha1"
+	k8upv1 "github.com/vshn/k8up/api/v1alpha1"
 	"github.com/vshn/k8up/operator/job"
 	"github.com/vshn/k8up/operator/observer"
 )
 
 const (
-	jobFinalizerName string = "k8up.syn.tools/jobobserver"
+	jobFinalizerName string = "k8up.io/jobobserver"
+
+	// Deprecated
+	legacyJobFinalizerName string = "k8up.syn.tools/jobobserver"
 )
 
 // JobHandler handles the reconciles for the batchv1.job objects that are
@@ -43,9 +46,13 @@ func (j *JobHandler) Handle() error {
 		return nil
 	}
 
-	if j.job.GetDeletionTimestamp() != nil && contains(j.job.GetFinalizers(), jobFinalizerName) {
+	finalizers := j.job.GetFinalizers()
+	deletionTimestamp := j.job.GetDeletionTimestamp()
+	if deletionTimestamp != nil &&
+		(contains(finalizers, jobFinalizerName) || contains(finalizers, legacyJobFinalizerName)) {
 		jobEvent = observer.Delete
 		controllerutil.RemoveFinalizer(j.job, jobFinalizerName)
+		controllerutil.RemoveFinalizer(j.job, legacyJobFinalizerName)
 		j.requireSpecUpdate = true
 	} else {
 		if j.job.Status.Active > 0 {
@@ -69,14 +76,17 @@ func (j *JobHandler) Handle() error {
 		exclusive = false
 	}
 
-	jobType, exists := j.job.GetLabels()[v1alpha1.LabelK8upType]
+	jobType, exists := j.job.GetLabels()[k8upv1.LabelK8upType]
 	if !exists {
-		jobType = v1alpha1.ScheduleType.String()
+		jobType, exists = j.job.GetLabels()[k8upv1.LegacyLabelK8upType]
+	}
+	if !exists {
+		jobType = k8upv1.ScheduleType.String()
 	}
 
 	oj := observer.ObservableJob{
 		Job:       j.job,
-		JobType:   v1alpha1.JobType(jobType),
+		JobType:   k8upv1.JobType(jobType),
 		Exclusive: exclusive,
 		Event:     jobEvent,
 	}

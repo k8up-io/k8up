@@ -264,9 +264,9 @@ func (ts *Suite) IsResourceExisting(ctx context.Context, obj client.Object) bool
 func defaultConfiguration() *cfg.Configuration {
 	return &cfg.Configuration{
 		MountPath:                        "/data",
-		BackupAnnotation:                 "k8up.syn.tools/backup",
-		BackupCommandAnnotation:          "k8up.syn.tools/backupcommand",
-		FileExtensionAnnotation:          "k8up.syn.tools/file-extension",
+		BackupAnnotation:                 "k8up.io/backup",
+		BackupCommandAnnotation:          "k8up.io/backupcommand",
+		FileExtensionAnnotation:          "k8up.io/file-extension",
 		ServiceAccount:                   "pod-executor",
 		BackupCheckSchedule:              "0 0 * * 0",
 		GlobalFailedJobsHistoryLimit:     3,
