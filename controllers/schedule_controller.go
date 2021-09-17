@@ -12,7 +12,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
-	k8upv1alpha1 "github.com/vshn/k8up/api/v1alpha1"
+	k8upv1 "github.com/vshn/k8up/api/v1"
 	"github.com/vshn/k8up/operator/cfg"
 	"github.com/vshn/k8up/operator/handler"
 	"github.com/vshn/k8up/operator/job"
@@ -34,7 +34,7 @@ type ScheduleReconciler struct {
 func (r *ScheduleReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := r.Log.WithValues("schedule", req.NamespacedName)
 
-	schedule := &k8upv1alpha1.Schedule{}
+	schedule := &k8upv1.Schedule{}
 	err := r.Client.Get(ctx, req.NamespacedName, schedule)
 	if err != nil {
 		if errors.IsNotFound(err) {
@@ -66,26 +66,26 @@ func (r *ScheduleReconciler) SetupWithManager(mgr ctrl.Manager, l logr.Logger) e
 	r.Scheme = mgr.GetScheme()
 	r.Log = l
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&k8upv1alpha1.Schedule{}).
+		For(&k8upv1.Schedule{}).
 		WithEventFilter(predicate.GenerationChangedPredicate{}).
 		Complete(r)
 }
 
 // fetchEffectiveSchedules retrieves a list of EffectiveSchedules and filter the one that matches the given schedule.
 // Returns an error if the listing failed, but empty map when no matching EffectiveSchedule object was found.
-func (r *ScheduleReconciler) fetchEffectiveSchedules(ctx context.Context, schedule *k8upv1alpha1.Schedule) (map[k8upv1alpha1.JobType]k8upv1alpha1.EffectiveSchedule, error) {
-	list := k8upv1alpha1.EffectiveScheduleList{}
+func (r *ScheduleReconciler) fetchEffectiveSchedules(ctx context.Context, schedule *k8upv1.Schedule) (map[k8upv1.JobType]k8upv1.EffectiveSchedule, error) {
+	list := k8upv1.EffectiveScheduleList{}
 	err := r.Client.List(ctx, &list, client.InNamespace(cfg.Config.OperatorNamespace))
 	if err != nil {
-		return map[k8upv1alpha1.JobType]k8upv1alpha1.EffectiveSchedule{}, err
+		return map[k8upv1.JobType]k8upv1.EffectiveSchedule{}, err
 	}
 	return filterEffectiveSchedulesForReferencesOfSchedule(list, schedule), nil
 }
 
 // filterEffectiveSchedulesForReferencesOfSchedule iterates over the given list of EffectiveSchedules and returns results that reference the given schedule in their spec.
 // It returns an empty map if no element matches.
-func filterEffectiveSchedulesForReferencesOfSchedule(list k8upv1alpha1.EffectiveScheduleList, schedule *k8upv1alpha1.Schedule) map[k8upv1alpha1.JobType]k8upv1alpha1.EffectiveSchedule {
-	filtered := map[k8upv1alpha1.JobType]k8upv1alpha1.EffectiveSchedule{}
+func filterEffectiveSchedulesForReferencesOfSchedule(list k8upv1.EffectiveScheduleList, schedule *k8upv1.Schedule) map[k8upv1.JobType]k8upv1.EffectiveSchedule {
+	filtered := map[k8upv1.JobType]k8upv1.EffectiveSchedule{}
 	for _, es := range list.Items {
 		if es.GetDeletionTimestamp() != nil {
 			continue

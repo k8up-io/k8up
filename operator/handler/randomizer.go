@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"math/big"
 
-	k8upv1a1 "github.com/vshn/k8up/api/v1alpha1"
+	k8upv1 "github.com/vshn/k8up/api/v1"
 )
 
 const (
@@ -18,13 +18,13 @@ const (
 	ScheduleWeeklyRandom   = "@weekly-random"
 )
 
-func (s *ScheduleHandler) createSeed(schedule *k8upv1a1.Schedule, jobType k8upv1a1.JobType) string {
+func (s *ScheduleHandler) createSeed(schedule *k8upv1.Schedule, jobType k8upv1.JobType) string {
 	return schedule.Namespace + "/" + schedule.Name + "@" + jobType.String()
 }
 
 // randomizeSchedule randomizes the given originalSchedule with a seed. The originalSchedule has to be one of the supported
 // '@x-random' predefined schedules, otherwise it returns an error with the original schedule unmodified.
-func randomizeSchedule(seed string, originalSchedule k8upv1a1.ScheduleDefinition) (k8upv1a1.ScheduleDefinition, error) {
+func randomizeSchedule(seed string, originalSchedule k8upv1.ScheduleDefinition) (k8upv1.ScheduleDefinition, error) {
 	checksum := calculateChecksumFromSeed(seed)
 
 	minute := remainderFromModulo(checksum, 60, 0)
@@ -35,18 +35,18 @@ func randomizeSchedule(seed string, originalSchedule k8upv1a1.ScheduleDefinition
 
 	switch originalSchedule {
 	case ScheduleHourlyRandom:
-		return k8upv1a1.ScheduleDefinition(fmt.Sprintf("%d * * * *", minute)), nil
+		return k8upv1.ScheduleDefinition(fmt.Sprintf("%d * * * *", minute)), nil
 	case ScheduleDailyRandom:
-		return k8upv1a1.ScheduleDefinition(fmt.Sprintf("%d %d * * *", minute, hour)), nil
+		return k8upv1.ScheduleDefinition(fmt.Sprintf("%d %d * * *", minute, hour)), nil
 	case ScheduleMonthlyRandom:
-		return k8upv1a1.ScheduleDefinition(fmt.Sprintf("%d %d %d * *", minute, hour, dayOfMonth)), nil
+		return k8upv1.ScheduleDefinition(fmt.Sprintf("%d %d %d * *", minute, hour, dayOfMonth)), nil
 	case ScheduleAnnuallyRandom:
 	case ScheduleYearlyRandom:
 		month := remainderFromModulo(checksum, 12, 1)
-		return k8upv1a1.ScheduleDefinition(fmt.Sprintf("%d %d %d %d *", minute, hour, dayOfMonth, month)), nil
+		return k8upv1.ScheduleDefinition(fmt.Sprintf("%d %d %d %d *", minute, hour, dayOfMonth, month)), nil
 	case ScheduleWeeklyRandom:
 		weekday := remainderFromModulo(checksum, 6, 0)
-		return k8upv1a1.ScheduleDefinition(fmt.Sprintf("%d %d * * %d", minute, hour, weekday)), nil
+		return k8upv1.ScheduleDefinition(fmt.Sprintf("%d %d * * %d", minute, hour, weekday)), nil
 	default:
 		return originalSchedule, fmt.Errorf("unrecognized random schedule: '%s'", originalSchedule)
 	}

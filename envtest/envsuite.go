@@ -33,7 +33,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 	// +kubebuilder:scaffold:imports
 
-	k8upv1a1 "github.com/vshn/k8up/api/v1alpha1"
+	k8upv1 "github.com/vshn/k8up/api/v1"
 	"github.com/vshn/k8up/operator/cfg"
 	"github.com/vshn/k8up/operator/executor"
 )
@@ -107,7 +107,7 @@ func registerCRDs(ts *Suite) {
 	ts.Require().NoError(appsv1.AddToScheme(ts.Scheme))
 	ts.Require().NoError(batchv1.AddToScheme(ts.Scheme))
 	ts.Require().NoError(corev1.AddToScheme(ts.Scheme))
-	ts.Require().NoError(k8upv1a1.AddToScheme(ts.Scheme))
+	ts.Require().NoError(k8upv1.AddToScheme(ts.Scheme))
 	ts.Require().NoError(rbacv1.AddToScheme(ts.Scheme))
 
 	// +kubebuilder:scaffold:scheme
@@ -193,9 +193,9 @@ func (ts *Suite) UpdateStatus(resources ...client.Object) {
 func (ts *Suite) SetCondition(
 	resource client.Object,
 	conditions *[]metav1.Condition,
-	cType k8upv1a1.ConditionType,
+	cType k8upv1.ConditionType,
 	status metav1.ConditionStatus,
-	reason k8upv1a1.ConditionReason) {
+	reason k8upv1.ConditionReason) {
 
 	meta.SetStatusCondition(conditions, metav1.Condition{
 		Type:    cType.String(),
@@ -252,7 +252,7 @@ func (ts *Suite) SanitizeNameForNS(name string) string {
 // It will consider still-existing object with a deletion timestamp as non-existing.
 // Any other errors will fail the test.
 func (ts *Suite) IsResourceExisting(ctx context.Context, obj client.Object) bool {
-	err := ts.Client.Get(ctx, k8upv1a1.MapToNamespacedName(obj), obj)
+	err := ts.Client.Get(ctx, k8upv1.MapToNamespacedName(obj), obj)
 	if apierrors.IsNotFound(err) {
 		return false
 	}

@@ -16,7 +16,7 @@ spec:
     singular: schedule
   scope: Namespaced
   versions:
-  - name: v1alpha1
+  - name: v1
     schema:
       openAPIV3Schema:
         description: Schedule is the Schema for the schedules API

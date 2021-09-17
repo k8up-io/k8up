@@ -10,7 +10,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
 
-	"github.com/vshn/k8up/api/v1alpha1"
+	k8upv1 "github.com/vshn/k8up/api/v1"
 )
 
 func TestObserver_IsConcurrentJobsLimitReached(t *testing.T) {
@@ -23,7 +23,7 @@ func TestObserver_IsConcurrentJobsLimitReached(t *testing.T) {
 	}
 
 	// empty observedJobs
-	isLimitReached := o.IsConcurrentJobsLimitReached(v1alpha1.BackupType, 1)
+	isLimitReached := o.IsConcurrentJobsLimitReached(k8upv1.BackupType, 1)
 	assert.False(t, isLimitReached)
 
 	oj := ObservableJob{
@@ -32,7 +32,7 @@ func TestObserver_IsConcurrentJobsLimitReached(t *testing.T) {
 				Name: "some-name",
 			},
 		},
-		JobType:    v1alpha1.BackupType,
+		JobType:    k8upv1.BackupType,
 		Event:      Running,
 		Exclusive:  true,
 		Repository: "some-repo",
@@ -44,15 +44,15 @@ func TestObserver_IsConcurrentJobsLimitReached(t *testing.T) {
 	o.observedJobs = ojs
 
 	// 1 observedJob and limit = 1
-	isLimitReached = o.IsConcurrentJobsLimitReached(v1alpha1.BackupType, 1)
+	isLimitReached = o.IsConcurrentJobsLimitReached(k8upv1.BackupType, 1)
 	assert.True(t, isLimitReached)
 
 	// another job type not present in observableJobs
-	isLimitReached = o.IsConcurrentJobsLimitReached(v1alpha1.ArchiveType, 1)
+	isLimitReached = o.IsConcurrentJobsLimitReached(k8upv1.ArchiveType, 1)
 	assert.False(t, isLimitReached)
 
 	// limit is 0
-	isLimitReached = o.IsConcurrentJobsLimitReached(v1alpha1.ArchiveType, 0)
+	isLimitReached = o.IsConcurrentJobsLimitReached(k8upv1.ArchiveType, 0)
 	assert.False(t, isLimitReached)
 }
 
@@ -77,7 +77,7 @@ func TestObserver_AreAllCallbacksInvoked(t *testing.T) {
 						Namespace: "default",
 					},
 				},
-				JobType:    v1alpha1.BackupType,
+				JobType:    k8upv1.BackupType,
 				Event:      Succeeded,
 				Exclusive:  true,
 				Repository: "some-repo",
@@ -149,7 +149,7 @@ func TestObserver_AreOnlyExpectedCallbacksInvoked(t *testing.T) {
 						Namespace: "default",
 					},
 				},
-				JobType:    v1alpha1.BackupType,
+				JobType:    k8upv1.BackupType,
 				Event:      testParameter.givenEventType,
 				Exclusive:  true,
 				Repository: "some-repo",

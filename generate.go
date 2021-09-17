@@ -11,7 +11,7 @@ package main
 //go:generate go run generate.go
 
 // Generate API reference documentation
-//go:generate go run github.com/elastic/crd-ref-docs --source-path=api/v1alpha1 --config=docs/api-gen-config.yaml --renderer=asciidoctor --templates-dir=docs/api-templates --output-path=${CRD_DOCS_REF_PATH}
+//go:generate go run github.com/elastic/crd-ref-docs --source-path=api/v1 --config=docs/api-gen-config.yaml --renderer=asciidoctor --templates-dir=docs/api-templates --output-path=${CRD_DOCS_REF_PATH}
 
 import (
 	"bufio"

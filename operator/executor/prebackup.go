@@ -6,7 +6,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	k8upv1alpha1 "github.com/vshn/k8up/api/v1alpha1"
+	k8upv1 "github.com/vshn/k8up/api/v1"
 )
 
 // StartPreBackup will start the defined pods as deployments.
@@ -16,12 +16,12 @@ func (b *BackupExecutor) StartPreBackup() (bool, error) {
 
 	templates, err := b.fetchPreBackupPodTemplates()
 	if err != nil {
-		b.SetConditionFalseWithMessage(k8upv1alpha1.ConditionPreBackupPodReady, k8upv1alpha1.ReasonRetrievalFailed, "error while retrieving container definitions: %v", err.Error())
+		b.SetConditionFalseWithMessage(k8upv1.ConditionPreBackupPodReady, k8upv1.ReasonRetrievalFailed, "error while retrieving container definitions: %v", err.Error())
 		return false, err
 	}
 
 	if len(templates.Items) == 0 {
-		b.SetConditionTrueWithMessage(k8upv1alpha1.ConditionPreBackupPodReady, k8upv1alpha1.ReasonNoPreBackupPodsFound, "no container definitions found")
+		b.SetConditionTrueWithMessage(k8upv1.ConditionPreBackupPodReady, k8upv1.ReasonNoPreBackupPodsFound, "no container definitions found")
 		return true, nil
 	}
 
@@ -47,9 +47,9 @@ func (b *BackupExecutor) startAllPreBackupDeployments(deployments []*appsv1.Depl
 	}
 	if ready {
 		b.Log.Info("pre backup pod(s) now ready")
-		b.SetConditionTrue(k8upv1alpha1.ConditionPreBackupPodReady, k8upv1alpha1.ReasonReady)
+		b.SetConditionTrue(k8upv1.ConditionPreBackupPodReady, k8upv1.ReasonReady)
 	} else {
-		b.SetConditionUnknownWithMessage(k8upv1alpha1.ConditionPreBackupPodReady, k8upv1alpha1.ReasonWaiting, "waiting for %d PreBackupPods to become ready", len(deployments))
+		b.SetConditionUnknownWithMessage(k8upv1.ConditionPreBackupPodReady, k8upv1.ReasonWaiting, "waiting for %d PreBackupPods to become ready", len(deployments))
 	}
 	return ready, nil
 }
@@ -60,12 +60,12 @@ func (b *BackupExecutor) startAllPreBackupDeployments(deployments []*appsv1.Depl
 // If one deployment is neither failed nor ready, then it returns false without error, indicating that it's still waiting.
 func (b *BackupExecutor) allDeploymentsAreReady(deployments []*appsv1.Deployment) (bool, error) {
 	for _, deployment := range deployments {
-		log := b.Log.WithValues("preBackup", k8upv1alpha1.MapToNamespacedName(deployment).String())
+		log := b.Log.WithValues("preBackup", k8upv1.MapToNamespacedName(deployment).String())
 		ready, err := isPreBackupDeploymentReady(deployment)
 		if err != nil {
 			log.Info("backup failed: deadline exceeded on pre backup deployment")
-			b.SetConditionFalseWithMessage(k8upv1alpha1.ConditionPreBackupPodReady, k8upv1alpha1.ReasonFailed, err.Error())
-			b.SetConditionTrueWithMessage(k8upv1alpha1.ConditionReady, k8upv1alpha1.ReasonFailed, err.Error())
+			b.SetConditionFalseWithMessage(k8upv1.ConditionPreBackupPodReady, k8upv1.ReasonFailed, err.Error())
+			b.SetConditionTrueWithMessage(k8upv1.ConditionReady, k8upv1.ReasonFailed, err.Error())
 			b.deletePreBackupDeployment(deployment)
 			return false, err
 		}
@@ -83,12 +83,12 @@ func (b *BackupExecutor) StopPreBackupDeployments() {
 	templates, err := b.fetchPreBackupPodTemplates()
 	if err != nil {
 		b.Log.Error(err, "could not fetch pod templates", "name", b.Obj.GetMetaObject().GetName(), "namespace", b.Obj.GetMetaObject().GetNamespace())
-		b.SetConditionFalseWithMessage(k8upv1alpha1.ConditionPreBackupPodReady, k8upv1alpha1.ReasonRetrievalFailed, "could not fetch pod templates: %v", err)
+		b.SetConditionFalseWithMessage(k8upv1.ConditionPreBackupPodReady, k8upv1.ReasonRetrievalFailed, "could not fetch pod templates: %v", err)
 		return
 	}
 
 	if len(templates.Items) == 0 {
-		b.SetConditionTrue(k8upv1alpha1.ConditionPreBackupPodReady, k8upv1alpha1.ReasonNoPreBackupPodsFound)
+		b.SetConditionTrue(k8upv1.ConditionPreBackupPodReady, k8upv1.ReasonNoPreBackupPodsFound)
 		return
 	}
 
@@ -99,7 +99,7 @@ func (b *BackupExecutor) StopPreBackupDeployments() {
 		b.deletePreBackupDeployment(deployment)
 	}
 
-	b.SetConditionTrue(k8upv1alpha1.ConditionPreBackupPodReady, k8upv1alpha1.ReasonReady)
+	b.SetConditionTrue(k8upv1.ConditionPreBackupPodReady, k8upv1.ReasonReady)
 }
 
 // deletePreBackupDeployment deletes the given deployment, if existing.
@@ -112,6 +112,6 @@ func (b *BackupExecutor) deletePreBackupDeployment(deployment *appsv1.Deployment
 	})
 	if err != nil && !errors.IsNotFound(err) {
 		b.Log.Error(err, "could not delete deployment", "name", b.Obj.GetMetaObject().GetName(), "namespace", b.Obj.GetMetaObject().GetNamespace())
-		b.SetConditionFalseWithMessage(k8upv1alpha1.ConditionPreBackupPodReady, k8upv1alpha1.ReasonDeletionFailed, "could not delete deployment: %v", err.Error())
+		b.SetConditionFalseWithMessage(k8upv1.ConditionPreBackupPodReady, k8upv1.ReasonDeletionFailed, "could not delete deployment: %v", err.Error())
 	}
 }

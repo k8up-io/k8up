@@ -14,7 +14,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	k8upv1alpha1 "github.com/vshn/k8up/api/v1alpha1"
+	k8upv1 "github.com/vshn/k8up/api/v1"
 	"github.com/vshn/k8up/operator/cfg"
 	"github.com/vshn/k8up/operator/executor/cleaner"
 	"github.com/vshn/k8up/operator/job"
@@ -106,7 +106,7 @@ func (g *generic) GetJobNamespacedName() types.NamespacedName {
 	return types.NamespacedName{Namespace: g.Obj.GetMetaObject().GetNamespace(), Name: g.Obj.GetJobName()}
 }
 
-func (g *generic) GetJobType() k8upv1alpha1.JobType {
+func (g *generic) GetJobType() k8upv1.JobType {
 	return g.Obj.GetType()
 }
 
@@ -118,14 +118,14 @@ func (g *generic) RegisterJobSucceededConditionCallback() {
 		switch event.Event {
 		case observer.Succeeded:
 			g.SetFinished(event.Job.Namespace, event.Job.Name)
-			g.SetConditionTrueWithMessage(k8upv1alpha1.ConditionCompleted,
-				k8upv1alpha1.ReasonSucceeded,
+			g.SetConditionTrueWithMessage(k8upv1.ConditionCompleted,
+				k8upv1.ReasonSucceeded,
 				"the job '%v/%v' ended successfully",
 				event.Job.Namespace, event.Job.Name)
 		case observer.Failed:
 			g.SetFinished(event.Job.Namespace, event.Job.Name)
-			g.SetConditionTrueWithMessage(k8upv1alpha1.ConditionCompleted,
-				k8upv1alpha1.ReasonFailed,
+			g.SetConditionTrueWithMessage(k8upv1.ConditionCompleted,
+				k8upv1.ReasonFailed,
 				"the job '%v/%v' failed, please check its log for details",
 				event.Job.Namespace, event.Job.Name)
 		}
@@ -137,8 +137,8 @@ func (g *generic) RegisterJobSucceededConditionCallback() {
 func (g *generic) CreateObjectIfNotExisting(obj client.Object) error {
 	err := g.Client.Create(g.CTX, obj)
 	if err != nil && !errors.IsAlreadyExists(err) {
-		g.SetConditionFalseWithMessage(k8upv1alpha1.ConditionReady,
-			k8upv1alpha1.ReasonCreationFailed,
+		g.SetConditionFalseWithMessage(k8upv1.ConditionReady,
+			k8upv1.ReasonCreationFailed,
 			"unable to create %v '%v/%v': %v",
 			obj.GetObjectKind().GroupVersionKind().Kind,
 			obj.GetNamespace(), obj.GetName(), err.Error())
@@ -155,7 +155,7 @@ func (g *generic) listOldResources(namespace string, objList client.ObjectList) 
 	})
 	if err != nil {
 		g.Log.Error(err, "could not list objects to cleanup old resources", "Namespace", namespace, "kind", objList.GetObjectKind().GroupVersionKind().Kind)
-		g.SetConditionFalseWithMessage(k8upv1alpha1.ConditionScrubbed, k8upv1alpha1.ReasonRetrievalFailed, "could not list objects to cleanup old resources: %v", err)
+		g.SetConditionFalseWithMessage(k8upv1.ConditionScrubbed, k8upv1.ReasonRetrievalFailed, "could not list objects to cleanup old resources: %v", err)
 		return err
 	}
 	return nil
@@ -164,7 +164,7 @@ func (g *generic) listOldResources(namespace string, objList client.ObjectList) 
 type jobObjectList interface {
 	client.ObjectList
 
-	GetJobObjects() k8upv1alpha1.JobObjectList
+	GetJobObjects() k8upv1.JobObjectList
 }
 
 func (g *generic) cleanupOldResources(typ jobObjectList, name types.NamespacedName, limits cleaner.GetJobsHistoryLimiter) {
@@ -176,25 +176,25 @@ func (g *generic) cleanupOldResources(typ jobObjectList, name types.NamespacedNa
 	cl := cleaner.ObjectCleaner{Client: g.Client, Limits: limits, Log: g.Logger()}
 	deleted, err := cl.CleanOldObjects(g.CTX, typ.GetJobObjects())
 	if err != nil {
-		g.SetConditionFalseWithMessage(k8upv1alpha1.ConditionScrubbed, k8upv1alpha1.ReasonDeletionFailed, "could not cleanup old resources: %v", err)
+		g.SetConditionFalseWithMessage(k8upv1.ConditionScrubbed, k8upv1.ReasonDeletionFailed, "could not cleanup old resources: %v", err)
 		return
 	}
-	g.SetConditionTrueWithMessage(k8upv1alpha1.ConditionScrubbed, k8upv1alpha1.ReasonSucceeded, "Deleted %v resources", deleted)
+	g.SetConditionTrueWithMessage(k8upv1.ConditionScrubbed, k8upv1.ReasonSucceeded, "Deleted %v resources", deleted)
 
 }
 
 // NewExecutor will return the right Executor for the given job object.
 func NewExecutor(config job.Config) queue.Executor {
 	switch config.Obj.GetType() {
-	case k8upv1alpha1.BackupType:
+	case k8upv1.BackupType:
 		return NewBackupExecutor(config)
-	case k8upv1alpha1.CheckType:
+	case k8upv1.CheckType:
 		return NewCheckExecutor(config)
-	case k8upv1alpha1.ArchiveType:
+	case k8upv1.ArchiveType:
 		return NewArchiveExecutor(config)
-	case k8upv1alpha1.PruneType:
+	case k8upv1.PruneType:
 		return NewPruneExecutor(config)
-	case k8upv1alpha1.RestoreType:
+	case k8upv1.RestoreType:
 		return NewRestoreExecutor(config)
 	}
 	return nil

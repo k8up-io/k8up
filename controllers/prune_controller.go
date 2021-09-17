@@ -11,7 +11,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 
-	k8upv1alpha1 "github.com/vshn/k8up/api/v1alpha1"
+	k8upv1 "github.com/vshn/k8up/api/v1"
 	"github.com/vshn/k8up/operator/cfg"
 	"github.com/vshn/k8up/operator/handler"
 	"github.com/vshn/k8up/operator/job"
@@ -31,7 +31,7 @@ type PruneReconciler struct {
 func (r *PruneReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := r.Log.WithValues("prune", req.NamespacedName)
 
-	prune := &k8upv1alpha1.Prune{}
+	prune := &k8upv1.Prune{}
 	err := r.Get(ctx, req.NamespacedName, prune)
 	if err != nil {
 		if errors.IsNotFound(err) {
@@ -60,7 +60,7 @@ func (r *PruneReconciler) SetupWithManager(mgr ctrl.Manager, l logr.Logger) erro
 	r.Scheme = mgr.GetScheme()
 	r.Log = l
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&k8upv1alpha1.Prune{}).
+		For(&k8upv1.Prune{}).
 		WithEventFilter(predicate.GenerationChangedPredicate{}).
 		Complete(r)
 }

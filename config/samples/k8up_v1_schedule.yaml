@@ -1,5 +1,5 @@
 ---
-apiVersion: k8up.io/v1alpha1
+apiVersion: k8up.io/v1
 kind: Schedule
 metadata:
   name: schedule-test

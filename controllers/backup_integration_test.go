@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	k8upv1a1 "github.com/vshn/k8up/api/v1alpha1"
+	k8upv1 "github.com/vshn/k8up/api/v1"
 	"github.com/vshn/k8up/controllers"
 	"github.com/vshn/k8up/envtest"
 	"github.com/vshn/k8up/operator/observer"
@@ -22,7 +22,7 @@ type BackupTestSuite struct {
 
 	PreBackupPodName string
 	CancelCtx        context.CancelFunc
-	BackupResource   *k8upv1a1.Backup
+	BackupResource   *k8upv1.Backup
 	Controller       controllers.BackupReconciler
 }
 
@@ -127,7 +127,7 @@ func (ts *BackupTestSuite) Test_GivenPreBackupPods_WhenRestartingK8up_ThenExpect
 func (ts *BackupTestSuite) Test_GivenFinishedBackup_WhenReconciling_ThenIgnore() {
 	ts.EnsureResources(ts.BackupResource)
 	ts.SetCondition(ts.BackupResource, &ts.BackupResource.Status.Conditions,
-		k8upv1a1.ConditionCompleted, metav1.ConditionTrue, k8upv1a1.ReasonSucceeded)
+		k8upv1.ConditionCompleted, metav1.ConditionTrue, k8upv1.ReasonSucceeded)
 
 	result := ts.whenReconciling(ts.BackupResource)
 	ts.Assert().Equal(float64(0), result.RequeueAfter.Seconds())
@@ -136,7 +136,7 @@ func (ts *BackupTestSuite) Test_GivenFinishedBackup_WhenReconciling_ThenIgnore()
 func (ts *BackupTestSuite) Test_GivenFailedBackup_WhenReconciling_ThenIgnore() {
 	ts.EnsureResources(ts.BackupResource)
 	ts.SetCondition(ts.BackupResource, &ts.BackupResource.Status.Conditions,
-		k8upv1a1.ConditionPreBackupPodReady, metav1.ConditionFalse, k8upv1a1.ReasonFailed)
+		k8upv1.ConditionPreBackupPodReady, metav1.ConditionFalse, k8upv1.ReasonFailed)
 
 	result := ts.whenReconciling(ts.BackupResource)
 	ts.Assert().Equal(float64(0), result.RequeueAfter.Seconds())

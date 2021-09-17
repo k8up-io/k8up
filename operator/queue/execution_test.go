@@ -4,7 +4,7 @@ import (
 	"errors"
 	"testing"
 
-	k8upv1alpha1 "github.com/vshn/k8up/api/v1alpha1"
+	k8upv1 "github.com/vshn/k8up/api/v1"
 
 	"github.com/go-logr/logr"
 )
@@ -29,8 +29,8 @@ func (m *mockExecutor) GetRepository() string {
 func (m *mockExecutor) GetJobNamespace() string {
 	return "test"
 }
-func (m *mockExecutor) GetJobType() k8upv1alpha1.JobType {
-	return k8upv1alpha1.ArchiveType
+func (m *mockExecutor) GetJobType() k8upv1.JobType {
+	return k8upv1.ArchiveType
 }
 func (m *mockExecutor) GetConcurrencyLimit() int {
 	return 1

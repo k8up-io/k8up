@@ -258,7 +258,7 @@ $ restic snapshots XXXXXXXX --json | jq -r '.[0].id'
 
 [source,yaml]
 ....
-apiVersion: k8up.io/v1alpha1
+apiVersion: k8up.io/v1
 kind: Restore
 metadata:
   name: restore-wordpress

@@ -12,7 +12,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"sigs.k8s.io/controller-runtime/pkg/metrics"
 
-	"github.com/vshn/k8up/api/v1alpha1"
+	k8upv1 "github.com/vshn/k8up/api/v1"
 )
 
 var (
@@ -41,7 +41,7 @@ type Executor interface {
 	// Associate the logs with the actual job.
 	Logger() logr.Logger
 	// GetJobType() returns the type of the CDR that the job will execute
-	GetJobType() v1alpha1.JobType
+	GetJobType() k8upv1.JobType
 	// GetJobNamespace() returns the namespace of the CDR that the job will execute
 	GetJobNamespace() string
 	// GetConcurrencyLimit
@@ -117,10 +117,10 @@ func (eq *ExecutionQueue) GetRepositories() []string {
 	return repositories
 }
 
-func (eq *ExecutionQueue) incQueueGauge(namespace string, jobType v1alpha1.JobType) {
+func (eq *ExecutionQueue) incQueueGauge(namespace string, jobType k8upv1.JobType) {
 	queueGauge.WithLabelValues(namespace, jobType.String()).Inc()
 }
 
-func (eq *ExecutionQueue) decQueueGauge(namespace string, jobType v1alpha1.JobType) {
+func (eq *ExecutionQueue) decQueueGauge(namespace string, jobType k8upv1.JobType) {
 	queueGauge.WithLabelValues(namespace, jobType.String()).Dec()
 }

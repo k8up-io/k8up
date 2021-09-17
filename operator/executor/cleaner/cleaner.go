@@ -10,7 +10,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	k8upv1alpha1 "github.com/vshn/k8up/api/v1alpha1"
+	k8upv1 "github.com/vshn/k8up/api/v1"
 	"github.com/vshn/k8up/operator/cfg"
 	"github.com/vshn/k8up/operator/job"
 )
@@ -31,7 +31,7 @@ type GetJobsHistoryLimiter interface {
 // CleanOldObjects iterates over the given list and deletes them with the oldest object first until the amount returned from GetJobsHistoryLimiter remain.
 // The function aborts early on errors.
 // Returns the amount of deleted objects and possible errors.
-func (c *ObjectCleaner) CleanOldObjects(ctx context.Context, jobObjects k8upv1alpha1.JobObjectList) (int, error) {
+func (c *ObjectCleaner) CleanOldObjects(ctx context.Context, jobObjects k8upv1.JobObjectList) (int, error) {
 	maxSuccessfulObjects, maxFailedObjects := historyLimits(c.Limits)
 	_, failedJobs, successfulJobs := job.GroupByStatus(jobObjects)
 
@@ -45,7 +45,7 @@ func (c *ObjectCleaner) CleanOldObjects(ctx context.Context, jobObjects k8upv1al
 
 // cleanOldObjects deletes from the given objects until maxObjects remain.
 // Returns the amount of deleted objects and possible errors.
-func (c *ObjectCleaner) cleanOldObjects(ctx context.Context, jobObjects k8upv1alpha1.JobObjectList, maxObjects int) (int, error) {
+func (c *ObjectCleaner) cleanOldObjects(ctx context.Context, jobObjects k8upv1.JobObjectList, maxObjects int) (int, error) {
 	numToDelete := len(jobObjects) - maxObjects
 
 	c.Log.Info("cleaning old jobs", "have", len(jobObjects), "want", maxObjects, "deleting", numToDelete)
@@ -65,7 +65,7 @@ func (c *ObjectCleaner) cleanOldObjects(ctx context.Context, jobObjects k8upv1al
 	return numToDelete, nil
 }
 
-func (c *ObjectCleaner) deleteJob(ctx context.Context, job k8upv1alpha1.JobObject) error {
+func (c *ObjectCleaner) deleteJob(ctx context.Context, job k8upv1.JobObject) error {
 	name := job.GetMetaObject().GetName()
 	ns := job.GetMetaObject().GetNamespace()
 	c.Log.Info("cleaning old job", "namespace", ns, "name", name)

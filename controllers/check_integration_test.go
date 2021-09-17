@@ -17,7 +17,7 @@ import (
 	controllerruntime "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	k8upv1a1 "github.com/vshn/k8up/api/v1alpha1"
+	k8upv1 "github.com/vshn/k8up/api/v1"
 	"github.com/vshn/k8up/controllers"
 	"github.com/vshn/k8up/envtest"
 	"github.com/vshn/k8up/operator/observer"
@@ -29,7 +29,7 @@ type CheckTestSuite struct {
 	CheckBaseName string
 
 	CheckNames     []string
-	GivenChecks    []*k8upv1a1.Check
+	GivenChecks    []*k8upv1.Check
 	KeepSuccessful int
 	KeepFailed     int
 }
@@ -42,9 +42,9 @@ func (ts *CheckTestSuite) BeforeTest(_, _ string) {
 	ts.CheckBaseName = "check-integration-test"
 }
 
-func NewCheckResource(restoreName, namespace string, keepFailed, keepSuccessful int) *k8upv1a1.Check {
-	return &k8upv1a1.Check{
-		Spec: k8upv1a1.CheckSpec{
+func NewCheckResource(restoreName, namespace string, keepFailed, keepSuccessful int) *k8upv1.Check {
+	return &k8upv1.Check{
+		Spec: k8upv1.CheckSpec{
 			SuccessfulJobsHistoryLimit: &keepSuccessful,
 			FailedJobsHistoryLimit:     &keepFailed,
 		},
@@ -89,7 +89,7 @@ func (ts *CheckTestSuite) TestJobCleanup() {
 func (ts *CheckTestSuite) expectCheckCleanupEventually(expectedDeletes int) {
 	failureMsg := fmt.Sprintf("Not enough Checks deleted, expected %d.", expectedDeletes)
 	ts.RepeatedAssert(10*time.Second, time.Second, failureMsg, func(timedCtx context.Context) (done bool, err error) {
-		checkResourceList := &k8upv1a1.CheckList{}
+		checkResourceList := &k8upv1.CheckList{}
 		err = ts.Client.List(ts.Ctx, checkResourceList, &client.ListOptions{
 			Namespace: ts.NS,
 		})
@@ -111,7 +111,7 @@ func (ts *CheckTestSuite) expectCheckCleanupEventually(expectedDeletes int) {
 	})
 }
 
-func (ts *CheckTestSuite) whenJobCallbackIsInvoked(check k8upv1a1.JobObject, evtType observer.EventType) {
+func (ts *CheckTestSuite) whenJobCallbackIsInvoked(check k8upv1.JobObject, evtType observer.EventType) {
 	checkNSName := types.NamespacedName{Name: check.GetJobName(), Namespace: ts.NS}
 
 	childJob := &batchv1.Job{}

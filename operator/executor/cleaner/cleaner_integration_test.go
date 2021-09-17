@@ -11,7 +11,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/uuid"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	k8upv1a1 "github.com/vshn/k8up/api/v1alpha1"
+	k8upv1 "github.com/vshn/k8up/api/v1"
 	"github.com/vshn/k8up/envtest"
 	"github.com/vshn/k8up/operator/executor/cleaner"
 	"github.com/vshn/k8up/operator/job"
@@ -67,75 +67,75 @@ func (ts *CleanerTestSuite) assertJobsDeleted() {
 	ts.Assertions.Equal(1, len(successfulJobs))
 }
 
-func (ts *CleanerTestSuite) loadJobs() *k8upv1a1.RestoreList {
-	jobs := &k8upv1a1.RestoreList{}
+func (ts *CleanerTestSuite) loadJobs() *k8upv1.RestoreList {
+	jobs := &k8upv1.RestoreList{}
 	ts.Assertions.NoError(ts.Client.List(ts.Ctx, jobs, &client.ListOptions{Namespace: ts.NS}))
 	return jobs
 }
 
-func jobList(ns string, running, failed, successful int) *k8upv1a1.RestoreList {
-	runningJobs := make([]k8upv1a1.Restore, running)
+func jobList(ns string, running, failed, successful int) *k8upv1.RestoreList {
+	runningJobs := make([]k8upv1.Restore, running)
 	for i := range runningJobs {
 		runningJobs[i] = createJob(ns)
 	}
-	failedJobs := make([]k8upv1a1.Restore, failed)
+	failedJobs := make([]k8upv1.Restore, failed)
 	for i := range failedJobs {
 		failedJobs[i] = createJob(ns)
 		markJobFailed(&failedJobs[i])
 	}
-	successfulJobs := make([]k8upv1a1.Restore, successful)
+	successfulJobs := make([]k8upv1.Restore, successful)
 	for i := range successfulJobs {
 		successfulJobs[i] = createJob(ns)
 		markJobSuccessful(&successfulJobs[i])
 	}
 
-	return &k8upv1a1.RestoreList{
+	return &k8upv1.RestoreList{
 		Items: append(runningJobs, append(failedJobs, successfulJobs...)...),
 	}
 }
 
-func (ts *CleanerTestSuite) EnsureJobs(jobs *k8upv1a1.RestoreList) {
+func (ts *CleanerTestSuite) EnsureJobs(jobs *k8upv1.RestoreList) {
 	for _, job := range jobs.Items {
 		ts.EnsureResources(&job)
 		ts.UpdateStatus(&job)
 	}
 }
 
-func createJob(ns string) k8upv1a1.Restore {
-	return k8upv1a1.Restore{
+func createJob(ns string) k8upv1.Restore {
+	return k8upv1.Restore{
 		ObjectMeta: metav1.ObjectMeta{Namespace: ns, Name: "job-" + string(uuid.NewUUID())},
-		Spec:       k8upv1a1.RestoreSpec{},
+		Spec:       k8upv1.RestoreSpec{},
 	}
 }
 
-func markJobSuccessful(job k8upv1a1.JobObject) {
-	job.SetStatus(k8upv1a1.Status{
+func markJobSuccessful(job k8upv1.JobObject) {
+	job.SetStatus(k8upv1.Status{
 		Conditions: []metav1.Condition{
 			{
-				Type:               k8upv1a1.ConditionCompleted.String(),
+				Type:               k8upv1.ConditionCompleted.String(),
 				Status:             metav1.ConditionTrue,
-				Reason:             k8upv1a1.ReasonSucceeded.String(),
+				Reason:             k8upv1.ReasonSucceeded.String(),
 				LastTransitionTime: metav1.Now(),
 			},
 		},
 	})
 }
 
-func markJobFailed(job k8upv1a1.JobObject) {
-	job.SetStatus(k8upv1a1.Status{
+func markJobFailed(job k8upv1.JobObject) {
+	job.SetStatus(k8upv1.Status{
 		Conditions: []metav1.Condition{
 			{
-				Type:               k8upv1a1.ConditionCompleted.String(),
+				Type:               k8upv1.ConditionCompleted.String(),
 				Status:             metav1.ConditionTrue,
-				Reason:             k8upv1a1.ReasonFailed.String(),
+				Reason:             k8upv1.ReasonFailed.String(),
 				LastTransitionTime: metav1.Now(),
 			},
 		},
 	})
 }
 
-func filterDeleted(list *k8upv1a1.RestoreList) *k8upv1a1.RestoreList {
-	out := make([]k8upv1a1.Restore, 0, len(list.Items))
+func filterDeleted(list *k8upv1.RestoreList) *k8upv1.RestoreList {
+	out := make([]k8upv1.Restore, 0, len(list.Items))
 	for _, obj := range list.Items {
 		if obj.DeletionTimestamp == nil {
 			out = append(out, obj)

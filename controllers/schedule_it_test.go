@@ -10,7 +10,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
-	k8upv1alpha1 "github.com/vshn/k8up/api/v1alpha1"
+	k8upv1 "github.com/vshn/k8up/api/v1"
 	"github.com/vshn/k8up/controllers"
 	"github.com/vshn/k8up/envtest"
 	"github.com/vshn/k8up/operator/cfg"
@@ -22,8 +22,8 @@ type (
 	ScheduleControllerTestSuite struct {
 		envtest.Suite
 		reconciler              *controllers.ScheduleReconciler
-		givenSchedule           *k8upv1alpha1.Schedule
-		givenEffectiveSchedules []k8upv1alpha1.EffectiveSchedule
+		givenSchedule           *k8upv1.Schedule
+		givenEffectiveSchedules []k8upv1.EffectiveSchedule
 	}
 )
 
@@ -47,9 +47,9 @@ func (ts *ScheduleControllerTestSuite) Test_GivenScheduleWithRandomSchedules_Whe
 
 	ts.thenAssertEffectiveScheduleExists(ts.givenSchedule.Name, handler.ScheduleDailyRandom)
 
-	actualSchedule := &k8upv1alpha1.Schedule{}
-	ts.FetchResource(k8upv1alpha1.MapToNamespacedName(ts.givenSchedule), actualSchedule)
-	ts.thenAssertCondition(actualSchedule, k8upv1alpha1.ConditionReady, k8upv1alpha1.ReasonReady, "resource is ready")
+	actualSchedule := &k8upv1.Schedule{}
+	ts.FetchResource(k8upv1.MapToNamespacedName(ts.givenSchedule), actualSchedule)
+	ts.thenAssertCondition(actualSchedule, k8upv1.ConditionReady, k8upv1.ReasonReady, "resource is ready")
 
 	actualESList := ts.whenListEffectiveSchedules()
 	ts.Assert().Len(actualESList, 1)
@@ -61,9 +61,9 @@ func (ts *ScheduleControllerTestSuite) Test_GivenEffectiveScheduleWithRandomSche
 
 	ts.whenReconciling(ts.givenSchedule)
 
-	actualSchedule := &k8upv1alpha1.Schedule{}
-	ts.FetchResource(k8upv1alpha1.MapToNamespacedName(ts.givenSchedule), actualSchedule)
-	ts.thenAssertCondition(actualSchedule, k8upv1alpha1.ConditionReady, k8upv1alpha1.ReasonReady, "resource is ready")
+	actualSchedule := &k8upv1.Schedule{}
+	ts.FetchResource(k8upv1.MapToNamespacedName(ts.givenSchedule), actualSchedule)
+	ts.thenAssertCondition(actualSchedule, k8upv1.ConditionReady, k8upv1.ReasonReady, "resource is ready")
 
 	actualESList := ts.whenListEffectiveSchedules()
 	ts.Assert().Len(actualESList, 0)
@@ -75,11 +75,11 @@ func (ts *ScheduleControllerTestSuite) Test_GivenEffectiveScheduleWithRandomSche
 
 	ts.whenReconciling(ts.givenSchedule)
 
-	actualSchedule := &k8upv1alpha1.Schedule{}
-	name := k8upv1alpha1.MapToNamespacedName(ts.givenSchedule)
+	actualSchedule := &k8upv1.Schedule{}
+	name := k8upv1.MapToNamespacedName(ts.givenSchedule)
 	ts.FetchResource(name, actualSchedule)
-	ts.thenAssertCondition(actualSchedule, k8upv1alpha1.ConditionReady, k8upv1alpha1.ReasonReady, "resource is ready")
-	scheduler.GetScheduler().HasSchedule(name, "1 * * * *", k8upv1alpha1.BackupType)
+	ts.thenAssertCondition(actualSchedule, k8upv1.ConditionReady, k8upv1.ReasonReady, "resource is ready")
+	scheduler.GetScheduler().HasSchedule(name, "1 * * * *", k8upv1.BackupType)
 
 	actualESList := ts.whenListEffectiveSchedules()
 	ts.Assert().Len(actualESList, 1)
@@ -89,7 +89,7 @@ func (ts *ScheduleControllerTestSuite) Test_GivenEffectiveScheduleWithRandomSche
 	ts.givenScheduleResource("* * * * *")
 	ts.givenEffectiveScheduleResource(ts.givenSchedule.Name)
 
-	controllerutil.AddFinalizer(ts.givenSchedule, k8upv1alpha1.ScheduleFinalizerName)
+	controllerutil.AddFinalizer(ts.givenSchedule, k8upv1.ScheduleFinalizerName)
 	ts.UpdateResources(ts.givenSchedule)
 	ts.DeleteResources(ts.givenSchedule)
 
@@ -113,20 +113,20 @@ func (ts *ScheduleControllerTestSuite) Test_GivenEffectiveScheduleWithRandomSche
 	ts.thenAssertEffectiveScheduleExists(ts.givenSchedule.Name, handler.ScheduleDailyRandom)
 }
 
-func (ts *ScheduleControllerTestSuite) whenReconciling(givenSchedule *k8upv1alpha1.Schedule) {
+func (ts *ScheduleControllerTestSuite) whenReconciling(givenSchedule *k8upv1.Schedule) {
 	newResult, err := ts.reconciler.Reconcile(ts.Ctx, ts.MapToRequest(givenSchedule))
 	ts.Assert().NoError(err)
 	ts.Assert().False(newResult.Requeue)
 }
 
-func (ts *ScheduleControllerTestSuite) whenListEffectiveSchedules() []k8upv1alpha1.EffectiveSchedule {
-	effectiveSchedules := &k8upv1alpha1.EffectiveScheduleList{}
+func (ts *ScheduleControllerTestSuite) whenListEffectiveSchedules() []k8upv1.EffectiveSchedule {
+	effectiveSchedules := &k8upv1.EffectiveScheduleList{}
 	ts.FetchResources(effectiveSchedules, client.InNamespace(ts.NS))
 	return effectiveSchedules.Items
 }
 
-func (ts *ScheduleControllerTestSuite) whenListSchedules() []k8upv1alpha1.Schedule {
-	schedules := &k8upv1alpha1.ScheduleList{}
+func (ts *ScheduleControllerTestSuite) whenListSchedules() []k8upv1.Schedule {
+	schedules := &k8upv1.ScheduleList{}
 	ts.FetchResources(schedules, client.InNamespace(ts.NS))
 	return schedules.Items
 }

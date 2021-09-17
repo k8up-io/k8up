@@ -10,7 +10,7 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 
-	k8upv1alpha1 "github.com/vshn/k8up/api/v1alpha1"
+	k8upv1 "github.com/vshn/k8up/api/v1"
 	"github.com/vshn/k8up/operator/cfg"
 	"github.com/vshn/k8up/operator/job"
 	"github.com/vshn/k8up/operator/observer"
@@ -35,7 +35,7 @@ func (p *PruneExecutor) GetConcurrencyLimit() int {
 
 // Execute creates the actual batch.job on the k8s api.
 func (p *PruneExecutor) Execute() error {
-	prune, ok := p.Obj.(*k8upv1alpha1.Prune)
+	prune, ok := p.Obj.(*k8upv1.Prune)
 	if !ok {
 		return errors.New("object is not a prune")
 	}
@@ -46,7 +46,7 @@ func (p *PruneExecutor) Execute() error {
 
 	jobObj, err := job.GenerateGenericJob(prune, p.Config)
 	if err != nil {
-		p.SetConditionFalseWithMessage(k8upv1alpha1.ConditionReady, k8upv1alpha1.ReasonCreationFailed, "could not get job template: %v", err)
+		p.SetConditionFalseWithMessage(k8upv1.ConditionReady, k8upv1.ReasonCreationFailed, "could not get job template: %v", err)
 		return err
 	}
 	jobObj.GetLabels()[job.K8upExclusive] = "true"
@@ -61,7 +61,7 @@ func (p *PruneExecutor) Exclusive() bool {
 	return true
 }
 
-func (p *PruneExecutor) startPrune(pruneJob *batchv1.Job, prune *k8upv1alpha1.Prune) {
+func (p *PruneExecutor) startPrune(pruneJob *batchv1.Job, prune *k8upv1.Prune) {
 	p.registerPruneCallback(prune)
 	p.RegisterJobSucceededConditionCallback()
 
@@ -71,7 +71,7 @@ func (p *PruneExecutor) startPrune(pruneJob *batchv1.Job, prune *k8upv1alpha1.Pr
 	if err := p.Client.Create(p.CTX, pruneJob); err != nil {
 		if !apierrors.IsAlreadyExists(err) {
 			p.Log.Error(err, "could not create job")
-			p.SetConditionFalseWithMessage(k8upv1alpha1.ConditionReady, k8upv1alpha1.ReasonCreationFailed, "could not create job: %v", err)
+			p.SetConditionFalseWithMessage(k8upv1.ConditionReady, k8upv1.ReasonCreationFailed, "could not create job: %v", err)
 			return
 		}
 	}
@@ -79,18 +79,18 @@ func (p *PruneExecutor) startPrune(pruneJob *batchv1.Job, prune *k8upv1alpha1.Pr
 	p.SetStarted("the job '%v/%v' was created", pruneJob.Namespace, pruneJob.Name)
 }
 
-func (p *PruneExecutor) registerPruneCallback(prune *k8upv1alpha1.Prune) {
+func (p *PruneExecutor) registerPruneCallback(prune *k8upv1.Prune) {
 	name := p.GetJobNamespacedName()
 	observer.GetObserver().RegisterCallback(name.String(), func(_ observer.ObservableJob) {
 		p.cleanupOldPrunes(name, prune)
 	})
 }
 
-func (p *PruneExecutor) cleanupOldPrunes(name types.NamespacedName, prune *k8upv1alpha1.Prune) {
-	p.cleanupOldResources(&k8upv1alpha1.PruneList{}, name, prune)
+func (p *PruneExecutor) cleanupOldPrunes(name types.NamespacedName, prune *k8upv1.Prune) {
+	p.cleanupOldResources(&k8upv1.PruneList{}, name, prune)
 }
 
-func (p *PruneExecutor) setupEnvVars(prune *k8upv1alpha1.Prune) []corev1.EnvVar {
+func (p *PruneExecutor) setupEnvVars(prune *k8upv1.Prune) []corev1.EnvVar {
 	vars := NewEnvVarConverter()
 
 	// FIXME(mw): this is ugly

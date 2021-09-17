@@ -15,7 +15,7 @@ import (
 	controllerruntime "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	k8upv1a1 "github.com/vshn/k8up/api/v1alpha1"
+	k8upv1 "github.com/vshn/k8up/api/v1"
 	"github.com/vshn/k8up/controllers"
 	"github.com/vshn/k8up/envtest"
 )
@@ -23,7 +23,7 @@ import (
 type RestoreTestSuite struct {
 	envtest.Suite
 
-	GivenRestore *k8upv1a1.Restore
+	GivenRestore *k8upv1.Restore
 	RestoreName  string
 }
 
@@ -44,11 +44,11 @@ func (r *RestoreTestSuite) BeforeTest(suiteName, testName string) {
 	r.RestoreName = "restore-integration-test"
 }
 
-func NewRestoreResource(restoreName, namespace string) *k8upv1a1.Restore {
-	return &k8upv1a1.Restore{
-		Spec: k8upv1a1.RestoreSpec{
-			RestoreMethod: &k8upv1a1.RestoreMethod{
-				S3: &k8upv1a1.S3Spec{
+func NewRestoreResource(restoreName, namespace string) *k8upv1.Restore {
+	return &k8upv1.Restore{
+		Spec: k8upv1.RestoreSpec{
+			RestoreMethod: &k8upv1.RestoreMethod{
+				S3: &k8upv1.S3Spec{
 					Bucket:   "backups",
 					Endpoint: "https://s3-endpoint.local",
 				},

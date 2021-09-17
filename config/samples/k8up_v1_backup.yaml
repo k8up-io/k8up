@@ -1,11 +1,10 @@
-apiVersion: k8up.io/v1alpha1
-kind: Prune
+apiVersion: k8up.io/v1
+kind: Backup
 metadata:
-  name: prune-test
+  name: k8up-test
 spec:
-  retention:
-    keepLast: 5
-    keepDaily: 14
+  failedJobsHistoryLimit: 2
+  successfulJobsHistoryLimit: 2
   backend:
     repoPasswordSecretRef:
       name: backup-repo
@@ -19,3 +18,4 @@ spec:
       secretAccessKeySecretRef:
         name: backup-credentials
         key: password
+  promURL: http://10.144.1.224:9000

@@ -1,9 +1,9 @@
-package v1alpha1_test
+package v1_test
 
 import (
 	"testing"
 
-	"github.com/vshn/k8up/api/v1alpha1"
+	k8upv1 "github.com/vshn/k8up/api/v1"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -15,19 +15,19 @@ type limiter interface {
 
 var historyLimitTestCases = map[string]func(successful, failed, deprecatedKeep *int) limiter{
 	"Archive": func(successful, failed, deprecatedKeep *int) limiter {
-		return &v1alpha1.Archive{Spec: v1alpha1.ArchiveSpec{RestoreSpec: &v1alpha1.RestoreSpec{SuccessfulJobsHistoryLimit: successful, FailedJobsHistoryLimit: failed, KeepJobs: deprecatedKeep}}}
+		return &k8upv1.Archive{Spec: k8upv1.ArchiveSpec{RestoreSpec: &k8upv1.RestoreSpec{SuccessfulJobsHistoryLimit: successful, FailedJobsHistoryLimit: failed, KeepJobs: deprecatedKeep}}}
 	},
 	"Backup": func(successful, failed, deprecatedKeep *int) limiter {
-		return &v1alpha1.Backup{Spec: v1alpha1.BackupSpec{SuccessfulJobsHistoryLimit: successful, FailedJobsHistoryLimit: failed, KeepJobs: deprecatedKeep}}
+		return &k8upv1.Backup{Spec: k8upv1.BackupSpec{SuccessfulJobsHistoryLimit: successful, FailedJobsHistoryLimit: failed, KeepJobs: deprecatedKeep}}
 	},
 	"Check": func(successful, failed, deprecatedKeep *int) limiter {
-		return &v1alpha1.Check{Spec: v1alpha1.CheckSpec{SuccessfulJobsHistoryLimit: successful, FailedJobsHistoryLimit: failed, KeepJobs: deprecatedKeep}}
+		return &k8upv1.Check{Spec: k8upv1.CheckSpec{SuccessfulJobsHistoryLimit: successful, FailedJobsHistoryLimit: failed, KeepJobs: deprecatedKeep}}
 	},
 	"Prune": func(successful, failed, deprecatedKeep *int) limiter {
-		return &v1alpha1.Prune{Spec: v1alpha1.PruneSpec{SuccessfulJobsHistoryLimit: successful, FailedJobsHistoryLimit: failed, KeepJobs: deprecatedKeep}}
+		return &k8upv1.Prune{Spec: k8upv1.PruneSpec{SuccessfulJobsHistoryLimit: successful, FailedJobsHistoryLimit: failed, KeepJobs: deprecatedKeep}}
 	},
 	"Restore": func(successful, failed, deprecatedKeep *int) limiter {
-		return &v1alpha1.Restore{Spec: v1alpha1.RestoreSpec{SuccessfulJobsHistoryLimit: successful, FailedJobsHistoryLimit: failed, KeepJobs: deprecatedKeep}}
+		return &k8upv1.Restore{Spec: k8upv1.RestoreSpec{SuccessfulJobsHistoryLimit: successful, FailedJobsHistoryLimit: failed, KeepJobs: deprecatedKeep}}
 	},
 }
 

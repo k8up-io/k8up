@@ -20,15 +20,15 @@ import (
 	controllerruntime "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	k8upv1a1 "github.com/vshn/k8up/api/v1alpha1"
+	k8upv1 "github.com/vshn/k8up/api/v1"
 	k8upObserver "github.com/vshn/k8up/operator/observer"
 )
 
-func (ts *BackupTestSuite) newPreBackupPod() *k8upv1a1.PreBackupPod {
-	return &k8upv1a1.PreBackupPod{
-		Spec: k8upv1a1.PreBackupPodSpec{
+func (ts *BackupTestSuite) newPreBackupPod() *k8upv1.PreBackupPod {
+	return &k8upv1.PreBackupPod{
+		Spec: k8upv1.PreBackupPodSpec{
 			BackupCommand: "/bin/true",
-			Pod: &k8upv1a1.Pod{
+			Pod: &k8upv1.Pod{
 				PodTemplateSpec: corev1.PodTemplateSpec{
 					Spec: corev1.PodSpec{
 						Containers: []corev1.Container{
@@ -49,19 +49,19 @@ func (ts *BackupTestSuite) newPreBackupPod() *k8upv1a1.PreBackupPod {
 	}
 }
 
-func (ts *BackupTestSuite) newBackup() *k8upv1a1.Backup {
-	return &k8upv1a1.Backup{
+func (ts *BackupTestSuite) newBackup() *k8upv1.Backup {
+	return &k8upv1.Backup{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "backup",
 			Namespace: ts.NS,
 		},
-		Spec: k8upv1a1.BackupSpec{
-			RunnableSpec: k8upv1a1.RunnableSpec{},
+		Spec: k8upv1.BackupSpec{
+			RunnableSpec: k8upv1.RunnableSpec{},
 		},
 	}
 }
 
-func (ts *BackupTestSuite) newBackupWithSecurityContext() *k8upv1a1.Backup {
+func (ts *BackupTestSuite) newBackupWithSecurityContext() *k8upv1.Backup {
 	runAsNonRoot := true
 	sc := &corev1.PodSecurityContext{
 		RunAsNonRoot: &runAsNonRoot,
@@ -131,7 +131,7 @@ func (ts *BackupTestSuite) afterPreBackupDeploymentStarted() {
 
 func (ts *BackupTestSuite) expectABackupContainer() {
 	ts.RepeatedAssert(5*time.Second, time.Second, "Backup not found", func(timedCtx context.Context) (done bool, err error) {
-		backups := new(k8upv1a1.BackupList)
+		backups := new(k8upv1.BackupList)
 		err = ts.Client.List(timedCtx, backups, client.InNamespace(ts.NS))
 		ts.Require().NoError(err)
 
@@ -147,13 +147,13 @@ func (ts *BackupTestSuite) expectABackupContainer() {
 	})
 }
 
-func (ts *BackupTestSuite) assertConditionWaitingForPreBackup(backup *k8upv1a1.Backup) {
+func (ts *BackupTestSuite) assertConditionWaitingForPreBackup(backup *k8upv1.Backup) {
 	ts.RepeatedAssert(5*time.Second, time.Second, "backup does not have correct condition", func(timedCtx context.Context) (done bool, err error) {
-		err = ts.Client.Get(timedCtx, k8upv1a1.MapToNamespacedName(backup), backup)
+		err = ts.Client.Get(timedCtx, k8upv1.MapToNamespacedName(backup), backup)
 		ts.Require().NoError(err)
-		preBackupCond := meta.FindStatusCondition(backup.Status.Conditions, k8upv1a1.ConditionPreBackupPodReady.String())
+		preBackupCond := meta.FindStatusCondition(backup.Status.Conditions, k8upv1.ConditionPreBackupPodReady.String())
 		if preBackupCond != nil {
-			ts.Assert().Equal(k8upv1a1.ReasonWaiting.String(), preBackupCond.Reason)
+			ts.Assert().Equal(k8upv1.ReasonWaiting.String(), preBackupCond.Reason)
 			ts.Assert().Equal(metav1.ConditionUnknown, preBackupCond.Status)
 			return true, nil
 		}
@@ -161,13 +161,13 @@ func (ts *BackupTestSuite) assertConditionWaitingForPreBackup(backup *k8upv1a1.B
 	})
 }
 
-func (ts *BackupTestSuite) assertConditionReadyForPreBackup(backup *k8upv1a1.Backup) {
+func (ts *BackupTestSuite) assertConditionReadyForPreBackup(backup *k8upv1.Backup) {
 	ts.RepeatedAssert(5*time.Second, time.Second, "backup does not have expected condition", func(timedCtx context.Context) (done bool, err error) {
-		err = ts.Client.Get(timedCtx, k8upv1a1.MapToNamespacedName(backup), backup)
+		err = ts.Client.Get(timedCtx, k8upv1.MapToNamespacedName(backup), backup)
 		ts.Require().NoError(err)
-		preBackupCond := meta.FindStatusCondition(backup.Status.Conditions, k8upv1a1.ConditionPreBackupPodReady.String())
-		if preBackupCond != nil && preBackupCond.Reason == k8upv1a1.ReasonReady.String() {
-			ts.Assert().Equal(k8upv1a1.ReasonReady.String(), preBackupCond.Reason)
+		preBackupCond := meta.FindStatusCondition(backup.Status.Conditions, k8upv1.ConditionPreBackupPodReady.String())
+		if preBackupCond != nil && preBackupCond.Reason == k8upv1.ReasonReady.String() {
+			ts.Assert().Equal(k8upv1.ReasonReady.String(), preBackupCond.Reason)
 			ts.Assert().Equal(metav1.ConditionTrue, preBackupCond.Status)
 			return true, nil
 		}
@@ -175,13 +175,13 @@ func (ts *BackupTestSuite) assertConditionReadyForPreBackup(backup *k8upv1a1.Bac
 	})
 }
 
-func (ts *BackupTestSuite) assertPreBackupPodConditionFailed(backup *k8upv1a1.Backup) {
+func (ts *BackupTestSuite) assertPreBackupPodConditionFailed(backup *k8upv1.Backup) {
 	ts.RepeatedAssert(5*time.Second, time.Second, "backup does not have expected condition", func(timedCtx context.Context) (done bool, err error) {
-		err = ts.Client.Get(timedCtx, k8upv1a1.MapToNamespacedName(backup), backup)
+		err = ts.Client.Get(timedCtx, k8upv1.MapToNamespacedName(backup), backup)
 		ts.Require().NoError(err)
-		preBackupCond := meta.FindStatusCondition(backup.Status.Conditions, k8upv1a1.ConditionPreBackupPodReady.String())
-		if preBackupCond != nil && preBackupCond.Reason == k8upv1a1.ReasonFailed.String() {
-			ts.Assert().Equal(k8upv1a1.ReasonFailed.String(), preBackupCond.Reason)
+		preBackupCond := meta.FindStatusCondition(backup.Status.Conditions, k8upv1.ConditionPreBackupPodReady.String())
+		if preBackupCond != nil && preBackupCond.Reason == k8upv1.ReasonFailed.String() {
+			ts.Assert().Equal(k8upv1.ReasonFailed.String(), preBackupCond.Reason)
 			ts.Assert().Equal(metav1.ConditionFalse, preBackupCond.Status)
 			return true, nil
 		}
@@ -189,13 +189,13 @@ func (ts *BackupTestSuite) assertPreBackupPodConditionFailed(backup *k8upv1a1.Ba
 	})
 }
 
-func (ts *BackupTestSuite) assertPreBackupPodConditionSucceeded(backup *k8upv1a1.Backup) {
+func (ts *BackupTestSuite) assertPreBackupPodConditionSucceeded(backup *k8upv1.Backup) {
 	ts.RepeatedAssert(5*time.Second, time.Second, "backup does not have expected condition", func(timedCtx context.Context) (done bool, err error) {
-		err = ts.Client.Get(timedCtx, k8upv1a1.MapToNamespacedName(backup), backup)
+		err = ts.Client.Get(timedCtx, k8upv1.MapToNamespacedName(backup), backup)
 		ts.Require().NoError(err)
-		preBackupCond := meta.FindStatusCondition(backup.Status.Conditions, k8upv1a1.ConditionPreBackupPodReady.String())
-		if preBackupCond != nil && preBackupCond.Reason == k8upv1a1.ReasonFailed.String() {
-			ts.Assert().Equal(k8upv1a1.ReasonSucceeded.String(), preBackupCond.Reason)
+		preBackupCond := meta.FindStatusCondition(backup.Status.Conditions, k8upv1.ConditionPreBackupPodReady.String())
+		if preBackupCond != nil && preBackupCond.Reason == k8upv1.ReasonFailed.String() {
+			ts.Assert().Equal(k8upv1.ReasonSucceeded.String(), preBackupCond.Reason)
 			ts.Assert().Equal(metav1.ConditionFalse, preBackupCond.Status)
 			return true, nil
 		}
@@ -260,8 +260,8 @@ func (ts *BackupTestSuite) markDeploymentAsFinished(deployment *appsv1.Deploymen
 	ts.UpdateStatus(deployment)
 }
 
-func (ts *BackupTestSuite) markBackupAsFinished(backup *k8upv1a1.Backup) {
-	backup.Status = k8upv1a1.Status{
+func (ts *BackupTestSuite) markBackupAsFinished(backup *k8upv1.Backup) {
+	backup.Status = k8upv1.Status{
 		Started:  true,
 		Finished: true,
 		Conditions: []metav1.Condition{

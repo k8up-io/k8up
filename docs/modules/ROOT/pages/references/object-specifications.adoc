@@ -11,7 +11,7 @@ With the schedule CRD it's possible to put all other CRDs on a schedule.
 
 [source,yaml]
 ----
-apiVersion: k8up.io/v1alpha1
+apiVersion: k8up.io/v1
 kind: Schedule
 metadata:
   name: schedule-test
@@ -75,7 +75,7 @@ Example for a restore to a PVC:
 
 [source,yaml]
 ----
-apiVersion: k8up.io/v1alpha1
+apiVersion: k8up.io/v1
 kind: Restore
 metadata:
   name: restore-test
@@ -129,7 +129,7 @@ Thus you should only run one schedule per repository for archival as there's a c
 
 [source,yaml]
 ----
-apiVersion: k8up.io/v1alpha1
+apiVersion: k8up.io/v1
 kind: Archive
 metadata:
   name: archive-test
@@ -168,7 +168,7 @@ This will trigger a single backup.
 
 [source,yaml]
 ----
-apiVersion: k8up.io/v1alpha1
+apiVersion: k8up.io/v1
 kind: Backup
 metadata:
   name: k8up-test
@@ -217,7 +217,7 @@ This will trigger a single check run on the repository.
 
 [source,yaml]
 ----
-apiVersion: k8up.io/v1alpha1
+apiVersion: k8up.io/v1
 kind: Check
 metadata:
   name: check-test
@@ -263,7 +263,7 @@ It will also fail the whole Pod in that case.
 
 [source,yaml]
 ----
-apiVersion: k8up.io/v1alpha1
+apiVersion: k8up.io/v1
 kind: Prune
 metadata:
   name: prune-test
@@ -428,7 +428,7 @@ They can be used for various use cases though, see <<how-tos/prebackuppod.adoc#P
 
 [source,yaml]
 ----
-apiVersion: k8up.io/v1alpha1
+apiVersion: k8up.io/v1
 kind: PreBackupPod
 metadata:
   name: mysqldump

@@ -34,7 +34,7 @@ TIP: See xref:references/operator-config-reference.adoc[Operator Config referenc
 Following example is a simple `Schedule` example without further resource specs.
 [source,yaml]
 ----
-apiVersion: k8up.io/v1alpha1
+apiVersion: k8up.io/v1
 kind: Schedule
 metadata:
   name: schedule-test
@@ -46,7 +46,7 @@ spec:
 This will create a `Prune` object with the resource default applied:
 [source,yaml]
 ----
-apiVersion: k8up.io/v1alpha1
+apiVersion: k8up.io/v1
 kind: Prune
 metadata:
   name: schedule-test-prune-qbq2k
@@ -63,7 +63,7 @@ This object in turn spawns a `Job` with the given resource spec.
 Following example is a `Schedule` example that also sets CPU request for all jobs.
 [source,yaml]
 ----
-apiVersion: k8up.io/v1alpha1
+apiVersion: k8up.io/v1
 kind: Schedule
 metadata:
   name: schedule-test
@@ -84,7 +84,7 @@ spec:
 Combined with the global memory limit, the `Prune` object will have following resources:
 [source,yaml]
 ----
-apiVersion: k8up.io/v1alpha1
+apiVersion: k8up.io/v1
 kind: Prune
 metadata:
   name: schedule-test-prune-qbq2k
@@ -99,7 +99,7 @@ spec:
 Whereas, the `Check` object will overwrite the CPU resource request template with its own specification:
 [source,yaml]
 ----
-apiVersion: k8up.io/v1alpha1
+apiVersion: k8up.io/v1
 kind: Check
 metadata:
   name: schedule-test-check-q5kae
