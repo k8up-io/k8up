@@ -4,16 +4,37 @@ ifeval::['{page-origin-reftype}' == 'tag']
 endif::[]
 
 .Tutorials
-include::partial$nav-tutorials.adoc[]
+* xref:tutorials/tutorial.adoc[Introduction]
+* xref:tutorials/presentations.adoc[Presentations]
 
 .How-to guides
-include::partial$nav-howtos.adoc[]
+* xref:how-tos/installation.adoc[Installation]
+* xref:how-tos/upgrade.adoc[Upgrade K8up]
+* xref:how-tos/backup.adoc[Backup]
+* xref:how-tos/schedules.adoc[Schedules]
+* xref:how-tos/optimize-schedules.adoc[Optimize Schedules]
+* xref:how-tos/manage-pod-resources.adoc[Manage Pod Resources]
+* xref:how-tos/restore.adoc[Restore]
+* xref:how-tos/check-status.adoc[Check Status]
+* xref:how-tos/application-aware-backups.adoc[Application-Aware Backups]
+* xref:how-tos/archive.adoc[Archive]
+* xref:how-tos/prebackuppod.adoc[Pre-Backup Pods]
 
 .Technical reference
-include::partial$nav-reference.adoc[]
+* xref:references/annotations.adoc[Annotations Reference]
+* xref:references/api-reference.adoc[API Reference]
+* xref:references/config-reference.adoc[Configuration]
+* xref:references/object-specifications.adoc[Object Specifications]
+* xref:references/schedule-specification.adoc[Schedule Specifications]
+* xref:references/status.adoc[Status and Conditions]
 
 .Explanation
-include::partial$nav-explanation.adoc[]
+* xref:explanations/architecture.adoc[Architecture]
+* xref:explanations/ide.adoc[IDE Integration]
+* xref:explanations/release.adoc[Releasing K8up]
+* xref:explanations/missing-docs.adoc[Missing Documentation]
+* xref:explanations/supported-k8s-versions.adoc[Supported Kubernetes Versions]
+* xref:explanations/what-has-changed-in-v1.adoc[What has changed in K8up v1.0]
 
 .About
 * xref:about/roadmap.adoc[Roadmap]

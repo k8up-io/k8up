@@ -1,6 +1,0 @@
-* xref:references/annotations.adoc[Annotations Reference]
-* xref:references/api-reference.adoc[API Reference]
-* xref:references/config-reference.adoc[Configuration]
-* xref:references/object-specifications.adoc[Object Specifications]
-* xref:references/schedule-specification.adoc[Schedule Specifications]
-* xref:references/status.adoc[Status and Conditions]
