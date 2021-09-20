@@ -1,7 +1,18 @@
 * xref:index.adoc[Home]
-ifeval::['{page-origin-reftype}' == 'tag']
-* https://github.com/vshn/k8up/releases/tag/{page-origin-refname}[Changelog,window=_blank]
-endif::[]
+
+.Changelogs
+* https://github.com/k8up-io/k8up/releases/tag/v1.0.5[v1.0.5,window=_blank]
+* https://github.com/k8up-io/k8up/releases/tag/v1.0.4[v1.0.4,window=_blank]
+* https://github.com/k8up-io/k8up/releases/tag/v1.0.3[v1.0.3,window=_blank]
+* https://github.com/k8up-io/k8up/releases/tag/v1.0.2[v1.0.2,window=_blank]
+* https://github.com/k8up-io/k8up/releases/tag/v1.0.1[v1.0.1,window=_blank]
+* https://github.com/k8up-io/k8up/releases/tag/v1.0.0[v1.0.0,window=_blank]
+* https://github.com/k8up-io/k8up/releases/tag/v1.0.0-rc6[v1.0.0-rc6,window=_blank]
+* https://github.com/k8up-io/k8up/releases/tag/v1.0.0-rc5[v1.0.0-rc5,window=_blank]
+* https://github.com/k8up-io/k8up/releases/tag/v1.0.0-rc4[v1.0.0-rc4,window=_blank]
+* https://github.com/k8up-io/k8up/releases/tag/v1.0.0-rc3[v1.0.0-rc3,window=_blank]
+* https://github.com/k8up-io/k8up/releases/tag/v1.0.0-rc2[v1.0.0-rc2,window=_blank]
+* https://github.com/k8up-io/k8up/releases/tag/v1.0.0-rc1[v1.0.0-rc1,window=_blank]
 
 .Tutorials
 * xref:tutorials/tutorial.adoc[Introduction]
