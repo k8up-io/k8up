@@ -49,7 +49,7 @@ jobs:
       if: ${{ steps.semver.outputs.prerelease != '' }}
 
     - name: Commit
-      run: git commit -all --message "Update version for Antora"
+      run: git commit --all --message "Update version for Antora"
       continue-on-error: true
     - name: Push
       run: git push --atomic --force --set-upstream origin ${{ env.BRANCH_NAME }}
