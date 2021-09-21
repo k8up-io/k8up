@@ -31,7 +31,7 @@ dockers:
 release:
   prerelease: auto
   github:
-    owner: vshn
+    owner: k8up-io
     name: k8up
   extra_files:
   - glob: ./k8up-crd*.yaml
