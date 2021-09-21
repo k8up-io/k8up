@@ -1,0 +1,60 @@
+name: Docs
+
+on:
+  push:
+    tags:
+      - "*"
+
+jobs:
+  antora:
+    runs-on: ubuntu-latest
+    if: ${{ contains(github.ref, 'tags') }}
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+    - name: Configure Git
+      run: |
+        git config user.name "Antora via GitHub Actions"
+        git config user.email "actions@github.com"
+    - name: Parse semver string
+      id: semver
+      uses: booxmedialtd/ws-action-parse-semver@v1
+      with:
+        input_string: ${{ github.ref }}
+        version_extractor_regex: '\/v(.*)$'
+    - name: Set variables
+      run: |
+        echo "MINOR_VERSION=${{ steps.semver.outputs.major }}.${{ steps.semver.outputs.minor }}" >> $GITHUB_ENV
+        echo "BRANCH_NAME=docs/v${{ steps.semver.outputs.major }}.${{ steps.semver.outputs.minor }}" >> $GITHUB_ENV
+    - name: Set branch name for Prerelease
+      if: ${{ steps.semver.outputs.prerelease != '' }}
+      run: echo "BRANCH_NAME=${{ env.BRANCH_NAME }}-rc" >> $GITHUB_ENV
+
+    - name: Checkout remote branch if exists
+      run: git checkout ${{ env.BRANCH_NAME }}
+      continue-on-error: true
+    - name: Rebase if possible
+      run: git rebase ${GITHUB_REF##*/} ${{ env.BRANCH_NAME }}
+      continue-on-error: true
+    - name: Create new branch if not existing
+      run: git switch --create ${{ env.BRANCH_NAME }}
+      continue-on-error: true
+
+    - name: Patch Antora file for Release
+      run: yq eval 'del(.prerelease) | del (.display_version) | .version = "${{ env.MINOR_VERSION }}"' -i docs/antora.yml
+      if: ${{ steps.semver.outputs.prerelease == '' }}
+    - name: Patch Antora file for Prerelease
+      run: yq eval 'del (.display_version) | .version = "${{ env.MINOR_VERSION }}", .prerelease = "-${{ steps.semver.outputs.prerelease }}"' -i docs/antora.yml
+      if: ${{ steps.semver.outputs.prerelease != '' }}
+
+    - name: Commit
+      run: git commit -all --message "Update version for Antora"
+      continue-on-error: true
+    - name: Push
+      run: git push --atomic --force --set-upstream origin ${{ env.BRANCH_NAME }}
+
+    - name: Cleanup prerelease branch if existing
+      if: ${{ steps.semver.outputs.prerelease == '' }}
+      run: git push origin --delete ${{ env.BRANCH_NAME }}-rc
+      continue-on-error: true
