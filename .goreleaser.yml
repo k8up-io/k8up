@@ -31,9 +31,9 @@ dockers:
   - "{{ if not .Prerelease }}ghcr.io/k8up-io/k8up:latest{{ end }}"
   - "{{ if not .Prerelease }}quay.io/k8up-io/k8up:latest{{ end }}"
   goarch: amd64
-- <<: *image_template
-  id: docker-arm64
-  goarch: arm64
+# - <<: *image_template
+#   id: docker-arm64
+#   goarch: arm64
 
 release:
   prerelease: auto
