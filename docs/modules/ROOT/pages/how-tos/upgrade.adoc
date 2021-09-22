@@ -22,7 +22,7 @@ NOTE: You might need to adapt the commands to your needs.
 
 === Prepare new Helm release
 
-The https://github.com/appuio/charts/tree/master/k8up[Helm Chart v1.0] comes with a few new and changed properties.
+The https://github.com/appuio/charts/tree/master/appuio/k8up[Helm Chart v1.0] comes with a few new and changed properties.
 Please consult the README.
 
 Most notably, the Chart is targeted to recent Kubernetes versions.
