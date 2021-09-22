@@ -1,0 +1,72 @@
+name: 🐛 Bug report
+description: Create a report to help us improve 🎉
+labels:
+  - bug
+
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: A clear and concise description of what the bug is.
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional Context
+      description: Add any other context about the problem here.
+    validations:
+      required: false
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: If applicable, add logs to help explain the bug.
+      render: shell
+    validations:
+      required: false
+  - type: textarea
+    id: expected_behavior
+    attributes:
+      label: Expected Behavior
+      description: A clear and concise description of what you expected to happen.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction_steps
+    attributes:
+      label: Steps To Reproduce
+      description: Describe steps to reproduce the behavior
+      placeholder: |
+        1. Specs
+        ```yaml
+
+        ```
+        2. Commands
+        ```bash
+
+        ```
+    validations:
+      required: false
+  - type: input
+    id: k8up_version
+    attributes:
+      label: Version of K8up
+      placeholder: e.g. v2.0.0
+    validations:
+      required: true
+  - type: input
+    id: k8s_version
+    attributes:
+      label: Version of Kubernetes
+      placeholder: e.g. v1.22
+    validations:
+      required: true
+  - type: input
+    id: k8s_distribution
+    attributes:
+      label: Distribution of Kubernetes
+      placeholder: e.g. OpenShift, Rancher, …
+    validations:
+      required: true

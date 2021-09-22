@@ -1,0 +1,63 @@
+name: 🚀 Feature request
+description: Suggest an idea for this project 💡
+labels:
+  - enhancement
+
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      value: |
+        **As** "role name"\
+        **I want** "a feature or functionality"\
+        **So that** "I get certain business value"
+    validations:
+      required: false
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: Add more information here. You are completely free regarding form and length.
+    validations:
+      required: true
+  - type: textarea
+    id: out_of_scope
+    attributes:
+      label: Out of Scope
+      description: List aspects that are explicitly not part of this feature
+      placeholder: |
+        - ...
+        - ...
+        - ...
+    validations:
+      required: false
+  - type: textarea
+    id: links
+    attributes:
+      label: Further links
+      description: URLs of relevant Git repositories, PRs, Issues, etc.
+      placeholder: |
+        - #567
+        - https://k8up.io/
+        - https://kubernetes.io/docs/reference/
+    validations:
+      required: false
+  - type: textarea
+    id: acceptance_criteria
+    attributes:
+      label: Acceptance Criteria
+      description: If you already have ideas what the requirements are, please list them below in given-when-then expressions.
+      placeholder: |
+        - Given a precondition, when an action happens, then expect a result
+        - Given a precondition, when an action happens, then expect a result
+        - Given a precondition, when an action happens, then expect a result
+    validations:
+      required: false
+  - type: textarea
+    id: implementation_idea
+    attributes:
+      label: Implementation Ideas
+      description: If applicable, shortly list possible implementation ideas
+    validations:
+      required: false
