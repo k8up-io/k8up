@@ -1,0 +1,62 @@
+= K8up Backup Methods
+
+K8up currently implements three ways to do backups:
+
+. xref:how-tos/backup.adoc[_PVC backups_], which work by mounting the underlying `PV` of each `PVC` and reading its files.
+. xref:how-tos/application-aware-backups.adoc[_Backup commands_], which print the content, that should be backed up, to STDOUT.
+. The special xref:how-tos/prebackuppod.adoc[`PreBackupPod`], which is run as part of a backup.
+
+This explanation guide briefly explains each backup method.
+
+== PVC Backup
+
+This is the most straight-forward backup approach.
+What k8up basically does is that it looks at all the `PVC` definitions in a namespace.
+For every `PVC` it creates a `Job` in that same namespace.
+That `Job` will launch a `Pod`, which mounts the respective `PV`.
+All the content of that `PV` is then backed-up.
+
+This method's advantage is that it is dead-easy to use and works for a surprising large amount of use-cases.
+It does not work in some cases though.
+More precise, it does not work when files are kept open for a long period of time, like databases do.
+It does also not work for content that is not stored in the cluster, like a managed database that is offered by a service provider.
+
+== Application-Aware Backups
+
+The backup command is defined an annotation on your `Pod`.
+When k8up does the backup, it will start that command in the context of your `Pod`.
+It uses the same method as if you are running `kubectl exec POD -- COMMAND ARGS`.
+K8up will then collect everything that is written to `STDOUT`.
+The collected content is then stored in the configured backup storage as text file.
+
+This method is especially useful to back up databases, because you will get a consistent view of that database.
+This is usually not guaranteed with a file-based backup, as the database may have not yet written some content to disk when k8up reads the file.
+Or worse: The database modifies the file while k8up is reading it.
+This can be prevented by relying on the respective tooling of your database to take backups.
+For PostgreSQL, this tool is `pg_dump` for example.
+
+The advantage of this method is that it has access to everything that your `Pod` has access to.
+Which means that it can connect to internal (and also external) endpoints to fetch data.
+It also works with a variety of database systems and likewise programs that store (some portion of) their data in-memory.
+
+The drawback is that it transfers data via `stdout`, which is less efficient.
+The reason is that Kubernetes has to relay that data from the executed command to k8up.
+Another drawback is that your `Pod` must provide the tools to execute the command.
+If it does not already contain that command – if it's a distro-less container for example – then the next method might be for you.
+
+== PreBackupPod
+
+The `PreBackupPod` builds upon the concept of the aforementioned _backup command_.
+It is essentially a special `Pod` that is created by `k8up` for every backup run.
+You have all the flexibility of the Kubernetes `Pod`-definition, like defining a special `image` or accessing a `Secret`.
+After the `Pod` started, `k8up` will run the given `backupCommand` in that `Pod` as described above.
+When the command finished, `k8up` will remove the `Pod` again.
+
+The advantage of this method is its flexibility.
+You can provide a special image which contains all the commands you need.
+You can access your `Secrets`.
+You can connect to services inside or outside the cluster, like a managed database.
+
+The drawback – in contrast to the pure _backup command_ – is that this `Pod` runs in its own context and can't access services which are internal to another _Pod_.
+You may also need to keep the `PreBackupPod` in sync with your main `Deployment` or with an external dependency.
+When you update your database in your main `Deployment` for example, you may need to update your `PreBackupPod` as well.
