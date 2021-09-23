@@ -22,9 +22,14 @@ os() {
   esac
 }
 
+restic_version() {
+  grep -e 'restic/restic' < go.mod \
+  | grep -oe '[0-9]*\.[0-9]*\.[0-9]*'
+}
+
 fetch_restic() {
   local RESTIC_DEST="${1}"
-  local RESTIC_VERSION="${2}"
+  local RESTIC_VERSION="${2-$(restic_version)}"
   local RESTIC_OS="${3-$(os)}"
   local RESTIC_ARCH="${4-$(cpu_arch)}"
 

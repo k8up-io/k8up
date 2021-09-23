@@ -5,9 +5,8 @@ RUN apk add --update --no-cache \
     ca-certificates \
     curl
 
-ARG RESTIC_VERSION=0.12.1
-COPY fetch_restic.sh ./
-RUN ./fetch_restic.sh /usr/local/bin/restic ${RESTIC_VERSION} \
+COPY go.mod fetch_restic.sh ./
+RUN ./fetch_restic.sh /usr/local/bin/restic \
  && /usr/local/bin/restic version
 
 FROM docker.io/library/alpine:3.14 as k8up
