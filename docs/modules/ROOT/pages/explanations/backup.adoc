@@ -20,6 +20,9 @@ This method's advantage is that it is dead-easy to use and works for a surprisin
 It does not work in some cases though.
 More precise, it does not work when files are kept open for a long period of time, like databases do.
 It does also not work for content that is not stored in the cluster, like a managed database that is offered by a service provider.
+If the PVC has the RWO access mode, the backup `Pod` needs to be scheduled on the same node as the `Pod` runs which uses this PVC.
+
+See xref:annotations.adoc[Annotations] to read more about how the backup process can be influenced.
 
 == Application-Aware Backups
 
@@ -44,6 +47,8 @@ The reason is that Kubernetes has to relay that data from the executed command t
 Another drawback is that your `Pod` must provide the tools to execute the command.
 If it does not already contain that command – if it's a distro-less container for example – then the next method might be for you.
 
+See xref:application-aware-backups.adoc[How to create Application-Aware Backups] to read more about it.
+
 == PreBackupPod
 
 The `PreBackupPod` builds upon the concept of the aforementioned _backup command_.
@@ -60,3 +65,5 @@ You can connect to services inside or outside the cluster, like a managed databa
 The drawback – in contrast to the pure _backup command_ – is that this `Pod` runs in its own context and can't access services which are internal to another _Pod_.
 You may also need to keep the `PreBackupPod` in sync with your main `Deployment` or with an external dependency.
 When you update your database in your main `Deployment` for example, you may need to update your `PreBackupPod` as well.
+
+See xref:prebackuppod.adoc[How to use Pre-Backup pods] to read more about it.
