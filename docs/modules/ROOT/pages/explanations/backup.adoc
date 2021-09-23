@@ -20,7 +20,8 @@ This method's advantage is that it is dead-easy to use and works for a surprisin
 It does not work in some cases though.
 More precise, it does not work when files are kept open for a long period of time, like databases do.
 It does also not work for content that is not stored in the cluster, like a managed database that is offered by a service provider.
-If the PVC has the RWO access mode, the backup `Pod` needs to be scheduled on the same node as the `Pod` runs which uses this PVC.
+
+NOTE: If the PVC has the `RWO` access mode, the backup `Pod` needs to be scheduled onto the same node, on which the `Pod` (which uses the respective `PVC`) runs.
 
 Read xref:references/annotations.adoc[] to learn more about how the backup process can be influenced.
 
