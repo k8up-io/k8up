@@ -1,10 +1,10 @@
-= K8up Backup Methods
+= Backup Methods
 
 K8up currently implements three ways to do backups:
 
 . xref:how-tos/backup.adoc[_PVC backups_], which work by mounting the underlying `PV` of each `PVC` and reading its files.
-. xref:how-tos/application-aware-backups.adoc[_Backup commands_], which print the content, that should be backed up, to STDOUT.
-. xref:how-tos/prebackuppod.adoc[`PreBackupPod`], which is run as part of a backup.
+. xref:how-tos/application-aware-backups.adoc[_Backup commands_], which print the content, that should be backed up, to _STDOUT_.
+. xref:how-tos/prebackuppod.adoc[_PreBackupPod_], which is run as part of a backup.
 
 This explanation guide briefly explains each backup method.
 
@@ -22,7 +22,7 @@ More precise, it does not work when files are kept open for a long period of tim
 It does also not work for content that is not stored in the cluster, like a managed database that is offered by a service provider.
 If the PVC has the RWO access mode, the backup `Pod` needs to be scheduled on the same node as the `Pod` runs which uses this PVC.
 
-See xref:annotations.adoc[Annotations] to read more about how the backup process can be influenced.
+Read xref:references/annotations.adoc[] to learn more about how the backup process can be influenced.
 
 == Application-Aware Backups
 
@@ -47,7 +47,7 @@ The reason is that Kubernetes has to relay that data from the executed command t
 Another drawback is that your `Pod` must provide the tools to execute the command.
 If it does not already contain that command – if it's a distro-less container for example – then the next method might be for you.
 
-See xref:application-aware-backups.adoc[How to create Application-Aware Backups] to read more about it.
+Read xref:how-tos/application-aware-backups.adoc[] to learn more about to use this backup method.
 
 == PreBackupPod
 
@@ -66,4 +66,4 @@ The drawback – in contrast to the pure _backup command_ – is that this `Pod`
 You may also need to keep the `PreBackupPod` in sync with your main `Deployment` or with an external dependency.
 When you update your database in your main `Deployment` for example, you may need to update your `PreBackupPod` as well.
 
-See xref:prebackuppod.adoc[How to use Pre-Backup pods] to read more about it.
+Read xref:how-tos/prebackuppod.adoc[] to learn more about the usage of and more use-cases for this backup method.

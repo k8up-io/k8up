@@ -28,7 +28,7 @@
 * xref:references/status.adoc[Status and Conditions]
 
 .Explanation
-* xref:explanations/backup.adoc[K8up Backup Methods]
+* xref:explanations/backup.adoc[Backup Methods]
 * xref:explanations/architecture.adoc[Architecture]
 * xref:explanations/ide.adoc[IDE Integration]
 * xref:explanations/release.adoc[Releasing K8up]
