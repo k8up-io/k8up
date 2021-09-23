@@ -16,24 +16,46 @@ snapshot:
   name_template: "{{ incpatch .Version }}-snapshot"
 
 dockers:
-- &image_template
-  id: docker-amd64
-  image_templates:
-  - "ghcr.io/k8up-io/k8up:v{{ .Version }}"
-  - "quay.io/k8up-io/k8up:v{{ .Version }}"
+- image_templates:
+  - "ghcr.io/k8up-io/k8up:v{{ .Version }}-amd64"
+  - "quay.io/k8up-io/k8up:v{{ .Version }}-amd64"
+  goarch: amd64
+  use: buildx
+  build_flag_templates:
+  - "--platform=linux/amd64"
+  extra_files: &dockers_extra_files
+  - fetch_restic.sh
+- image_templates:
+  - "ghcr.io/k8up-io/k8up:v{{ .Version }}-arm64"
+  - "quay.io/k8up-io/k8up:v{{ .Version }}-arm64"
+  goarch: arm64
+  use: buildx
+  build_flag_templates:
+  - "--platform=linux/arm64"
+  extra_files: *dockers_extra_files
+
+docker_manifests:
+- name_template: "ghcr.io/k8up-io/k8up:v{{ .Version }}"
+  image_templates: &ghcr
+    - "ghcr.io/k8up-io/k8up:v{{ .Version }}-amd64"
+    - "ghcr.io/k8up-io/k8up:v{{ .Version }}-arm64"
+- name_template: "quay.io/k8up-io/k8up:v{{ .Version }}"
+  image_templates: &quay
+    - "quay.io/k8up-io/k8up:v{{ .Version }}-amd64"
+    - "quay.io/k8up-io/k8up:v{{ .Version }}-arm64"
 
   # For prereleases, updating `latest` and the floating tags of the major
   # version does not make sense. Only the image for the exact version should
   # be pushed.
-  - "{{ if not .Prerelease }}ghcr.io/k8up-io/k8up:v{{ .Major }}{{ end }}"
-  - "{{ if not .Prerelease }}quay.io/k8up-io/k8up:v{{ .Major }}{{ end }}"
+- name_template: "{{ if not .Prerelease }}ghcr.io/k8up-io/k8up:v{{ .Major }}{{ end }}"
+  image_templates: *ghcr
+- name_template: "{{ if not .Prerelease }}quay.io/k8up-io/k8up:v{{ .Major }}{{ end }}"
+  image_templates: *quay
 
-  - "{{ if not .Prerelease }}ghcr.io/k8up-io/k8up:latest{{ end }}"
-  - "{{ if not .Prerelease }}quay.io/k8up-io/k8up:latest{{ end }}"
-  goarch: amd64
-# - <<: *image_template
-#   id: docker-arm64
-#   goarch: arm64
+- name_template: "{{ if not .Prerelease }}ghcr.io/k8up-io/k8up:latest{{ end }}"
+  image_templates: *ghcr
+- name_template: "{{ if not .Prerelease }}quay.io/k8up-io/k8up:latest{{ end }}"
+  image_templates: *quay
 
 release:
   prerelease: auto

@@ -9,25 +9,19 @@ jobs:
   dist:
     runs-on: ubuntu-latest
     steps:
-    -
-      uses: actions/checkout@v2
+    - uses: actions/checkout@v2
       with:
         fetch-depth: 0
-    -
-      name: Determine Go version from go.mod
+    - name: Determine Go version from go.mod
       run: echo "GO_VERSION=$(grep "go 1." go.mod | cut -d " " -f 2)" >> $GITHUB_ENV
-    -
-      uses: actions/setup-go@v2
+    - uses: actions/setup-go@v2
       with:
         go-version: ${{ env.GO_VERSION }}
-    -
-      name: Set up QEMU
+    - name: Set up QEMU
       uses: docker/setup-qemu-action@v1
-    -
-      name: Set up Docker Buildx
+    - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v1
-    -
-      uses: actions/cache@v2
+    - uses: actions/cache@v2
       with:
         path: ~/go/pkg/mod
         key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
@@ -47,11 +41,9 @@ jobs:
         registry: ghcr.io
         username: ${{ github.repository_owner }}
         password: ${{ secrets.GITHUB_TOKEN }}
-    -
-      name: Generate artifacts
+    - name: Generate artifacts
       run: make crd
-    -
-      name: Build changelog from PRs with labels
+    - name: Build changelog from PRs with labels
       id: build_changelog
       uses: mikepenz/release-changelog-builder-action@v2
       with:
@@ -63,8 +55,7 @@ jobs:
         outputFile: .github/release-notes.md
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    -
-      name: Publish releases
+    - name: Publish releases
       uses: goreleaser/goreleaser-action@v2
       with:
         args: release --release-notes .github/release-notes.md
