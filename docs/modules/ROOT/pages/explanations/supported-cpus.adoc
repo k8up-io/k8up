@@ -1,0 +1,10 @@
+= Supported CPU architectures
+
+K8up is only built for Linux.
+The only supported CPU architecture is currently the _x64_ (otherwise known as _AMD64_ and _x86-64_).
+
+In v2.x we introduced builds of the K8up binary for the _AArch64_ CPU architecture (otherwise known as _amd64_).
+These builds are currently provided on a best-effort basis without further testing or support.
+
+We will eventually provide Docker builds for _AArch64_ CPUs as well.
+But with our current build process, we're depending on _restic_ to provide Docker images for _AArch64_ first before we can provide such images.
