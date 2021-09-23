@@ -9,14 +9,14 @@
 * xref:how-tos/installation.adoc[Installation]
 * xref:how-tos/upgrade.adoc[Upgrade K8up]
 * xref:how-tos/backup.adoc[Backup]
+* xref:how-tos/application-aware-backups.adoc[Application-Aware Backups]
+* xref:how-tos/prebackuppod.adoc[Pre-Backup Pods]
 * xref:how-tos/schedules.adoc[Schedules]
+* xref:how-tos/restore.adoc[Restore]
+* xref:how-tos/archive.adoc[Archive]
+* xref:how-tos/check-status.adoc[Check Status]
 * xref:how-tos/optimize-schedules.adoc[Optimize Schedules]
 * xref:how-tos/manage-pod-resources.adoc[Manage Pod Resources]
-* xref:how-tos/restore.adoc[Restore]
-* xref:how-tos/check-status.adoc[Check Status]
-* xref:how-tos/application-aware-backups.adoc[Application-Aware Backups]
-* xref:how-tos/archive.adoc[Archive]
-* xref:how-tos/prebackuppod.adoc[Pre-Backup Pods]
 
 .Technical reference
 * xref:references/annotations.adoc[Annotations Reference]
@@ -28,6 +28,7 @@
 * xref:references/status.adoc[Status and Conditions]
 
 .Explanation
+* xref:explanations/backup.adoc[Backup Methods]
 * xref:explanations/architecture.adoc[Architecture]
 * xref:explanations/ide.adoc[IDE Integration]
 * xref:explanations/release.adoc[Releasing K8up]
