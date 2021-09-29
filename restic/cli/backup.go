@@ -23,7 +23,8 @@ func (r *Restic) Backup(backupDir string, tags ArrayOpts) error {
 	backuplogger.Info("starting backup")
 
 	if _, err := os.Stat(backupDir); os.IsNotExist(err) {
-		backuplogger.Info("backupdir does not exist, skipping", "dirname", backupDir)
+		backuplogger.Info("backupdir does not exist, skipping. Sending snapshot list", "dirname", backupDir)
+		r.sendPostWebhook()
 		return nil
 	}
 
