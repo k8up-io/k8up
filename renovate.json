@@ -7,5 +7,17 @@
   ],
   "postUpdateOptions": [
     "gomodTidy"
+  ],
+  "packageRules": [
+    {
+      "matchPackagePatterns": [
+        "k8s.io/utils",
+        "sigs.k8s.io/controller-runtime/tools/setup-envtest"
+      ],
+      "schedule": [
+        "on the first day of the month"
+      ],
+      "automerge": true
+    }
   ]
 }
