@@ -3,9 +3,11 @@
 K8up officially has two support streams:
 
 . Recent stable Kubernetes version
-. OpenShift `3.11`
+. OpenShift `v4.8` or newer
 
-K8up supports legacy Kubernetes clusters such as OpenShift `3.11` (Kubernetes 1.11) as long VSHN (the company behind K8up) operates OpenShift `3.11` with K8up installed.
+K8up v1 supports legacy Kubernetes clusters such as OpenShift `3.11` (Kubernetes 1.11) as long VSHN (the company behind K8up) operates OpenShift `3.11` with K8up installed.
 However, some new features are not supported on Kubernetes < `1.16`, e.g. High Availability with Leader election.
+
+With K8vup v2, support for OpenShift 3.11 has been dropped since their Kubernetes version is too old to support `apiextensions.k8s.io/v1` CustomResourceDefinitions.
 
 See the {page-origin-url}[Repository,window=_blank] which upstream Kubernetes version is supported.

@@ -23,3 +23,5 @@ For now, their CLI interfaces have been aligned, which already helps during deve
 
 We have big plans for future versions of K8up, but they all require a solid foundation.
 We believe that K8up v2 is that solid foundation.
+
+Going forward, K8up v2 drops support for very old Kubernetes versions, for example OpenShift 3.11.

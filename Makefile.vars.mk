@@ -13,12 +13,10 @@ e2etest_dir ?= $(CURDIR)/$(PROJECT_ROOT_DIR)/.e2e-test
 e2etest_dir_created = $(e2etest_dir)/.created
 
 CRD_FILE ?= k8up-crd.yaml
-CRD_FILE_LEGACY ?= k8up-crd-legacy.yaml
 CRD_ROOT_DIR ?= config/crd/apiextensions.k8s.io
-CRD_SPEC_VERSION ?= v1
 CRD_DOCS_REF_PATH ?= docs/modules/ROOT/pages/references/api-reference.adoc
 
-KIND_NODE_VERSION ?= v1.21.2
+KIND_NODE_VERSION ?= v1.22.1
 KIND ?= go run sigs.k8s.io/kind
 KIND_KUBECONFIG ?= $(e2etest_dir)/kind-kubeconfig-$(KIND_NODE_VERSION)
 KIND_CLUSTER ?= k8up-$(KIND_NODE_VERSION)
