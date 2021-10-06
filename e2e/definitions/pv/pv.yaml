@@ -10,7 +10,8 @@ spec:
   capacity:
     storage: 1Gi
   hostPath:
-    path: /pv/data/pvc-subject
+    path: /tmp/e2e/pvc-subject
     type: DirectoryOrCreate
+  # 'Delete' is only supported inside /tmp
   persistentVolumeReclaimPolicy: Delete
   storageClassName: hostpath
