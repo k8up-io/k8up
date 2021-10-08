@@ -16,8 +16,8 @@ require (
 	github.com/stretchr/testify v1.7.0
 	github.com/urfave/cli/v2 v2.3.0
 	go.uber.org/zap v1.19.1
-	k8s.io/api v0.21.3
-	k8s.io/apimachinery v0.21.3
+	k8s.io/api v0.22.2
+	k8s.io/apimachinery v0.22.2
 	k8s.io/client-go v0.21.3
 	k8s.io/utils v0.0.0-20210820185131-d34e5cb4466e
 	sigs.k8s.io/controller-runtime v0.9.5
@@ -60,7 +60,6 @@ require (
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510 // indirect
 	github.com/google/uuid v1.1.2 // indirect
 	github.com/googleapis/gnostic v0.5.5 // indirect
-	github.com/hashicorp/golang-lru v0.5.4 // indirect
 	github.com/huandu/xstrings v1.2.1 // indirect
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.11 // indirect
@@ -118,7 +117,7 @@ require (
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 	k8s.io/apiextensions-apiserver v0.21.3 // indirect
 	k8s.io/component-base v0.21.3 // indirect
-	k8s.io/klog/v2 v2.8.0 // indirect
+	k8s.io/klog/v2 v2.9.0 // indirect
 	k8s.io/kube-openapi v0.0.0-20210421082810-95288971da7e // indirect
 	sigs.k8s.io/kustomize/api v0.9.0 // indirect
 	sigs.k8s.io/kustomize/cmd/config v0.10.0 // indirect
