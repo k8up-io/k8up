@@ -19,25 +19,22 @@ func TestBackupExecutor_setupEnvVars(t *testing.T) {
 		givenConfig     *cfg.Configuration
 		expectedEnvVars []corev1.EnvVar
 	}{
-		"GivenEmptySpec_ThenExpectEmpty_StatsURL": {
-			givenSpec:       v1.BackupSpec{},
-			expectedEnvVars: nil,
+		"GivenEmptySpec_ThenExpectEmptyVariables": {
+			givenSpec: v1.BackupSpec{},
+			expectedEnvVars: []corev1.EnvVar{
+				{Name: "STATS_URL", Value: ""},
+				{Name: "PROM_URL", Value: ""},
+			},
 		},
-		"GivenSpec_WhenGlobalDefined_ThenExpectGlobalVariable_StatsURL": {
+		"GivenSpec_WhenGlobalDefined_ThenExpectGlobalVariable": {
 			givenSpec: v1.BackupSpec{},
 			givenConfig: &cfg.Configuration{
 				GlobalStatsURL: "https://hostname:port/stats",
 				PromURL:        "https://hostname:port/prom",
 			},
 			expectedEnvVars: []corev1.EnvVar{
-				{
-					Name:  "STATS_URL",
-					Value: "https://hostname:port/stats",
-				},
-				{
-					Name:  "PROM_URL",
-					Value: "https://hostname:port/prom",
-				},
+				{Name: "STATS_URL", Value: "https://hostname:port/stats"},
+				{Name: "PROM_URL", Value: "https://hostname:port/prom"},
 			},
 		},
 		"GivenSpecWithSpecificValue_WhenGlobalDefined_ThenExpectSpecificVariable": {
@@ -50,19 +47,17 @@ func TestBackupExecutor_setupEnvVars(t *testing.T) {
 				PromURL:        "https://hostname:port/prom",
 			},
 			expectedEnvVars: []corev1.EnvVar{
-				{
-					Name:  "STATS_URL",
-					Value: "https://custom:port/stats",
-				},
-				{
-					Name:  "PROM_URL",
-					Value: "https://custom:port/prom",
-				},
+				{Name: "STATS_URL", Value: "https://custom:port/stats"},
+				{Name: "PROM_URL", Value: "https://custom:port/prom"},
 			},
 		},
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
+			currentConfig := cfg.Config
+			defer func() {
+				cfg.Config = currentConfig
+			}()
 			backup := &v1.Backup{
 				Spec: tt.givenSpec,
 				ObjectMeta: metav1.ObjectMeta{
@@ -71,6 +66,8 @@ func TestBackupExecutor_setupEnvVars(t *testing.T) {
 			}
 			if tt.givenConfig != nil {
 				cfg.Config = tt.givenConfig
+			} else {
+				cfg.Config = &cfg.Configuration{}
 			}
 			exec := NewBackupExecutor(job.Config{
 				Log: zapr.NewLogger(zaptest.NewLogger(t)),
