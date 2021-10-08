@@ -118,8 +118,8 @@ func (b *BackupExecutor) setupEnvVars() []corev1.EnvVar {
 		}
 	}
 
-	vars.SetString("STATS_URL", cfg.Config.GlobalStatsURL)
-	vars.SetString("PROM_URL", cfg.Config.PromURL)
+	vars.SetStringOrDefault("STATS_URL", b.backup.Spec.StatsURL, cfg.Config.GlobalStatsURL)
+	vars.SetStringOrDefault("PROM_URL", b.backup.Spec.PromURL, cfg.Config.PromURL)
 	vars.SetString("BACKUPCOMMAND_ANNOTATION", cfg.Config.BackupCommandAnnotation)
 	vars.SetString("FILEEXTENSION_ANNOTATION", cfg.Config.FileExtensionAnnotation)
 

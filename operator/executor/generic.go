@@ -51,6 +51,15 @@ func (e *EnvVarConverter) SetString(key, value string) {
 	e.setEntry(key, envVarEntry{stringEnv: &value})
 }
 
+// SetStringOrDefault adds a string key and value pair to the environment.
+// If value is an empty string, it will use the given default value.
+func (e *EnvVarConverter) SetStringOrDefault(key, value, def string) {
+	if value == "" {
+		value = def
+	}
+	e.setEntry(key, envVarEntry{stringEnv: &value})
+}
+
 // SetEnvVarSource add an EnvVarSource to the environment with the given key.
 func (e *EnvVarConverter) SetEnvVarSource(key string, value *corev1.EnvVarSource) {
 	e.setEntry(key, envVarEntry{envVarSource: value})
