@@ -6,15 +6,14 @@ package cleaner_test
 import (
 	"testing"
 
-	"github.com/stretchr/testify/suite"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/uuid"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-
 	k8upv1 "github.com/k8up-io/k8up/api/v1"
 	"github.com/k8up-io/k8up/envtest"
 	"github.com/k8up-io/k8up/operator/executor/cleaner"
 	"github.com/k8up-io/k8up/operator/job"
+	"github.com/stretchr/testify/suite"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/uuid"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 type CleanerTestSuite struct {
@@ -54,22 +53,22 @@ func (ts *CleanerTestSuite) withJobs() {
 
 func (ts *CleanerTestSuite) runCleanup() {
 	objCleaner := &cleaner.ObjectCleaner{Client: ts.Client, Limits: newLimiter(1, 1), Log: ts.Logger}
-	deleted, err := objCleaner.CleanOldObjects(ts.Ctx, ts.loadJobs().GetJobObjects())
+	deleted, err := objCleaner.CleanOldObjects(ts.Ctx, ts.fetchJobs().GetJobObjects())
 	ts.Assertions.NoError(err)
 	ts.Assertions.Equal(2, deleted)
 }
 
 func (ts *CleanerTestSuite) assertJobsDeleted() {
-	afterClean := filterDeleted(ts.loadJobs())
+	afterClean := filterDeleted(ts.fetchJobs())
 	runningJobs, failedJobs, successfulJobs := job.GroupByStatus(afterClean.GetJobObjects())
 	ts.Assertions.Equal(3, len(runningJobs))
 	ts.Assertions.Equal(1, len(failedJobs))
 	ts.Assertions.Equal(1, len(successfulJobs))
 }
 
-func (ts *CleanerTestSuite) loadJobs() *k8upv1.RestoreList {
+func (ts *CleanerTestSuite) fetchJobs() *k8upv1.RestoreList {
 	jobs := &k8upv1.RestoreList{}
-	ts.Assertions.NoError(ts.Client.List(ts.Ctx, jobs, &client.ListOptions{Namespace: ts.NS}))
+	ts.Assertions.NoError(ts.Client.List(ts.Ctx, jobs, client.InNamespace(ts.NS)))
 	return jobs
 }
 
@@ -96,8 +95,12 @@ func jobList(ns string, running, failed, successful int) *k8upv1.RestoreList {
 
 func (ts *CleanerTestSuite) EnsureJobs(jobs *k8upv1.RestoreList) {
 	for _, jobItem := range jobs.Items {
-		ts.EnsureResources(&jobItem)
-		ts.UpdateStatus(&jobItem)
+		item := &jobItem
+		deepCopy := jobItem.DeepCopy()
+		ts.EnsureResources(item)
+		// client.Create nullifies the status (because of Subresource) so we'll set it again.
+		item.Status = deepCopy.Status
+		ts.UpdateStatus(item)
 	}
 }
 
