@@ -4,4 +4,4 @@ nodes:
 - role: control-plane
   extraMounts:
   - hostPath: ./debug/data
-    containerPath: /pv/data
+    containerPath: /tmp/e2e

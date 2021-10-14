@@ -45,9 +45,8 @@ docker_manifests:
     - "quay.io/k8up-io/k8up:v{{ .Version }}-amd64"
     - "quay.io/k8up-io/k8up:v{{ .Version }}-arm64"
 
-  # For prereleases, updating `latest` and the floating tags of the major
-  # version does not make sense. Only the image for the exact version should
-  # be pushed.
+  # For prereleases, updating `latest` and the floating tags of the major version does not make sense.
+  # Only the image for the exact version should be pushed.
 - name_template: "{{ if not .Prerelease }}ghcr.io/k8up-io/k8up:v{{ .Major }}{{ end }}"
   image_templates: *ghcr
 - name_template: "{{ if not .Prerelease }}quay.io/k8up-io/k8up:v{{ .Major }}{{ end }}"
@@ -60,8 +59,5 @@ docker_manifests:
 
 release:
   prerelease: auto
-  github:
-    owner: k8up-io
-    name: k8up
   extra_files:
   - glob: ./k8up-crd*.yaml

@@ -23,7 +23,7 @@ If it doesn't work, check the following:
 
 [IMPORTANT]
 ====
-Remember that you need to re-run `make integration-test` when you ran `make clean` or when you deleted the `./testbin` directory.
+Remember that you need to re-run `make integration-test` when you ran `make clean` or when you deleted the `./integration-test` directory.
 ====
 
 [NOTE]

@@ -24,7 +24,7 @@ test: ## Run tests
 .PHONY: integration-test
 # operator module {
 # See https://storage.googleapis.com/kubebuilder-tools/ for list of supported K8s versions
-integration-test: export ENVTEST_K8S_VERSION = 1.21.x
+integration-test: export ENVTEST_K8S_VERSION = 1.22.x
 integration-test: export KUBEBUILDER_ATTACH_CONTROL_PLANE_OUTPUT = $(INTEGRATION_TEST_DEBUG_OUTPUT)
 # }
 # restic module {
@@ -66,11 +66,11 @@ run-restic: run  ## Run the restic module. Use ARGS to pass arguments to the com
 
 .PHONY: install
 install: generate ## Install CRDs into a cluster
-	$(KUSTOMIZE) build $(CRD_ROOT_DIR)/$(CRD_SPEC_VERSION) | kubectl apply $(KIND_KUBECTL_ARGS) -f -
+	$(KUSTOMIZE) build $(CRD_ROOT_DIR)/v1 | kubectl apply $(KIND_KUBECTL_ARGS) -f -
 
 .PHONY: uninstall
 uninstall: generate ## Uninstall CRDs from a cluster
-	$(KUSTOMIZE) build $(CRD_ROOT_DIR)/$(CRD_SPEC_VERSION) | kubectl delete -f -
+	$(KUSTOMIZE) build $(CRD_ROOT_DIR)/v1 | kubectl delete -f -
 
 .PHONY: deploy
 deploy: generate ## Deploy controller in the configured Kubernetes cluster in ~/.kube/config
@@ -79,13 +79,16 @@ deploy: generate ## Deploy controller in the configured Kubernetes cluster in ~/
 
 .PHONY: generate
 generate: ## Generate manifests e.g. CRD, RBAC etc.
-	@CRD_ROOT_DIR="$(CRD_ROOT_DIR)" CRD_DOCS_REF_PATH="$(CRD_DOCS_REF_PATH)" go generate -tags=generate generate.go
-	@rm config/*.yaml
+	# Generate code
+	go run sigs.k8s.io/controller-tools/cmd/controller-gen object:headerFile="hack/boilerplate.go.txt" paths="./..."
+	# Generate CRDs
+	go run sigs.k8s.io/controller-tools/cmd/controller-gen rbac:roleName=manager-role webhook paths="./..." output:crd:artifacts:config=$(CRD_ROOT_DIR)/v1/base crd:crdVersions=v1
+	# Generate API reference documentation
+	go run github.com/elastic/crd-ref-docs --source-path=api/v1 --config=docs/api-gen-config.yaml --renderer=asciidoctor --templates-dir=docs/api-templates --output-path=$(CRD_DOCS_REF_PATH)
 
 .PHONY: crd
 crd: generate ## Generate CRD to file
 	$(KUSTOMIZE) build $(CRD_ROOT_DIR)/v1 > $(CRD_FILE)
-	$(KUSTOMIZE) build $(CRD_ROOT_DIR)/v1beta1 > $(CRD_FILE_LEGACY)
 
 .PHONY: fmt
 fmt: ## Run go fmt against code

@@ -1,13 +1,12 @@
 = Releasing K8up
 
-IMPORTANT: Before pushing a new Git tag, please adjust the version number in https://github.com/k8up-io/k8up/blob/master/docs/antora.yml[antora.yml].
-
 The release process is automated all the way through.
 It starts when a maintainer pushes a new git tag.
 This will trigger a GitHub Action which will, in turn, create:
 
 - A GitHub release with a changelog based on the merged pull requests.
 - A build of the Docker image, which is pushed to https://ghcr.io/k8up-io/k8up[GitHub Container Registry] and https://quay.io/repository/k8up-io/k8up[Quay.io].
+- A new version selector in the documentation if the version is minor or major.
 
 This process mostly relies on https://goreleaser.com/[GoReleaser].
 
