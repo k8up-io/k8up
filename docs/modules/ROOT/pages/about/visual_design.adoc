@@ -6,15 +6,15 @@ The logos are available under https://github.com/k8up-io/k8up/tree/master/docs/m
 
 === Wide
 
-link:/k8up/1.0.0/_images/k8up-logo.png[PNG], link:/k8up/1.0.0/_images/k8up-logo.svg[SVG]
+link:/k8up/_images/k8up-logo.png[PNG], link:/k8up/_images/k8up-logo.svg[SVG]
 
-image::k8up-logo.png[link="/syn/_images/k8up-logo.png"]
+image::k8up-logo.png[link="/k8up/_images/k8up-logo.png"]
 
 === Square
 
-link:/k8up/1.0.0/_images/k8up-logo-square.png[PNG], link:/k8up/1.0.0/_images/k8up-logo-square.svg[SVG]
+link:/k8up/_images/k8up-logo-square.png[PNG], link:/k8up/_images/k8up-logo-square.svg[SVG]
 
-image::k8up-logo-square.png[link="/syn/_images/k8up-logo-square.png"]
+image::k8up-logo-square.png[link="/k8up/_images/k8up-logo-square.png"]
 
 == Colors
 
