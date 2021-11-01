@@ -3,7 +3,6 @@ package cli
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path"
 	"time"
@@ -28,7 +27,7 @@ func (r *Restic) Backup(backupDir string, tags ArrayOpts) error {
 		return nil
 	}
 
-	files, err := ioutil.ReadDir(backupDir)
+	files, err := os.ReadDir(backupDir)
 	if err != nil {
 		return fmt.Errorf("can't read backupdir '%s': %w", backupDir, err)
 	}

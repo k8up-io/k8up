@@ -10,7 +10,6 @@ import (
 	"context"
 	"encoding/json"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -62,7 +61,7 @@ func newTestErrorChannel() chan error {
 func (w *webhookserver) runWebServer(t *testing.T) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", func(wr http.ResponseWriter, r *http.Request) {
-		w.jsonData, _ = ioutil.ReadAll(r.Body)
+		w.jsonData, _ = io.ReadAll(r.Body)
 	})
 
 	srv := &testServer{
@@ -194,7 +193,7 @@ func createTestFiles(t *testing.T) {
 		err := os.MkdirAll(dir, os.ModePerm)
 		require.NoError(t, err)
 
-		err = ioutil.WriteFile(file, []byte(testfileContent), os.ModePerm)
+		err = os.WriteFile(file, []byte(testfileContent), os.ModePerm)
 		require.NoError(t, err)
 
 		abs, _ := filepath.Abs(file)
@@ -298,7 +297,7 @@ func TestRestoreDisk(t *testing.T) {
 	restoredir := os.Getenv(restoreDirEnvKey)
 	backupdir := os.Getenv(backupDirEnvKey)
 	restoreFilePath := filepath.Join(restoredir, backupdir, "PVC2/test.txt")
-	contents, err := ioutil.ReadFile(restoreFilePath)
+	contents, err := os.ReadFile(restoreFilePath)
 	require.NoError(t, err)
 
 	assert.Equalf(t, testfileContent, string(contents), "restored content of '%s' is not as expected", restoreFilePath)

@@ -2,7 +2,7 @@ package cli
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"os"
 
 	"github.com/prometheus/client_golang/prometheus"
 
@@ -217,7 +217,7 @@ func (p *PromMetrics) ToProm() []prometheus.Collector {
 }
 
 func (r *Restic) getMountedFolders() []string {
-	files, err := ioutil.ReadDir(cfg.Config.BackupDir)
+	files, err := os.ReadDir(cfg.Config.BackupDir)
 	if err != nil {
 		r.logger.WithName("MountCollector").Error(err, "can't list mounted folders for stats")
 		return []string{}
