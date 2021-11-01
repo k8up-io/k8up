@@ -6,8 +6,8 @@ require (
 	// When updating crd-ref-docs, verify that there were no changes from Elastic to hostile licenses.
 	github.com/elastic/crd-ref-docs v0.0.7
 	github.com/firepear/qsplit/v2 v2.5.0
-	github.com/go-logr/logr v0.4.0
-	github.com/go-logr/zapr v0.4.0
+	github.com/go-logr/logr v1.2.0
+	github.com/go-logr/zapr v1.2.0
 	github.com/imdario/mergo v0.3.12
 	github.com/minio/minio-go/v7 v7.0.15
 	github.com/prometheus/client_golang v1.11.0
