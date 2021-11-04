@@ -125,7 +125,7 @@ You’ll need the credentials from the secrets and the encryption key. With that
 
 [source,bash]
 ----
-export RESTIC_REPOSITORY=s3:http://localhost/baas
+export RESTIC_REPOSITORY=s3:http://localhost/k8up
 export RESTIC_PASSWORD=p@assword
 export AWS_ACCESS_KEY_ID=8U0UDNYPNUDTUS1LIAF3
 export AWS_SECRET_ACCESS_KEY=ip3cdrkXcHmH4S7if7erKPNoxDn27V0vrg6CHHem

@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	prometheusNamespace = "baas"
+	prometheusNamespace = "k8up"
 	prometheusSubsystem = "backup_restic"
 )
 
