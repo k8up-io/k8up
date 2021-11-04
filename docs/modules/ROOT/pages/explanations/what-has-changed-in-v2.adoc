@@ -25,3 +25,4 @@ We have big plans for future versions of K8up, but they all require a solid foun
 We believe that K8up v2 is that solid foundation.
 
 Going forward, K8up v2 drops support for very old Kubernetes versions, for example OpenShift 3.11.
+If you are using Prometheus for alerting, note that metrics names changed their prefix from `baas` to `k8up`.

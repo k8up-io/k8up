@@ -1,8 +1,8 @@
 groups:
 - name: K8up
   rules:
-  - alert: baas_last_errors
-    expr: baas_backup_restic_last_errors > 0
+  - alert: K8upBackupLastErrors
+    expr: k8up_backup_restic_last_errors > 0
     for: 1m
     labels:
       severity: critical
