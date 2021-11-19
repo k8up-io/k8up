@@ -5,6 +5,7 @@
 [![Maintainability](https://img.shields.io/codeclimate/maintainability/k8up-io/k8up)][codeclimate]
 [![GitHub downloads](https://img.shields.io/github/downloads/k8up-io/k8up/total)][releases]
 [![License](https://img.shields.io/github/license/k8up-io/k8up)][license]
+[![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/5388/badge)](https://bestpractices.coreinfrastructure.org/projects/5388)
 
 ![K8up logo](docs/modules/ROOT/assets/images/k8up-logo.svg "K8up")
 
