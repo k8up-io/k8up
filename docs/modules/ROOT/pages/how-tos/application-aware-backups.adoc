@@ -24,6 +24,31 @@ Tested with:
 
 * MariaDB
 * MongoDB
+* PostgreSQL
 * tar to stdout
 
 But it should work with any command that has the ability to output the backup to stdout.
+
+== PostgreSQL
+
+Note that the PostgreSQL image used requires the utility `pg_dump`.
+It is able to dump the database content into an SQL stream in a consistent state.
+The parameter `-- clean` ensures all tables including data are purged before, so a restore to an already populated DB does work.
+
+[source,yaml]
+----
+<SNIP>
+template:
+  metadata:
+    labels:
+      app: postgresql
+    annotations:
+      k8up.io/backupcommand: sh -c 'PGDATABASE="$POSTGRES_DB" PGUSER="$POSTGRES_USER" PGPASSWORD="$POSTGRES_PASSWORD" pg_dump --clean'
+      k8up.io/file-extension: .sql
+  spec:
+    containers:
+      - name: postgres
+        image: docker.io/bitnami/postgresql:11
+        ...
+<SNIP>
+----
