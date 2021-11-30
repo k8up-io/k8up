@@ -1,8 +1,6 @@
 name: k8up
 title: K8up Documentation
-version: master
-prerelease: -master
-display_version: master
+version: "2.1"
 start_page: ROOT:index.adoc
 nav:
-- modules/ROOT/nav.adoc
+  - modules/ROOT/nav.adoc
