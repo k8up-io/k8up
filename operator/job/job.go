@@ -61,6 +61,11 @@ func GenerateGenericJob(obj k8upv1.JobObject, config Config) (*batchv1.Job, erro
 		},
 		Spec: batchv1.JobSpec{
 			Template: corev1.PodTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{
+					Labels: map[string]string{
+						K8uplabel: "true",
+					},
+				},
 				Spec: corev1.PodSpec{
 					RestartPolicy: corev1.RestartPolicyOnFailure,
 					Containers: []corev1.Container{
