@@ -67,8 +67,7 @@ If you set your `user.name` and `user.email` git configs, you can sign your comm
 Some K8up contributors might not be familiar with `git`, or have used a web based editor, and thus asking them to `git commit --amend -s` is not the best way forward.
 
 In this case, maintainers can update the commits based on clause (c) of the DCO.
-The most trivial way for a contributor to allow the maintainer to do this, is to add a DCO signature in a pull requests's comment, or a maintainer can simply note that the change is sufficiently trivial that it does not substantially
-change the existing contribution - i.e., a spelling change.
+The most trivial way for a contributor to allow the maintainer to do this, is to add a DCO signature in a pull requests's comment, or a maintainer can simply note that the change is sufficiently trivial that it does not substantially change the existing contribution - i.e., a spelling change.
 
 When you add someone's DCO, please also add your own to keep a log.
 
