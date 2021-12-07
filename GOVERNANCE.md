@@ -17,7 +17,7 @@ The K8up community adheres to the following principles:
 
 ## Roadmap and Planning
 
-The K8up roadmap is on GitHub, see [Milestones](https://github.com/k8up-io/k8up/milestones).
+The K8up roadmap is on GitHub, see [Projects -> Roadmap](https://github.com/k8up-io/k8up/projects/2).
 
 ## Contributing
 
