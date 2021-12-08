@@ -6,8 +6,8 @@ require (
 	// When updating crd-ref-docs, verify that there were no changes from Elastic to hostile licenses.
 	github.com/elastic/crd-ref-docs v0.0.7
 	github.com/firepear/qsplit/v2 v2.5.0
-	github.com/go-logr/logr v0.4.0
-	github.com/go-logr/zapr v0.4.0
+	github.com/go-logr/logr v1.2.0
+	github.com/go-logr/zapr v1.2.0
 	github.com/imdario/mergo v0.3.12
 	github.com/minio/minio-go/v7 v7.0.16
 	github.com/prometheus/client_golang v1.11.0
@@ -21,7 +21,7 @@ require (
 	k8s.io/client-go v0.22.3
 	k8s.io/utils v0.0.0-20211116205334-6203023598ed
 	sigs.k8s.io/controller-runtime v0.10.3
-	sigs.k8s.io/controller-runtime/tools/setup-envtest v0.0.0-20211004203041-b1efff64d3d2
+	sigs.k8s.io/controller-runtime/tools/setup-envtest v0.0.0-20211208212546-f236f0345ad2
 	sigs.k8s.io/controller-tools v0.7.0
 	sigs.k8s.io/kind v0.11.1
 	sigs.k8s.io/kustomize/kustomize/v4 v4.4.1
