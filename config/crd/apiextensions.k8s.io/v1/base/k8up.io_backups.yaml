@@ -50,7 +50,7 @@ spec:
           metadata:
             type: object
           spec:
-            description: BackupSpec defines a single backup. It must contain all inforomation
+            description: BackupSpec defines a single backup. It must contain all information
               to connect to the backup repository when applied. If used with defaults
               or schedules the operator will ensure that the defaults are applied
               before creating the object on the API.
