@@ -52,3 +52,48 @@ template:
         ...
 <SNIP>
 ----
+
+== MongoDB
+
+Note that the MongoDB image used requires the utility `mongodump`.
+It's able to dump all the database contents into a https://www.mongodb.com/blog/post/archiving-and-compression-in-mongodb-tools[proprietary binary archive] in a consistent state.
+
+[source,yaml]
+----
+<SNIP>
+template:
+  metadata:
+    labels:
+      app.kubernetes.io/name: mongodb
+    annotations:
+      k8up.io/backupcommand: sh -c 'mongodump --username=$MONGODB_ROOT_USER --password=$MONGODB_ROOT_PASSWORD --archive'
+      k8up.io/file-extension: .archive
+  spec:
+    containers:
+      - name: mongodb
+        image: quay.io/bitnami/mongodb:4.4.11-debian-10-r12
+        ...
+<SNIP>
+----
+
+The proprietary binary archive can only be read by the https://www.mongodb.com/try/download/database-tools[MongoDB Database Tools].
+Use them to to recover a database.
+
+.MongoDB restore using Port-Forward
+[example]
+====
+[source,bash]
+----
+$ kubectl port-forward po/mongodb-0 27017:27017
+$ ./mongorestore -u root -p <root-pw> mongodb://localhost:27017 --archive=mydatabase.archive
+2022-02-14T18:05:28.879+0100	preparing collections to restore from
+2022-02-14T18:05:28.908+0100	reading metadata for mydatabase.mydatabase_apps_scheduler from archive 'mydatabase.archive'
+...
+2022-02-14T18:07:17.252+0100	finished restoring mydatabase.mydatabase_federation_dns_cache (0 documents, 0 failures)
+2022-02-14T18:07:17.252+0100	restoring users from archive 'mydatabase.archive'
+2022-02-14T18:07:17.310+0100	restoring indexes for collection mydatabase.mydatabase_user_data_files from metadata
+2022-02-14T18:07:17.310+0100	restoring indexes for collection mydatabase.mydatabase_livechat_unit_monitors from metadata
+...
+2022-02-14T18:07:21.711+0100	79020 document(s) restored successfully. 0 document(s) failed to restore.
+----
+====
