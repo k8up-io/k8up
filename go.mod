@@ -16,9 +16,9 @@ require (
 	github.com/stretchr/testify v1.7.0
 	github.com/urfave/cli/v2 v2.3.0
 	go.uber.org/zap v1.21.0
-	k8s.io/api v0.23.1
-	k8s.io/apimachinery v0.23.1
-	k8s.io/client-go v0.23.1
+	k8s.io/api v0.23.4
+	k8s.io/apimachinery v0.23.4
+	k8s.io/client-go v0.23.4
 	k8s.io/utils v0.0.0-20220127004650-9b3446523e65
 	sigs.k8s.io/controller-runtime v0.11.0
 	sigs.k8s.io/controller-runtime/tools/setup-envtest v0.0.0-20220119181005-7ba3e559790c
@@ -126,6 +126,6 @@ require (
 	sigs.k8s.io/kustomize/api v0.11.0 // indirect
 	sigs.k8s.io/kustomize/cmd/config v0.10.3 // indirect
 	sigs.k8s.io/kustomize/kyaml v0.13.2 // indirect
-	sigs.k8s.io/structured-merge-diff/v4 v4.2.0 // indirect
+	sigs.k8s.io/structured-merge-diff/v4 v4.2.1 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
