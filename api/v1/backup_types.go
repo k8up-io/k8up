@@ -6,7 +6,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
-// BackupSpec defines a single backup. It must contain all inforomation to connect to
+// BackupSpec defines a single backup. It must contain all information to connect to
 // the backup repository when applied. If used with defaults or schedules the operator will
 // ensure that the defaults are applied before creating the object on the API.
 type BackupSpec struct {

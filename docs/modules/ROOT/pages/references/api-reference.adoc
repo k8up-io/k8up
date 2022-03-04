@@ -225,7 +225,7 @@ BackupSchedule manages schedules for the backup service
 [id="{anchor_prefix}-github-com-k8up-io-k8up-api-v1-backupspec"]
 === BackupSpec 
 
-BackupSpec defines a single backup. It must contain all inforomation to connect to the backup repository when applied. If used with defaults or schedules the operator will ensure that the defaults are applied before creating the object on the API.
+BackupSpec defines a single backup. It must contain all information to connect to the backup repository when applied. If used with defaults or schedules the operator will ensure that the defaults are applied before creating the object on the API.
 
 .Appears In:
 ****
