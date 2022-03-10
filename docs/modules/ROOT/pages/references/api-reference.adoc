@@ -73,7 +73,7 @@ ArchiveList contains a list of Archive
 | *`kind`* __string__ | `ArchiveList`
 | *`metadata`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#listmeta-v1-meta[$$ListMeta$$]__ | Refer to Kubernetes API documentation for fields of `metadata`.
 
-| *`items`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-archive[$$Archive$$]__ | 
+| *`items`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-archive[$$Archive$$] array__ | 
 |===
 
 
@@ -200,7 +200,7 @@ BackupList contains a list of Backup
 | *`kind`* __string__ | `BackupList`
 | *`metadata`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#listmeta-v1-meta[$$ListMeta$$]__ | Refer to Kubernetes API documentation for fields of `metadata`.
 
-| *`items`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-backup[$$Backup$$]__ | 
+| *`items`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-backup[$$Backup$$] array__ | 
 |===
 
 
@@ -284,7 +284,7 @@ CheckList contains a list of Check
 | *`kind`* __string__ | `CheckList`
 | *`metadata`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#listmeta-v1-meta[$$ListMeta$$]__ | Refer to Kubernetes API documentation for fields of `metadata`.
 
-| *`items`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-check[$$Check$$]__ | 
+| *`items`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-check[$$Check$$] array__ | 
 |===
 
 
@@ -364,7 +364,7 @@ EffectiveScheduleList contains a list of EffectiveSchedule
 | *`kind`* __string__ | `EffectiveScheduleList`
 | *`metadata`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#listmeta-v1-meta[$$ListMeta$$]__ | Refer to Kubernetes API documentation for fields of `metadata`.
 
-| *`items`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-effectiveschedule[$$EffectiveSchedule$$]__ | 
+| *`items`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-effectiveschedule[$$EffectiveSchedule$$] array__ | 
 |===
 
 
@@ -505,7 +505,7 @@ PreBackupPodList contains a list of PreBackupPod
 | *`kind`* __string__ | `PreBackupPodList`
 | *`metadata`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#listmeta-v1-meta[$$ListMeta$$]__ | Refer to Kubernetes API documentation for fields of `metadata`.
 
-| *`items`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-prebackuppod[$$PreBackupPod$$]__ | 
+| *`items`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-prebackuppod[$$PreBackupPod$$] array__ | 
 |===
 
 
@@ -563,7 +563,7 @@ PruneList contains a list of Prune
 | *`kind`* __string__ | `PruneList`
 | *`metadata`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#listmeta-v1-meta[$$ListMeta$$]__ | Refer to Kubernetes API documentation for fields of `metadata`.
 
-| *`items`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-prune[$$Prune$$]__ | 
+| *`items`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-prune[$$Prune$$] array__ | 
 |===
 
 
@@ -655,7 +655,7 @@ RestoreList contains a list of Restore
 | *`kind`* __string__ | `RestoreList`
 | *`metadata`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#listmeta-v1-meta[$$ListMeta$$]__ | Refer to Kubernetes API documentation for fields of `metadata`.
 
-| *`items`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-restore[$$Restore$$]__ | 
+| *`items`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-restore[$$Restore$$] array__ | 
 |===
 
 
@@ -852,7 +852,7 @@ ScheduleList contains a list of Schedule
 | *`kind`* __string__ | `ScheduleList`
 | *`metadata`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#listmeta-v1-meta[$$ListMeta$$]__ | Refer to Kubernetes API documentation for fields of `metadata`.
 
-| *`items`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-schedule[$$Schedule$$]__ | 
+| *`items`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-schedule[$$Schedule$$] array__ | 
 |===
 
 
@@ -941,7 +941,7 @@ SnapshotList contains a list of Snapshot
 | *`kind`* __string__ | `SnapshotList`
 | *`metadata`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#listmeta-v1-meta[$$ListMeta$$]__ | Refer to Kubernetes API documentation for fields of `metadata`.
 
-| *`items`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-snapshot[$$Snapshot$$]__ | 
+| *`items`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-snapshot[$$Snapshot$$] array__ | 
 |===
 
 
