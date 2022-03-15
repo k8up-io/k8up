@@ -42,6 +42,12 @@ This will trigger a one time job to restore the latest snapshot to S3.
 
 == Restore from S3 to PVC
 
+[NOTE]
+====
+You can't restore from backups that were done from `stdin` (`PreBackupPod` or backup command annotation).
+In those cases, use the manual restore option described below using the `restic dump` or `restic mount` commands.
+====
+
 First, create a new PVC to extract the data to:
 
 [source,yaml]
