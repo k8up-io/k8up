@@ -151,12 +151,15 @@ func (s *Scheduler) RemoveSchedules(namespacedName types.NamespacedName) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
-	for _, ref := range s.registeredSchedules[namespacedName.String()] {
+	schedules := s.registeredSchedules[namespacedName.String()]
+	if len(schedules) > 0 {
+		s.decRegisteredSchedulesGauge(namespacedName.Namespace)
+	}
+
+	for _, ref := range schedules {
 		s.cron.Remove(ref.EntryID)
 	}
 	delete(s.registeredSchedules, namespacedName.String())
-
-	s.decRegisteredSchedulesGauge(namespacedName.Namespace)
 }
 
 func (s *Scheduler) createObject(jobType k8upv1.JobType, namespace string, obj k8upv1.ObjectCreator, config job.Config) {
