@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/rand"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	k8upv1 "github.com/k8up-io/k8up/api/v1"
@@ -14,17 +15,6 @@ import (
 )
 
 func TestScheduler_SyncSchedules(t *testing.T) {
-	ns := "test-namespace"
-	obj := &k8upv1.Backup{
-		ObjectMeta: metav1.ObjectMeta{
-			Namespace: ns,
-			Name:      "my-backup",
-		},
-	}
-	nsName := types.NamespacedName{
-		Namespace: obj.Namespace,
-		Name:      obj.Name,
-	}
 	tests := map[string]struct {
 		expectErr            bool
 		existingJobs         []Job
@@ -42,7 +32,7 @@ func TestScheduler_SyncSchedules(t *testing.T) {
 				{JobType: k8upv1.PruneType, Schedule: "* * * * *"},
 			},
 		},
-		"GivenInexistentSchedule_WhenAddingWithNewSchedule_ThenAddSchedule": {
+		"GivenNonExistentSchedule_WhenAddingWithNewSchedule_ThenAddSchedule": {
 			newJobs: []Job{
 				{JobType: k8upv1.PruneType, Schedule: "* * * * *"},
 			},
@@ -63,7 +53,7 @@ func TestScheduler_SyncSchedules(t *testing.T) {
 				{JobType: k8upv1.ArchiveType, Schedule: "* * * * *"},
 			},
 		},
-		"GivenExistingSchedule_WhenSyncingSchedules_ThenRemoveInexistentSchedule": {
+		"GivenExistingSchedule_WhenSyncingSchedules_ThenRemoveNonExistentSchedule": {
 			existingJobs: []Job{
 				{JobType: k8upv1.PruneType, Schedule: "1 * * * *"},
 				{JobType: k8upv1.ArchiveType, Schedule: "* * * * *"},
@@ -79,6 +69,7 @@ func TestScheduler_SyncSchedules(t *testing.T) {
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
 			s := newScheduler()
+			nsName, obj := newBackup()
 			jobList := JobList{
 				Jobs: tt.newJobs,
 				Config: job.Config{
@@ -98,11 +89,11 @@ func TestScheduler_SyncSchedules(t *testing.T) {
 			} else {
 				assert.NoError(t, err)
 			}
-			scheduleRefs := s.registeredSchedules[types.NamespacedName{Name: obj.Name, Namespace: obj.Namespace}.String()]
+			scheduleRefs := s.registeredSchedules[nsName.String()]
 			require.Len(t, scheduleRefs, len(tt.expectedScheduleRefs))
 			for i, ref := range tt.expectedScheduleRefs {
-				assert.Equal(t, ref.Schedule, scheduleRefs[i].Schedule)
-				assert.Equal(t, ref.JobType, scheduleRefs[i].JobType)
+				assert.Equal(t, ref.Schedule, scheduleRefs[i].Schedule, "cron schedule")
+				assert.Equal(t, ref.JobType, scheduleRefs[i].JobType, "job type")
 			}
 		})
 	}
@@ -133,4 +124,18 @@ func Test_generateName(t *testing.T) {
 			assert.Equal(t, len(name), len(tt.expectedPrefix)+5)
 		})
 	}
+}
+
+func newBackup() (types.NamespacedName, *k8upv1.Backup) {
+	ns := "test-namespace-" + rand.String(5)
+	obj := &k8upv1.Backup{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: ns,
+			Name:      "my-backup",
+		},
+	}
+	return types.NamespacedName{
+		Namespace: obj.Namespace,
+		Name:      obj.Name,
+	}, obj
 }
