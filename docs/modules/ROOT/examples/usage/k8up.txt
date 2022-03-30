@@ -2,7 +2,7 @@ NAME:
    k8up - A new cli application
 
 USAGE:
-   main [global options] command [command options] [arguments...]
+   k8up [global options] command [command options] [arguments...]
 
 VERSION:
    snapshot

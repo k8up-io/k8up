@@ -1,8 +1,8 @@
 NAME:
-   main operator - 
+   k8up operator - 
 
 USAGE:
-   main operator [command options] [arguments...]
+   k8up operator [command options] [arguments...]
 
 DESCRIPTION:
    Start k8up in operator mode
@@ -32,8 +32,8 @@ OPTIONS:
    --global-memory-request value                       set the memory request for scheduled jobs [$BACKUP_GLOBAL_MEMORY_REQUEST]
    --global-memory-limit value                         set the memory limit for scheduled jobs [$BACKUP_GLOBAL_MEMORY_LIMIT]
    --image value                                       URL of the restic image (default: "ghcr.io/k8up-io/k8up:latest") [$BACKUP_IMAGE]
-   --command-restic value                              The command that is executed for restic backups. (default: "/usr/local/bin/k8up", "restic") [$BACKUP_COMMAND_RESTIC]
-   --restic-options value                              Pass custom restic options in the form 'key=value,key2=value2'. See https://restic.readthedocs.io/en/stable/manual_rest.html?highlight=--option#usage-help [$BACKUP_RESTIC_OPTIONS]
+   --command-restic value                              The command that is executed for restic backups. (default: "/usr/local/bin/k8up", "restic")                                                                 (accepts multiple inputs) [$BACKUP_COMMAND_RESTIC]
+   --restic-options value                              Pass custom restic options in the form 'key=value,key2=value2'. See https://restic.readthedocs.io/en/stable/manual_rest.html?highlight=--option#usage-help  (accepts multiple inputs) [$BACKUP_RESTIC_OPTIONS]
    --datapath value, --mountpath value                 to which path the PVCs should get mounted in the backup container (default: "/data") [$BACKUP_DATAPATH]
    --globalstatsurl value                              set the URL to post metrics globally [$BACKUP_GLOBALSTATSURL]
    --metrics-bindaddress value                         set the bind address for the prometheus endpoint (default: ":8080") [$BACKUP_METRICS_BINDADDRESS]

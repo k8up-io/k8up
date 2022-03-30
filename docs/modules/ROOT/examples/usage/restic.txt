@@ -1,8 +1,8 @@
 NAME:
-   main restic - 
+   k8up restic - 
 
 USAGE:
-   main restic [command options] [arguments...]
+   k8up restic [command options] [arguments...]
 
 CATEGORY:
    backup
@@ -15,7 +15,7 @@ OPTIONS:
    --prune                               Set, if the container should do a prune (default: false)
    --restore                             Set, if the container should attempt a restore (default: false)
    --archive                             Set, if the container should do an archive (default: false)
-   --tag value                           List of tags to consider for given operation
+   --tag value                           List of tags to consider for given operation  (accepts multiple inputs)
    --backupCommandAnnotation value       Defines the command to invoke when doing a backup via STDOUT. [$BACKUPCOMMAND_ANNOTATION]
    --fileExtensionAnnotation value       Defines the file extension to use for STDOUT backups. [$FILEEXTENSION_ANNOTATION]
    --promURL value                       Sets the URL of a prometheus push gateway to report metrics. [$PROM_URL]
