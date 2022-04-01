@@ -126,6 +126,7 @@ func (b *BackupExecutor) startBackup(backupJob *batchv1.Job) error {
 	backupJob.Spec.Template.Spec.Volumes = volumes
 	backupJob.Spec.Template.Spec.ServiceAccountName = cfg.Config.ServiceAccount
 	backupJob.Spec.Template.Spec.Containers[0].VolumeMounts = b.newVolumeMounts(volumes)
+	backupJob.Spec.Template.Spec.Containers[0].Args = BuildTagArgs(b.backup.Spec.Tags)
 
 	if err = b.CreateObjectIfNotExisting(backupJob); err == nil {
 		b.SetStarted("the job '%v/%v' was created", backupJob.Namespace, backupJob.Name)

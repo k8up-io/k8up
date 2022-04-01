@@ -66,7 +66,7 @@ func (p *PruneExecutor) startPrune(pruneJob *batchv1.Job, prune *k8upv1.Prune) {
 	p.RegisterJobSucceededConditionCallback()
 
 	pruneJob.Spec.Template.Spec.Containers[0].Env = p.setupEnvVars(prune)
-	pruneJob.Spec.Template.Spec.Containers[0].Args = []string{"-prune"}
+	pruneJob.Spec.Template.Spec.Containers[0].Args = append([]string{"-prune"}, BuildTagArgs(prune.Spec.Retention.Tags)...)
 
 	if err := p.Client.Create(p.CTX, pruneJob); err != nil {
 		if !apierrors.IsAlreadyExists(err) {
