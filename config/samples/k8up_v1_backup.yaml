@@ -5,12 +5,16 @@ metadata:
 spec:
   failedJobsHistoryLimit: 2
   successfulJobsHistoryLimit: 2
+  tags:
+    - test
+    - dump
+    - mariadb
   backend:
     repoPasswordSecretRef:
       name: backup-repo
       key: password
     s3:
-      endpoint: http://10.144.1.224:9000
+      endpoint: http://10.144.13.4:9000
       bucket: k8up
       accessKeyIDSecretRef:
         name: backup-credentials
@@ -18,4 +22,4 @@ spec:
       secretAccessKeySecretRef:
         name: backup-credentials
         key: password
-  promURL: http://10.144.1.224:9000
+  promURL: http://10.144.13.4:9000

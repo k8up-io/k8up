@@ -4,7 +4,6 @@ metadata:
   labels:
     app: mariadb
   name: mariadb
-  namespace: myproject
 spec:
   progressDeadlineSeconds: 600
   replicas: 1
@@ -49,3 +48,16 @@ spec:
         - name: mariadb
           persistentVolumeClaim:
             claimName: mariadb
+
+---
+
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: mariadb
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi

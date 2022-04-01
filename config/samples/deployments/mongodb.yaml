@@ -50,3 +50,14 @@ spec:
         - name: mongodb
           persistentVolumeClaim:
             claimName: mongodb
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: mongodb
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
