@@ -141,3 +141,10 @@ func (ts *BackupTestSuite) Test_GivenFailedBackup_WhenReconciling_ThenIgnore() {
 	result := ts.whenReconciling(ts.BackupResource)
 	ts.Assert().Equal(float64(0), result.RequeueAfter.Seconds())
 }
+
+func (ts *BackupTestSuite) Test_GivenBackupWithTags_WhenCreatingBackupjob_ThenHaveTagArguments() {
+	ts.EnsureResources(ts.newBackupWithTags())
+	ts.whenReconciling(ts.BackupResource)
+	job := ts.expectABackupJobEventually()
+	ts.assertJobHasTagArguments(job)
+}

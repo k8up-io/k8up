@@ -1,15 +1,13 @@
 kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
-  name: myclaim
   annotations:
     k8up.io/backup: 'true'
-  namespace: myproject
+  name: myclaim
 spec:
   accessModes:
-    - ReadWriteMany
-  # volumeMode: Filesystem
+    # So it works in KIND
+    - ReadWriteOnce
   resources:
     requests:
       storage: 1Gi
-  # storageClassName: slow

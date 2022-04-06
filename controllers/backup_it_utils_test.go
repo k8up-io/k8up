@@ -24,6 +24,10 @@ import (
 	k8upObserver "github.com/k8up-io/k8up/operator/observer"
 )
 
+const (
+	backupTag = "integrationTag"
+)
+
 func (ts *BackupTestSuite) newPreBackupPod() *k8upv1.PreBackupPod {
 	return &k8upv1.PreBackupPod{
 		Spec: k8upv1.PreBackupPodSpec{
@@ -284,4 +288,15 @@ func (ts *BackupTestSuite) notifyObserverOfBackupJobStatusChange(status k8upObse
 	}
 	event.Event = status
 	observer.GetUpdateChannel() <- event
+}
+
+func (ts *BackupTestSuite) newBackupWithTags() *k8upv1.Backup {
+	backupWithTags := ts.newBackup()
+	backupWithTags.Spec.Tags = []string{backupTag}
+	return backupWithTags
+}
+
+func (ts *BackupTestSuite) assertJobHasTagArguments(job *batchv1.Job) {
+	jobArguments := job.Spec.Template.Spec.Containers[0].Args
+	ts.Assert().Contains(jobArguments, backupTag, "backup tag in job args")
 }
