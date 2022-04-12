@@ -16,7 +16,7 @@ spec:
       name: backup-repo
       key: password
     s3:
-      endpoint: http://10.144.1.224:9000
+      endpoint: http://minio.minio:9000
       bucket: k8up
       accessKeyIDSecretRef:
         name: backup-credentials
@@ -28,7 +28,7 @@ spec:
     schedule: '0 * * * *'
     restoreMethod:
       s3:
-        endpoint: http://10.144.1.224:9000
+        endpoint: http://minio.minio:9000
         bucket: restoremini
         accessKeyIDSecretRef:
           name: backup-credentials
@@ -40,7 +40,7 @@ spec:
     schedule: '* * * * *'
     failedJobsHistoryLimit: 2
     successfulJobsHistoryLimit: 2
-    promURL: http://10.144.1.224:9000
+    promURL: http://minio.minio:9000
     resources:
       requests:
         memory: "64Mi"
@@ -54,7 +54,7 @@ spec:
         memory: "64Mi"
         cpu: "250m"
     schedule: '@hourly-random'
-    promURL: http://10.144.1.224:9000
+    promURL: http://minio.minio:9000
   prune:
     schedule: '*/2 * * * *'
     retention:

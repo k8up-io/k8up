@@ -159,11 +159,18 @@ kind-clean: ## Removes the kind instance if it exists.
 
 .PHONY: kind-run
 kind-run: export KUBECONFIG = $(KIND_KUBECONFIG)
-kind-run: kind-setup install run-operator ## Runs the operator on the local host but configured for the kind cluster
+kind-run: kind-setup kind-minio install run-operator ## Runs the operator on the local host but configured for the kind cluster
 
 kind-e2e-image: docker-build
 	$(e2e_make) kind-e2e-image
 
+.PHONY: kind-minio
+kind-minio: $(minio_sentinel)
+
+$(minio_sentinel): export KUBECONFIG = $(KIND_KUBECONFIG)
+$(minio_sentinel): kind-setup
+	kubectl apply -f $(SAMPLES_ROOT_DIR)/deployments/minio.yaml
+	@touch $@
 ###
 ### E2E Test
 ###
