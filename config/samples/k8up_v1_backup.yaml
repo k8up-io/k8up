@@ -14,7 +14,7 @@ spec:
       name: backup-repo
       key: password
     s3:
-      endpoint: http://10.144.13.4:9000
+      endpoint: http://minio.minio:9000
       bucket: k8up
       accessKeyIDSecretRef:
         name: backup-credentials
@@ -22,4 +22,3 @@ spec:
       secretAccessKeySecretRef:
         name: backup-credentials
         key: password
-  promURL: http://10.144.13.4:9000

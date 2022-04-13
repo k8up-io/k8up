@@ -8,7 +8,7 @@ spec:
     key: password
   restoreMethod:
     s3:
-      endpoint: http://10.144.1.224:9000
+      endpoint: http://minio.minio:9000
       bucket: restoremini
       accessKeyIDSecretRef:
         name: backup-credentials
@@ -18,7 +18,7 @@ spec:
         key: password
   backend:
     s3:
-      endpoint: http://10.144.1.224:9000
+      endpoint: http://minio.minio:9000
       bucket: k8up
       accessKeyIDSecretRef:
         name: backup-credentials
