@@ -14,7 +14,7 @@ require (
 	github.com/restic/restic v0.12.1
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/stretchr/testify v1.7.1
-	github.com/urfave/cli/v2 v2.4.0
+	github.com/urfave/cli/v2 v2.6.0
 	go.uber.org/zap v1.21.0
 	k8s.io/api v0.23.6
 	k8s.io/apimachinery v0.23.6
@@ -29,7 +29,7 @@ require (
 
 require (
 	cloud.google.com/go v0.84.0 // indirect
-	github.com/BurntSushi/toml v0.4.1 // indirect
+	github.com/BurntSushi/toml v1.1.0 // indirect
 	github.com/Masterminds/goutils v1.1.0 // indirect
 	github.com/Masterminds/semver v1.5.0 // indirect
 	github.com/Masterminds/sprig v2.22.0+incompatible // indirect
