@@ -9,7 +9,7 @@ require (
 	github.com/go-logr/logr v1.2.3
 	github.com/go-logr/zapr v1.2.3
 	github.com/imdario/mergo v0.3.12
-	github.com/minio/minio-go/v7 v7.0.24
+	github.com/minio/minio-go/v7 v7.0.26
 	github.com/prometheus/client_golang v1.12.1
 	github.com/restic/restic v0.12.1
 	github.com/robfig/cron/v3 v3.0.1
