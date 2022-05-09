@@ -201,3 +201,35 @@ func TestBackend_IsBackendEqualTo(t *testing.T) {
 		})
 	}
 }
+
+func Test_AppendEnvFromToContainer(t *testing.T) {
+	t.Run("GivenFromEnv_WhenAppendedToContainer_ThenContainerHasFromEnv", func(t *testing.T) {
+		// Given a container with an empty EnvFrom
+		var container = &corev1.Container{
+			EnvFrom: []corev1.EnvFromSource{},
+		}
+
+		// And a Backend config with an EnvFrom, containing a secret reference called
+		secretRef := new(corev1.SecretEnvSource)
+		secretRef.Name = "my-secret"
+
+		var spec = &RunnableSpec{
+			Backend: &Backend{
+				EnvFrom: []corev1.EnvFromSource{{
+					Prefix:       "test-prefix",
+					ConfigMapRef: new(corev1.ConfigMapEnvSource),
+					SecretRef:    secretRef,
+				}},
+			},
+			Resources:          corev1.ResourceRequirements{},
+			PodSecurityContext: nil,
+		}
+
+		// When I Append EnvFrom to the container
+		spec.AppendEnvFromToContainer(container)
+
+		// Then My container has the secret reference in the EnvFrom structure
+		assert.Equal(t, "test-prefix", container.EnvFrom[0].Prefix)
+		assert.Equal(t, "my-secret", container.EnvFrom[0].SecretRef.Name)
+	})
+}

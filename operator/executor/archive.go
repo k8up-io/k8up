@@ -61,6 +61,7 @@ func (a *ArchiveExecutor) startArchive(archiveJob *batchv1.Job, archive *k8upv1.
 	a.RegisterJobSucceededConditionCallback()
 
 	archiveJob.Spec.Template.Spec.Containers[0].Env = a.setupEnvVars(archive)
+	archive.Spec.AppendEnvFromToContainer(&archiveJob.Spec.Template.Spec.Containers[0])
 	archiveJob.Spec.Template.Spec.Containers[0].Args = a.setupArgs(archive)
 
 	err := a.Client.Create(a.CTX, archiveJob)

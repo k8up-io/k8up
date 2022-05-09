@@ -63,6 +63,7 @@ func (c *CheckExecutor) startCheck(checkJob *batchv1.Job) error {
 	c.registerCheckCallback()
 
 	checkJob.Spec.Template.Spec.Containers[0].Env = c.setupEnvVars()
+	c.check.Spec.AppendEnvFromToContainer(&checkJob.Spec.Template.Spec.Containers[0])
 	checkJob.Spec.Template.Spec.Containers[0].Args = []string{"-check"}
 
 	err := c.CreateObjectIfNotExisting(checkJob)

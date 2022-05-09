@@ -7,6 +7,9 @@ spec:
   successfulJobsHistoryLimit: 2
   promURL: http://minio:9000
   backend:
+    envFrom: # Adding any arbitrary env variables to the job container spec
+    - secretRef:
+        name: "secret-name"
     repoPasswordSecretRef:
       name: backup-repo
       key: password

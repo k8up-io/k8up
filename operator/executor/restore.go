@@ -93,6 +93,7 @@ func (r *RestoreExecutor) buildRestoreObject(restore *k8upv1.Restore) (*batchv1.
 	j.GetLabels()[job.K8upExclusive] = strconv.FormatBool(r.Exclusive())
 
 	j.Spec.Template.Spec.Containers[0].Env = r.setupEnvVars(restore)
+	restore.Spec.AppendEnvFromToContainer(&j.Spec.Template.Spec.Containers[0])
 
 	volumes, volumeMounts := r.volumeConfig(restore)
 	j.Spec.Template.Spec.Volumes = volumes

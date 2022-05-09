@@ -15,3 +15,10 @@ type RunnableSpec struct {
 	// PodSecurityContext describes the security context with which this action shall be executed.
 	PodSecurityContext *corev1.PodSecurityContext `json:"podSecurityContext,omitempty"`
 }
+
+// AppendEnvFromToContainer will add EnvFromSource from the given RunnableSpec to the Container
+func (in *RunnableSpec) AppendEnvFromToContainer(containerSpec *corev1.Container) {
+	if in.Backend != nil {
+		containerSpec.EnvFrom = append(containerSpec.EnvFrom, in.Backend.EnvFrom...)
+	}
+}
