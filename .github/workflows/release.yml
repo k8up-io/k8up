@@ -45,7 +45,7 @@ jobs:
       run: make crd
     - name: Build changelog from PRs with labels
       id: build_changelog
-      uses: mikepenz/release-changelog-builder-action@v2
+      uses: mikepenz/release-changelog-builder-action@v3
       with:
         configuration: ".github/changelog-configuration.json"
         # PreReleases still get a changelog, but the next full release gets a diff since the last full release,
