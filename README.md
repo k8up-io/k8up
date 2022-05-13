@@ -21,6 +21,8 @@ It’s that easy. K8up takes care of the rest. It also provides a Prometheus end
 The documentation is written in AsciiDoc and published with Antora to [k8up.io](https://k8up.io/).
 It's source is available in the `docs/` directory.
 
+Run `make docs-preview` to build the docs and preview changes.
+
 ## Contributing
 
 K8up is written using [Kubebuilder](https://github.com/kubernetes-sigs/kubebuilder).

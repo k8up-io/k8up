@@ -66,7 +66,7 @@ IMPORTANT: On some laptops, running Minikube on battery power severely undermine
 * `kubectl apply -k wordpress`
 
 . Install the CRDs K8up uses:
-* `kubectl apply -f https://github.com/k8up-io/k8up/releases/download/{k8up_version}/k8up-crd.yaml`
+* `kubectl apply -f \https://github.com/k8up-io/k8up/releases/download/{k8up_version}/k8up-crd.yaml`
 
 . Install K8up in Minikube:
 * `helm repo add appuio \https://charts.appuio.ch`
