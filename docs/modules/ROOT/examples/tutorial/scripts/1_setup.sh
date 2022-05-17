@@ -26,7 +26,7 @@ kubectl apply -k wordpress
 
 echo ""
 echo "••• Installing CRDs for K8up •••"
-kubectl apply -f https://github.com/k8up-io/k8up/releases/download/v1.2.0/k8up-crd.yaml
+kubectl apply -f https://github.com/k8up-io/k8up/releases/download/v2.2.0/k8up-crd.yaml
 
 echo ""
 echo "••• Installing K8up •••"
