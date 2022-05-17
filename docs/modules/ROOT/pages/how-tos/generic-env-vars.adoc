@@ -1,0 +1,25 @@
+= Generic Restic Environment Variables
+
+Most of the supported backup backends allow you to specify authentication details as secret values.
+
+One such example is the S3 backend spec; it has `accessKeyIDSecretRef` and `secretAccessKeySecretRef` fields.
+
+It is however sometimes useful to pass additional environment variables to the container that runs the backup.
+This can be achieved with the help of the `envFrom` field that references a config map or a secret at the backend level.
+
+Please be aware that you could potentially add conflicting or duplicate environment variables.
+
+Check the api reference for the xref:references/api-reference.adoc#{anchor_prefix}-github-com-k8up-io-k8up-api-v1-backend[Backend].
+
+You can read link:https://kubernetes.io/docs/tasks/configure-pod-container/configure-pod-configmap/#configure-all-key-value-pairs-in-a-configmap-as-container-environment-variables[the kubernetes documentation] for more information on how to use `envFrom`.
+
+== Open Stack Swift Authentication Example
+
+The following example shows you how to configure Open Stack Swift authentication using a Kubernetes secret and `envFrom` configuration for your backend.
+
+You can read more on link:https://wiki.openstack.org/wiki/OpenStackClient/Authentication[Open Stack Client Authentication].
+
+[source,yaml]
+----
+include::example$open-stack-swift-auth.yaml[]
+----

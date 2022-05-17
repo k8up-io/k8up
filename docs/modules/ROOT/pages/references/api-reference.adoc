@@ -153,6 +153,7 @@ Backend allows configuring several backend implementations. It is expected that 
 |===
 | Field | Description
 | *`repoPasswordSecretRef`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#secretkeyselector-v1-core[$$SecretKeySelector$$]__ | RepoPasswordSecretRef references a secret key to look up the restic repository password
+| *`envFrom`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#envfromsource-v1-core[$$EnvFromSource$$] array__ | EnvFrom adds all environment variables from a an external source to the Restic job.
 | *`local`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-localspec[$$LocalSpec$$]__ | 
 | *`s3`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-s3spec[$$S3Spec$$]__ | 
 | *`gcs`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-api-v1-gcsspec[$$GCSSpec$$]__ | 

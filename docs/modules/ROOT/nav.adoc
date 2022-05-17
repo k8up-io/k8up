@@ -9,6 +9,7 @@
 * xref:how-tos/installation.adoc[Installation]
 * xref:how-tos/upgrade.adoc[Upgrade K8up]
 * xref:how-tos/backup.adoc[Backup]
+* xref:how-tos/generic-env-vars.adoc[Generic Environment Variables]
 * xref:how-tos/application-aware-backups.adoc[Application-Aware Backups]
 * xref:how-tos/prebackuppod.adoc[Pre-Backup Pods]
 * xref:how-tos/schedules.adoc[Schedules]

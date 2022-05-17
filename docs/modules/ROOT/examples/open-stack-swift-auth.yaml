@@ -1,0 +1,45 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: "open-stack-secret"
+stringData:
+  OS_AUTH_URL: "https://your-provider.auth.com/v3"
+  OS_IDENTITY_API_VERSION: "3"
+  OS_USER_DOMAIN_NAME: "Default"
+  OS_PROJECT_DOMAIN_NAME: "Default"
+  OS_TENANT_ID: "Open Stack Tenant Id"
+  OS_TENANT_NAME: "Open Stack Tenant Name"
+  OS_USERNAME: "Username"
+  OS_PASSWORD: "Password"
+  OS_REGION_NAME: "US"
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: "restic-repository-password"
+stringData:
+  password: "secret_pass"
+
+---
+apiVersion: k8up.io/v1
+kind: Backup
+metadata:
+  name: k8up-test-swift
+spec:
+  tags:
+    - prod
+    - archive
+    - important
+  failedJobsHistoryLimit: 4
+  successfulJobsHistoryLimit: 0
+  backend:
+    envFrom:
+    - secretRef:
+        name: "open-stack-secret"
+    repoPasswordSecretRef:
+      name: "restic-repository-password"
+      key: "password"
+    swift:
+      path: "/container-path"
+      container: "my-backup-container"

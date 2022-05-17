@@ -123,6 +123,7 @@ func (b *BackupExecutor) startBackup(backupJob *batchv1.Job) error {
 	}
 
 	backupJob.Spec.Template.Spec.Containers[0].Env = b.setupEnvVars()
+	b.backup.Spec.AppendEnvFromToContainer(&backupJob.Spec.Template.Spec.Containers[0])
 	backupJob.Spec.Template.Spec.Volumes = volumes
 	backupJob.Spec.Template.Spec.ServiceAccountName = cfg.Config.ServiceAccount
 	backupJob.Spec.Template.Spec.Containers[0].VolumeMounts = b.newVolumeMounts(volumes)
