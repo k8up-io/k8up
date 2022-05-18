@@ -41,6 +41,7 @@ spec:
               key: password
         ports:
         - containerPort: 9000
+        - containerPort: 9001
         readinessProbe:
           httpGet:
             path: /minio/health/ready
