@@ -7,11 +7,11 @@ spec:
   type: NodePort
   ports:
     - port: 9000
-      name: minio-api-port
+      name: api
       targetPort: 9000
       protocol: TCP
     - port: 9001
-      name: mini-browser-port
+      name: webui
       targetPort: 9001
       protocol: TCP
   selector:
