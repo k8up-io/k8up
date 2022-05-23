@@ -135,6 +135,9 @@ func (s *ScheduleHandler) mergeSecurityContextWithDefaults(specInstance *k8upv1.
 		specInstance.PodSecurityContext = s.schedule.Spec.PodSecurityContext.DeepCopy()
 		return
 	}
+	if s.schedule.Spec.PodSecurityContext == nil {
+		return
+	}
 
 	if err := mergo.Merge(specInstance.PodSecurityContext, s.schedule.Spec.PodSecurityContext); err != nil {
 		s.Log.Info("could not merge the schedule's security context with the resource's security context", "err", err.Error(), "schedule", s.Obj.GetMetaObject().GetName(), "namespace", s.Obj.GetMetaObject().GetNamespace())
