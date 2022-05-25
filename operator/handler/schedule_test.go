@@ -184,6 +184,42 @@ func TestScheduleHandler_mergeBackendWithDefaults(t *testing.T) {
 	}
 }
 
+func TestScheduleHandler_mergePodSecurityContextWithDefaults(t *testing.T) {
+	tests := map[string]struct {
+		givenSchedulePodSecurityContext *corev1.PodSecurityContext
+		givenResourcePodSecurityContext *corev1.PodSecurityContext
+		expectedPodSecurityContext      *corev1.PodSecurityContext
+	}{
+		"GivenScheduleContextIsNil_WhenResourceContextIsGiven_ThenUseResourcePSC": {
+			givenSchedulePodSecurityContext: nil,
+			givenResourcePodSecurityContext: newBuilderPSC().runAsUser(0).runAsGroup(1).seLinuxOptions("s0:c123,c456").get(),
+			expectedPodSecurityContext:      newBuilderPSC().runAsUser(0).runAsGroup(1).seLinuxOptions("s0:c123,c456").get(),
+		},
+		"GivenScheduleContextIsPopulated_WhenResourceContextIsGiven_ThenMergeWithResourcePSC": {
+			givenSchedulePodSecurityContext: newBuilderPSC().runAsGroup(2).seLinuxOptions("s1:c123,c456").get(),
+			givenResourcePodSecurityContext: newBuilderPSC().runAsUser(1).runAsGroup(1).get(),
+			expectedPodSecurityContext:      newBuilderPSC().runAsUser(1).runAsGroup(1).seLinuxOptions("s1:c123,c456").get(),
+		},
+		"GivenScheduleContextIsPopulated_WhenResourceContextIsNil_ThenUseResourcePSC": {
+			givenSchedulePodSecurityContext: newBuilderPSC().runAsGroup(1).seLinuxOptions("s1:c123,c456").get(),
+			givenResourcePodSecurityContext: nil,
+			expectedPodSecurityContext:      newBuilderPSC().runAsGroup(1).seLinuxOptions("s1:c123,c456").get(),
+		},
+	}
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			schedule := ScheduleHandler{schedule: &k8upv1.Schedule{Spec: k8upv1.ScheduleSpec{
+				PodSecurityContext: tt.givenSchedulePodSecurityContext,
+			}}}
+			res := &k8upv1.RunnableSpec{
+				PodSecurityContext: tt.givenResourcePodSecurityContext,
+			}
+			schedule.mergeSecurityContextWithDefaults(res)
+			assert.Equal(t, *tt.expectedPodSecurityContext, *res.PodSecurityContext)
+		})
+	}
+}
+
 func newS3Backend(endpoint, bucket string) k8upv1.Backend {
 	return k8upv1.Backend{
 		S3: &k8upv1.S3Spec{
@@ -191,4 +227,31 @@ func newS3Backend(endpoint, bucket string) k8upv1.Backend {
 			Bucket:   bucket,
 		},
 	}
+}
+
+type builderPodSecurityContext struct {
+	corev1.PodSecurityContext
+}
+
+func newBuilderPSC() *builderPodSecurityContext {
+	return &builderPodSecurityContext{}
+}
+
+func (b *builderPodSecurityContext) seLinuxOptions(level string) *builderPodSecurityContext {
+	b.SELinuxOptions = &corev1.SELinuxOptions{Level: level}
+	return b
+}
+
+func (b *builderPodSecurityContext) runAsUser(runAsUser int64) *builderPodSecurityContext {
+	b.RunAsUser = &runAsUser
+	return b
+}
+
+func (b *builderPodSecurityContext) runAsGroup(runAsGroup int64) *builderPodSecurityContext {
+	b.RunAsGroup = &runAsGroup
+	return b
+}
+
+func (b *builderPodSecurityContext) get() *corev1.PodSecurityContext {
+	return &b.PodSecurityContext
 }
