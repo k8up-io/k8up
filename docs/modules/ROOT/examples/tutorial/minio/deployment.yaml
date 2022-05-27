@@ -26,6 +26,7 @@ spec:
         args:
         - server
         - /data
+        - '--console-address=:9001'
         env:
         - name: MINIO_ROOT_USER
           valueFrom:
@@ -39,6 +40,7 @@ spec:
               key: password
         ports:
         - containerPort: 9000
+        - containerPort: 9001
         readinessProbe:
           httpGet:
             path: /minio/health/ready
