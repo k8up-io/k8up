@@ -227,6 +227,7 @@ To restore using Restic, set these variables (in a Unix-based system; for Window
 [source,bash]
 ....
 kubectl port-forward svc/minio 9000:9000 &
+export MINIO_PORT=$!
 export KUBECONFIG=""
 export RESTIC_REPOSITORY=s3:http://localhost:9000/backups/
 export RESTIC_PASSWORD=p@ssw0rd
@@ -336,7 +337,7 @@ Whenever K8up performs a backup, it creates a pod for the job. The one we create
 [[step_6]]
 === Scheduling regular backups
 
-NOTE: The operations of this step can be executed at once using the `scripts/7_schedule.sh` script.
+NOTE: The operations of this step can be executed at once using the `scripts/5_schedule.sh` script.
 
 Instead of performing backups manually, you can also set a schedule on which backups are performed automatically. This requires specifying the schedule in `cron` format.
 
@@ -381,7 +382,9 @@ TIP: Running the `watch restic snapshots` command will rerun restic every 2 seco
 [[step_7]]
 === Cleaning up the cluster
 
-NOTE: The operations of this step can be executed at once using the `scripts/8_stop.sh` script.
+NOTE: The operations of this step can be executed at once using the `scripts/6_stop.sh` script.
+
+Stop port forwarding with `kill $MINIO_PORT`.
 
 When you are done with this tutorial, just execute the `minikube stop` command to shut the cluster down. If you would like to get rid of it completely, run `minikube delete`.
 
