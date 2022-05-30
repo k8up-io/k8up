@@ -1,4 +1,4 @@
-:k8up_version: v1.2.0
+:k8up_version: v2.2.0
 
 = Backing up Kubernetes Clusters with K8up
 
@@ -11,7 +11,8 @@ This situation is so common that we as https://vshn.ch/[VSHN] decided to tackle 
 
 In this tutorial you'll learn how to backup a small https://github.com/kubernetes/minikube[Minikube] cluster running on your computer. We are going to deploy https://min.io/[Minio], https://mariadb.com/[MariaDB], and https://wordpress.org/[WordPress] to this cluster. Then we'll create a blog post on our new website. Later we're going to "deface" it so that we have a valid reason to restore it safely afterwards. Through this process you get to know K8up and its basic capabilities.
 
-NOTE: All the scripts and YAML files are available in https://github.com/k8up-io/k8up/tree/master/docs/modules/ROOT/examples/tutorial[GitHub].
+NOTE: All the scripts and YAML files are available in https://github.com/k8up-io/k8up/tree/master/docs/modules/ROOT/examples/tutorial[GitHub]. +
+The paths in this tutorial are relative to `docs/modules/ROOT/examples/tutorial`.
 
 === Requirements
 
@@ -89,6 +90,7 @@ The https://asciinema.org/[asciinema] movie below shows all of these steps in re
 NOTE: The operations of this step can be executed at once using the `scripts/2_browser.sh` script.
 
 . Open WordPress in your default browser using the `minikube service wordpress` command. You should see the WordPress installation wizard appearing in your browser window.
+.. If the browser does not open automatically, use `minikube service --url wordpress` to get the URL to open it manually.
 
 IMPORTANT: If the message "Error establishing a database connection" appears when launching WordPress, just delete the WordPress pod and try again. This usually happens if the WordPress pod starts before the MariaDB pod and can't find the database server.
 
@@ -130,7 +132,7 @@ image::tutorial/wordpress-install.png[]
 === Backing up the blog
 
 In this step we're going to create a backup of our blog and it's database.
-Everything related to this is defined in `../backup.yml`.
+Everything related to this is defined in `backup.yml`.
 Once applied to our Minikube cluster,
 k8up will instantly take a backup of the database
 and copy it to Minio, our S3-compatible backup storage.
@@ -138,7 +140,7 @@ Read on to learn how K8up exactly does what it does.
 
 NOTE: The operations of this step can be executed at once using the `scripts/3_backup.sh` script.
 
-To trigger a backup, use the command `kubectl apply -f ../backup.yaml`. You can see the job in the "Jobs" section of `k9s`.
+To trigger a backup, use the command `kubectl apply -f backup.yaml`. You can see the job in the "Jobs" section of `k9s`.
 
 Running the `kubectl logs` command on a backup pod brings the following information:
 
@@ -273,11 +275,11 @@ spec:
 ....
 
 Don't forget to fill in your actual `backend:` information as documented above.
-There is a predefined restore YAML file in `../examples/restore/wordpress.yaml` where you only have to replace `SNAPSHOT_ID`.
+There is a predefined restore YAML file in `restore/wordpress.yaml` where you only have to replace `SNAPSHOT_ID`.
 
 [start=3]
 . Apply the changes:
-* `kubectl apply -f ../examples/restore/wordpress.yaml`
+* `kubectl apply -f restore/wordpress.yaml`
 * Use the `kubectl get pods` commands to see when your restore job is done.
 
 TIP: Use the command `kubectl get pods --sort-by=.metadata.creationTimestamp` to order the pods in descending age order. Then you will quickly find the pod of the restore job at the end of the list.
