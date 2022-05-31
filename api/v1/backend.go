@@ -6,7 +6,7 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 
-	"github.com/k8up-io/k8up/operator/cfg"
+	"github.com/k8up-io/k8up/v2/operator/cfg"
 )
 
 type (

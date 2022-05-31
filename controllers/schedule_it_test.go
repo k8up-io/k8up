@@ -10,12 +10,12 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
-	k8upv1 "github.com/k8up-io/k8up/api/v1"
-	"github.com/k8up-io/k8up/controllers"
-	"github.com/k8up-io/k8up/envtest"
-	"github.com/k8up-io/k8up/operator/cfg"
-	"github.com/k8up-io/k8up/operator/handler"
-	"github.com/k8up-io/k8up/operator/scheduler"
+	k8upv1 "github.com/k8up-io/k8up/v2/api/v1"
+	"github.com/k8up-io/k8up/v2/controllers"
+	"github.com/k8up-io/k8up/v2/envtest"
+	"github.com/k8up-io/k8up/v2/operator/cfg"
+	"github.com/k8up-io/k8up/v2/operator/handler"
+	"github.com/k8up-io/k8up/v2/operator/scheduler"
 )
 
 type (

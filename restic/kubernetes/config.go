@@ -7,7 +7,7 @@ import (
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 
-	"github.com/k8up-io/k8up/restic/cfg"
+	"github.com/k8up-io/k8up/v2/restic/cfg"
 )
 
 func getClientConfig() (*rest.Config, error) {

@@ -1,9 +1,9 @@
 package handler
 
 import (
-	"github.com/k8up-io/k8up/operator/executor"
-	"github.com/k8up-io/k8up/operator/job"
-	"github.com/k8up-io/k8up/operator/queue"
+	"github.com/k8up-io/k8up/v2/operator/executor"
+	"github.com/k8up-io/k8up/v2/operator/job"
+	"github.com/k8up-io/k8up/v2/operator/queue"
 )
 
 // Handler is the generic job handler for most of the k8up jobs.

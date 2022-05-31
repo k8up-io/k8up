@@ -12,7 +12,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"sigs.k8s.io/controller-runtime/pkg/metrics"
 
-	k8upv1 "github.com/k8up-io/k8up/api/v1"
+	k8upv1 "github.com/k8up-io/k8up/v2/api/v1"
 )
 
 var (

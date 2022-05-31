@@ -3,7 +3,7 @@ package v1_test
 import (
 	"testing"
 
-	k8upv1 "github.com/k8up-io/k8up/api/v1"
+	k8upv1 "github.com/k8up-io/k8up/v2/api/v1"
 
 	"github.com/stretchr/testify/assert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"

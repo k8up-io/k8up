@@ -1,4 +1,4 @@
-module github.com/k8up-io/k8up
+module github.com/k8up-io/k8up/v2
 
 go 1.17
 

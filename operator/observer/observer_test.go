@@ -10,7 +10,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
 
-	k8upv1 "github.com/k8up-io/k8up/api/v1"
+	k8upv1 "github.com/k8up-io/k8up/v2/api/v1"
 )
 
 func TestObserver_IsConcurrentJobsLimitReached(t *testing.T) {

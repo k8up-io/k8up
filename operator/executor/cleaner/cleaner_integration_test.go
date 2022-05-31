@@ -6,10 +6,10 @@ package cleaner_test
 import (
 	"testing"
 
-	k8upv1 "github.com/k8up-io/k8up/api/v1"
-	"github.com/k8up-io/k8up/envtest"
-	"github.com/k8up-io/k8up/operator/executor/cleaner"
-	"github.com/k8up-io/k8up/operator/job"
+	k8upv1 "github.com/k8up-io/k8up/v2/api/v1"
+	"github.com/k8up-io/k8up/v2/envtest"
+	"github.com/k8up-io/k8up/v2/operator/executor/cleaner"
+	"github.com/k8up-io/k8up/v2/operator/job"
 	"github.com/stretchr/testify/suite"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/uuid"
