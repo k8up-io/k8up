@@ -32,6 +32,13 @@ docs-update-usage: ## Generates dumps from `k8up --help`, which are then include
 	go run $(K8UP_MAIN_GO) restic --help > "$(docs_usage_dir)/restic.txt"
 	go run $(K8UP_MAIN_GO) operator --help > "$(docs_usage_dir)/operator.txt"
 
+.PHONY: docs-generate-api
+docs-generate-api: $(CRD_REF_DOCS_BIN) ## Generates API reference documentation
+	$(CRD_REF_DOCS_BIN) --source-path=api/v1 --config=docs/api-gen-config.yaml --renderer=asciidoctor --templates-dir=docs/api-templates --output-path=$(CRD_DOCS_REF_PATH)
+
+.PHONY: docs-generate
+docs-generate: docs-update-usage docs-generate-api
+
 # This will clean the Antora Artifacts, not the npm artifacts
 .PHONY: docs-clean
 docs-clean: ## Cleans Antora artifacts

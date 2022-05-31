@@ -8,7 +8,7 @@ MAKEFLAGS += --no-builtin-variables
 .SECONDARY:
 
 PROJECT_ROOT_DIR = ..
-include ../Makefile.vars.mk
+include ../Makefile.vars.mk ../tools/tools.mk
 include kind.mk
 
 uname_s := $(shell uname -s)
@@ -58,7 +58,7 @@ $(e2etest_dir_created):
 # a marker file must be created, because the date of the
 # directory may update when content in it is created/updated,
 # which would cause a rebuild / re-initialization of dependants
-	@touch $(e2etest_dir_created)
+	@touch $@
 
 $(bats):
 	@npm install

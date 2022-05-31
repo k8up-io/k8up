@@ -9,7 +9,7 @@ MAKEFLAGS += --no-builtin-variables
 .DEFAULT_GOAL := help
 
 PROJECT_ROOT_DIR = .
-include Makefile.vars.mk
+include Makefile.vars.mk tools/tools.mk
 include Makefile.restic-integration.mk
 
 e2e_make := $(MAKE) -C e2e
@@ -40,9 +40,9 @@ integration-test: export BACKUP_DIR = $(backup_dir)
 integration-test: export RESTORE_DIR = $(restore_dir)
 integration-test: export STATS_URL = $(stats_url)
 # }
-integration-test: generate $(integrationtest_dir_created) restic-integration-test-setup ## Run integration tests with envtest
-	$(setup-envtest) use '$(ENVTEST_K8S_VERSION)!'
-	export KUBEBUILDER_ASSETS="$$($(setup-envtest) use -i -p path '$(ENVTEST_K8S_VERSION)!')"; \
+integration-test: generate $(integrationtest_dir_created) restic-integration-test-setup $(SETUP_ENVTEST_BIN) ## Run integration tests with envtest
+	$(SETUP_ENVTEST_BIN) $(ENVTEST_ADDITIONAL_FLAGS) use '$(ENVTEST_K8S_VERSION)!'
+	export KUBEBUILDER_ASSETS="$$($(SETUP_ENVTEST_BIN) $(ENVTEST_ADDITIONAL_FLAGS) use -i -p path '$(ENVTEST_K8S_VERSION)!')"; \
 		env | grep KUBEBUILDER; \
 		go test -tags=integration -coverprofile cover.out  ./...
 
@@ -65,15 +65,15 @@ run-restic: CMD := restic
 run-restic: run  ## Run the restic module. Use ARGS to pass arguments to the command, e.g. `make run-restic ARGS="--debug" CMD_ARGS="--check"`
 
 .PHONY: install
-install: generate ## Install CRDs into a cluster
+install: $(KUSTOMIZE) generate ## Install CRDs into a cluster
 	$(KUSTOMIZE) build $(CRD_ROOT_DIR)/v1 | kubectl apply $(KIND_KUBECTL_ARGS) -f -
 
 .PHONY: uninstall
-uninstall: generate ## Uninstall CRDs from a cluster
+uninstall: $(KUSTOMIZE) generate ## Uninstall CRDs from a cluster
 	$(KUSTOMIZE) build $(CRD_ROOT_DIR)/v1 | kubectl delete -f -
 
 .PHONY: deploy
-deploy: generate ## Deploy controller in the configured Kubernetes cluster in ~/.kube/config
+deploy: $(KUSTOMIZE) generate ## Deploy controller in the configured Kubernetes cluster in ~/.kube/config
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
 	$(KUSTOMIZE) build config/default | kubectl apply -f -
 
@@ -83,11 +83,9 @@ generate: ## Generate manifests e.g. CRD, RBAC etc.
 	go run sigs.k8s.io/controller-tools/cmd/controller-gen object:headerFile="hack/boilerplate.go.txt" paths="./..."
 	# Generate CRDs
 	go run sigs.k8s.io/controller-tools/cmd/controller-gen rbac:roleName=manager-role webhook paths="./..." output:crd:artifacts:config=$(CRD_ROOT_DIR)/v1/base crd:crdVersions=v1
-	# Generate API reference documentation
-	go run github.com/elastic/crd-ref-docs --source-path=api/v1 --config=docs/api-gen-config.yaml --renderer=asciidoctor --templates-dir=docs/api-templates --output-path=$(CRD_DOCS_REF_PATH)
 
 .PHONY: crd
-crd: generate ## Generate CRD to file
+crd: $(KUSTOMIZE) generate ## Generate CRD to file
 	$(KUSTOMIZE) build $(CRD_ROOT_DIR)/v1 > $(CRD_FILE)
 
 .PHONY: fmt
@@ -99,7 +97,7 @@ vet: ## Run go vet against code
 	go vet ./...
 
 .PHONY: lint
-lint: fmt vet docs-update-usage ## Invokes the fmt and vet targets
+lint: generate fmt vet docs-generate ## Invokes the fmt and vet targets
 	@echo 'Check for uncommitted changes ...'
 	git diff --exit-code
 
@@ -140,9 +138,9 @@ $(BIN_FILENAME):
 
 $(integrationtest_dir_created):
 	mkdir -p $(integrationtest_dir)
-	# a marker file must be created, because the date of the
-	# directory may update when content in it is created/updated,
-	# which would cause a rebuild / re-initialization of dependants
+# a marker file must be created, because the date of the
+# directory may update when content in it is created/updated,
+# which would cause a rebuild / re-initialization of dependants
 	@touch $(integrationtest_dir_created)
 
 ###

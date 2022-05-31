@@ -50,7 +50,7 @@ clear_pv_data() {
 }
 
 kustomize() {
-	go run sigs.k8s.io/kustomize/kustomize/v4 "${@}"
+	../.e2e-test/kustomize "${@}"
 }
 
 restic() {

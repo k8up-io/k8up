@@ -10,16 +10,16 @@ kind-setup: $(kind_marker) $(e2etest_dir_created) ## Creates the kind cluster
 
 .PHONY: kind-clean
 kind-clean: export KUBECONFIG = $(KIND_KUBECONFIG)
-kind-clean: ## Remove the kind Cluster
+kind-clean: $(KIND) ## Remove the kind Cluster
 	@$(KIND) delete cluster --name $(KIND_CLUSTER) || true
-	@rm $(KIND) $(kind_marker) $(KIND_KUBECONFIG) || true
+	@rm -rf $(KIND) $(kind_marker) $(KIND_KUBECONFIG)
 
 ###
 ### Artifacts
 ###
 
 $(KIND_KUBECONFIG): export KUBECONFIG = $(KIND_KUBECONFIG)
-$(KIND_KUBECONFIG):
+$(KIND_KUBECONFIG): $(KIND)
 	@mkdir -p debug/data/pvc-subject
 	$(KIND) create cluster \
 		--name $(KIND_CLUSTER) \
