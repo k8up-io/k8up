@@ -20,7 +20,6 @@ SAMPLES_ROOT_DIR ?= config/samples
 minio_sentinel = $(e2etest_dir)/minio_sentinel
 
 KIND_NODE_VERSION ?= v1.23.1
-KIND ?= go run sigs.k8s.io/kind
 KIND_KUBECONFIG ?= $(e2etest_dir)/kind-kubeconfig-$(KIND_NODE_VERSION)
 KIND_CLUSTER ?= k8up-$(KIND_NODE_VERSION)
 KIND_KUBECTL_ARGS ?= --validate=true
@@ -34,8 +33,6 @@ K8UP_E2E_IMG = $(E2E_REPO)/k8up:$(E2E_TAG)
 
 BATS_FILES ?= .
 
-KUSTOMIZE ?= go run sigs.k8s.io/kustomize/kustomize/v4
-
 # Image URL to use all building/pushing image targets
 K8UP_GHCR_IMG ?= ghcr.io/k8up-io/k8up:$(IMG_TAG)
 K8UP_QUAY_IMG ?= quay.io/k8up-io/k8up:$(IMG_TAG)
@@ -43,4 +40,4 @@ K8UP_QUAY_IMG ?= quay.io/k8up-io/k8up:$(IMG_TAG)
 # Operator Integration Test
 ENVTEST_ADDITIONAL_FLAGS ?= --bin-dir "$(integrationtest_dir)"
 INTEGRATION_TEST_DEBUG_OUTPUT ?= false
-setup-envtest ?= go run sigs.k8s.io/controller-runtime/tools/setup-envtest $(ENVTEST_ADDITIONAL_FLAGS)
+setup-envtest ?= $(SETUP_ENVTEST_BIN) $(ENVTEST_ADDITIONAL_FLAGS)
