@@ -10,7 +10,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/push"
 
-	"github.com/k8up-io/k8up/restic/cli"
+	"github.com/k8up-io/k8up/v2/restic/cli"
 )
 
 const (

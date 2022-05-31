@@ -7,8 +7,8 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 
-	k8upv1 "github.com/k8up-io/k8up/api/v1"
-	"github.com/k8up-io/k8up/operator/cfg"
+	k8upv1 "github.com/k8up-io/k8up/v2/api/v1"
+	"github.com/k8up-io/k8up/v2/operator/cfg"
 )
 
 func TestScheduleHandler_mergeResourcesWithDefaults(t *testing.T) {

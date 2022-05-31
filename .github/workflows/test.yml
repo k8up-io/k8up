@@ -14,7 +14,7 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Determine Go version from go.mod
-      run: echo "GO_VERSION=$(grep "go 1." go.mod | cut -d " " -f 2)" >> $GITHUB_ENV
+      run: echo "GO_VERSION=$(go mod edit -json | jq -r .Go)" >> $GITHUB_ENV
     - uses: actions/setup-go@v3
       with:
         go-version: ${{ env.GO_VERSION }}
@@ -32,4 +32,4 @@ jobs:
         CC_TEST_REPORTER_ID: 8b249859554fe1e4e283329f31f8cdace9ecfed692ce3cf733fd9ce22ed40594
       with:
         coverageLocations: cover.out:gocov
-        prefix: github.com/${{ github.repository }}
+        prefix: github.com/${{ github.repository }}/v2

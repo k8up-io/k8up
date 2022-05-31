@@ -8,9 +8,9 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 
-	k8upv1 "github.com/k8up-io/k8up/api/v1"
-	"github.com/k8up-io/k8up/operator/cfg"
-	"github.com/k8up-io/k8up/operator/job"
+	k8upv1 "github.com/k8up-io/k8up/v2/api/v1"
+	"github.com/k8up-io/k8up/v2/operator/cfg"
+	"github.com/k8up-io/k8up/v2/operator/job"
 )
 
 // BackupExecutor creates a batch.job object on the cluster. It merges all the

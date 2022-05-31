@@ -10,9 +10,9 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	k8upv1 "github.com/k8up-io/k8up/api/v1"
-	"github.com/k8up-io/k8up/operator/cfg"
-	"github.com/k8up-io/k8up/operator/job"
+	k8upv1 "github.com/k8up-io/k8up/v2/api/v1"
+	"github.com/k8up-io/k8up/v2/operator/cfg"
+	"github.com/k8up-io/k8up/v2/operator/job"
 )
 
 // ObjectCleaner cleans old, finished job objects.

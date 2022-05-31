@@ -5,7 +5,7 @@ import (
 
 	"github.com/go-logr/logr"
 
-	"github.com/k8up-io/k8up/restic/logging"
+	"github.com/k8up-io/k8up/v2/restic/logging"
 )
 
 type Lock struct {

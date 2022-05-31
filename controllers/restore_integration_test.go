@@ -15,9 +15,9 @@ import (
 	controllerruntime "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	k8upv1 "github.com/k8up-io/k8up/api/v1"
-	"github.com/k8up-io/k8up/controllers"
-	"github.com/k8up-io/k8up/envtest"
+	k8upv1 "github.com/k8up-io/k8up/v2/api/v1"
+	"github.com/k8up-io/k8up/v2/controllers"
+	"github.com/k8up-io/k8up/v2/envtest"
 )
 
 type RestoreTestSuite struct {

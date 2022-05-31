@@ -3,8 +3,8 @@ package cli
 import (
 	"fmt"
 
-	"github.com/k8up-io/k8up/restic/cfg"
-	"github.com/k8up-io/k8up/restic/logging"
+	"github.com/k8up-io/k8up/v2/restic/cfg"
+	"github.com/k8up-io/k8up/v2/restic/logging"
 )
 
 // Prune will enforce the retention policy onto the repository
