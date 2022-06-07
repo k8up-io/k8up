@@ -62,7 +62,7 @@ restic() {
 		--namespace "${DETIK_CLIENT_NAMESPACE-"k8up-system"}" \
 		--image "${E2E_IMAGE}" \
 		--env "AWS_ACCESS_KEY_ID=myaccesskey" \
-		--env "AWS_SECRET_KEY=mysecretkey" \
+		--env "AWS_SECRET_ACCESS_KEY=mysecretkey" \
 		--env "RESTIC_PASSWORD=myreposecret" \
 		--pod-running-timeout 10s \
 		--timeout 3s \
@@ -142,7 +142,7 @@ given_an_annotated_subject() {
 }
 
 given_s3_storage() {
-	helm repo add minio https://helm.min.io/
+	helm repo add minio https://helm.min.io/ --force-update
 	helm repo update
 	helm upgrade --install minio \
 		--values definitions/minio/helm.yaml \
