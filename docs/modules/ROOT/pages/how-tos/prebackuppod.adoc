@@ -19,7 +19,7 @@ kind: PreBackupPod
 metadata:
   name: mysqldump
 spec:
-  backupCommand: mysqldump -u$USER -p$PW -h $DB_HOST --all-databases
+  backupCommand: sh -c 'mysqldump -u$USER -p$PW -h $DB_HOST --all-databases'
   pod:
     spec:
       containers:
