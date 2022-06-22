@@ -49,6 +49,9 @@ func (r *ArchiveReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	if archive.Spec.Backend != nil {
 		repository = archive.Spec.Backend.String()
 	}
+	if archive.Spec.RestoreSpec == nil {
+		archive.Spec.RestoreSpec = &k8upv1.RestoreSpec{}
+	}
 	config := job.NewConfig(ctx, r.Client, log, archive, r.Scheme, repository)
 
 	archiveHandler := handler.NewHandler(config)
