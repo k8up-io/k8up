@@ -45,11 +45,15 @@ type initStdErrWrapper struct {
 func (i *initStdErrWrapper) Write(p []byte) (n int, err error) {
 	scanner := bufio.NewScanner(bytes.NewReader(p))
 
-	for scanner.Scan() {
-		if strings.Contains(scanner.Text(), "already initialized") {
-			i.exists = true
-			return len(p), nil
-		}
-	}
+    // array of acceptable errors to attempt to continue
+    okErrorArray := []string{"already initialized", "config already exists"}
+    for _, errorString := range okErrorArray {
+    	for scanner.Scan() {
+    		if strings.Contains(scanner.Text(), errorString) {
+    			i.exists = true
+    			return len(p), nil
+    		}
+        }
+    }
 	return i.Writer.Write(p)
 }
