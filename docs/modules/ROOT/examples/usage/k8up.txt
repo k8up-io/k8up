@@ -17,6 +17,7 @@ GLOBAL OPTIONS:
    --debug, --verbose, -d  sets the log level to debug (default: false) [$K8UP_DEBUG]
    --help, -h              show help (default: false)
    --version, -v           print the version (default: false)
+   
 
 COPYRIGHT:
    (c) 2021 VSHN AG
