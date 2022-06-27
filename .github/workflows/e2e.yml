@@ -26,7 +26,7 @@ jobs:
         key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
         restore-keys: |
           ${{ runner.os }}-go-
-    - uses: azure/setup-kubectl@v1
+    - uses: azure/setup-kubectl@v3
       with:
         version: ${{ matrix.kind-node-version }}
       id: install
