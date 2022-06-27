@@ -46,14 +46,16 @@ func (i *initStdErrWrapper) Write(p []byte) (n int, err error) {
 	scanner := bufio.NewScanner(bytes.NewReader(p))
 
 	// array of acceptable errors to attempt to continue
-	okErrorArray := []string{"already initialized", "config already exists"}
-	for _, errorString := range okErrorArray {
-		for scanner.Scan() {
+	okErrorArray := []string{"already initialized", "already exists"}
+
+	for scanner.Scan() {
+		for _, errorString := range okErrorArray {
 			if strings.Contains(scanner.Text(), errorString) {
 				i.exists = true
 				return len(p), nil
 			}
 		}
 	}
+
 	return i.Writer.Write(p)
 }
