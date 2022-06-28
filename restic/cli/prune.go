@@ -45,6 +45,9 @@ func (r *Restic) Prune(tags ArrayOpts) error {
 	if cfg.Config.PruneKeepTags {
 		args = append(args, "--keep-tag")
 	}
+	if cfg.Config.Hostname != "" {
+		args = append(args, "--host="+cfg.Config.Hostname)
+	}
 
 	resticPruneLogger := prunelogger.WithName("restic")
 	opts := CommandOptions{
