@@ -326,6 +326,8 @@ List of available settings:
 
 WARNING: Please don't confuse `tags` and `keepTags` here. If you specify `keepTags` it will remove all snapshots that don't have the tag! If you use the `tags` array it will apply the retention only to snapshots with that specific tag. That way there can be multiple backup sets on a repository, for example `prod` and `dev`.
 
+NOTE: The retention is applied per namespace.
+
 == Backend
 
 [source,yaml]
