@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/elastic/crd-ref-docs v0.0.8
-	sigs.k8s.io/controller-runtime/tools/setup-envtest v0.0.0-20220525144126-196828e54e42
+	sigs.k8s.io/controller-runtime/tools/setup-envtest v0.0.0-20220629132207-365ae09c4c6c
 	sigs.k8s.io/kind v0.14.0
 	sigs.k8s.io/kustomize/kustomize/v4 v4.5.5
 )
