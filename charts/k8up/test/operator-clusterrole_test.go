@@ -5,26 +5,14 @@ import (
 	"testing"
 
 	"github.com/gruntwork-io/terratest/modules/helm"
-	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
 
 var (
-	tplRbac = []string{"templates/rbac.yaml"}
+	tplRbac = []string{"templates/operator-clusterrole.yaml"}
 )
-
-func Test_RBAC_GivenDefaultSetting_WhenRenderTemplate_ThenRenderRbacRules(t *testing.T) {
-	options := &helm.Options{
-		Logger: logger.Discard,
-	}
-
-	output := helm.RenderTemplate(t, options, helmChartPath, releaseName, tplRbac)
-
-	docs := strings.Split(output, "\n---\n")
-	assert.Greater(t, len(docs), 1)
-}
 
 func Test_RBAC_GivenDefaultSetting_WhenRenderTemplate_ThenRenderRbacWithReplacedValues(t *testing.T) {
 	options := &helm.Options{
@@ -34,7 +22,7 @@ func Test_RBAC_GivenDefaultSetting_WhenRenderTemplate_ThenRenderRbacWithReplaced
 	output := helm.RenderTemplate(t, options, helmChartPath, releaseName, tplRbac)
 
 	docs := strings.Split(output, "\n---\n")
-	assert.Greater(t, len(docs), 1)
+	assert.Len(t, docs, 1, "resources in file")
 
 	for _, doc := range docs {
 		obj := unstructured.Unstructured{}
