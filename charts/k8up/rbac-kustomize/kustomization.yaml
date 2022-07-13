@@ -1,8 +1,0 @@
-resources:
-  - github.com/k8up-io/k8up/config/rbac?ref=v2.3.2
-
-namePrefix: PREFIX-
-namespace: "{{ .Release.Namespace }}"
-
-commonLabels:
-  replace: LABELS

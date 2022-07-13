@@ -34,7 +34,8 @@ You'll need:
 - Go development environment
 - Your favorite IDE (with a Go plugin)
 - Docker
-- make
+- `make`
+- `sed` (or `gsed` for MacOS)
 
 To run the end-to-end test (e.g. `make e2e-test`), you additionally need:
 

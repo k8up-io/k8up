@@ -1,6 +1,6 @@
 # k8up
 
-![Version: 2.0.5](https://img.shields.io/badge/Version-2.0.5-informational?style=flat-square) ![AppVersion: v2.3.2](https://img.shields.io/badge/AppVersion-v2.3.2-informational?style=flat-square)
+![Version: 2.0.5](https://img.shields.io/badge/Version-2.0.5-informational?style=flat-square)
 
 Kubernetes and OpenShift Backup Operator based on restic
 
@@ -9,11 +9,11 @@ Kubernetes and OpenShift Backup Operator based on restic
 ## Installation
 
 ```bash
-helm repo add appuio https://charts.appuio.ch
-helm install k8up appuio/k8up
+helm repo add k8up-io https://k8up-io.github.io/k8up
+helm install k8up k8up-io/k8up
 ```
 ```bash
-kubectl apply -f https://github.com/k8up-io/k8up/releases/download/v2.3.2/k8up-crd.yaml
+kubectl apply -f https://github.com/k8up-io/k8up/releases/download/k8up-2.0.5/k8up-crd.yaml
 ```
 
 <!---

@@ -7,7 +7,6 @@ keywords:
   - operator
   - restic
 version: 2.0.5
-appVersion: v2.3.2
 sources:
   - https://github.com/k8up-io/k8up
 maintainers:
