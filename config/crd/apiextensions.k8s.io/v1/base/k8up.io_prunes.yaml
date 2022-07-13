@@ -3,7 +3,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.9.0
+    controller-gen.kubebuilder.io/version: v0.9.2
   creationTimestamp: null
   name: prunes.k8up.io
 spec:
@@ -72,6 +72,7 @@ spec:
                         required:
                         - key
                         type: object
+                        x-kubernetes-map-type: atomic
                       accountNameSecretRef:
                         description: SecretKeySelector selects a key of a Secret.
                         properties:
@@ -90,6 +91,7 @@ spec:
                         required:
                         - key
                         type: object
+                        x-kubernetes-map-type: atomic
                       container:
                         type: string
                     type: object
@@ -113,6 +115,7 @@ spec:
                         required:
                         - key
                         type: object
+                        x-kubernetes-map-type: atomic
                       accountKeySecretRef:
                         description: SecretKeySelector selects a key of a Secret.
                         properties:
@@ -131,6 +134,7 @@ spec:
                         required:
                         - key
                         type: object
+                        x-kubernetes-map-type: atomic
                       bucket:
                         type: string
                       path:
@@ -154,6 +158,7 @@ spec:
                               description: Specify whether the ConfigMap must be defined
                               type: boolean
                           type: object
+                          x-kubernetes-map-type: atomic
                         prefix:
                           description: An optional identifier to prepend to each key
                             in the ConfigMap. Must be a C_IDENTIFIER.
@@ -169,6 +174,7 @@ spec:
                               description: Specify whether the Secret must be defined
                               type: boolean
                           type: object
+                          x-kubernetes-map-type: atomic
                       type: object
                     type: array
                   gcs:
@@ -191,6 +197,7 @@ spec:
                         required:
                         - key
                         type: object
+                        x-kubernetes-map-type: atomic
                       bucket:
                         type: string
                       projectIDSecretRef:
@@ -211,6 +218,7 @@ spec:
                         required:
                         - key
                         type: object
+                        x-kubernetes-map-type: atomic
                     type: object
                   local:
                     properties:
@@ -236,6 +244,7 @@ spec:
                     required:
                     - key
                     type: object
+                    x-kubernetes-map-type: atomic
                   rest:
                     properties:
                       passwordSecretReg:
@@ -256,6 +265,7 @@ spec:
                         required:
                         - key
                         type: object
+                        x-kubernetes-map-type: atomic
                       url:
                         type: string
                       userSecretRef:
@@ -276,6 +286,7 @@ spec:
                         required:
                         - key
                         type: object
+                        x-kubernetes-map-type: atomic
                     type: object
                   s3:
                     properties:
@@ -297,6 +308,7 @@ spec:
                         required:
                         - key
                         type: object
+                        x-kubernetes-map-type: atomic
                       bucket:
                         type: string
                       endpoint:
@@ -319,6 +331,7 @@ spec:
                         required:
                         - key
                         type: object
+                        x-kubernetes-map-type: atomic
                     type: object
                   swift:
                     properties:
