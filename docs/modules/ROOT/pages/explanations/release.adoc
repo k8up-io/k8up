@@ -1,16 +1,88 @@
 = Releasing K8up
 
-The release process is automated all the way through.
-It starts when a maintainer pushes a new git tag.
-This will trigger a GitHub Action which will, in turn, create:
+This repository contains code releases as well as Helm chart releases.
+They are using separate versioning scheme, each using SemVer.
 
-- A GitHub release with a changelog based on the merged pull requests.
+[IMPORTANT]
+====
+Any Pull Request _must_ clearly isolate code changes from Helm chart changes.
+Otherwise, there could be issues with the release automation and the generated changelog.
+====
+
+[NOTE]
+====
+Changes to the repository boilerplate, CI/CD or similar shall be considered as normal code change.
+====
+
+[TIP]
+====
+The PR template reminds you how to separate and label PRs.
+====
+
+== Operator Release
+
+The release process is automated all the way through.
+Releasing a new version of the operator requires pushing a **new Git tag**, following the SemVer schema with a **`v` prefix**.
+Optionally, for prereleases they may contain a ascending release candidate suffix with `-rc#`.
+
+.Possible Operator Git tags
+[example]
+====
+- `v0.1.2`
+- `v1.4.0`
+- `v2.0.0-rc1`
+- `v2.0.0-rc2`
+- `v2.0.0`
+====
+
+The release notes will be automatically created and is based on merged PRs.
+PRs that affect Helm charts are excluded.
+The following labels must exist on a PR to be included in the release notes:
+
+- `area:operator`
+- one of [`bug`, `enhancement`, `documentation`, `change`, `breaking`, `dependency`]
+
+Once the operator is released, consider creating another PR that updates the Helm chart with the newly-created release tag.
+
+The following is the result:
+
+- A GitHub release with release notes based on the merged pull requests, only displaying changes between operator releases.
+  The release contains the binary as well as the CRDs in YAML.
 - A build of the Docker image, which is pushed to https://ghcr.io/k8up-io/k8up[GitHub Container Registry] and https://quay.io/repository/k8up-io/k8up[Quay.io].
 - A new version selector in the documentation if the version is minor or major.
 
 This process mostly relies on https://goreleaser.com/[GoReleaser].
 
-== Git Tag
+== Helm Chart Release
 
-Note that we use the following format `v0.0.0` for git tags, see `git tags`.
-We follow https://semver.org/[SemVer].
+Releasing a new version of a Helm chart requires pushing a **new Git tag**, following the SemVer schema with a **chart name prefix**, for example `appcat-service-s3-1.2.3`.
+It's recommended to create a PR for each Helm chart change separately.
+After merging a PR for a Helm chart it's _not_ required to immediately release it.
+
+The PR should only contain changes in the `charts/` directory.
+Each affected chart _must_ set the version in `Chart.yaml` to the same as the Git tag, following SemVer.
+The chart README _must_ be generated using `make chart-docs` to ensure that the README is generated using special comments in `values.yaml`.
+
+.Possible Helm chart Git tags
+[example]
+====
+- `k8up-2.2.3`
+====
+
+The release notes will be automatically created and is based on merged PRs.
+PRs that affect code changes are excluded.
+The following labels must exist on a PR to be included in the release notes:
+
+- `area:chart`
+- `chart:k8up`
+- one of [`bug`, `enhancement`, `documentation`, `change`, `breaking`, `dependency`]
+
+If the Helm chart updates the image tag for the operator, it's recommended to set a title like `Update image tag to vx.y.z` or similar and set the `dependency` label.
+
+[NOTE]
+====
+Prereleases for Helm charts are currently not supported.
+====
+
+The result is a GitHub release with release notes based on the merged pull requests, only displaying changes between chart releases.
+The release contains the chart archive as well as the CRDs in YAML.
