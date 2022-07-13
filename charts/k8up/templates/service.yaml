@@ -3,7 +3,11 @@ kind: Service
 metadata:
   name: {{ include "k8up.fullname" . }}-metrics
   labels:
-{{ include "k8up.labels" . | indent 4 }}
+    {{- include "k8up.labels" . | nindent 4 }}
+  {{- with .Values.metrics.service.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
 spec:
   type: {{ .Values.metrics.service.type }}
   ports:

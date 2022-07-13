@@ -6,9 +6,9 @@ keywords:
   - backup
   - operator
   - restic
-version: 2.0.5
+version: 3.0.0
 sources:
   - https://github.com/k8up-io/k8up
 maintainers:
-  - name: APPUiO Team
+  - name: K8up Authors
     email: info@appuio.ch

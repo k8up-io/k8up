@@ -65,7 +65,11 @@ k8up:
       # -- Global Memory resource limit applied to jobs. See [supported units][resource-units].
       memory: ""
 
+# -- Annotations to add to the Pod spec.
+podAnnotations: {}
+# -- Security context to add to the Pod spec.
 podSecurityContext: {}
+# -- Container security context
 securityContext: {}
 
 nodeSelector: {}
@@ -80,6 +84,9 @@ metrics:
     type: ClusterIP
     # -- Service node port of the metrics endpoint, requires `metrics.service.type=NodePort`
     nodePort: 0
+    # -- Annotations to add to the service
+    annotations: {}
+
   serviceMonitor:
     # -- Whether to enable ServiceMonitor manifests for
     # [Prometheus Operator][prometheus-operator]

@@ -39,3 +39,21 @@ Document your changes in values.yaml and let `make docs:helm` generate this sect
 * Note: `image.tag` changed from `v1.x` to `v2.x`. Please see the [full changelog](https://github.com/k8up-io/k8up/releases/tag/v2.0.0).
 * `metrics.prometheusRule.legacyRules` has been removed (no support for OpenShift 3.11 anymore).
 * Note: `k8up.backupImage.repository` changed from `quay.io/vshn/wrestic` to `ghcr.io/k8up-io/k8up` (`wrestic` is not needed anymore in K8up v2).
+
+## Upgrading from Charts 2.x to 3.x
+
+Due to the migration of the chart from [APPUiO](https://github.com/appuio/charts/tree/master/appuio/k8up) to this repo, we decided to make a breaking change for the chart.
+Only chart archives from version 3.x can be downloaded from the https://k8up-io.github.io/k8up index.
+No 2.x chart releases will be migrated from the APPUiO Helm repo.
+
+Some RBAC roles and role bindings have change the name.
+In most cases this shouldn't be an issue and Helm should be able to cleanup the old resources without impact on the RBAC permissions.
+
+* New parameter: `podAnnotations`, default `{}`.
+* New parameter: `service.annotations`, default `{}`.
+* Note: Renamed ClusterRole `${release-name}-manager-role` to `${release-name}-manager`.
+* Note: Spec of ClusterRole `${release-name}-leader-election-role` moved to `${release-name}-manager`.
+* Note: Renamed ClusterRoleBinding `${release-name}-manager-rolebinding` to `${release-name}`.
+* Note: ClusterRoleBinding `${release-name}-leader-election-rolebinding` removed (not needed anymore).
+* Note: Renamed ClusterRole `${release-name}-k8up-view` to `${release-name}-view`.
+* Note: Renamed ClusterRole `${release-name}-k8up-edit` to `${release-name}-edit`.
