@@ -2,8 +2,12 @@ name: Docs
 
 on:
   push:
+    branches:
+      - master
     tags:
-      - "*"
+      - "v*"
+    paths-ignore:
+      - charts/**
 
 jobs:
   antora:
@@ -17,6 +21,7 @@ jobs:
       run: |
         git config user.name "Antora via GitHub Actions"
         git config user.email "actions@github.com"
+
     - name: Parse semver string
       id: semver
       uses: booxmedialtd/ws-action-parse-semver@v1
@@ -42,10 +47,13 @@ jobs:
       continue-on-error: true
 
     - name: Patch Antora file for Release
-      run: yq eval 'del(.prerelease) | del (.display_version) | .version = "${{ env.MINOR_VERSION }}"' -i docs/antora.yml
+      run: |
+        yq eval 'del(.prerelease) | del (.display_version) | .version = "${{ env.MINOR_VERSION }}" | .asciidoc.attributes.releaseVersion = "v${{ steps.semver.outputs.fullversion }}"' -i docs/antora.yml
       if: ${{ steps.semver.outputs.prerelease == '' }}
     - name: Patch Antora file for Prerelease
-      run: yq eval 'del (.display_version) | .version = "${{ env.MINOR_VERSION }}", .prerelease = "-${{ steps.semver.outputs.prerelease }}"' -i docs/antora.yml
+      run: |
+        yq eval 'del (.display_version) | .version = "${{ env.MINOR_VERSION }}" | .prerelease = "-${{ steps.semver.outputs.prerelease }}" | .asciidoc.attributes.releaseVersion = "v${{ steps.semver.outputs.fullversion }}"' -i docs/antora.yml
+        cat docs/antora.yml
       if: ${{ steps.semver.outputs.prerelease != '' }}
 
     - name: Commit

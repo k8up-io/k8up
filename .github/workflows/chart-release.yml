@@ -1,0 +1,81 @@
+name: ChartRelease
+
+on:
+  push:
+    tags:
+      - "[a-z]+-*" # match tags following the 'chart-name-x.y.z'
+
+jobs:
+  # Currently this job with changelog generator only works for the k8up chart...
+  # More charts (e.g. forks) may need additional engineering to get the changelog right.
+  gh-pages:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download cr
+        uses: giantswarm/install-binary-action@v1.0.0
+        with:
+          binary: cr
+          version: "1.4.0"
+          download_url: https://github.com/helm/chart-releaser/releases/download/v${version}/chart-releaser_${version}_linux_amd64.tar.gz
+          tarball_binary_path: "${binary}"
+          smoke_test: "${binary} version"
+
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: '0'
+
+      - uses: actions/setup-go@v3
+
+      - uses: actions/cache@v3
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+      - name: Configure Git
+        run: |
+          git config user.name "$GITHUB_ACTOR"
+          git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
+      - name: Get chart name
+        run: echo "CHART_NAME=$(echo ${GITHUB_REF##*/} | grep --perl-regexp --only-matching '^([a-zA-Z0-9-]+)(?![0-9.]+)')" >> $GITHUB_ENV
+
+      - name: Get chart versions
+        run: |
+          echo "CHART_VERSION=$(yq e '.version' charts/${CHART_NAME}/Chart.yaml)" >> $GITHUB_ENV
+          echo "PREVIOUS_CHART_VERSION=$(git tag --sort=taggerdate --list "k8up-*" | tail -n 2 | head -n 1 | rev | cut -d - -f 1 | rev)" >> $GITHUB_ENV        
+      - name: Prepare changelog config
+        run: .github/changelog-charts.sh ${CHART_NAME}
+
+      - name: Generate additional artifacts
+        run: make chart-prepare
+
+      - name: Package Helm chart
+        run: |
+          mkdir -p .cr-index
+          cr package charts/${CHART_NAME}
+          cr upload
+          cr index --push
+        env:
+          CR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CR_OWNER: ${{ github.repository_owner }}
+          CR_GIT_REPO: ${{ github.event.repository.name }}
+
+      - name: Build changelog from PRs with labels
+        id: build_changelog
+        uses: mikepenz/release-changelog-builder-action@v3
+        with:
+          configuration: ".github/configuration.json"
+          ignorePreReleases: true
+          outputFile: .github/release-notes.md
+          fromTag: ${{ env.CHART_NAME }}-${{ env.PREVIOUS_CHART_VERSION }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # there doesn't seem to be any maintained GitHub actions that allow uploading assets after release has been made.
+      - name: Update release
+        run: |
+          gh release upload ${CHART_NAME}-${CHART_VERSION} .github/crds.yaml
+          gh release edit   ${CHART_NAME}-${CHART_VERSION} --notes-file .github/release-notes.md
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

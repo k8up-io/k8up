@@ -6,6 +6,7 @@ K8UP_GOARCH ?= amd64
 
 CURDIR ?= $(shell pwd)
 BIN_FILENAME ?= $(CURDIR)/$(PROJECT_ROOT_DIR)/k8up
+WORK_DIR = $(CURDIR)/.work
 
 integrationtest_dir ?= $(CURDIR)/$(PROJECT_ROOT_DIR)/.integration-test
 integrationtest_dir_created = $(integrationtest_dir)/.created

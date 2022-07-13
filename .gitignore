@@ -36,3 +36,8 @@ node_modules/
 e2e/debug
 .integration-test/
 .e2e-test/
+/.work/
+
+# Charts
+.cr-release-packages/
+.cr-index/
