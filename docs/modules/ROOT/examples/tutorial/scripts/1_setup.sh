@@ -30,9 +30,9 @@ kubectl apply -f https://github.com/k8up-io/k8up/releases/download/v2.2.0/k8up-c
 
 echo ""
 echo "••• Installing K8up •••"
-helm repo add appuio https://charts.appuio.ch
+helm repo add k8up-io https://k8up-io.github.io/k8up
 helm repo update
-helm install appuio/k8up --generate-name
+helm install k8up-io/k8up --generate-name
 
 echo ""
 echo "••• Watch pods •••"

@@ -6,33 +6,6 @@ The most convenient way to install K8up is using https://helm.sh/[helm].
 
 Please refer to the separate installation instructions in the https://github.com/k8up-io/k8up/tree/master/charts/k8up[Helm chart].
 
-== Kustomize
-
-The following installs Kustomize in the `k8up-system` namespace with default values.
-
-[source,bash]
-----
-kubectl apply -k config/default
-----
-
-If you wish to customize manifests, you need to create a new directory with `kustomization.yaml`.
-The following example sets another namespace and adds the RBAC auth proxy for the metrics (if you want to restrict the metrics from public access).
-
-[source,yaml]
-[subs="verbatim,attributes"]
-----
-include::example$howtos/kustomization.yaml[]
-----
-
-Then you can build with Kustomize:
-[source,bash]
-----
-kustomize build my-custom-k8up-dir | kubectl apply -f -
-----
-
-TIP: The Kustomize version included in `kubectl -k` is often several versions behind Kustomize itself.
-     It may not support advanced features such as directly referencing a Git repository with path and ref to import manifests.
-
 == Samples
 
 Some K8up examples are located at `config/samples/` in the K8up repository:
