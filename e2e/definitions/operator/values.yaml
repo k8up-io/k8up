@@ -1,0 +1,16 @@
+podAnnotations:
+  imagesha: sha256:72859c783009c5d7cba63d94891bb06f0de93a8a6e2e658a48d8d3c93e3f0603
+image:
+  pullPolicy: IfNotPresent
+  registry: $E2E_REGISTRY
+  repository: $E2E_REPO
+  tag: $E2E_TAG
+k8up:
+  backupImage:
+    repository: $E2E_REGISTRY/$E2E_REPO
+    tag: $E2E_TAG
+  env:
+    - name: BACKUP_LOG_LEVEL
+      value: debug
+    - name: BACKUP_ENABLE_LEADER_ELECTION
+      value: $BACKUP_ENABLE_LEADER_ELECTION

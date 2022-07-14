@@ -154,10 +154,22 @@ given_s3_storage() {
 }
 
 given_a_running_operator() {
-	apply definitions/operator
+	values_src="definitions/operator/values.yaml"
+	values_tgt="debug/definitions/operator/values.yaml"
+	mkdir -p "$(dirname ${values_tgt})"
+	cp "${values_src}" "${values_tgt}"
 
-	NAMESPACE=k8up-system \
-		wait_until deployment/k8up-operator available
+	replace_in_file ${values_tgt} IMAGE_SHA "$(docker image inspect ${E2E_IMAGE} | jq -r '.[].Id')"
+	replace_in_file ${values_tgt} E2E_REGISTRY "${IMG_REGISTRY}"
+	replace_in_file ${values_tgt} E2E_REPO "${IMG_REPO}"
+	replace_in_file ${values_tgt} E2E_TAG "${IMG_TAG}"
+
+	helm upgrade --install k8up ../charts/k8up \
+		--create-namespace \
+		--namespace k8up-system \
+		--values "${values_tgt}" \
+		--wait
+
 	echo "✅  A running operator is ready"
 }
 
