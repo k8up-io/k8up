@@ -12,11 +12,7 @@ apiVersion: k8up.io/v1
 kind: Restore
 metadata:
   name: restore-test
-
 spec:
-  repoPasswordSecretRef:
-    name: backup-repo
-    key: password
   s3:
     endpoint: http://localhost:9000
     bucket: restore
@@ -27,6 +23,9 @@ spec:
       name: backup-credentials
       key: password
   backend:
+    repoPasswordSecretRef:
+      name: backup-repo
+      key: password
     s3:
       endpoint: http://localhost:9000
       bucket: k8up
@@ -84,15 +83,14 @@ kind: Restore
 metadata:
   name: restore-test-mfw
   namespace: snapshot-test
-
 spec:
-  repoPasswordSecretRef:
-    name: backup-repo
-    key: password
   restoreMethod:
     folder:
       claimName: mfw-restore
   backend:
+    repoPasswordSecretRef:
+      name: backup-repo
+      key: password
     s3:
       endpoint: http://minio-service:9000
       bucket: k8up
