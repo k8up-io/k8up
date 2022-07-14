@@ -51,6 +51,8 @@ In most cases this shouldn't be an issue and Helm should be able to cleanup the 
 
 * New parameter: `podAnnotations`, default `{}`.
 * New parameter: `service.annotations`, default `{}`.
+* Parameter changed: `image.tag` now defaults to `v2` instead of a pinned version.
+* Parameter changed: `image.pullPolicy` now defaults to `Always` instead of `IfNotPresent`.
 * Note: Renamed ClusterRole `${release-name}-manager-role` to `${release-name}-manager`.
 * Note: Spec of ClusterRole `${release-name}-leader-election-role` moved to `${release-name}-manager`.
 * Note: Renamed ClusterRoleBinding `${release-name}-manager-rolebinding` to `${release-name}`.

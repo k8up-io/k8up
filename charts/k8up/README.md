@@ -41,13 +41,13 @@ Document your changes in values.yaml and let `make docs:helm` generate this sect
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | affinity | object | `{}` |  |
-| image.pullPolicy | string | `"IfNotPresent"` | Operator image pull policy |
+| image.pullPolicy | string | `"Always"` | Operator image pull policy |
 | image.registry | string | `"ghcr.io"` | Operator image registry |
 | image.repository | string | `"k8up-io/k8up"` | Operator image repository |
-| image.tag | string | `"v2.3.2"` | Operator image tag (version) |
+| image.tag | string | `"v2"` | Operator image tag (version) |
 | imagePullSecrets | list | `[]` |  |
 | k8up.backupImage.repository | string | `"ghcr.io/k8up-io/k8up"` | The backup runner image repository |
-| k8up.backupImage.tag | string | `"v2.3.2"` | The backup runner image tag |
+| k8up.backupImage.tag | string | `"v2"` | The backup runner image tag |
 | k8up.enableLeaderElection | bool | `true` | Specifies whether leader election should be enabled. |
 | k8up.envVars | list | `[]` | envVars allows the specification of additional environment variables. See [values.yaml](values.yaml) how to specify See documentation which variables are supported. |
 | k8up.globalResources | object | empty values | Specify the resource requests and limits that the Pods should have when they are scheduled by K8up. You are still able to override those via K8up resources, but this gives cluster administrators custom defaults. |
@@ -112,6 +112,8 @@ In most cases this shouldn't be an issue and Helm should be able to cleanup the 
 
 * New parameter: `podAnnotations`, default `{}`.
 * New parameter: `service.annotations`, default `{}`.
+* Parameter changed: `image.tag` now defaults to `v2` instead of a pinned version.
+* Parameter changed: `image.pullPolicy` now defaults to `Always` instead of `IfNotPresent`.
 * Note: Renamed ClusterRole `${release-name}-manager-role` to `${release-name}-manager`.
 * Note: Spec of ClusterRole `${release-name}-leader-election-role` moved to `${release-name}-manager`.
 * Note: Renamed ClusterRoleBinding `${release-name}-manager-rolebinding` to `${release-name}`.

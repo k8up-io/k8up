@@ -4,13 +4,13 @@
 replicaCount: 1
 image:
   # -- Operator image pull policy
-  pullPolicy: IfNotPresent
+  pullPolicy: Always
   # -- Operator image registry
   registry: ghcr.io
   # -- Operator image repository
   repository: k8up-io/k8up
   # -- Operator image tag (version)
-  tag: v2.3.2
+  tag: v2
 
 imagePullSecrets: []
 serviceAccount:
@@ -35,7 +35,7 @@ k8up:
     # -- The backup runner image repository
     repository: ghcr.io/k8up-io/k8up
     # -- The backup runner image tag
-    tag: v2.3.2
+    tag: v2
 
   # -- Specifies the timezone K8up is using for scheduling.
   # Empty value defaults to the timezone in which Kubernetes is deployed.

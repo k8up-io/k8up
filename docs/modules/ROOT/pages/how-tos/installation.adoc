@@ -4,7 +4,7 @@
 
 The most convenient way to install K8up is using https://helm.sh/[helm].
 
-Please refer to the installation instructions in the https://github.com/appuio/charts/tree/master/appuio/k8up[Helm chart].
+Please refer to the separate installation instructions in the https://github.com/k8up-io/k8up/tree/master/charts/k8up[Helm chart].
 
 == Kustomize
 
