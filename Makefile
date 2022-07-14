@@ -67,17 +67,31 @@ run-restic: CMD := restic
 run-restic: run  ## Run the restic module. Use ARGS to pass arguments to the command, e.g. `make run-restic ARGS="--debug" CMD_ARGS="--check"`
 
 .PHONY: install
-install: $(KUSTOMIZE) generate ## Install CRDs into a cluster
-	$(KUSTOMIZE) build $(CRD_ROOT_DIR)/v1 | kubectl apply $(KIND_KUBECTL_ARGS) -f -
+install: export KUBECONFIG = $(KIND_KUBECONFIG)
+install: generate kind-setup ## Install CRDs into a cluster
+	kubectl apply $(KIND_KUBECTL_ARGS) -f $(CRD_ROOT_DIR)/v1/base
 
 .PHONY: uninstall
-uninstall: $(KUSTOMIZE) generate ## Uninstall CRDs from a cluster
-	$(KUSTOMIZE) build $(CRD_ROOT_DIR)/v1 | kubectl delete -f -
+uninstall: export KUBECONFIG = $(KIND_KUBECONFIG)
+uninstall: generate kind-setup ## Uninstall CRDs from a cluster
+	kubectl delete -f $(CRD_ROOT_DIR)/v1/base
+
+deploy_args =
 
 .PHONY: deploy
-deploy: $(KUSTOMIZE) generate ## Deploy controller in the configured Kubernetes cluster in ~/.kube/config
-	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
-	$(KUSTOMIZE) build config/default | kubectl apply -f -
+deploy: export KUBECONFIG = $(KIND_KUBECONFIG)
+deploy: kind-load-image install ## Deploy controller in the configured Kubernetes cluster in ~/.kube/config
+	helm upgrade --install k8up charts/k8up \
+		--create-namespace \
+		--namespace k8up-system \
+		--set podAnnotations.imagesha="$(shell docker image inspect $(K8UP_E2E_IMG) | jq -r '.[].Id')" \
+		--set image.pullPolicy=IfNotPresent \
+		--set image.registry=$(E2E_REGISTRY) \
+		--set image.repository=$(E2E_REPO) \
+		--set image.tag=$(E2E_TAG) \
+		--set k8up.backupImage.repository=$(E2E_REGISTRY)/$(E2E_REPO) \
+		--set k8up.backupImage.tag=$(E2E_TAG) \
+		--wait $(deploy_args)
 
 .PHONY: generate
 generate: ## Generate manifests e.g. CRD, RBAC etc.
@@ -87,8 +101,8 @@ generate: ## Generate manifests e.g. CRD, RBAC etc.
 	go run sigs.k8s.io/controller-tools/cmd/controller-gen rbac:roleName=manager-role webhook paths="./..." output:crd:artifacts:config=$(CRD_ROOT_DIR)/v1/base crd:crdVersions=v1
 
 .PHONY: crd
-crd: $(KUSTOMIZE) generate ## Generate CRD to file
-	$(KUSTOMIZE) build $(CRD_ROOT_DIR)/v1 > $(CRD_FILE)
+crd: generate ## Generate CRD to file
+	@cat $(CRD_ROOT_DIR)/v1/base/*.yaml | yq > $(CRD_FILE)
 
 .PHONY: fmt
 fmt: ## Run go fmt against code
@@ -164,8 +178,8 @@ kind-clean: ## Removes the kind instance if it exists.
 kind-run: export KUBECONFIG = $(KIND_KUBECONFIG)
 kind-run: kind-setup kind-minio install run-operator ## Runs the operator on the local host but configured for the kind cluster
 
-kind-e2e-image: docker-build
-	$(e2e_make) kind-e2e-image
+kind-load-image: docker-build
+	$(e2e_make) kind-load-image
 
 .PHONY: kind-minio
 kind-minio: $(minio_sentinel)
