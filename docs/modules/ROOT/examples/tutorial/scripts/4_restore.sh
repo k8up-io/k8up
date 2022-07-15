@@ -12,7 +12,7 @@ kubectl config use-context minikube
 
 # Restore WordPress PVC
 SNAPSHOT_ID=$(restic snapshots --json --last --path /data/wordpress-pvc | jq -r '.[0].id')
-scripts/customize.py wordpress "${SNAPSHOT_ID}" | kubectl apply -f -
+yq e '.spec.snapshot="'${SNAPSHOT_ID}'"' restore/wordpress.yaml | kubectl apply -f -
 
 # Read SQL data from Restic into file
 SNAPSHOT_ID=$(restic snapshots --json --last --path /default-mariadb | jq -r '.[0].id')
