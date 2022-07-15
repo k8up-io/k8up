@@ -75,7 +75,7 @@ jobs:
       # there doesn't seem to be any maintained GitHub actions that allow uploading assets after release has been made.
       - name: Update release
         run: |
-          gh release upload ${CHART_NAME}-${CHART_VERSION} .github/crds.yaml
+          gh release upload ${CHART_NAME}-${CHART_VERSION} k8up-crd.yaml
           gh release edit   ${CHART_NAME}-${CHART_VERSION} --notes-file .github/release-notes.md
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
