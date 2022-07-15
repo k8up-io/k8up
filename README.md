@@ -30,7 +30,7 @@ K8up is written using [Kubebuilder](https://github.com/kubernetes-sigs/kubebuild
 You'll need:
 
 - A running Kubernetes cluster (minishift, minikube, k3s, ... you name it)
-- [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/) and [kustomize](https://kubernetes-sigs.github.io/kustomize/installation/)
+- [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/)
 - Go development environment
 - Your favorite IDE (with a Go plugin)
 - Docker
@@ -41,9 +41,9 @@ To run the end-to-end test (e.g. `make e2e-test`), you additionally need:
 
 - `helm` (version 3)
 - `jq`
+- `yq`
 - `node` and `npm`
 - `bash` (installed, doesn't have to be your default shell)
-- `shasum` or `sha1sum`
 - `base64`
 - `find`
 
@@ -86,7 +86,7 @@ make generate
 
 ### Install CRDs
 
-CRDs can be either installed on the cluster by running `make install` or using `kubectl apply -k config/crd/apiextensions.k8s.io/v1`.
+CRDs can be either installed on the cluster by running `make install` or using `kubectl apply -f config/crd/apiextensions.k8s.io/v1`.
 
 Currently there's an issue using [`make install`](https://github.com/kubernetes-sigs/kubebuilder/issues/1544) related to how the CRDs are specified.
 Therefore settle to the second approach for now.
@@ -115,7 +115,7 @@ make e2e-test
 To test just a specific e2e test, run:
 
 ```bash
-make e2e-test -e BATS_FILES=test-00-deployment.bats
+make e2e-test -e BATS_FILES=test-02-deployment.bats
 ```
 
 To remove the local KIND cluster and other e2e resources, run:

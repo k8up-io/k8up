@@ -13,8 +13,8 @@ DEBUG_DETIK="true"
 	kubectl delete namespace "$DETIK_CLIENT_NAMESPACE" --ignore-not-found
 	kubectl create namespace "$DETIK_CLIENT_NAMESPACE" || true
 
-	apply definitions/operator
+	given_a_running_operator
 
-	try "at most 10 times every 2s to find 1 pod named 'k8up-operator' with '.spec.containers[*].image' being '${E2E_IMAGE}'"
-	try "at most 20 times every 2s to find 1 pod named 'k8up-operator' with 'status' being 'running'"
+	try "at most 10 times every 2s to find 1 pod named 'k8up' with '.spec.containers[*].image' being '${E2E_IMAGE}'"
+	try "at most 20 times every 2s to find 1 pod named 'k8up' with 'status' being 'running'"
 }

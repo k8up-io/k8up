@@ -3,6 +3,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: annotated-subject-deployment
+  namespace: k8up-e2e-subject
 spec:
   replicas: 1
   selector:
@@ -24,17 +25,22 @@ spec:
         - sh
         - -c
         - |
-          printf '$BACKUP_FILE_CONTENT' | tee '/data/$BACKUP_FILE_NAME' && \
-          printf '#!/bin/sh\nsleep 30s\necho $BACKUP_FILE_CONTENT\n' | tee /tmp/test.sh && chmod a+x /tmp/test.sh && \
+          printf "$BACKUP_FILE_CONTENT" | tee "/data/$BACKUP_FILE_NAME" && \
+          printf '#!/bin/sh\nsleep 30s\necho %s\n' "$BACKUP_FILE_CONTENT" | tee /tmp/test.sh && chmod a+x /tmp/test.sh && \
           echo && \
           ls -la /data && \
-          echo "test file '/data/$BACKUP_FILE_NAME' written, sleeping now" && \
+          echo "test file /data/$BACKUP_FILE_NAME written, sleeping now" && \
           sleep infinity
         securityContext:
           runAsUser: $ID
         volumeMounts:
         - name: volume
           mountPath: /data
+        env:
+        - name: BACKUP_FILE_CONTENT
+          value: ""
+        - name: BACKUP_FILE_NAME
+          value: ""
       volumes:
       - name: volume
         persistentVolumeClaim:

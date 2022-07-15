@@ -5,7 +5,7 @@ image::k8up-logo.svg[]
 [discrete]
 == Introduction
 
-K8up (pronounced `/keɪtæpp/` or simply "ketchup") is a Kubernetes Operator distributed via a https://github.com/appuio/charts/tree/master/appuio/k8up[Helm chart], compatible with https://www.openshift.com/[OpenShift] and plain https://kubernetes.io/[Kubernetes]. It allows cluster operators to:
+K8up (pronounced `/keɪtæpp/` or simply "ketchup") is a Kubernetes Operator distributed via a https://github.com/k8up-io/k8up/tree/master/charts/k8up[Helm chart], compatible with https://www.openshift.com/[OpenShift] and plain https://kubernetes.io/[Kubernetes]. It allows cluster operators to:
 
 * Backup all PVCs marked as `ReadWriteMany` or with a specific label.
 * Perform individual, on-demand backups.

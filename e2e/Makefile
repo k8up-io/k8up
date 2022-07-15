@@ -26,10 +26,14 @@ bats_args ?=
 .PHONY: test
 test: export KUBECONFIG = $(KIND_KUBECONFIG)
 test: export E2E_IMAGE = $(K8UP_E2E_IMG)
-test: setup kind-e2e-image ## Run the E2E tests
+test: export IMG_REGISTRY = $(E2E_REGISTRY)
+test: export IMG_TAG = $(E2E_TAG)
+test: export IMG_REPO = $(E2E_REPO)
+test: setup kind-load-image ## Run the E2E tests
 	@$(bats) $(bats_args) $(BATS_FILES)
 
-kind-e2e-image: kind-setup ## Load the e2e container image onto e2e cluster
+.PHONY: kind-load-image
+kind-load-image: kind-setup ## Load the e2e container image onto e2e cluster
 	@$(KIND) load docker-image --name $(KIND_CLUSTER) $(K8UP_E2E_IMG)
 
 .PHONY: setup
@@ -42,7 +46,7 @@ clean-setup: kind-clean ## Clean the e2e setup (e.g. to rerun the setup)
 
 .PHONY: clean
 clean: clean-setup ## Remove all e2e-related resources (incl. all e2e Docker images)
-	docker images --filter "reference=$(E2E_REPO)" --format "{{.Repository }}:{{ .Tag }}" | $(xargs) docker rmi || true
+	docker images --filter "reference=$(E2E_REGISTRY)/$(E2E_REPO)" --format "{{.Repository }}:{{ .Tag }}" | $(xargs) docker rmi || true
 	rm -rf debug node_modules || true
 
 .PHONY: help

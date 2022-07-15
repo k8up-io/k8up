@@ -8,5 +8,4 @@ import (
 	_ "github.com/elastic/crd-ref-docs"
 	_ "sigs.k8s.io/controller-runtime/tools/setup-envtest"
 	_ "sigs.k8s.io/kind"
-	_ "sigs.k8s.io/kustomize/kustomize/v4"
 )

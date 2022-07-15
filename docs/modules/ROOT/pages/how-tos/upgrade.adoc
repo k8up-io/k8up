@@ -27,7 +27,7 @@ As a result, we also updated some names.
   The k8up Go module is now called https://github.com/k8up-io/k8up[`github.com/k8up-io/k8up`].
 
 Our docs are still at https://k8up.io.
-Our reference helm chart is still at https://github.com/appuio/charts/ and was updated accordingly.
+Our reference helm chart has moved to https://github.com/k8up-io/k8up/tree/master/charts/k8up and was updated accordingly.
 
 === Wrestic Integration
 
@@ -65,7 +65,7 @@ NOTE: You might need to adapt the commands to your needs.
 
 === Prepare new Helm release
 
-The https://github.com/appuio/charts/tree/master/appuio/k8up[Helm Chart v1.0] comes with a few new and changed properties.
+The https://github.com/k8up-io/k8up/tree/master/charts/k8up[Helm Chart] comes with a few new and changed properties.
 Please consult the README.
 
 Most notably, the Chart is targeted to recent Kubernetes versions.
@@ -107,6 +107,10 @@ done
 . Install the Helm Chart version 1.x.
 
 NOTE: For Kubernetes < 1.15 (OpenShift 3.11), please add `--set k8up.enableLeaderElection=false` to the `helm install` command.
+
+=== Install 2.x and 3.x
+
+Please consult the dedicated README in https://github.com/k8up-io/k8up/tree/master/charts/k8up[Helm Chart] to install or upgrade Helm charts.
 
 === Verify your backups work
 

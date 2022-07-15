@@ -27,10 +27,10 @@ KIND_KUBECTL_ARGS ?= --validate=true
 
 ENABLE_LEADER_ELECTION ?= false
 
-SHASUM ?= $(shell command -v sha1sum > /dev/null && echo "sha1sum" || echo "shasum -a1")
-E2E_TAG ?= e2e_$(shell $(SHASUM) $(BIN_FILENAME) | cut -b-8)
-E2E_REPO ?= local.dev/k8up-io
-K8UP_E2E_IMG = $(E2E_REPO)/k8up:$(E2E_TAG)
+E2E_TAG ?= e2e
+E2E_REGISTRY = local.dev
+E2E_REPO ?= k8up-io/k8up
+K8UP_E2E_IMG = $(E2E_REGISTRY)/$(E2E_REPO):$(E2E_TAG)
 
 BATS_FILES ?= .
 
