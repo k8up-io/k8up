@@ -23,6 +23,15 @@ Please install the following software packages before starting:
 * The latest version of https://minikube.sigs.k8s.io/[Minikube].
 * https://helm.sh/[Helm], required to install K8up in your cluster.
 * https://k9scli.io/[k9s] to display the contents of our clusters on the terminal.
+* Version 4 of https://mikefarah.gitbook.io/yq/[yq].
+
+When applying the manifests and executing the scripts mentioned in this tutorial, you need a local copy of K8up:
+
+[source,bash]
+----
+git clone https://github.com/k8up-io/k8up.git --depth=1
+cd k8up/docs/modules/ROOT/examples/tutorial
+----
 
 == Tutorial
 
