@@ -1,8 +1,0 @@
-resources:
-- role.yaml
-- role_binding.yaml
-- leader_election_role.yaml
-- leader_election_role_binding.yaml
-
-- consolidated_viewer_role.yaml
-- consolidated_editor_role.yaml

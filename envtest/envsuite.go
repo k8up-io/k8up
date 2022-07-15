@@ -68,7 +68,7 @@ func (ts *Suite) SetupSuite() {
 	ts.Require().NoErrorf(err, "'%s' does not seem to exist. Check KUBEBUILDER_ASSETS and make sure you run `make integration-test` before you run this test in your IDE.", absEnvtestAssets)
 	ts.Require().Truef(info.IsDir(), "'%s' does not seem to be a directory. Check KUBEBUILDER_ASSETS and make sure you run `make integration-test` before you run this test in your IDE.", absEnvtestAssets)
 
-	crds := filepath.Join(Root, "config", "crd", "apiextensions.k8s.io", "v1", "base")
+	crds := filepath.Join(Root, "config", "crd", "apiextensions.k8s.io", "v1")
 	absCrds, _ := filepath.Abs(crds)
 	info, err = os.Stat(crds)
 	ts.Require().NoErrorf(err, "'%s' does not seem to exist. Make sure to set the working directory to the project root.", absCrds)

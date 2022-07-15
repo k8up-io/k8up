@@ -69,12 +69,12 @@ run-restic: run  ## Run the restic module. Use ARGS to pass arguments to the com
 .PHONY: install
 install: export KUBECONFIG = $(KIND_KUBECONFIG)
 install: generate kind-setup ## Install CRDs into a cluster
-	kubectl apply $(KIND_KUBECTL_ARGS) -f $(CRD_ROOT_DIR)/v1/base
+	kubectl apply $(KIND_KUBECTL_ARGS) -f $(CRD_ROOT_DIR)/v1
 
 .PHONY: uninstall
 uninstall: export KUBECONFIG = $(KIND_KUBECONFIG)
 uninstall: generate kind-setup ## Uninstall CRDs from a cluster
-	kubectl delete -f $(CRD_ROOT_DIR)/v1/base
+	kubectl delete -f $(CRD_ROOT_DIR)/v1
 
 deploy_args =
 
@@ -98,11 +98,11 @@ generate: ## Generate manifests e.g. CRD, RBAC etc.
 	# Generate code
 	go run sigs.k8s.io/controller-tools/cmd/controller-gen object:headerFile=".github/boilerplate.go.txt" paths="./..."
 	# Generate CRDs
-	go run sigs.k8s.io/controller-tools/cmd/controller-gen rbac:roleName=manager-role webhook paths="./..." output:crd:artifacts:config=$(CRD_ROOT_DIR)/v1/base crd:crdVersions=v1
+	go run sigs.k8s.io/controller-tools/cmd/controller-gen rbac:roleName=manager-role webhook paths="./..." output:crd:artifacts:config=$(CRD_ROOT_DIR)/v1 crd:crdVersions=v1
 
 .PHONY: crd
 crd: generate ## Generate CRD to file
-	@cat $(CRD_ROOT_DIR)/v1/base/*.yaml | yq > $(CRD_FILE)
+	@cat $(CRD_ROOT_DIR)/v1/*.yaml | yq > $(CRD_FILE)
 
 .PHONY: fmt
 fmt: ## Run go fmt against code
@@ -134,7 +134,7 @@ clean: restic-integration-test-clean e2e-clean docs-clean ## Cleans up the gener
 # setup-envtest removes write permission from the files it generates, so they have to be restored in order to delete the directory
 	chmod +rwx -R -f $(integrationtest_dir) || true
 
-	rm -rf $(e2etest_dir) $(integrationtest_dir) dist/ bin/ cover.out $(BIN_FILENAME) || true
+	rm -rf $(e2etest_dir) $(integrationtest_dir) dist/ bin/ cover.out $(BIN_FILENAME) $(WORK_DIR)
 
 .PHONY: release-prepare
 release-prepare: crd ## Prepares artifacts for releases
