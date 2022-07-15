@@ -2,6 +2,7 @@ kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
   name: subject-pvc
+  namespace: k8up-e2e-subject
 spec:
   accessModes:
   - ReadWriteMany

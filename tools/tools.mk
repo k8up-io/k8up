@@ -12,14 +12,6 @@ $(CRD_REF_DOCS_BIN):
 	@mkdir -p $(tools_dir)
 	cd $(PROJECT_ROOT_DIR)/tools && go build -o $@ github.com/elastic/crd-ref-docs
 
-KUSTOMIZE ?= $(tools_dir)/kustomize
-
-$(KUSTOMIZE): export GOOS = $(shell go env GOOS)
-$(KUSTOMIZE): export GOARCH = $(shell go env GOARCH)
-$(KUSTOMIZE):
-	@mkdir -p $(tools_dir)
-	cd $(PROJECT_ROOT_DIR)/tools && go build -o $@ sigs.k8s.io/kustomize/kustomize/v4
-
 KIND ?= $(tools_dir)/kind
 
 $(KIND): export GOOS = $(shell go env GOOS)

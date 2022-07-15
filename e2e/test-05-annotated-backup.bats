@@ -20,11 +20,13 @@ DEBUG_DETIK="true"
 	given_s3_storage
 	given_an_annotated_subject "${expected_filename}" "${expected_content}"
 
-	apply definitions/backup
-	try "at most 10 times every 1s to get backup named 'k8up-k8up-backup' and verify that '.status.started' is 'true'"
-	try "at most 10 times every 1s to get job named 'k8up-k8up-backup' and verify that '.status.active' is '1'"
+	kubectl apply -f definitions/secrets
+	yq e '.spec.podSecurityContext.runAsUser='$(id -u)'' definitions/backup/backup.yaml | kubectl apply -f -
 
-	wait_until backup/k8up-k8up-backup completed
+	try "at most 10 times every 1s to get backup named 'k8up-backup' and verify that '.status.started' is 'true'"
+	try "at most 10 times every 1s to get job named 'k8up-backup' and verify that '.status.active' is '1'"
+
+	wait_until backup/k8up-backup completed
 
 	run restic snapshots
 

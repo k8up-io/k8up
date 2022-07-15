@@ -49,10 +49,6 @@ clear_pv_data() {
 	mkdir -p ./debug/data/pvc-subject
 }
 
-kustomize() {
-	../.e2e-test/kustomize "${@}"
-}
-
 restic() {
 	kubectl run "restic-$(timestamp)" \
 		--rm \
@@ -97,20 +93,14 @@ prepare() {
 	target_file="${target_dir}/main.yml"
 
 	mkdir -p "${target_dir}"
-	kustomize build "${definition_dir}" -o "${target_file}"
+	cp -r "definitions" "debug/definitions"
+
 
 	replace_in_file "${target_file}" E2E_IMAGE "'${E2E_IMAGE}'"
 	replace_in_file "${target_file}" ID "$(id -u)"
 	replace_in_file "${target_file}" BACKUP_ENABLE_LEADER_ELECTION "'${BACKUP_ENABLE_LEADER_ELECTION}'"
 	replace_in_file "${target_file}" BACKUP_FILE_NAME "${BACKUP_FILE_NAME}"
 	replace_in_file "${target_file}" BACKUP_FILE_CONTENT "${BACKUP_FILE_CONTENT}"
-}
-
-apply() {
-	require_args 1 ${#}
-
-	prepare "${1}"
-	kubectl apply -f "debug/${1}/main.yml"
 }
 
 given_a_clean_ns() {
@@ -127,7 +117,9 @@ given_a_subject() {
 	export BACKUP_FILE_NAME=${1}
 	export BACKUP_FILE_CONTENT=${2}
 
-	apply definitions/subject
+	kubectl apply -f definitions/pv
+	yq e '.spec.template.spec.containers[0].securityContext.runAsUser='$(id -u)' | .spec.template.spec.containers[0].env[0].value=strenv(BACKUP_FILE_CONTENT) | .spec.template.spec.containers[0].env[1].value=strenv(BACKUP_FILE_NAME)' definitions/subject/deployment.yaml | kubectl apply -f -
+
 	echo "✅  The subject is ready"
 }
 
@@ -137,7 +129,9 @@ given_an_annotated_subject() {
 	export BACKUP_FILE_NAME=${1}
 	export BACKUP_FILE_CONTENT=${2}
 
-	apply definitions/annotated-subject
+	kubectl apply -f definitions/pv
+	yq e '.spec.template.spec.containers[0].securityContext.runAsUser='$(id -u)' | .spec.template.spec.containers[0].env[0].value=strenv(BACKUP_FILE_CONTENT) | .spec.template.spec.containers[0].env[1].value=strenv(BACKUP_FILE_NAME)' definitions/annotated-subject/deployment.yaml | kubectl apply -f -
+
 	echo "✅  The annotated subject is ready"
 }
 
@@ -181,9 +175,11 @@ given_an_existing_backup() {
 	backup_file_content=${2}
 	given_a_subject "${backup_file_name}" "${backup_file_content}"
 
-	apply definitions/backup
-	wait_until backup/k8up-k8up-backup completed
-	verify "'.status.conditions[?(@.type==\"Completed\")].reason' is 'Succeeded' for Backup named 'k8up-k8up-backup'"
+	kubectl apply -f definitions/secrets
+	yq e '.spec.podSecurityContext.runAsUser='$(id -u)'' definitions/backup/backup.yaml | kubectl apply -f -
+
+	wait_until backup/k8up-backup completed
+	verify "'.status.conditions[?(@.type==\"Completed\")].reason' is 'Succeeded' for Backup named 'k8up-backup'"
 
 	run restic dump latest "/data/subject-pvc/${backup_file_name}"
 	# shellcheck disable=SC2154

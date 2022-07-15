@@ -27,12 +27,14 @@ DEBUG_DETIK="true"
 	given_a_subject "${new_filename}" "${new_content}"
 
 	# Restore
-	apply definitions/restore
-	try "at most 10 times every 1s to get Restore named 'k8up-k8up-restore' and verify that '.status.started' is 'true'"
-	try "at most 10 times every 1s to get Job named 'k8up-k8up-restore' and verify that '.status.active' is '1'"
+	kubectl apply -f definitions/secrets
+	yq e '.spec.podSecurityContext.runAsUser='$(id -u)'' definitions/restore/restore.yaml | kubectl apply -f -
 
-	wait_until restore/k8up-k8up-restore completed
-	verify "'.status.conditions[?(@.type==\"Completed\")].reason' is 'Succeeded' for Restore named 'k8up-k8up-restore'"
+	try "at most 10 times every 1s to get Restore named 'k8up-restore' and verify that '.status.started' is 'true'"
+	try "at most 10 times every 1s to get Job named 'k8up-restore' and verify that '.status.active' is '1'"
+
+	wait_until restore/k8up-restore completed
+	verify "'.status.conditions[?(@.type==\"Completed\")].reason' is 'Succeeded' for Restore named 'k8up-restore'"
 
 	expect_file_in_container 'deploy/subject-deployment' 'subject-container' "/data/${expected_filename}" "${expected_content}"
 	expect_file_in_container 'deploy/subject-deployment' 'subject-container' "/data/${new_filename}" "${new_content}"
