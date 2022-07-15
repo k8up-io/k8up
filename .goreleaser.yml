@@ -1,3 +1,7 @@
+before:
+  hooks:
+    - make release-prepare
+
 builds:
 - main: ./cmd/k8up
   binary: k8up

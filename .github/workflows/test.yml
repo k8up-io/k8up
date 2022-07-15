@@ -1,31 +1,42 @@
 name: Test
 
 on:
-  push:
-    branches:
-    - master
   pull_request:
     branches:
-    - master
+      - master
+    paths-ignore:
+      - charts/**
+      - docs/**
+  push:
+    branches:
+      - master
+    paths-ignore:
+      - charts/**
+      - docs/**
 
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
+
     - name: Determine Go version from go.mod
       run: echo "GO_VERSION=$(go mod edit -json | jq -r .Go)" >> $GITHUB_ENV
+
     - uses: actions/setup-go@v3
       with:
         go-version: ${{ env.GO_VERSION }}
+
     - uses: actions/cache@v3
       with:
         path: ~/go/pkg/mod
         key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
         restore-keys: |
           ${{ runner.os }}-go-
+
     - name: Run tests
       run: make integration-test
+
     - name: Upload code coverage report to Code Climate
       uses: paambaati/codeclimate-action@v3.0.0
       env:

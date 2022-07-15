@@ -1,0 +1,54 @@
+{
+  "pr_template": "- ${{TITLE}} (#${{NUMBER}})",
+  "categories": [
+    {
+      "title": "## 🚀 Features",
+      "labels": [
+        "enhancement",
+        "area:chart"
+      ],
+      "exhaustive": true
+    },
+    {
+      "title": "## 🛠️ Minor Changes",
+      "labels": [
+        "change",
+        "area:chart"
+      ],
+      "exhaustive": true
+    },
+    {
+      "title": "## 🔎 Breaking Changes",
+      "labels": [
+        "breaking",
+        "area:chart"
+      ],
+      "exhaustive": true
+    },
+    {
+      "title": "## 🐛 Fixes",
+      "labels": [
+        "bug",
+        "area:chart"
+      ],
+      "exhaustive": true
+    },
+    {
+      "title": "## 📄 Documentation",
+      "labels": [
+        "documentation",
+        "area:chart"
+      ],
+      "exhaustive": true
+    },
+    {
+      "title": "## 🔗 Dependency Updates",
+      "labels": [
+        "dependency",
+        "area:chart"
+      ],
+      "exhaustive": true
+    }
+  ],
+  "template": "This release contains _only_ Helm chart changes\n\n${{CATEGORIZED_COUNT}} changes since ${{FROM_TAG}}\n\n${{CHANGELOG}}"
+}

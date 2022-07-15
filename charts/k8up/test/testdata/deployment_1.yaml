@@ -1,0 +1,14 @@
+k8up:
+  envVars:
+  - name: VARIABLE
+    value: VALUE
+
+affinity:
+  nodeAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+          - host

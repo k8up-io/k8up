@@ -1,0 +1,9 @@
+metrics:
+  serviceMonitor:
+    enabled: true
+    additionalLabels:
+      my-custom-label: my-value
+  prometheusRule:
+    enabled: true
+    additionalLabels:
+      my-custom-label: my-value

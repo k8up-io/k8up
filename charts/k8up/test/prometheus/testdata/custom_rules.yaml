@@ -1,0 +1,12 @@
+metrics:
+  prometheusRule:
+    enabled: true
+    additionalRules:
+    - alert: MyCustomRule
+      expr: metric > 0
+      for: 1m
+      labels:
+        severity: critical
+      annotations:
+        summary: Summary
+        description: Description

@@ -11,6 +11,8 @@ MAKEFLAGS += --no-builtin-variables
 PROJECT_ROOT_DIR = .
 include Makefile.vars.mk tools/tools.mk
 include Makefile.restic-integration.mk
+# Chart-related
+-include charts/charts.mk
 
 e2e_make := $(MAKE) -C e2e
 go_build ?= go build -o $(BIN_FILENAME) $(K8UP_MAIN_GO)
@@ -80,7 +82,7 @@ deploy: $(KUSTOMIZE) generate ## Deploy controller in the configured Kubernetes 
 .PHONY: generate
 generate: ## Generate manifests e.g. CRD, RBAC etc.
 	# Generate code
-	go run sigs.k8s.io/controller-tools/cmd/controller-gen object:headerFile="hack/boilerplate.go.txt" paths="./..."
+	go run sigs.k8s.io/controller-tools/cmd/controller-gen object:headerFile=".github/boilerplate.go.txt" paths="./..."
 	# Generate CRDs
 	go run sigs.k8s.io/controller-tools/cmd/controller-gen rbac:roleName=manager-role webhook paths="./..." output:crd:artifacts:config=$(CRD_ROOT_DIR)/v1/base crd:crdVersions=v1
 
@@ -119,6 +121,9 @@ clean: restic-integration-test-clean e2e-clean docs-clean ## Cleans up the gener
 	chmod +rwx -R -f $(integrationtest_dir) || true
 
 	rm -rf $(e2etest_dir) $(integrationtest_dir) dist/ bin/ cover.out $(BIN_FILENAME) || true
+
+.PHONY: release-prepare
+release-prepare: crd ## Prepares artifacts for releases
 
 .PHONY: help
 help: ## Show this help

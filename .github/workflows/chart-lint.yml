@@ -1,0 +1,36 @@
+name: ChartLint
+
+on:
+  pull_request:
+    # only run when there are chart changes
+    paths:
+      - 'charts/**'
+      - '!charts/charts.mk'
+      - '!charts/go*'
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: '0'
+
+      - uses: actions/setup-go@v3
+
+      - uses: actions/cache@v3
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+      - name: Verify charts are upt-do-date
+        run: make chart-lint
+
+  template:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Render Helm charts
+        run: find charts -type f -name Chart.yaml -exec .github/render-charts.sh {} \;

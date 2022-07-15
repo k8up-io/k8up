@@ -1,0 +1,256 @@
+{{- if .Values.rbac.create -}}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: '{{ include "k8up.fullname" . }}-manager'
+  labels:
+    {{- include "k8up.labels" . | nindent 4 }}
+rules:
+  - apiGroups:
+      - apps
+    resources:
+      - deployments
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - batch
+    resources:
+      - jobs
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - batch
+    resources:
+      - jobs/finalizers
+      - jobs/status
+    verbs:
+      - get
+      - patch
+      - update
+  - apiGroups:
+      - coordination.k8s.io
+    resources:
+      - leases
+    verbs:
+      - create
+      - get
+      - list
+      - update
+  - apiGroups:
+      - ""
+    resources:
+      - persistentvolumeclaims
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - ""
+    resources:
+      - pods
+    verbs:
+      - '*'
+  - apiGroups:
+      - ""
+    resources:
+      - pods/exec
+    verbs:
+      - '*'
+  - apiGroups:
+      - ""
+    resources:
+      - serviceaccounts
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+  - apiGroups:
+      - k8up.io
+    resources:
+      - archives
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - k8up.io
+    resources:
+      - archives/finalizers
+      - archives/status
+    verbs:
+      - get
+      - patch
+      - update
+  - apiGroups:
+      - k8up.io
+    resources:
+      - backups
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - k8up.io
+    resources:
+      - backups/finalizers
+      - backups/status
+    verbs:
+      - get
+      - patch
+      - update
+  - apiGroups:
+      - k8up.io
+    resources:
+      - checks
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - k8up.io
+    resources:
+      - checks/finalizers
+      - checks/status
+    verbs:
+      - get
+      - patch
+      - update
+  - apiGroups:
+      - k8up.io
+    resources:
+      - effectiveschedules
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - k8up.io
+    resources:
+      - effectiveschedules/finalizers
+    verbs:
+      - update
+  - apiGroups:
+      - k8up.io
+    resources:
+      - prebackuppods
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - k8up.io
+    resources:
+      - prebackuppods/finalizers
+      - prebackuppods/status
+    verbs:
+      - get
+      - patch
+      - update
+  - apiGroups:
+      - k8up.io
+    resources:
+      - prunes
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - k8up.io
+    resources:
+      - prunes/finalizers
+      - prunes/status
+    verbs:
+      - get
+      - patch
+      - update
+  - apiGroups:
+      - k8up.io
+    resources:
+      - restores
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - k8up.io
+    resources:
+      - restores/finalizers
+      - restores/status
+    verbs:
+      - get
+      - patch
+      - update
+  - apiGroups:
+      - k8up.io
+    resources:
+      - schedules
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - k8up.io
+    resources:
+      - schedules/finalizers
+      - schedules/status
+    verbs:
+      - get
+      - patch
+      - update
+  - apiGroups:
+      - rbac.authorization.k8s.io
+    resources:
+      - rolebindings
+      - roles
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+{{- end -}}
