@@ -12,7 +12,7 @@ require (
 	github.com/restic/restic v0.13.1
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/stretchr/testify v1.8.0
-	github.com/urfave/cli/v2 v2.11.0
+	github.com/urfave/cli/v2 v2.11.1
 	go.uber.org/zap v1.21.0
 	k8s.io/api v0.24.2
 	k8s.io/apimachinery v0.24.2
