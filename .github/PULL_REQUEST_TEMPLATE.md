@@ -20,7 +20,7 @@
   `bug`, `enhancement`, `documentation`, `change`, `breaking`, `dependency`
   as they show up in the changelog
 - [ ] PR contains the label `area:chart`
-- [ ] PR contains the chart label, e.g. `chart:appcat-service-s3`
+- [ ] PR contains the chart label, e.g. `chart:k8up`
 - [ ] Variables are documented in the values.yaml using the format required by [Helm-Docs](https://github.com/norwoodj/helm-docs#valuesyaml-metadata).
 - [ ] Chart Version bumped if immediate release after merging is planned
 - [ ] I have run `make chart-docs`
