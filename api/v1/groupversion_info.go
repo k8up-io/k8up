@@ -2,8 +2,6 @@
 // +kubebuilder:object:generate=true
 // +groupName=k8up.io
 
-// +kubebuilder:rbac:groups=coordination.k8s.io,resources=leases,verbs=get;list;create;update
-
 package v1
 
 import (

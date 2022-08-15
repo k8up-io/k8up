@@ -55,7 +55,7 @@ This process mostly relies on https://goreleaser.com/[GoReleaser].
 
 == Helm Chart Release
 
-Releasing a new version of a Helm chart requires pushing a **new Git tag**, following the SemVer schema with a **chart name prefix**, for example `appcat-service-s3-1.2.3`.
+Releasing a new version of a Helm chart requires pushing a **new Git tag**, following the SemVer schema with a **chart name prefix**, for example `k8up-3.2.1`.
 It's recommended to create a PR for each Helm chart change separately.
 After merging a PR for a Helm chart it's _not_ required to immediately release it.
 
