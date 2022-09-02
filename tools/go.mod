@@ -5,7 +5,7 @@ go 1.19
 require (
 	github.com/elastic/crd-ref-docs v0.0.8
 	sigs.k8s.io/controller-runtime/tools/setup-envtest v0.0.0-20220722124738-f0351217e9e0
-	sigs.k8s.io/kind v0.14.0
+	sigs.k8s.io/kind v0.15.0
 )
 
 require (
@@ -53,7 +53,7 @@ require (
 	gopkg.in/check.v1 v1.0.0-20200227125254-8fa46927fb4f // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
-	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 	k8s.io/apiextensions-apiserver v0.0.0-20190918161926-8f644eb6e783 // indirect
 	k8s.io/apimachinery v0.0.0-20190913080033-27d36303b655 // indirect
 	k8s.io/klog v0.4.0 // indirect
