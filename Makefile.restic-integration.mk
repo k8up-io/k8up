@@ -61,12 +61,12 @@ $(minio_pid): minio-download
 			"--config-dir" "$(minio_config)"
 	@while ! curl --silent "http://$(minio_address)" > /dev/null; do echo "Waiting for server http://$(minio_address) to become ready"; sleep 0.5; done
 
-$(minio_path): $(integrationtest_dir_created)
+$(minio_path): | $(integrationtest_dir)
 	curl $(curl_args) --output "$(minio_path)" "$(minio_url)"
 	chmod +x "$(minio_path)"
 	"$(minio_path)" --version
 
-$(restic_path): $(integrationtest_dir_created)
+$(restic_path): | $(integrationtest_dir)
 	curl $(curl_args) "$(restic_url)" | \
 		bunzip2 > "$(restic_path)"
 	chmod +x "$(restic_path)"

@@ -9,9 +9,7 @@ BIN_FILENAME ?= $(CURDIR)/$(PROJECT_ROOT_DIR)/k8up
 WORK_DIR = $(CURDIR)/.work
 
 integrationtest_dir ?= $(CURDIR)/$(PROJECT_ROOT_DIR)/.integration-test
-integrationtest_dir_created = $(integrationtest_dir)/.created
 e2etest_dir ?= $(CURDIR)/$(PROJECT_ROOT_DIR)/.e2e-test
-e2etest_dir_created = $(e2etest_dir)/.created
 
 CRD_FILE ?= k8up-crd.yaml
 CRD_ROOT_DIR ?= config/crd/apiextensions.k8s.io
