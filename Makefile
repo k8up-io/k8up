@@ -32,7 +32,7 @@ test: ## Run tests
 .PHONY: integration-test
 # operator module {
 # See https://storage.googleapis.com/kubebuilder-tools/ for list of supported K8s versions
-integration-test: export ENVTEST_K8S_VERSION = 1.22.x
+integration-test: export ENVTEST_K8S_VERSION = 1.24.x
 integration-test: export KUBEBUILDER_ATTACH_CONTROL_PLANE_OUTPUT = $(INTEGRATION_TEST_DEBUG_OUTPUT)
 # }
 # restic module {

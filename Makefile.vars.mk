@@ -18,7 +18,7 @@ CRD_DOCS_REF_PATH ?= docs/modules/ROOT/pages/references/api-reference.adoc
 SAMPLES_ROOT_DIR ?= config/samples
 minio_sentinel = $(e2etest_dir)/minio_sentinel
 
-KIND_NODE_VERSION ?= v1.23.1
+KIND_NODE_VERSION ?= v1.24.4
 KIND_KUBECONFIG ?= $(e2etest_dir)/kind-kubeconfig-$(KIND_NODE_VERSION)
 KIND_CLUSTER ?= k8up-$(KIND_NODE_VERSION)
 KIND_KUBECTL_ARGS ?= --validate=true

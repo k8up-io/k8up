@@ -1,6 +1,5 @@
 [![Build](https://img.shields.io/github/workflow/status/k8up-io/k8up/Test)][build]
 ![Go version](https://img.shields.io/github/go-mod/go-version/k8up-io/k8up)
-![Kubernetes version](https://img.shields.io/badge/k8s-v1.23-blue)
 [![Version](https://img.shields.io/github/v/release/k8up-io/k8up)][releases]
 [![Maintainability](https://img.shields.io/codeclimate/maintainability/k8up-io/k8up)][codeclimate]
 [![GitHub downloads](https://img.shields.io/github/downloads/k8up-io/k8up/total)][releases]
