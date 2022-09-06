@@ -1,3 +1,5 @@
+clean_targets += docs-clean
+
 pages   := $(shell find . -type f -name '*.adoc')
 out_dir := ./_public
 

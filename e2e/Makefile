@@ -1,3 +1,5 @@
+clean_targets += e2e-clean
+
 uname_s := $(shell uname -s)
 ifeq ($(uname_s),Linux)
 	xargs := xargs --no-run-if-empty
@@ -28,7 +30,7 @@ e2e-setup: e2e/node_modules kind-setup | $(e2etest_dir) ## Run the e2e setup
 .PHONY: clean
 e2e-clean: kind-clean ## Remove all e2e-related resources (incl. all e2e Docker images)
 	docker images --filter "reference=$(E2E_REGISTRY)/$(E2E_REPO)" --format "{{.Repository }}:{{ .Tag }}" | $(xargs) docker rmi || true
-	rm -rf debug node_modules || true
+	rm -rf e2e/debug e2e/node_modules $(e2etest_dir)
 
 ###
 ### Artifacts

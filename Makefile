@@ -8,9 +8,16 @@ MAKEFLAGS += --no-builtin-variables
 .SECONDARY:
 .DEFAULT_GOAL := help
 
+.PHONY: help
+help: ## Show this help
+	@grep -E -h '\s##\s' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
+
+# extensible array of targets. Modules can add target to this variable for the all-in-one target.
+clean_targets := build-clean
+
 PROJECT_ROOT_DIR = .
 include Makefile.vars.mk tools/tools.mk
-include Makefile.restic-integration.mk
+include Makefile.restic-integration.mk envtest/integration.mk
 # Chart-related
 -include charts/charts.mk
 # Documentation
@@ -20,39 +27,11 @@ include Makefile.restic-integration.mk
 # E2E tests
 -include e2e/Makefile
 
-e2e_make := $(MAKE) -C e2e
 go_build ?= go build -o $(BIN_FILENAME) $(K8UP_MAIN_GO)
-
-all: build ## Invokes the build target
 
 .PHONY: test
 test: ## Run tests
 	go test ./... -coverprofile cover.out
-
-.PHONY: integration-test
-# operator module {
-# See https://storage.googleapis.com/kubebuilder-tools/ for list of supported K8s versions
-integration-test: export ENVTEST_K8S_VERSION = 1.24.x
-integration-test: export KUBEBUILDER_ATTACH_CONTROL_PLANE_OUTPUT = $(INTEGRATION_TEST_DEBUG_OUTPUT)
-# }
-# restic module {
-integration-test: export RESTIC_BINARY = $(restic_path)
-integration-test: export RESTIC_PASSWORD = $(restic_password)
-integration-test: export RESTIC_REPOSITORY = s3:http://$(minio_address)/test
-integration-test: export AWS_ACCESS_KEY_ID = $(minio_root_user)
-integration-test: export AWS_SECRET_ACCESS_KEY = $(minio_root_password)
-integration-test: export RESTORE_S3ENDPOINT = http://$(minio_address)/restore
-integration-test: export RESTORE_ACCESSKEYID = $(minio_root_user)
-integration-test: export RESTORE_SECRETACCESSKEY = $(minio_root_password)
-integration-test: export BACKUP_DIR = $(backup_dir)
-integration-test: export RESTORE_DIR = $(restore_dir)
-integration-test: export STATS_URL = $(stats_url)
-# }
-integration-test: generate restic-integration-test-setup $(SETUP_ENVTEST_BIN) | $(integrationtest_dir) ## Run integration tests with envtest
-	$(SETUP_ENVTEST_BIN) $(ENVTEST_ADDITIONAL_FLAGS) use '$(ENVTEST_K8S_VERSION)!'
-	export KUBEBUILDER_ASSETS="$$($(SETUP_ENVTEST_BIN) $(ENVTEST_ADDITIONAL_FLAGS) use -i -p path '$(ENVTEST_K8S_VERSION)!')"; \
-		env | grep KUBEBUILDER; \
-		go test -tags=integration -coverprofile cover.out  ./...
 
 .PHONY: build
 build: generate fmt vet $(BIN_FILENAME) docs-update-usage ## Build manager binary
@@ -135,19 +114,13 @@ docker-push: ## Push the docker image
 	docker push $(K8UP_QUAY_IMG)
 	docker push $(K8UP_GHCR_IMG)
 
-clean: export KUBECONFIG = $(KIND_KUBECONFIG)
-clean: restic-integration-test-clean e2e-clean docs-clean ## Cleans up the generated resources
-# setup-envtest removes write permission from the files it generates, so they have to be restored in order to delete the directory
-	chmod +rwx -R -f $(integrationtest_dir) || true
+build-clean:
+	rm -rf dist/ bin/ cover.out $(BIN_FILENAME) $(WORK_DIR)
 
-	rm -rf $(e2etest_dir) $(integrationtest_dir) dist/ bin/ cover.out $(BIN_FILENAME) $(WORK_DIR)
+clean: $(clean_targets) ## Cleans up all the locally generated resources
 
 .PHONY: release-prepare
 release-prepare: crd ## Prepares artifacts for releases
-
-.PHONY: help
-help: ## Show this help
-	@grep -E -h '\s##\s' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
 
 ###
 ### Assets

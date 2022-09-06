@@ -19,11 +19,3 @@ $(KIND): export GOARCH = $(shell go env GOARCH)
 $(KIND):
 	@mkdir -p $(tools_dir)
 	cd $(PROJECT_ROOT_DIR)/tools && go build -o $@ sigs.k8s.io/kind
-
-SETUP_ENVTEST_BIN ?= $(tools_dir)/setup-envtest
-
-$(SETUP_ENVTEST_BIN): export GOOS = $(shell go env GOOS)
-$(SETUP_ENVTEST_BIN): export GOARCH = $(shell go env GOARCH)
-$(SETUP_ENVTEST_BIN):
-	@mkdir -p $(tools_dir)
-	cd $(PROJECT_ROOT_DIR)/tools && go build -o $@ sigs.k8s.io/controller-runtime/tools/setup-envtest

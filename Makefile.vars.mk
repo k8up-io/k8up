@@ -11,6 +11,10 @@ WORK_DIR = $(CURDIR)/.work
 integrationtest_dir ?= $(CURDIR)/$(PROJECT_ROOT_DIR)/.integration-test
 e2etest_dir ?= $(CURDIR)/$(PROJECT_ROOT_DIR)/.e2e-test
 
+go_bin ?= $(PWD)/.work/bin
+$(go_bin):
+	@mkdir -p $@
+
 CRD_FILE ?= k8up-crd.yaml
 CRD_ROOT_DIR ?= config/crd/apiextensions.k8s.io
 CRD_DOCS_REF_PATH ?= docs/modules/ROOT/pages/references/api-reference.adoc
@@ -37,6 +41,7 @@ K8UP_GHCR_IMG ?= ghcr.io/k8up-io/k8up:$(IMG_TAG)
 K8UP_QUAY_IMG ?= quay.io/k8up-io/k8up:$(IMG_TAG)
 
 # Operator Integration Test
-ENVTEST_ADDITIONAL_FLAGS ?= --bin-dir "$(integrationtest_dir)"
+ENVTEST_ADDITIONAL_FLAGS ?= --bin-dir "$(go_bin)"
 INTEGRATION_TEST_DEBUG_OUTPUT ?= false
-setup-envtest ?= $(SETUP_ENVTEST_BIN) $(ENVTEST_ADDITIONAL_FLAGS)
+# See https://storage.googleapis.com/kubebuilder-tools/ for list of supported K8s versions
+ENVTEST_K8S_VERSION = 1.24.x
