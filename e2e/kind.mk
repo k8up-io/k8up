@@ -1,5 +1,7 @@
 curl_args ?= --location --fail --silent --show-error
 
+KIND ?= $(go_bin)/kind
+
 .PHONY: kind-setup
 kind-setup: export KUBECONFIG = $(KIND_KUBECONFIG)
 kind-setup: $(KIND_KUBECONFIG) | $(e2etest_dir) ## Creates the kind cluster
@@ -24,3 +26,7 @@ $(KIND_KUBECONFIG): $(KIND)
 	@kubectl version
 	@kubectl cluster-info
 	@kubectl config use-context kind-$(KIND_CLUSTER)
+
+$(KIND): export GOBIN = $(go_bin)
+$(KIND): | $(go_bin)
+	go install sigs.k8s.io/kind@latest

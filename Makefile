@@ -16,7 +16,7 @@ help: ## Show this help
 clean_targets := build-clean
 
 PROJECT_ROOT_DIR = .
-include Makefile.vars.mk tools/tools.mk
+include Makefile.vars.mk
 include Makefile.restic-integration.mk envtest/integration.mk
 # Chart-related
 -include charts/charts.mk
@@ -115,7 +115,7 @@ docker-push: ## Push the docker image
 	docker push $(K8UP_GHCR_IMG)
 
 build-clean:
-	rm -rf dist/ bin/ cover.out $(BIN_FILENAME) $(WORK_DIR)
+	rm -rf dist/ bin/ cover.out $(BIN_FILENAME) $(WORK_DIR) $(CRD_FILE)
 
 clean: $(clean_targets) ## Cleans up all the locally generated resources
 
