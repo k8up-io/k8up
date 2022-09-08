@@ -31,13 +31,13 @@ type RestoreSpec struct {
 	Tags []string `json:"tags,omitempty"`
 }
 
-func (r RestoreSpec) CreateObject(name, namespace string) runtime.Object {
+func (r *RestoreSpec) CreateObject(name, namespace string) runtime.Object {
 	return &Restore{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,
 		},
-		Spec: r,
+		Spec: *r,
 	}
 }
 

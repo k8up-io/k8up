@@ -142,12 +142,12 @@ func (in *CheckSchedule) GetObjectCreator() ObjectCreator {
 	return in
 }
 
-func (c CheckSpec) CreateObject(name, namespace string) runtime.Object {
+func (c *CheckSpec) CreateObject(name, namespace string) runtime.Object {
 	return &Check{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,
 		},
-		Spec: c,
+		Spec: *c,
 	}
 }

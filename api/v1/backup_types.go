@@ -163,12 +163,12 @@ func (in *BackupSchedule) GetObjectCreator() ObjectCreator {
 	return in
 }
 
-func (b BackupSpec) CreateObject(name, namespace string) runtime.Object {
+func (b *BackupSpec) CreateObject(name, namespace string) runtime.Object {
 	return &Backup{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,
 		},
-		Spec: b,
+		Spec: *b,
 	}
 }

@@ -28,13 +28,13 @@ type PruneSpec struct {
 	SuccessfulJobsHistoryLimit *int `json:"successfulJobsHistoryLimit,omitempty"`
 }
 
-func (p PruneSpec) CreateObject(name, namespace string) runtime.Object {
+func (p *PruneSpec) CreateObject(name, namespace string) runtime.Object {
 	return &Prune{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,
 		},
-		Spec: p,
+		Spec: *p,
 	}
 }
 
