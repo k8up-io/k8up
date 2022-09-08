@@ -87,7 +87,7 @@ generate: ## Generate manifests e.g. CRD, RBAC etc.
 
 .PHONY: crd
 crd: generate ## Generate CRD to file
-	@cat $(CRD_ROOT_DIR)/v1/*.yaml | yq > $(CRD_FILE)
+	@yq $(CRD_ROOT_DIR)/v1/*.yaml > $(CRD_FILE)
 
 .PHONY: fmt
 fmt: ## Run go fmt against code

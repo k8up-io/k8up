@@ -22,6 +22,16 @@ preview_cmd ?= $(docker_cmd) run --rm --publish 35729:35729 --publish 2020:2020 
 
 docs_usage_dir ?= docs/modules/ROOT/examples/usage
 
+## CRD API doc generator
+
+crd_ref_docs_bin ?= $(go_bin)/crd-ref-docs
+
+$(crd_ref_docs_bin): export GOBIN = $(go_bin)
+$(crd_ref_docs_bin): | $(go_bin)
+	go install github.com/elastic/crd-ref-docs@latest
+
+##
+
 .PHONY: docs-all
 docs-all: docs-update-usage docs-html docs-pdf ## Generate HTML and PDF docs
 
@@ -35,8 +45,8 @@ docs-update-usage: ## Generates dumps from `k8up --help`, which are then include
 	go run $(K8UP_MAIN_GO) operator --help > "$(docs_usage_dir)/operator.txt"
 
 .PHONY: docs-generate-api
-docs-generate-api: $(CRD_REF_DOCS_BIN) ## Generates API reference documentation
-	$(CRD_REF_DOCS_BIN) --source-path=api/v1 --config=docs/api-gen-config.yaml --renderer=asciidoctor --templates-dir=docs/api-templates --output-path=$(CRD_DOCS_REF_PATH)
+docs-generate-api: $(crd_ref_docs_bin) ## Generates API reference documentation
+	$(crd_ref_docs_bin) --source-path=api/v1 --config=docs/api-gen-config.yaml --renderer=asciidoctor --templates-dir=docs/api-templates --output-path=$(CRD_DOCS_REF_PATH)
 
 .PHONY: docs-generate
 docs-generate: docs-update-usage docs-generate-api
@@ -44,7 +54,7 @@ docs-generate: docs-update-usage docs-generate-api
 # This will clean the Antora Artifacts, not the npm artifacts
 .PHONY: docs-clean
 docs-clean: ## Cleans Antora artifacts
-	rm -rf $(out_dir) '?' .cache
+	rm -rf $(out_dir) '?' .cache $(crd_ref_docs_bin)
 
 .PHONY: docs-check
 docs-check: ## Runs vale against the docs to check style
