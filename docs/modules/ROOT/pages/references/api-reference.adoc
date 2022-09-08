@@ -767,6 +767,7 @@ RunnableSpec defines the fields that are necessary on the specs of all actions t
 | *`backend`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-backend[$$Backend$$]__ | Backend contains the restic repo where the job should backup to.
 | *`resources`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#resourcerequirements-v1-core[$$ResourceRequirements$$]__ | Resources describes the compute resource requirements (cpu, memory, etc.)
 | *`podSecurityContext`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#podsecuritycontext-v1-core[$$PodSecurityContext$$]__ | PodSecurityContext describes the security context with which this action shall be executed.
+| *`activeDeadlineSeconds`* __integer__ | ActiveDeadlineSeconds specifies the duration in seconds relative to the startTime that the job may be continuously active before the system tries to terminate it. Value must be positive integer if given.
 |===
 
 

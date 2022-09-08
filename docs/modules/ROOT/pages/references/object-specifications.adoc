@@ -121,6 +121,7 @@ Only applicable when used within a <<Schedule, schedule>>.
 Defaults to 3.
 Only applicable when used within a <<Schedule, schedule>>.
 * `tags`: list of tags to be considered for the restore. They're ignored if a snapshot ID is provided.
+* `activeDeadlineSeconds`: specifies the duration in seconds relative to the startTime that the job may be continuously active before the system tries to terminate it.
 
 == Archive
 
@@ -134,6 +135,7 @@ kind: Archive
 metadata:
   name: archive-test
 spec:
+  activeDeadlineSeconds: 600
   repoPasswordSecretRef:
     name: backup-repo
     key: password
@@ -173,6 +175,7 @@ kind: Backup
 metadata:
   name: k8up-test
 spec:
+  activeDeadlineSeconds: 600
   tags:
     - prod
     - archive
@@ -210,6 +213,7 @@ Only applicable when used within a <<Schedule, schedule>>.
 * `promURL`: sends backup statistics to this Prometheus pushgateway while the backups are running.
 * `statsURL`: will send a JSON webhook containing backup information information to this endpoint. Can be used to gather a list with available backups.
 * `tags`: list of tags to be added to the backup. Can be used in restores and archives again.
+* `activeDeadlineSeconds`: specifies the duration in seconds relative to the startTime that the job may be continuously active before the system tries to terminate it.
 
 == Check
 
@@ -222,6 +226,7 @@ kind: Check
 metadata:
   name: check-test
 spec:
+  activeDeadlineSeconds: 600
   backend:
     repoPasswordSecretRef:
       name: backup-repo
@@ -251,6 +256,7 @@ Only applicable when used within a <<Schedule, schedule>>.
 * `successfulJobsHistoryLimit`: amount of successful jobs that should be left after cleanup, for example how many job/pod objects should be left after they finished.
 Defaults to 3.
 Only applicable when used within a <<Schedule, schedule>>.
+* `activeDeadlineSeconds`: specifies the duration in seconds relative to the startTime that the job may be continuously active before the system tries to terminate it.
 
 == Prune
 
@@ -268,6 +274,7 @@ kind: Prune
 metadata:
   name: prune-test
 spec:
+  activeDeadlineSeconds: 600
   retention:
     keepLast: 5
     keepDaily: 14
@@ -299,6 +306,7 @@ Only applicable when used within a <<Schedule, schedule>>.
 * `successfulJobsHistoryLimit`: amount of successful jobs that should be left after cleanup, for example how many job/pod objects should be left after they finished.
 Defaults to 3.
 Only applicable when used within a <<Schedule, schedule>>.
+* `activeDeadlineSeconds`: specifies the duration in seconds relative to the startTime that the job may be continuously active before the system tries to terminate it.
 
 === Retention
 

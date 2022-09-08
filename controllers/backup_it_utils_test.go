@@ -72,6 +72,7 @@ func (ts *BackupTestSuite) newBackupWithSecurityContext() *k8upv1.Backup {
 
 	backup := ts.newBackup()
 	backup.Spec.PodSecurityContext = sc
+	backup.Spec.ActiveDeadlineSeconds = pointer.Int64(500)
 	return backup
 }
 

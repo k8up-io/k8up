@@ -116,6 +116,11 @@ func (b *Backup) GetPodSecurityContext() *corev1.PodSecurityContext {
 	return b.Spec.PodSecurityContext
 }
 
+// GetActiveDeadlineSeconds implements JobObject
+func (b *Backup) GetActiveDeadlineSeconds() *int64 {
+	return b.Spec.ActiveDeadlineSeconds
+}
+
 // GetFailedJobsHistoryLimit returns failed jobs history limit.
 // Returns KeepJobs if unspecified.
 func (b *Backup) GetFailedJobsHistoryLimit() *int {

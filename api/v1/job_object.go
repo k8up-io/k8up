@@ -21,6 +21,8 @@ type JobObject interface {
 	GetResources() corev1.ResourceRequirements
 	// GetPodSecurityContext returns the specified pod security context
 	GetPodSecurityContext() *corev1.PodSecurityContext
+	// GetActiveDeadlineSeconds returns the specified active deadline seconds timeout.
+	GetActiveDeadlineSeconds() *int64
 }
 
 // +k8s:deepcopy-gen=false
