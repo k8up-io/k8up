@@ -35,7 +35,7 @@ type (
 	}
 )
 
-// The jobs types that k8up deals with
+// The job types that k8up deals with
 const (
 	BackupType   JobType = "backup"
 	CheckType    JobType = "check"

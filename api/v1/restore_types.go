@@ -31,13 +31,13 @@ type RestoreSpec struct {
 	Tags []string `json:"tags,omitempty"`
 }
 
-func (r RestoreSpec) CreateObject(name, namespace string) runtime.Object {
+func (r *RestoreSpec) CreateObject(name, namespace string) runtime.Object {
 	return &Restore{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,
 		},
-		Spec: r,
+		Spec: *r,
 	}
 }
 
@@ -102,6 +102,11 @@ func (r *Restore) GetResources() corev1.ResourceRequirements {
 // GetPodSecurityContext returns the pod security context
 func (r *Restore) GetPodSecurityContext() *corev1.PodSecurityContext {
 	return r.Spec.PodSecurityContext
+}
+
+// GetActiveDeadlineSeconds implements JobObject
+func (r *Restore) GetActiveDeadlineSeconds() *int64 {
+	return r.Spec.ActiveDeadlineSeconds
 }
 
 // GetFailedJobsHistoryLimit returns failed jobs history limit.

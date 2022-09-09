@@ -47,6 +47,13 @@ spec:
           spec:
             description: ArchiveSpec defines the desired state of Archive.
             properties:
+              activeDeadlineSeconds:
+                description: ActiveDeadlineSeconds specifies the duration in seconds
+                  relative to the startTime that the job may be continuously active
+                  before the system tries to terminate it. Value must be positive
+                  integer if given.
+                format: int64
+                type: integer
               backend:
                 description: Backend contains the restic repo where the job should
                   backup to.

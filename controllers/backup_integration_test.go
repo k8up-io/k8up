@@ -7,13 +7,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/suite"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
 	k8upv1 "github.com/k8up-io/k8up/v2/api/v1"
 	"github.com/k8up-io/k8up/v2/controllers"
 	"github.com/k8up-io/k8up/v2/envtest"
 	"github.com/k8up-io/k8up/v2/operator/observer"
+	"github.com/stretchr/testify/suite"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 type BackupTestSuite struct {
@@ -57,6 +56,7 @@ func (ts *BackupTestSuite) Test_GivenBackupWithSecurityContext_ExpectBackupJobWi
 	job := ts.expectABackupJobEventually()
 	ts.Assert().NotNil(job.Spec.Template.Spec.SecurityContext)
 	ts.Assert().Equal(*ts.BackupResource.Spec.PodSecurityContext, *job.Spec.Template.Spec.SecurityContext)
+	ts.Assert().Equal(int64(500), *job.Spec.ActiveDeadlineSeconds)
 }
 
 func (ts *BackupTestSuite) Test_GivenPreBackupPods_ExpectPreBackupDeployment() {

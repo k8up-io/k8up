@@ -28,13 +28,13 @@ type PruneSpec struct {
 	SuccessfulJobsHistoryLimit *int `json:"successfulJobsHistoryLimit,omitempty"`
 }
 
-func (p PruneSpec) CreateObject(name, namespace string) runtime.Object {
+func (p *PruneSpec) CreateObject(name, namespace string) runtime.Object {
 	return &Prune{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,
 		},
-		Spec: p,
+		Spec: *p,
 	}
 }
 
@@ -112,6 +112,11 @@ func (p *Prune) GetResources() corev1.ResourceRequirements {
 // GetPodSecurityContext returns the pod security context
 func (p *Prune) GetPodSecurityContext() *corev1.PodSecurityContext {
 	return p.Spec.PodSecurityContext
+}
+
+// GetActiveDeadlineSeconds implements JobObject
+func (p *Prune) GetActiveDeadlineSeconds() *int64 {
+	return p.Spec.ActiveDeadlineSeconds
 }
 
 // GetFailedJobsHistoryLimit returns failed jobs history limit.

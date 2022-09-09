@@ -95,6 +95,11 @@ func (c *Check) GetPodSecurityContext() *corev1.PodSecurityContext {
 	return c.Spec.PodSecurityContext
 }
 
+// GetActiveDeadlineSeconds implements JobObject
+func (c *Check) GetActiveDeadlineSeconds() *int64 {
+	return c.Spec.ActiveDeadlineSeconds
+}
+
 // GetFailedJobsHistoryLimit returns failed jobs history limit.
 // Returns KeepJobs if unspecified.
 func (c *Check) GetFailedJobsHistoryLimit() *int {
@@ -142,12 +147,12 @@ func (in *CheckSchedule) GetObjectCreator() ObjectCreator {
 	return in
 }
 
-func (c CheckSpec) CreateObject(name, namespace string) runtime.Object {
+func (c *CheckSpec) CreateObject(name, namespace string) runtime.Object {
 	return &Check{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,
 		},
-		Spec: c,
+		Spec: *c,
 	}
 }

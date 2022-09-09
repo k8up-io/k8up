@@ -38,6 +38,13 @@ spec:
               archive:
                 description: ArchiveSchedule manages schedules for the archival service
                 properties:
+                  activeDeadlineSeconds:
+                    description: ActiveDeadlineSeconds specifies the duration in seconds
+                      relative to the startTime that the job may be continuously active
+                      before the system tries to terminate it. Value must be positive
+                      integer if given.
+                    format: int64
+                    type: integer
                   backend:
                     description: Backend contains the restic repo where the job should
                       backup to.
@@ -936,6 +943,13 @@ spec:
               backup:
                 description: BackupSchedule manages schedules for the backup service
                 properties:
+                  activeDeadlineSeconds:
+                    description: ActiveDeadlineSeconds specifies the duration in seconds
+                      relative to the startTime that the job may be continuously active
+                      before the system tries to terminate it. Value must be positive
+                      integer if given.
+                    format: int64
+                    type: integer
                   backend:
                     description: Backend contains the restic repo where the job should
                       backup to.
@@ -1480,6 +1494,13 @@ spec:
               check:
                 description: CheckSchedule manages the schedules for the checks
                 properties:
+                  activeDeadlineSeconds:
+                    description: ActiveDeadlineSeconds specifies the duration in seconds
+                      relative to the startTime that the job may be continuously active
+                      before the system tries to terminate it. Value must be positive
+                      integer if given.
+                    format: int64
+                    type: integer
                   backend:
                     description: Backend contains the restic repo where the job should
                       backup to.
@@ -2186,6 +2207,13 @@ spec:
               prune:
                 description: PruneSchedule manages the schedules for the prunes
                 properties:
+                  activeDeadlineSeconds:
+                    description: ActiveDeadlineSeconds specifies the duration in seconds
+                      relative to the startTime that the job may be continuously active
+                      before the system tries to terminate it. Value must be positive
+                      integer if given.
+                    format: int64
+                    type: integer
                   backend:
                     description: Backend contains the restic repo where the job should
                       backup to.
@@ -2776,6 +2804,13 @@ spec:
               restore:
                 description: RestoreSchedule manages schedules for the restore service
                 properties:
+                  activeDeadlineSeconds:
+                    description: ActiveDeadlineSeconds specifies the duration in seconds
+                      relative to the startTime that the job may be continuously active
+                      before the system tries to terminate it. Value must be positive
+                      integer if given.
+                    format: int64
+                    type: integer
                   backend:
                     description: Backend contains the restic repo where the job should
                       backup to.

@@ -116,6 +116,11 @@ func (b *Backup) GetPodSecurityContext() *corev1.PodSecurityContext {
 	return b.Spec.PodSecurityContext
 }
 
+// GetActiveDeadlineSeconds implements JobObject
+func (b *Backup) GetActiveDeadlineSeconds() *int64 {
+	return b.Spec.ActiveDeadlineSeconds
+}
+
 // GetFailedJobsHistoryLimit returns failed jobs history limit.
 // Returns KeepJobs if unspecified.
 func (b *Backup) GetFailedJobsHistoryLimit() *int {
@@ -163,12 +168,12 @@ func (in *BackupSchedule) GetObjectCreator() ObjectCreator {
 	return in
 }
 
-func (b BackupSpec) CreateObject(name, namespace string) runtime.Object {
+func (b *BackupSpec) CreateObject(name, namespace string) runtime.Object {
 	return &Backup{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,
 		},
-		Spec: b,
+		Spec: *b,
 	}
 }
