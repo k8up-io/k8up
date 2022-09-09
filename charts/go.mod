@@ -65,7 +65,7 @@ require (
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/gobwas/glob v0.2.3 // indirect
 	github.com/google/uuid v1.2.0 // indirect
-	github.com/gruntwork-io/terratest v0.40.18
+	github.com/gruntwork-io/terratest v0.40.22
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/huandu/xstrings v1.3.1 // indirect
 	github.com/imdario/mergo v0.3.11 // indirect
