@@ -3,5 +3,5 @@ kind: Cluster
 nodes:
 - role: control-plane
   extraMounts:
-  - hostPath: ./debug/data
+  - hostPath: ./e2e/debug/data
     containerPath: /tmp/e2e

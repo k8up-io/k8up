@@ -1,13 +1,6 @@
-# Set Shell to bash, otherwise some targets fail with dash/zsh etc.
-SHELL := /bin/bash
-
-# Disable built-in rules
-MAKEFLAGS += --no-builtin-rules
-MAKEFLAGS += --no-builtin-variables
-.SUFFIXES:
-.SECONDARY:
-
 include Makefile.restic-integration.vars.mk
+
+clean_targets += restic-integration-test-clean
 
 .PHONY: restic-integration-test-setup
 restic-integration-test-setup: minio-start restic-download ## Prepare to run the integration test for the restic module
@@ -50,8 +43,8 @@ minio-download: $(minio_path) ## Download github.com/minio/minio
 
 restic-download: $(restic_path) ## Download github.com/restic/restic
 
-$(minio_pid): export MINIO_ACCESS_KEY = $(minio_root_user)
-$(minio_pid): export MINIO_SECRET_KEY = $(minio_root_password)
+$(minio_pid): export MINIO_ROOT_USER = $(minio_root_user)
+$(minio_pid): export MINIO_ROOT_PASSWORD = $(minio_root_password)
 $(minio_pid): minio-download
 	@mkdir -p "$(minio_data)" "$(minio_config)"
 	@./exec.sh "$(minio_pid)" \
@@ -61,13 +54,13 @@ $(minio_pid): minio-download
 			"--config-dir" "$(minio_config)"
 	@while ! curl --silent "http://$(minio_address)" > /dev/null; do echo "Waiting for server http://$(minio_address) to become ready"; sleep 0.5; done
 
-$(minio_path): $(integrationtest_dir_created)
-	curl $(curl_args) --output "$(minio_path)" "$(minio_url)"
-	chmod +x "$(minio_path)"
-	"$(minio_path)" --version
+$(minio_path): | $(go_bin)
+	curl $(curl_args) --output "$@" "$(minio_url)"
+	chmod +x "$@"
+	"$@" --version
 
-$(restic_path): $(integrationtest_dir_created)
+$(restic_path): | $(go_bin)
 	curl $(curl_args) "$(restic_url)" | \
-		bunzip2 > "$(restic_path)"
-	chmod +x "$(restic_path)"
-	"$(restic_path)" version
+		bunzip2 > "$@"
+	chmod +x "$@"
+	"$@" version

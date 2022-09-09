@@ -11,7 +11,7 @@ jobs:
     strategy:
       matrix:
         include:
-        - kind-node-version: v1.23.0
+        - kind-node-version: v1.24.4
         - kind-node-version: v1.18.19
     steps:
     - uses: actions/checkout@v3

@@ -9,9 +9,11 @@ BIN_FILENAME ?= $(CURDIR)/$(PROJECT_ROOT_DIR)/k8up
 WORK_DIR = $(CURDIR)/.work
 
 integrationtest_dir ?= $(CURDIR)/$(PROJECT_ROOT_DIR)/.integration-test
-integrationtest_dir_created = $(integrationtest_dir)/.created
 e2etest_dir ?= $(CURDIR)/$(PROJECT_ROOT_DIR)/.e2e-test
-e2etest_dir_created = $(e2etest_dir)/.created
+
+go_bin ?= $(PWD)/.work/bin
+$(go_bin):
+	@mkdir -p $@
 
 CRD_FILE ?= k8up-crd.yaml
 CRD_ROOT_DIR ?= config/crd/apiextensions.k8s.io
@@ -20,7 +22,7 @@ CRD_DOCS_REF_PATH ?= docs/modules/ROOT/pages/references/api-reference.adoc
 SAMPLES_ROOT_DIR ?= config/samples
 minio_sentinel = $(e2etest_dir)/minio_sentinel
 
-KIND_NODE_VERSION ?= v1.23.1
+KIND_NODE_VERSION ?= v1.24.4
 KIND_KUBECONFIG ?= $(e2etest_dir)/kind-kubeconfig-$(KIND_NODE_VERSION)
 KIND_CLUSTER ?= k8up-$(KIND_NODE_VERSION)
 KIND_KUBECTL_ARGS ?= --validate=true
@@ -39,6 +41,7 @@ K8UP_GHCR_IMG ?= ghcr.io/k8up-io/k8up:$(IMG_TAG)
 K8UP_QUAY_IMG ?= quay.io/k8up-io/k8up:$(IMG_TAG)
 
 # Operator Integration Test
-ENVTEST_ADDITIONAL_FLAGS ?= --bin-dir "$(integrationtest_dir)"
+ENVTEST_ADDITIONAL_FLAGS ?= --bin-dir "$(go_bin)"
 INTEGRATION_TEST_DEBUG_OUTPUT ?= false
-setup-envtest ?= $(SETUP_ENVTEST_BIN) $(ENVTEST_ADDITIONAL_FLAGS)
+# See https://storage.googleapis.com/kubebuilder-tools/ for list of supported K8s versions
+ENVTEST_K8S_VERSION = 1.24.x
