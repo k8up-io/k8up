@@ -11,7 +11,7 @@ OPTIONS:
    --annotation value                                  the annotation to be used for filtering (default: "k8up.io/backup") [$BACKUP_ANNOTATION]
    --backupcommandannotation value                     set the annotation name that identify the backup commands on Pods (default: "k8up.io/backupcommand") [$BACKUP_BACKUPCOMMANDANNOTATION]
    --checkschedule value                               the default check schedule (default: "0 0 * * 0") [$BACKUP_CHECKSCHEDULE]
-   --command-restic value                              The command that is executed for restic backups. (default: "/usr/local/bin/k8up", "restic")  (accepts multiple inputs) [$BACKUP_COMMAND_RESTIC]
+   --command-restic value [ --command-restic value ]   The command that is executed for restic backups. (default: "/usr/local/bin/k8up", "restic") [$BACKUP_COMMAND_RESTIC]
    --datapath value, --mountpath value                 to which path the PVCs should get mounted in the backup container (default: "/data") [$BACKUP_DATAPATH]
    --enable-leader-election                            enable leader election within the operator Pod (default: enabled) [$BACKUP_ENABLE_LEADER_ELECTION]
    --fileextensionannotation value                     set the annotation name where the file extension is stored for backup commands (default: "k8up.io/file-extension") [$BACKUP_FILEEXTENSIONANNOTATION]
@@ -44,5 +44,5 @@ OPTIONS:
    --podfilter value                                   the filter used to find the backup pods (default: "backupPod=true") [$BACKUP_PODFILTER]
    --promurl value                                     set the operator wide default prometheus push gateway (default: "http://127.0.0.1/") [$BACKUP_PROMURL]
    --restartpolicy value                               set the RestartPolicy for the backup jobs. According to https://kubernetes.io/docs/concepts/workloads/controllers/jobs-run-to-completion/, this should be 'OnFailure' for jobs that terminate (default: "OnFailure") [$BACKUP_RESTARTPOLICY]
-   --restic-options value                              Pass custom restic options in the form 'key=value,key2=value2'. See https://restic.readthedocs.io/en/stable/manual_rest.html?highlight=--option#usage-help  (accepts multiple inputs) [$BACKUP_RESTIC_OPTIONS]
+   --restic-options value [ --restic-options value ]   Pass custom restic options in the form 'key=value,key2=value2'. See https://restic.readthedocs.io/en/stable/manual_rest.html?highlight=--option#usage-help [$BACKUP_RESTIC_OPTIONS]
    
