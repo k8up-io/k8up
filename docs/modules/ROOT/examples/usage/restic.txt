@@ -42,7 +42,7 @@ OPTIONS:
    --restoreS3SecretKey value            S3 secret key used to connect to the S3 endpoint when restoring [$RESTORE_SECRETACCESSKEY]
    --restoreSnap value                   Snapshot ID, if empty takes the latest snapshot
    --restoreType value                   Type of this restore, 'folder' or 's3'
-   --tag value                           List of tags to consider for given operation  (accepts multiple inputs)
+   --tag value [ --tag value ]           List of tags to consider for given operation
    --trimRestorePath                     If set, strips the value of --restoreDir from the lefts side of the remote restore path value (default: enabled) [$TRIM_RESTOREPATH]
    --verifyRestore                       If the restore should get verified, only for PVCs restore (default: false)
    --webhookURL value, --statsURL value  Sets the URL of a server which will retrieve a webhook after the action completes. [$STATS_URL]
