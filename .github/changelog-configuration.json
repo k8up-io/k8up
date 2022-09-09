@@ -3,27 +3,51 @@
     "categories": [
         {
             "title": "## 🚀 Features",
-            "labels": ["enhancement", "feature"]
+            "labels": [
+                "enhancement",
+                "area:operator"
+            ],
+            "exhaustive": true
         },
         {
             "title": "## 🛠️ Minor Changes",
-            "labels": ["change"]
+            "labels": [
+                "change",
+                "area:operator"
+            ],
+            "exhaustive": true
         },
         {
             "title": "## 🔎 Breaking Changes",
-            "labels": ["breaking"]
+            "labels": [
+                "breaking",
+                "area:operator"
+            ],
+            "exhaustive": true
         },
         {
             "title": "## 🐛 Fixes",
-            "labels": ["bug", "fix"]
+            "labels": [
+                "bug",
+                "area:operator"
+            ],
+            "exhaustive": true
         },
         {
             "title": "## 📄 Documentation",
-            "labels": ["documentation"]
+            "labels": [
+                "documentation",
+                "area:operator"
+            ],
+            "exhaustive": true
         },
         {
             "title": "## 🔗 Dependency Updates",
-            "labels": ["dependency"]
+            "labels": [
+                "dependency",
+                "area:operator"
+            ],
+            "exhaustive": true
         }
     ],
     "template": "${{CATEGORIZED_COUNT}} changes since ${{FROM_TAG}}\n\n${{CHANGELOG}}"
