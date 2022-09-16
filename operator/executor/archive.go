@@ -41,6 +41,7 @@ func (a *ArchiveExecutor) Execute() error {
 	}
 
 	if a.Obj.GetStatus().Started {
+		a.RegisterJobSucceededConditionCallback() // ensure that completed jobs can complete backups between operator restarts.
 		return nil
 	}
 

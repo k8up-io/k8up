@@ -45,6 +45,7 @@ func (c *CheckExecutor) Execute() error {
 	c.check = checkObject
 
 	if c.Obj.GetStatus().Started {
+		c.RegisterJobSucceededConditionCallback() // ensure that completed jobs can complete backups between operator restarts.
 		return nil
 	}
 

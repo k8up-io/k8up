@@ -42,6 +42,7 @@ func (r *RestoreExecutor) Execute() error {
 	}
 
 	if restore.GetStatus().Started {
+		r.RegisterJobSucceededConditionCallback() // ensure that completed jobs can complete backups between operator restarts.
 		return nil
 	}
 

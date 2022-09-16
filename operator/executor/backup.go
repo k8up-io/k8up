@@ -42,6 +42,7 @@ func (b *BackupExecutor) Execute() error {
 	b.backup = backupObject
 
 	if b.Obj.GetStatus().Started {
+		b.RegisterJobSucceededConditionCallback() // ensure that completed jobs can complete backups between operator restarts.
 		return nil
 	}
 

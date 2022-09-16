@@ -41,6 +41,7 @@ func (p *PruneExecutor) Execute() error {
 	}
 
 	if prune.GetStatus().Started {
+		p.RegisterJobSucceededConditionCallback() // ensure that completed jobs can complete backups between operator restarts.
 		return nil
 	}
 
