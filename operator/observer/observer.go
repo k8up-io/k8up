@@ -124,13 +124,13 @@ func (o *Observer) handleEvent(event ObservableJob) {
 		incFailureCounters(event.Job.Namespace, event.JobType)
 		invokeCallbacks(event)
 	case Succeeded:
+		o.observedJobs[jobName] = event
+		invokeCallbacks(event)
 		// Only report succeeded jobs we've already seen to prevent
 		// reporting succeeded jobs on operator restart
 		if exists {
 			o.log.Info("job succeeded", "jobName", jobName)
-			o.observedJobs[jobName] = event
 			incSuccessCounters(event.Job.Namespace, event.JobType)
-			invokeCallbacks(event)
 		}
 	case Delete:
 		o.log.Info("deleting job from observer", "jobName", jobName)
