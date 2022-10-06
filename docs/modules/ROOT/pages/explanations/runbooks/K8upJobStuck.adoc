@@ -14,4 +14,4 @@ In the namespace that is mentioned in the `message` annotation (NOT the one ment
 * Check `backup`, `check` or `prune` objects (`kubectl get backup,check,prune`)
 
 The alert will persist, even if subsequent jobs succeed.
-If subsequent jobs of the same type were successful, delete the problematic object to resolve the monitoring alert.
+If subsequent jobs of the same type were successful, delete the problematic object and kill the k8up operator process (or delete the k8up pod) to resolve the monitoring alert.
