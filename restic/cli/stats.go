@@ -219,7 +219,12 @@ func (p *PromMetrics) ToProm() []prometheus.Collector {
 func (r *Restic) getMountedFolders() []string {
 	files, err := os.ReadDir(cfg.Config.BackupDir)
 	if err != nil {
-		r.logger.WithName("MountCollector").Error(err, "can't list mounted folders for stats")
+		log := r.logger.WithName("MountCollector")
+		if os.IsNotExist(err) {
+			log.Info("stats mount dir doesn't exist, skipping stats", "dir", cfg.Config.BackupDir)
+		} else {
+			log.Error(err, "can't list mounted folders for stats")
+		}
 		return []string{}
 	}
 
