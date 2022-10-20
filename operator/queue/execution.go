@@ -87,8 +87,8 @@ func (eq *ExecutionQueue) Get(repository string) Executor {
 	entry := eq.queues[repository].get()
 	if eq.queues[repository].Len() == 0 {
 		delete(eq.queues, repository)
-		eq.decQueueGauge(entry.GetJobNamespace(), entry.GetJobType())
 	}
+	eq.decQueueGauge(entry.GetJobNamespace(), entry.GetJobType())
 	return entry
 }
 
