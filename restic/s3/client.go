@@ -16,6 +16,7 @@ type Client struct {
 	Endpoint        string
 	AccessKeyID     string
 	SecretAccessKey string
+	Region          string
 	minioClient     *minio.Client
 	bucket          string
 }
@@ -26,11 +27,12 @@ type UploadObject struct {
 }
 
 // New returns a new Client
-func New(endpoint, accessKeyID, secretAccessKey string) *Client {
+func New(endpoint, accessKeyID, secretAccessKey, region string) *Client {
 	return &Client{
 		Endpoint:        endpoint,
 		AccessKeyID:     accessKeyID,
 		SecretAccessKey: secretAccessKey,
+		Region:          region,
 	}
 }
 
@@ -55,6 +57,7 @@ func (c *Client) Connect(ctx context.Context) error {
 	mc, err := minio.New(c.Endpoint, &minio.Options{
 		Creds:  credentials.NewStaticV2(c.AccessKeyID, c.SecretAccessKey, ""),
 		Secure: ssl,
+		Region: c.Region,
 	})
 	c.minioClient = mc
 

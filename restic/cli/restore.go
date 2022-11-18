@@ -45,6 +45,7 @@ type S3Bucket struct {
 	Endpoint  string
 	AccessKey string
 	SecretKey string
+	Region    string
 }
 
 type fileNode struct {
@@ -312,7 +313,12 @@ func (r *Restic) doRestore(log logr.Logger, latestSnap Snapshot, snapRoot string
 }
 
 func (r *Restic) s3Connect(ctx context.Context, fileName string) (chan error, *io.PipeWriter, error) {
-	s3Client := s3.New(cfg.Config.RestoreS3Endpoint, cfg.Config.RestoreS3AccessKey, cfg.Config.RestoreS3SecretKey)
+	s3Client := s3.New(
+		cfg.Config.RestoreS3Endpoint,
+		cfg.Config.RestoreS3AccessKey,
+		cfg.Config.RestoreS3SecretKey,
+		cfg.Config.Region,
+	)
 	err := s3Client.Connect(ctx)
 	if err != nil {
 		return nil, nil, err

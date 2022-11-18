@@ -46,6 +46,7 @@ type Configuration struct {
 	RestoreS3Endpoint  string
 	RestoreS3AccessKey string
 	RestoreS3SecretKey string
+	Region             string
 	RestoreSnap        string
 	RestoreType        string
 	RestoreFilter      string
