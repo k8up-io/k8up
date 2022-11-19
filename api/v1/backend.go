@@ -2,9 +2,8 @@ package v1
 
 import (
 	"fmt"
-	"reflect"
-
 	corev1 "k8s.io/api/core/v1"
+	"reflect"
 
 	"github.com/k8up-io/k8up/v2/operator/cfg"
 )
@@ -113,6 +112,7 @@ func (in *LocalSpec) String() string {
 type S3Spec struct {
 	Endpoint                 string                    `json:"endpoint,omitempty"`
 	Bucket                   string                    `json:"bucket,omitempty"`
+	Region                   string                    `json:"region,omitempty"`
 	AccessKeyIDSecretRef     *corev1.SecretKeySelector `json:"accessKeyIDSecretRef,omitempty"`
 	SecretAccessKeySecretRef *corev1.SecretKeySelector `json:"secretAccessKeySecretRef,omitempty"`
 }
@@ -164,6 +164,18 @@ func (in *S3Spec) RestoreEnvVars() map[string]*corev1.EnvVar {
 	} else {
 		vars[cfg.RestoreS3SecretAccessKeyEnvName] = &corev1.EnvVar{
 			Value: cfg.Config.GlobalRestoreS3SecretAccessKey,
+		}
+	}
+
+	if in.Region != "" {
+		vars[cfg.AwsDefaultRegion] = &corev1.EnvVar{
+			Name:  "AWS_DEFAULT_REGION",
+			Value: in.Region,
+		}
+	} else {
+		vars[cfg.AwsDefaultRegion] = &corev1.EnvVar{
+			Name:  "AWS_DEFAULT_REGION",
+			Value: cfg.Config.GlobalRestoreS3Region,
 		}
 	}
 

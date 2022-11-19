@@ -11,6 +11,7 @@ const (
 	RestoreS3EndpointEnvName        = "RESTORE_S3ENDPOINT"
 	RestoreS3AccessKeyIDEnvName     = "RESTORE_ACCESSKEYID"
 	RestoreS3SecretAccessKeyEnvName = "RESTORE_SECRETACCESSKEY"
+	RestoreRegion                   = "RESTORE_REGION"
 
 	ResticRepositoryEnvName = "RESTIC_REPOSITORY"
 	ResticPasswordEnvName   = "RESTIC_PASSWORD"
@@ -18,6 +19,7 @@ const (
 
 	AwsAccessKeyIDEnvName     = "AWS_ACCESS_KEY_ID"
 	AwsSecretAccessKeyEnvName = "AWS_SECRET_ACCESS_KEY"
+	AwsDefaultRegion          = "AWS_DEFAULT_REGION"
 
 	AzureAccountEnvName    = "AZURE_ACCOUNT_NAME"
 	AzureAccountKeyEnvName = "AZURE_ACCOUNT_KEY"
@@ -55,6 +57,7 @@ type Configuration struct {
 	GlobalRestoreS3Bucket            string
 	GlobalRestoreS3Endpoint          string
 	GlobalRestoreS3SecretAccessKey   string
+	GlobalRestoreS3Region            string
 	GlobalS3Bucket                   string
 	GlobalS3Endpoint                 string
 	GlobalSecretAccessKey            string
