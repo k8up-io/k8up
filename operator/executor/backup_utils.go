@@ -45,6 +45,15 @@ func (b *BackupExecutor) registerBackupCallback() {
 	})
 }
 
+func (b *BackupExecutor) registerCITANodeCallback() {
+	name := b.GetJobNamespacedName()
+	observer.GetObserver().RegisterCallback(name.String(), func(_ observer.ObservableJob) {
+		//b.StopPreBackupDeployments()
+		//b.cleanupOldBackups(name)
+		b.startCITANode(b.CTX, b.Client, b.backup.Namespace, b.backup.Spec.Node)
+	})
+}
+
 func (b *BackupExecutor) createServiceAccountAndBinding() error {
 	role, sa, binding := newServiceAccountDefinition(b.backup.Namespace)
 	for _, obj := range []client.Object{&role, &sa, &binding} {

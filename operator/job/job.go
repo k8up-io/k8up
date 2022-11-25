@@ -71,10 +71,11 @@ func GenerateGenericJob(obj k8upv1.JobObject, config Config) (*batchv1.Job, erro
 					RestartPolicy: corev1.RestartPolicyOnFailure,
 					Containers: []corev1.Container{
 						{
-							Name:      obj.GetType().String(),
-							Image:     cfg.Config.BackupImage,
-							Command:   cfg.Config.BackupCommandRestic,
-							Resources: config.Obj.GetResources(),
+							Name:            obj.GetType().String(),
+							Image:           cfg.Config.BackupImage,
+							ImagePullPolicy: "Always",
+							Command:         cfg.Config.BackupCommandRestic,
+							Resources:       config.Obj.GetResources(),
 						},
 					},
 					SecurityContext: obj.GetPodSecurityContext(),

@@ -348,6 +348,9 @@ spec:
                         type: string
                     type: object
                 type: object
+              chain:
+                description: Chain
+                type: string
               failedJobsHistoryLimit:
                 description: FailedJobsHistoryLimit amount of failed jobs to keep
                   for later analysis. KeepJobs is used property is not specified.
@@ -357,6 +360,9 @@ spec:
                   \n Deprecated: Use FailedJobsHistoryLimit and SuccessfulJobsHistoryLimit
                   respectively."
                 type: integer
+              node:
+                description: Node
+                type: string
               podSecurityContext:
                 description: PodSecurityContext describes the security context with
                   which this action shall be executed.
@@ -626,6 +632,9 @@ spec:
                 items:
                   type: string
                 type: array
+            required:
+            - chain
+            - node
             type: object
           status:
             description: Status defines the observed state of a generic K8up job.

@@ -1,8 +1,10 @@
 package executor
 
 import (
+	"context"
 	"errors"
 	"fmt"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"strconv"
 
 	batchv1 "k8s.io/api/batch/v1"
@@ -46,31 +48,42 @@ func (r *RestoreExecutor) Execute() error {
 		return nil
 	}
 
-	r.startRestore(restore)
+	return r.startRestore(restore)
 
-	return nil
+	//return nil
 }
 
-func (r *RestoreExecutor) startRestore(restore *k8upv1.Restore) {
-	r.registerRestoreCallback(restore)
+func (r *RestoreExecutor) startRestore(restore *k8upv1.Restore) error {
+	node := NewCITANode(r.CTX, r.Client, restore.Namespace, restore.Spec.Node)
+	stopped, err := node.Stop()
+	if err != nil {
+		return err
+	}
+	if !stopped {
+		return nil
+	}
+
+	//r.registerRestoreCallback(restore)
+	r.registerCITANodeCallback(restore)
 	r.RegisterJobSucceededConditionCallback()
 
 	restoreJob, err := r.buildRestoreObject(restore)
 	if err != nil {
 		r.Log.Error(err, "unable to build restore object")
 		r.SetConditionFalseWithMessage(k8upv1.ConditionReady, k8upv1.ReasonCreationFailed, "unable to build restore object: %v", err)
-		return
+		return err
 	}
 
 	if err := r.Client.Create(r.CTX, restoreJob); err != nil {
 		if !apierrors.IsAlreadyExists(err) {
 			r.Log.Error(err, "could not create job")
 			r.SetConditionFalseWithMessage(k8upv1.ConditionReady, k8upv1.ReasonCreationFailed, "could not create job: %v", err)
-			return
+			return err
 		}
 	}
 
 	r.SetStarted("the job '%v/%v' was created", restoreJob.Namespace, restoreJob.Name)
+	return nil
 }
 
 func (r *RestoreExecutor) registerRestoreCallback(restore *k8upv1.Restore) {
@@ -78,6 +91,19 @@ func (r *RestoreExecutor) registerRestoreCallback(restore *k8upv1.Restore) {
 	observer.GetObserver().RegisterCallback(name.String(), func(_ observer.ObservableJob) {
 		r.cleanupOldRestores(name, restore)
 	})
+}
+
+func (r *RestoreExecutor) registerCITANodeCallback(restore *k8upv1.Restore) {
+	name := r.GetJobNamespacedName()
+	observer.GetObserver().RegisterCallback(name.String(), func(_ observer.ObservableJob) {
+		//b.StopPreBackupDeployments()
+		//b.cleanupOldBackups(name)
+		r.startCITANode(r.CTX, r.Client, restore.Namespace, restore.Spec.Node)
+	})
+}
+
+func (r *RestoreExecutor) startCITANode(ctx context.Context, client client.Client, namespace, name string) {
+	NewCITANode(ctx, client, namespace, name).Start()
 }
 
 func (r *RestoreExecutor) cleanupOldRestores(name types.NamespacedName, restore *k8upv1.Restore) {

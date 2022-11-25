@@ -1,7 +1,10 @@
 package executor
 
 import (
+	"context"
 	stderrors "errors"
+	"fmt"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"strconv"
 
 	batchv1 "k8s.io/api/batch/v1"
@@ -104,20 +107,43 @@ func (b *BackupExecutor) listAndFilterPVCs(annotation string) ([]corev1.Volume, 
 	return volumes, nil
 }
 
-func (b *BackupExecutor) startBackup(backupJob *batchv1.Job) error {
+func (b *BackupExecutor) prepareVolumes() ([]corev1.Volume, error) {
 
-	ready, err := b.StartPreBackup()
+	return []corev1.Volume{
+		{
+			Name: "backup-source",
+			VolumeSource: corev1.VolumeSource{
+				PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{
+					ClaimName: fmt.Sprintf("datadir-%s-0", b.backup.Spec.Node),
+					ReadOnly:  false,
+				},
+			},
+		},
+	}, nil
+}
+
+func (b *BackupExecutor) startBackup(backupJob *batchv1.Job) error {
+	node := NewCITANode(b.CTX, b.Client, b.backup.Namespace, b.backup.Spec.Node)
+	stopped, err := node.Stop()
 	if err != nil {
 		return err
 	}
-	if !ready || b.backup.Status.IsWaitingForPreBackup() {
+	if !stopped {
 		return nil
 	}
+	//if err != nil {
+	//	return err
+	//}
+	//if !ready || b.backup.Status.IsWaitingForPreBackup() {
+	//	return nil
+	//}
 
-	b.registerBackupCallback()
+	//b.registerBackupCallback()
+	b.registerCITANodeCallback()
 	b.RegisterJobSucceededConditionCallback()
 
-	volumes, err := b.listAndFilterPVCs(cfg.Config.BackupAnnotation)
+	volumes, err := b.prepareVolumes()
+	//volumes, err := b.listAndFilterPVCs(cfg.Config.BackupAnnotation)
 	if err != nil {
 		b.SetConditionFalseWithMessage(k8upv1.ConditionReady, k8upv1.ReasonRetrievalFailed, err.Error())
 		return err
@@ -139,4 +165,8 @@ func (b *BackupExecutor) startBackup(backupJob *batchv1.Job) error {
 
 func (b *BackupExecutor) cleanupOldBackups(name types.NamespacedName) {
 	b.cleanupOldResources(&k8upv1.BackupList{}, name, b.backup)
+}
+
+func (b *BackupExecutor) startCITANode(ctx context.Context, client client.Client, namespace, name string) {
+	NewCITANode(ctx, client, namespace, name).Start()
 }

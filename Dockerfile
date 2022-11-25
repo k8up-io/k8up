@@ -31,4 +31,4 @@ COPY k8up /usr/local/bin/
 RUN chmod a+x /usr/local/bin/k8up
 RUN $RESTIC_BINARY version
 
-USER 65532
+#USER 65532

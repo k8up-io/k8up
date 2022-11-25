@@ -39,6 +39,7 @@ BATS_FILES ?= .
 # Image URL to use all building/pushing image targets
 K8UP_GHCR_IMG ?= ghcr.io/k8up-io/k8up:$(IMG_TAG)
 K8UP_QUAY_IMG ?= quay.io/k8up-io/k8up:$(IMG_TAG)
+CITA_CLOUD_IMG ?= registry.devops.rivtower.com/cita-cloud/k8up:$(IMG_TAG)
 
 # Operator Integration Test
 ENVTEST_ADDITIONAL_FLAGS ?= --bin-dir "$(go_bin)"

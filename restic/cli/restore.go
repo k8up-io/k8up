@@ -139,6 +139,16 @@ func (r *Restic) getLatestSnapshot(snapshotID string, log logr.Logger) (Snapshot
 }
 
 func (r *Restic) folderRestore(restoreDir string, snapshot Snapshot, restoreFilter string, verify bool, log logr.Logger) error {
+	log.Info("clean up original files...")
+	needRemovePath := filepath.Join(restoreDir, "*")
+	contents, err := filepath.Glob(needRemovePath)
+	for _, item := range contents {
+		err = os.RemoveAll(item)
+		if err != nil {
+			log.Error(err, "unable to clean up original files", "path", item)
+			return err
+		}
+	}
 	var linkedDir string
 	if cfg.Config.RestoreTrimPath {
 		restoreRoot, err := r.linkRestorePaths(snapshot, restoreDir)
