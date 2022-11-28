@@ -36,8 +36,7 @@
 * xref:explanations/ide.adoc[IDE Integration]
 * xref:explanations/release.adoc[Releasing K8up]
 * xref:explanations/missing-docs.adoc[Missing Documentation]
-* xref:explanations/supported-k8s-versions.adoc[Supported Kubernetes Versions]
-* xref:explanations/supported-cpus.adoc[Supported CPU Architectures]
+* xref:explanations/system-requirements.adoc[System Requirements]
 * xref:explanations/what-has-changed-in-v1.adoc[Changes in K8up v1.0]
 * xref:explanations/what-has-changed-in-v2.adoc[Changes in K8up v2.0]
 

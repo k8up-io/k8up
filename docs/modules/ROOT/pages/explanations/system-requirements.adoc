@@ -1,0 +1,17 @@
+= System Requirements
+
+== Supported Kubernetes Versions
+
+K8up (v2 or later) officially only supports recent stable Kubernetes versions.
+
+K8up v1 (not maintained anymore) supports legacy Kubernetes clusters such as OpenShift `3.11` (Kubernetes 1.11).
+
+See the {page-origin-url}[Repository,window=_blank] which upstream Kubernetes version is supported.
+
+== Supported CPU architectures
+
+K8up is only built, tested and supported on Linux.
+The only supported CPU architecture is currently _x64_ (otherwise known as _AMD64_ and _x86-64_).
+
+In v2.x, we added Docker images for the _AArch64_ CPU architecture (otherwise known as _arm64_).
+These builds are currently provided on a best-effort basis without further testing or support.
