@@ -8,7 +8,7 @@ require (
 	github.com/go-logr/zapr v1.2.3
 	github.com/imdario/mergo v0.3.13
 	github.com/minio/minio-go/v7 v7.0.41
-	github.com/prometheus/client_golang v1.13.0
+	github.com/prometheus/client_golang v1.14.0
 	github.com/restic/restic v0.14.0
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/stretchr/testify v1.8.0
@@ -64,7 +64,7 @@ require (
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/prometheus/client_model v0.2.0 // indirect
+	github.com/prometheus/client_model v0.3.0 // indirect
 	github.com/prometheus/common v0.37.0 // indirect
 	github.com/prometheus/procfs v0.8.0 // indirect
 	github.com/rs/xid v1.4.0 // indirect
