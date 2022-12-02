@@ -16,7 +16,7 @@ import (
 
 // Backup backup to the repository. It will loop through all subfolders of
 // backupdir and trigger a snapshot for each of them.
-func (r *Restic) Backup(backupDir string, tags ArrayOpts) error {
+func (r *Restic) Backup(backupDir string, tags ArrayOpts, includePaths []string) error {
 	backuplogger := r.logger.WithName("backup")
 
 	backuplogger.Info("starting backup")
@@ -35,7 +35,7 @@ func (r *Restic) Backup(backupDir string, tags ArrayOpts) error {
 	// we need to ignore any non folder things in the directory
 	for _, folder := range files {
 		if folder.IsDir() {
-			err := r.folderBackup(path.Join(backupDir, folder.Name()), backuplogger, tags)
+			err := r.folderBackup(path.Join(backupDir, folder.Name()), backuplogger, tags, includePaths)
 			if err != nil {
 				return err
 			}
@@ -48,7 +48,33 @@ func (r *Restic) Backup(backupDir string, tags ArrayOpts) error {
 	return nil
 }
 
-func (r *Restic) folderBackup(folder string, backuplogger logr.Logger, tags ArrayOpts) error {
+func (r *Restic) folderBackup(folder string, backuplogger logr.Logger, tags ArrayOpts, includePaths []string) error {
+	includeFlag := true
+	if len(includePaths) == 0 {
+		includeFlag = false
+	} else {
+		for _, includePath := range includePaths {
+			if includePath == "*" {
+				includeFlag = false
+				break
+			}
+		}
+		if includeFlag {
+			// write includePath to a tmp file
+			file, err := os.Create("/files_to_backup")
+			if err != nil {
+				return err
+			}
+			for _, includePath := range includePaths {
+				_, err := file.WriteString("/data/backup-source/" + includePath + "\n")
+				if err != nil {
+					return err
+				}
+			}
+			file.Close()
+		}
+	}
+	backuplogger.Info("include path info", "include flag", includeFlag, "include path", includePaths)
 
 	outputWriter := r.newParseBackupOutput(backuplogger, folder)
 
@@ -59,11 +85,21 @@ func (r *Restic) folderBackup(folder string, backuplogger logr.Logger, tags Arra
 		"--json": {},
 	})
 
-	opts := CommandOptions{
-		Path:   r.resticPath,
-		Args:   flags.ApplyToCommand("backup", folder),
-		StdOut: outputWriter,
-		StdErr: outputWriter,
+	var opts CommandOptions
+	if includeFlag {
+		opts = CommandOptions{
+			Path:   r.resticPath,
+			Args:   flags.ApplyToCommand("backup", "--files-from", "/files_to_backup"),
+			StdOut: outputWriter,
+			StdErr: outputWriter,
+		}
+	} else {
+		opts = CommandOptions{
+			Path:   r.resticPath,
+			Args:   flags.ApplyToCommand("backup", folder),
+			StdOut: outputWriter,
+			StdErr: outputWriter,
+		}
 	}
 
 	return r.triggerBackup(backuplogger, tags, opts, nil)

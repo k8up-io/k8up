@@ -1,0 +1,25 @@
+apiVersion: k8up.io/v1
+kind: Backup
+metadata:
+  name: full-backup-new
+  namespace: zhujq
+spec:
+  node: test-chain-zenoh-overlord-node0
+  chain: test-chain-zenoh-overlord
+  dataType:
+    full:
+      includePaths:
+        - "data"
+        - "chain_data"
+  failedJobsHistoryLimit: 2
+  successfulJobsHistoryLimit: 2
+#  tags:
+#    - test
+#    - dump
+#    - mariadb
+  backend:
+    repoPasswordSecretRef:
+      name: backup-repo
+      key: password
+    local:
+      mountPath: "mountPath"

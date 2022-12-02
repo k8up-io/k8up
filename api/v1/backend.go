@@ -97,7 +97,8 @@ func addEnvVarFromSecret(vars map[string]*corev1.EnvVarSource, key string, ref *
 }
 
 type LocalSpec struct {
-	MountPath string `json:"mountPath,omitempty"`
+	MountPath    string `json:"mountPath,omitempty"`
+	StorageClass string `json:"storageClass,omitempty"`
 }
 
 // EnvVars returns the env vars for this backend.

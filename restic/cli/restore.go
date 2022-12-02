@@ -62,7 +62,7 @@ type fileNode struct {
 }
 
 // Restore triggers a restore of a snapshot
-func (r *Restic) Restore(snapshotID string, options RestoreOptions, tags ArrayOpts) error {
+func (r *Restic) Restore(snapshotID string, options RestoreOptions, tags ArrayOpts, includePaths []string) error {
 	restorelogger := r.logger.WithName("restore")
 
 	restorelogger.Info("restore initialised")
@@ -86,7 +86,7 @@ func (r *Restic) Restore(snapshotID string, options RestoreOptions, tags ArrayOp
 	var stats *RestoreStats
 	switch options.RestoreType {
 	case FolderRestore:
-		err = r.folderRestore(options.RestoreDir, latestSnap, options.RestoreFilter, options.Verify, restorelogger)
+		err = r.folderRestore(options.RestoreDir, latestSnap, options.RestoreFilter, options.Verify, restorelogger, includePaths)
 		stats = &RestoreStats{
 			RestoreLocation: options.RestoreDir,
 			RestoredFiles:   []string{"not supported for folder restores"},
@@ -138,15 +138,41 @@ func (r *Restic) getLatestSnapshot(snapshotID string, log logr.Logger) (Snapshot
 	return snapshot, err
 }
 
-func (r *Restic) folderRestore(restoreDir string, snapshot Snapshot, restoreFilter string, verify bool, log logr.Logger) error {
-	log.Info("clean up original files...")
-	needRemovePath := filepath.Join(restoreDir, "*")
-	contents, err := filepath.Glob(needRemovePath)
-	for _, item := range contents {
-		err = os.RemoveAll(item)
-		if err != nil {
-			log.Error(err, "unable to clean up original files", "path", item)
-			return err
+func (r *Restic) folderRestore(restoreDir string, snapshot Snapshot, restoreFilter string, verify bool, log logr.Logger, includePaths []string) error {
+	var cleanAllFlag bool
+	if len(includePaths) == 0 {
+		cleanAllFlag = true
+	} else {
+		for _, includePath := range includePaths {
+			if includePath == "*" {
+				cleanAllFlag = true
+				break
+			}
+		}
+	}
+	if cleanAllFlag {
+		log.Info("need clean all file first")
+		needRemovePath := filepath.Join(restoreDir, "*")
+		contents, err := filepath.Glob(needRemovePath)
+		for _, item := range contents {
+			err = os.RemoveAll(item)
+			if err != nil {
+				log.Error(err, "unable to clean up original files", "path", item)
+				return err
+			}
+		}
+	} else {
+		log.Info("need clean include path first", "include path", includePaths)
+		for _, includePath := range includePaths {
+			needRemovePath := filepath.Join(restoreDir, includePath)
+			contents, err := filepath.Glob(needRemovePath)
+			for _, item := range contents {
+				err = os.RemoveAll(item)
+				if err != nil {
+					log.Error(err, "unable to clean up original files", "path", item)
+					return err
+				}
+			}
 		}
 	}
 	var linkedDir string

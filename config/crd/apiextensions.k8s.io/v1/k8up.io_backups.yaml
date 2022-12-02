@@ -357,6 +357,23 @@ spec:
               chain:
                 description: Chain
                 type: string
+              dataType:
+                description: DataType
+                properties:
+                  full:
+                    properties:
+                      includePaths:
+                        items:
+                          type: string
+                        type: array
+                    type: object
+                  state:
+                    properties:
+                      blockHeight:
+                        format: int64
+                        type: integer
+                    type: object
+                type: object
               failedJobsHistoryLimit:
                 description: FailedJobsHistoryLimit amount of failed jobs to keep
                   for later analysis. KeepJobs is used property is not specified.
@@ -579,9 +596,6 @@ spec:
                 items:
                   type: string
                 type: array
-            required:
-            - chain
-            - node
             type: object
           status:
             description: Status defines the observed state of a generic K8up job.

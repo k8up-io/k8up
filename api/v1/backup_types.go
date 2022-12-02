@@ -42,6 +42,21 @@ type BackupSpec struct {
 	Chain string `json:"chain,omitempty"`
 	// Node
 	Node string `json:"node,omitempty"`
+	// DataType
+	DataType *DataType `json:"dataType,omitempty"`
+}
+
+type DataType struct {
+	Full  *FullType  `json:"full,omitempty"`
+	State *StateType `json:"state,omitempty"`
+}
+
+type FullType struct {
+	IncludePaths []string `json:"includePaths,omitempty"`
+}
+
+type StateType struct {
+	BlockHeight int64 `json:"blockHeight,omitempty"`
 }
 
 type BackupTemplate struct {

@@ -108,8 +108,7 @@ func (b *BackupExecutor) listAndFilterPVCs(annotation string) ([]corev1.Volume, 
 }
 
 func (b *BackupExecutor) prepareVolumes() ([]corev1.Volume, error) {
-
-	return []corev1.Volume{
+	volumes := []corev1.Volume{
 		{
 			Name: "backup-source",
 			VolumeSource: corev1.VolumeSource{
@@ -119,7 +118,24 @@ func (b *BackupExecutor) prepareVolumes() ([]corev1.Volume, error) {
 				},
 			},
 		},
-	}, nil
+	}
+	if b.backup.Spec.Backend.Local != nil {
+		// create same pvc as node's pvc
+		// add to volumes
+	}
+	if b.backup.Spec.DataType.State != nil {
+		volumes = append(volumes, corev1.Volume{
+			Name: "cita-config",
+			VolumeSource: corev1.VolumeSource{
+				ConfigMap: &corev1.ConfigMapVolumeSource{
+					LocalObjectReference: corev1.LocalObjectReference{
+						Name: fmt.Sprintf("%s-config", b.backup.Spec.Node),
+					},
+				},
+			},
+		})
+	}
+	return volumes, nil
 }
 
 func (b *BackupExecutor) startBackup(backupJob *batchv1.Job) error {
@@ -153,14 +169,54 @@ func (b *BackupExecutor) startBackup(backupJob *batchv1.Job) error {
 	b.backup.Spec.AppendEnvFromToContainer(&backupJob.Spec.Template.Spec.Containers[0])
 	backupJob.Spec.Template.Spec.Volumes = volumes
 	backupJob.Spec.Template.Spec.ServiceAccountName = cfg.Config.ServiceAccount
-	backupJob.Spec.Template.Spec.Containers[0].VolumeMounts = b.newVolumeMounts(volumes)
-	backupJob.Spec.Template.Spec.Containers[0].Args = BuildTagArgs(b.backup.Spec.Tags)
+	if b.backup.Spec.DataType.Full != nil {
+		backupJob.Spec.Template.Spec.Containers[0].VolumeMounts = b.newVolumeMounts(volumes)
+	}
+	if b.backup.Spec.DataType.State != nil {
+		backupJob.Spec.Template.Spec.Containers[0].VolumeMounts = b.newVolumeMountsForState()
+	}
+	if b.backup.Spec.Backend.Local != nil {
+		backupJob.Spec.Template.Spec.Containers[0].VolumeMounts = append(backupJob.Spec.Template.Spec.Containers[0].VolumeMounts)
+	}
+
+	//backupJob.Spec.Template.Spec.Containers[0].Args = BuildTagArgs(b.backup.Spec.Tags)
+	args, err := b.args()
+	if err != nil {
+		return err
+	}
+	backupJob.Spec.Template.Spec.Containers[0].Args = args
 
 	if err = b.CreateObjectIfNotExisting(backupJob); err == nil {
 		b.SetStarted("the job '%v/%v' was created", backupJob.Namespace, backupJob.Name)
 	}
 	return err
 
+}
+
+func (b *BackupExecutor) args() ([]string, error) {
+	var args []string
+	if len(b.backup.Spec.Tags) > 0 {
+		args = append(args, BuildTagArgs(b.backup.Spec.Tags)...)
+	}
+	crypto, consensus, err := b.GetCryptoAndConsensus(b.backup.Namespace, b.backup.Spec.Node)
+	if err != nil {
+		return nil, err
+	}
+	switch {
+	case b.backup.Spec.DataType.Full != nil:
+		args = append(args, "-dataType", "full")
+		args = append(args, BuildIncludePathArgs(b.backup.Spec.DataType.Full.IncludePaths)...)
+	case b.backup.Spec.DataType.State != nil:
+		args = append(args, "-dataType", "state")
+		args = append(args, "-blockHeight", strconv.FormatInt(b.backup.Spec.DataType.State.BlockHeight, 10))
+		// todo:
+		args = append(args, "-crypto", crypto)
+		args = append(args, "-consensus", consensus)
+		args = append(args, "-backupDir", "/state_data")
+	default:
+		return nil, fmt.Errorf("undefined backup data type on '%v/%v'", b.backup.Namespace, b.backup.Name)
+	}
+	return args, nil
 }
 
 func (b *BackupExecutor) cleanupOldBackups(name types.NamespacedName) {

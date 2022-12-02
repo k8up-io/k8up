@@ -6,6 +6,8 @@ package executor
 
 import (
 	"fmt"
+	appv1 "k8s.io/api/apps/v1"
+	"strings"
 
 	"github.com/go-logr/logr"
 	"github.com/imdario/mergo"
@@ -234,4 +236,48 @@ func BuildTagArgs(tagList []string) []string {
 		args = append(args, "--tag", tagList[i])
 	}
 	return args
+}
+
+func BuildIncludePathArgs(includePathList []string) []string {
+	var args []string
+	for i := range includePathList {
+		args = append(args, "--path", includePathList[i])
+	}
+	return args
+}
+
+func (g *generic) getObject(namespace, name string, object client.Object) error {
+	err := g.Client.Get(g.CTX, types.NamespacedName{Namespace: namespace, Name: name}, object)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (g *generic) GetCryptoAndConsensus(namespace, name string) (string, string, error) {
+	sts := &appv1.StatefulSet{}
+	err := g.Client.Get(g.CTX, types.NamespacedName{Namespace: namespace, Name: name}, sts)
+	if err != nil {
+		return "", "", err
+	}
+
+	var crypto, consensus string
+	for _, container := range sts.Spec.Template.Spec.Containers {
+		if container.Name == "crypto" || container.Name == "kms" {
+			if strings.Contains(container.Image, "sm") {
+				crypto = "sm"
+			} else if strings.Contains(container.Image, "eth") {
+				crypto = "eth"
+			}
+		} else if container.Name == "consensus" {
+			if strings.Contains(container.Image, "bft") {
+				consensus = "bft"
+			} else if strings.Contains(container.Image, "raft") {
+				consensus = "raft"
+			} else if strings.Contains(container.Image, "overlord") {
+				consensus = "overlord"
+			}
+		}
+	}
+	return crypto, consensus, nil
 }

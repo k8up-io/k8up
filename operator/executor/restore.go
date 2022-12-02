@@ -22,6 +22,7 @@ const restorePath = "/restore"
 
 type RestoreExecutor struct {
 	generic
+	backup *k8upv1.Backup
 }
 
 // NewRestoreExecutor will return a new executor for Restore jobs.
@@ -47,6 +48,13 @@ func (r *RestoreExecutor) Execute() error {
 		r.RegisterJobSucceededConditionCallback() // ensure that completed jobs can complete backups between operator restarts.
 		return nil
 	}
+
+	backup := &k8upv1.Backup{}
+	err := r.getObject(restore.Namespace, restore.Spec.Backup, backup)
+	if err != nil {
+		return err
+	}
+	r.backup = backup
 
 	return r.startRestore(restore)
 
@@ -150,6 +158,10 @@ func (r *RestoreExecutor) args(restore *k8upv1.Restore) ([]string, error) {
 		args = append(args, "-restoreSnap", restore.Spec.Snapshot)
 	}
 
+	crypto, consensus, err := r.GetCryptoAndConsensus(r.backup.Namespace, r.backup.Spec.Node)
+	if err != nil {
+		return nil, err
+	}
 	switch {
 	case restore.Spec.RestoreMethod.Folder != nil:
 		args = append(args, "-restoreType", "folder")
@@ -157,6 +169,18 @@ func (r *RestoreExecutor) args(restore *k8upv1.Restore) ([]string, error) {
 		args = append(args, "-restoreType", "s3")
 	default:
 		return nil, fmt.Errorf("undefined restore method (-restoreType) on '%v/%v'", restore.Namespace, restore.Name)
+	}
+	switch {
+	case r.backup.Spec.DataType.Full != nil:
+		args = append(args, "-dataType", "full")
+		args = append(args, BuildIncludePathArgs(r.backup.Spec.DataType.Full.IncludePaths)...)
+	case r.backup.Spec.DataType.State != nil:
+		args = append(args, "-dataType", "state")
+		args = append(args, "-blockHeight", strconv.FormatInt(r.backup.Spec.DataType.State.BlockHeight, 10))
+		// todo:
+		args = append(args, "-crypto", crypto)
+		args = append(args, "-consensus", consensus)
+		args = append(args, "-restoreDir", "/state_data")
 	}
 	return args, nil
 }
@@ -180,6 +204,24 @@ func (r *RestoreExecutor) volumeConfig(restore *k8upv1.Restore) ([]corev1.Volume
 			MountPath: restorePath,
 		}
 		mounts = append(mounts, tmpMount)
+	}
+
+	if r.backup.Spec.DataType.State != nil {
+		// add config.toml volume
+		volumes = append(volumes, corev1.Volume{
+			Name: "cita-config",
+			VolumeSource: corev1.VolumeSource{
+				ConfigMap: &corev1.ConfigMapVolumeSource{
+					LocalObjectReference: corev1.LocalObjectReference{
+						Name: fmt.Sprintf("%s-config", restore.Spec.Node),
+					},
+				},
+			},
+		})
+		mounts = append(mounts, corev1.VolumeMount{
+			Name:      "cita-config",
+			MountPath: "/cita-config",
+			ReadOnly:  true})
 	}
 
 	return volumes, mounts

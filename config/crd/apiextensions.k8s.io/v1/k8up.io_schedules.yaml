@@ -352,6 +352,9 @@ spec:
                             type: string
                         type: object
                     type: object
+                  backup:
+                    description: Backup
+                    type: string
                   chain:
                     description: Chain
                     type: string
@@ -652,9 +655,6 @@ spec:
                     items:
                       type: string
                     type: array
-                required:
-                - chain
-                - node
                 type: object
               backend:
                 description: Backend allows configuring several backend implementations.
@@ -1271,6 +1271,23 @@ spec:
                     type: string
                   concurrentRunsAllowed:
                     type: boolean
+                  dataType:
+                    description: DataType
+                    properties:
+                      full:
+                        properties:
+                          includePaths:
+                            items:
+                              type: string
+                            type: array
+                        type: object
+                      state:
+                        properties:
+                          blockHeight:
+                            format: int64
+                            type: integer
+                        type: object
+                    type: object
                   failedJobsHistoryLimit:
                     description: FailedJobsHistoryLimit amount of failed jobs to keep
                       for later analysis. KeepJobs is used property is not specified.
@@ -1505,9 +1522,6 @@ spec:
                     items:
                       type: string
                     type: array
-                required:
-                - chain
-                - node
                 type: object
               check:
                 description: CheckSchedule manages the schedules for the checks
@@ -3136,6 +3150,9 @@ spec:
                             type: string
                         type: object
                     type: object
+                  backup:
+                    description: Backup
+                    type: string
                   chain:
                     description: Chain
                     type: string
@@ -3436,9 +3453,6 @@ spec:
                     items:
                       type: string
                     type: array
-                required:
-                - chain
-                - node
                 type: object
               successfulJobsHistoryLimit:
                 description: SuccessfulJobsHistoryLimit amount of successful jobs

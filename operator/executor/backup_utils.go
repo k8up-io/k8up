@@ -28,6 +28,21 @@ func (b *BackupExecutor) newVolumeMounts(claims []corev1.Volume) []corev1.Volume
 	return mounts
 }
 
+func (b *BackupExecutor) newVolumeMountsForState() []corev1.VolumeMount {
+	return []corev1.VolumeMount{
+		{
+			Name:      "backup-source",
+			MountPath: "/data/backup-source",
+			ReadOnly:  false,
+		},
+		{
+			Name:      "cita-config",
+			MountPath: "/cita-config",
+			ReadOnly:  true,
+		},
+	}
+}
+
 func containsAccessMode(s []corev1.PersistentVolumeAccessMode, e string) bool {
 	for _, a := range s {
 		if string(a) == e {
