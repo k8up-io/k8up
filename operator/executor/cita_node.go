@@ -3,6 +3,7 @@ package executor
 import (
 	"context"
 	appsv1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/util/retry"
 	"k8s.io/utils/pointer"
@@ -69,4 +70,20 @@ func (c *CITANode) Start() {
 		return nil
 	})
 	return
+}
+
+func (c *CITANode) GetPVCInfo() (corev1.ResourceRequirements, error) {
+	var resourceRequirements corev1.ResourceRequirements
+	sts := &appsv1.StatefulSet{}
+	if err := c.Client.Get(c.CTX, types.NamespacedName{Name: c.name, Namespace: c.namespace}, sts); err != nil {
+		return resourceRequirements, err
+	}
+	pvcs := sts.Spec.VolumeClaimTemplates
+	for _, pvc := range pvcs {
+		if pvc.Name == "datadir" {
+			resourceRequirements = pvc.Spec.Resources
+			break
+		}
+	}
+	return resourceRequirements, nil
 }

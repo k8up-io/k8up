@@ -28,6 +28,16 @@ func (b *BackupExecutor) newVolumeMounts(claims []corev1.Volume) []corev1.Volume
 	return mounts
 }
 
+func (b *BackupExecutor) newVolumeMountsForFull() []corev1.VolumeMount {
+	return []corev1.VolumeMount{
+		{
+			Name:      "backup-source",
+			MountPath: "/data/backup-source",
+			ReadOnly:  true,
+		},
+	}
+}
+
 func (b *BackupExecutor) newVolumeMountsForState() []corev1.VolumeMount {
 	return []corev1.VolumeMount{
 		{

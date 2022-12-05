@@ -237,6 +237,8 @@ spec:
                     properties:
                       mountPath:
                         type: string
+                      storageClass:
+                        type: string
                     type: object
                   repoPasswordSecretRef:
                     description: RepoPasswordSecretRef references a secret key to

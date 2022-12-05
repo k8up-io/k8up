@@ -206,6 +206,23 @@ func (r *RestoreExecutor) volumeConfig(restore *k8upv1.Restore) ([]corev1.Volume
 		mounts = append(mounts, tmpMount)
 	}
 
+	if restore.Spec.Backend.Local != nil {
+		// local pvc backup and local pvc restore
+		volumes = append(volumes, corev1.Volume{
+			Name: "restore-source",
+			VolumeSource: corev1.VolumeSource{
+				PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{
+					ClaimName: restore.Spec.Backup,
+				},
+			},
+		})
+		mounts = append(mounts, corev1.VolumeMount{
+			Name:      "restore-source",
+			ReadOnly:  false,
+			MountPath: restore.Spec.Backend.Local.MountPath,
+		})
+	}
+
 	if r.backup.Spec.DataType.State != nil {
 		// add config.toml volume
 		volumes = append(volumes, corev1.Volume{

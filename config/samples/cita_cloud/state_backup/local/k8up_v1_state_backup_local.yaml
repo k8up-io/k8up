@@ -1,16 +1,15 @@
 apiVersion: k8up.io/v1
 kind: Backup
 metadata:
-  name: full-backup-new
+  name: state-backup-to-local
   namespace: zhujq
 spec:
   node: test-chain-zenoh-overlord-node0
   chain: test-chain-zenoh-overlord
   dataType:
-    full:
-      includePaths:
-        - "data"
-        - "chain_data"
+    state:
+      blockHeight: 50
+
   failedJobsHistoryLimit: 2
   successfulJobsHistoryLimit: 2
 #  tags:
@@ -22,4 +21,5 @@ spec:
       name: backup-repo
       key: password
     local:
-      mountPath: "mountPath"
+      mountPath: "/hello"
+      storageClass: "nas-client-provisioner"

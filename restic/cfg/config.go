@@ -42,6 +42,8 @@ type Configuration struct {
 	CITACrypto    string
 	CITAConsensus string
 	Paths         []string
+	//Backend        string
+	//LocalMountPath string
 	// CITA Option End
 
 	PromURL    string

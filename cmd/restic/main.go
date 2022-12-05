@@ -55,8 +55,8 @@ var (
 
 			&cli.StringFlag{Destination: &cfg.Config.DataType, Name: "dataType", Usage: "Type of data, 'full' or 'state', customized for CITA"},
 			&cli.Int64Flag{Destination: &cfg.Config.BlockHeight, Name: "blockHeight", Usage: "The block height you want to state-backup or state-recover, customized for CITA"},
-			&cli.StringFlag{Destination: &cfg.Config.CITACrypto, Name: "crypto", Usage: "Type of this crypto, 'sm' or 'eth', customized for CITA"},
-			&cli.StringFlag{Destination: &cfg.Config.CITAConsensus, Name: "consensus", Usage: "Type of this consensus, 'bft' or 'raft' or 'overlord', customized for CITA"},
+			&cli.StringFlag{Destination: &cfg.Config.CITACrypto, Name: "crypto", Usage: "Type of node crypto, 'sm' or 'eth', customized for CITA"},
+			&cli.StringFlag{Destination: &cfg.Config.CITAConsensus, Name: "consensus", Usage: "Type of node consensus, 'bft' or 'raft' or 'overlord', customized for CITA"},
 			&cli.StringSliceFlag{Name: "path", Usage: "List of paths you want to backup"},
 
 			&cli.StringFlag{Destination: &cfg.Config.RestoreDir, Name: "restoreDir", EnvVars: []string{restoreDirEnvKey}, Value: "/data", Usage: "Set to which directory the restore should be performed."},

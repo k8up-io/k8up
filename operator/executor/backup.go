@@ -4,6 +4,9 @@ import (
 	"context"
 	stderrors "errors"
 	"fmt"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/utils/pointer"
+	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"strconv"
 
@@ -121,7 +124,38 @@ func (b *BackupExecutor) prepareVolumes() ([]corev1.Volume, error) {
 	}
 	if b.backup.Spec.Backend.Local != nil {
 		// create same pvc as node's pvc
+		pvcInfo, err := NewCITANode(b.CTX, b.Client, b.backup.Namespace, b.backup.Spec.Node).GetPVCInfo()
+		if err != nil {
+			return nil, err
+		}
+		destPVC := &corev1.PersistentVolumeClaim{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      b.backup.Name,
+				Namespace: b.backup.Namespace,
+			},
+			Spec: corev1.PersistentVolumeClaimSpec{
+				AccessModes:      []corev1.PersistentVolumeAccessMode{corev1.ReadWriteOnce},
+				Resources:        pvcInfo,
+				StorageClassName: pointer.String(b.backup.Spec.Backend.Local.StorageClass),
+			},
+		}
+		err = ctrl.SetControllerReference(b.backup, destPVC, b.Scheme)
+		if err != nil {
+			return nil, err
+		}
+		err = b.CreateObjectIfNotExisting(destPVC)
+		if err != nil {
+			return nil, err
+		}
 		// add to volumes
+		volumes = append(volumes, corev1.Volume{
+			Name: "backup-dest",
+			VolumeSource: corev1.VolumeSource{
+				PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{
+					ClaimName: destPVC.Name,
+					ReadOnly:  false,
+				},
+			}})
 	}
 	if b.backup.Spec.DataType.State != nil {
 		volumes = append(volumes, corev1.Volume{
@@ -170,13 +204,18 @@ func (b *BackupExecutor) startBackup(backupJob *batchv1.Job) error {
 	backupJob.Spec.Template.Spec.Volumes = volumes
 	backupJob.Spec.Template.Spec.ServiceAccountName = cfg.Config.ServiceAccount
 	if b.backup.Spec.DataType.Full != nil {
-		backupJob.Spec.Template.Spec.Containers[0].VolumeMounts = b.newVolumeMounts(volumes)
+		backupJob.Spec.Template.Spec.Containers[0].VolumeMounts = b.newVolumeMountsForFull()
 	}
 	if b.backup.Spec.DataType.State != nil {
 		backupJob.Spec.Template.Spec.Containers[0].VolumeMounts = b.newVolumeMountsForState()
 	}
 	if b.backup.Spec.Backend.Local != nil {
-		backupJob.Spec.Template.Spec.Containers[0].VolumeMounts = append(backupJob.Spec.Template.Spec.Containers[0].VolumeMounts)
+		// mount new pvc
+		backupJob.Spec.Template.Spec.Containers[0].VolumeMounts = append(backupJob.Spec.Template.Spec.Containers[0].VolumeMounts, corev1.VolumeMount{
+			Name:      "backup-dest",
+			ReadOnly:  false,
+			MountPath: b.backup.Spec.Backend.Local.MountPath,
+		})
 	}
 
 	//backupJob.Spec.Template.Spec.Containers[0].Args = BuildTagArgs(b.backup.Spec.Tags)
@@ -216,6 +255,10 @@ func (b *BackupExecutor) args() ([]string, error) {
 	default:
 		return nil, fmt.Errorf("undefined backup data type on '%v/%v'", b.backup.Namespace, b.backup.Name)
 	}
+	//switch {
+	//case b.backup.Spec.Backend.Local != nil:
+	//	args = append(args, "-backend", "local")
+	//}
 	return args, nil
 }
 

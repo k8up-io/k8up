@@ -1,29 +1,27 @@
 apiVersion: k8up.io/v1
-kind: Backup
+kind: Restore
 metadata:
-  name: state-backup
+  name: full-restore-from-s3
   namespace: zhujq
 spec:
-  node: test-chain-zenoh-overlord-node0
   chain: test-chain-zenoh-overlord
-  dataType:
-    state:
-      blockHeight: 50
+  node: test-chain-zenoh-overlord-node0
+  backup: full-backup-to-s3
+#  podSecurityContext:
+#    runAsGroup: 1000
+#    runAsUser: 1000
+#    fsGroup: 1000
+  restoreMethod:
+    folder:
+      claimName: datadir-test-chain-zenoh-overlord-node0-0
 
-  failedJobsHistoryLimit: 2
-  successfulJobsHistoryLimit: 2
-#  tags:
-#    - test
-#    - dump
-#    - mariadb
   backend:
     repoPasswordSecretRef:
       name: backup-repo
       key: password
     s3:
-#      endpoint: http://192.168.31.200:31026
       endpoint: http://192.168.10.122:30289
-      bucket: k8up-state
+      bucket: k8up-full
       accessKeyIDSecretRef:
         name: minio-credentials
         key: username
