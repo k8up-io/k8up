@@ -9,7 +9,6 @@ import (
 	"github.com/k8up-io/k8up/v2/controllers"
 	"github.com/k8up-io/k8up/v2/envtest"
 	"github.com/k8up-io/k8up/v2/operator/handler"
-	"github.com/k8up-io/k8up/v2/operator/scheduler"
 	"github.com/stretchr/testify/suite"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -62,7 +61,7 @@ func (ts *ScheduleControllerTestSuite) Test_GivenEffectiveScheduleWithRandomSche
 	ts.Assert().Len(actualSchedule.Status.EffectiveSchedules, 0, "slice of effective schedules")
 }
 
-func (ts *ScheduleControllerTestSuite) Test_GivenEffectiveScheduleWithRandomSchedules_WhenReconcile_ThenUsePreGeneratedSchedule() {
+func (ts *ScheduleControllerTestSuite) Test_GivenEffectiveScheduleWithRandomSchedules_WhenReconcile_ThenUpdateScheduleInStatus() {
 	ts.givenScheduleResource(handler.ScheduleHourlyRandom)
 	ts.givenEffectiveSchedule()
 
@@ -72,8 +71,8 @@ func (ts *ScheduleControllerTestSuite) Test_GivenEffectiveScheduleWithRandomSche
 	name := k8upv1.MapToNamespacedName(ts.givenSchedule)
 	ts.FetchResource(name, actualSchedule)
 	ts.thenAssertCondition(actualSchedule, k8upv1.ConditionReady, k8upv1.ReasonReady, "resource is ready")
-	ts.Assert().True(scheduler.GetScheduler().HasSchedule(name, "1 * * * *", k8upv1.BackupType))
 	ts.Assert().Len(actualSchedule.Status.EffectiveSchedules, 1, "slice of effective schedules")
+	ts.Assert().NotEqual("somevaluetobechanged", actualSchedule.Status.EffectiveSchedules[0].GeneratedSchedule)
 }
 
 func (ts *ScheduleControllerTestSuite) whenReconciling(givenSchedule *k8upv1.Schedule) {

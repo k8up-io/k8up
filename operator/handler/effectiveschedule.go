@@ -15,41 +15,31 @@ func (s *ScheduleHandler) getEffectiveSchedule(jobType k8upv1.JobType, originalS
 		return originalSchedule
 	}
 
-	if existingSchedule, found := s.findExistingSchedule(jobType); found {
-		return existingSchedule
-	}
-
 	randomizedSchedule, err := s.createRandomSchedule(jobType, originalSchedule)
 	if err != nil {
 		s.Log.Info("Could not randomize schedule, continuing with original schedule", "schedule", originalSchedule, "error", err.Error())
 		return originalSchedule
 	}
-	s.addEffectiveSchedule(jobType, randomizedSchedule)
+	s.setEffectiveSchedule(jobType, randomizedSchedule)
 	return randomizedSchedule
 }
 
-// findExistingSchedule searches in the Status.EffectiveSchedules and tries to find a generated schedule definition for the given jobType.
-// It returns empty string and false if none were found.
-func (s *ScheduleHandler) findExistingSchedule(jobType k8upv1.JobType) (k8upv1.ScheduleDefinition, bool) {
+// setEffectiveSchedule will create or update the EffectiveSchedule in the Status for the given jobType with the given schedule definition.
+// The EffectiveSchedules aren't persisted or updated in this function, update the Schedule's Status for that.
+func (s *ScheduleHandler) setEffectiveSchedule(jobType k8upv1.JobType, schedule k8upv1.ScheduleDefinition) {
+	newList := make([]k8upv1.EffectiveSchedule, 0)
+	found := false
 	for _, effectiveSchedule := range s.schedule.Status.EffectiveSchedules {
 		if effectiveSchedule.JobType == jobType {
-			s.Log.V(1).Info("using generated schedule",
-				"name", k8upv1.MapToNamespacedName(s.schedule),
-				"schedule", effectiveSchedule.GeneratedSchedule,
-				"type", jobType)
-			return effectiveSchedule.GeneratedSchedule, true
+			effectiveSchedule.GeneratedSchedule = schedule
+			found = true
 		}
+		newList = append(newList, effectiveSchedule)
 	}
-	return "", false
-}
-
-// addEffectiveSchedule will create or update the EffectiveSchedule in the Status for the given jobType with the given schedule definition.
-// The EffectiveSchedules aren't persisted or updated in this function, update the Schedule's Status for that.
-func (s *ScheduleHandler) addEffectiveSchedule(jobType k8upv1.JobType, schedule k8upv1.ScheduleDefinition) {
-	s.schedule.Status.EffectiveSchedules = append(s.schedule.Status.EffectiveSchedules, k8upv1.EffectiveSchedule{
-		JobType:           jobType,
-		GeneratedSchedule: schedule,
-	})
+	if !found {
+		newList = append(newList, k8upv1.EffectiveSchedule{JobType: jobType, GeneratedSchedule: schedule})
+	}
+	s.schedule.Status.EffectiveSchedules = newList
 }
 
 // cleanupEffectiveSchedules removes elements in the EffectiveSchedule list that match the job type, but aren't randomized.

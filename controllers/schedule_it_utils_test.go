@@ -17,7 +17,7 @@ func (ts *ScheduleControllerTestSuite) givenScheduleResource(schedule k8upv1.Sch
 
 func (ts *ScheduleControllerTestSuite) givenEffectiveSchedule() {
 	ts.givenSchedule.Status.EffectiveSchedules = []k8upv1.EffectiveSchedule{
-		{JobType: k8upv1.BackupType, GeneratedSchedule: "1 * * * *"},
+		{JobType: k8upv1.BackupType, GeneratedSchedule: "somevaluetobechanged"},
 	}
 	ts.UpdateStatus(ts.givenSchedule)
 }
