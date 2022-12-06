@@ -99,7 +99,6 @@ func TestScheduleHandler_mergeResourcesWithDefaults(t *testing.T) {
 		},
 	}
 	cfg.Config = &cfg.Configuration{}
-	cfg.Config.OperatorNamespace = "irrelevant-but-required"
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
 			cfg.Config.GlobalCPUResourceLimit = tt.globalCPUResourceLimit
@@ -167,7 +166,6 @@ func TestScheduleHandler_mergeBackendWithDefaults(t *testing.T) {
 		},
 	}
 	cfg.Config = &cfg.Configuration{}
-	cfg.Config.OperatorNamespace = "irrelevant-but-required"
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
 			cfg.Config.GlobalS3Bucket = tt.globalS3Bucket

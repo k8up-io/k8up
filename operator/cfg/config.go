@@ -78,7 +78,6 @@ type Configuration struct {
 
 	// Enabling this will ensure there is only one active controller manager.
 	EnableLeaderElection bool
-	OperatorNamespace    string
 
 	// Allows to pass options to restic, see https://restic.readthedocs.io/en/stable/manual_rest.html?highlight=--option#usage-help
 	// Format: `key=value,key2=value2`
