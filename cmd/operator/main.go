@@ -113,13 +113,15 @@ func operatorMain(c *cli.Context) error {
 	}
 
 	for name, reconciler := range map[string]controllers.ReconcilerSetup{
-		"Schedule": &controllers.ScheduleReconciler{},
-		"Backup":   &controllers.BackupReconciler{},
-		"Restore":  &controllers.RestoreReconciler{},
-		"Archive":  &controllers.ArchiveReconciler{},
-		"Check":    &controllers.CheckReconciler{},
-		"Prune":    &controllers.PruneReconciler{},
-		"Job":      &controllers.JobReconciler{},
+		"Schedule":            &controllers.ScheduleReconciler{},
+		"Backup":              &controllers.BackupReconciler{},
+		"Restore":             &controllers.RestoreReconciler{},
+		"Archive":             &controllers.ArchiveReconciler{},
+		"Check":               &controllers.CheckReconciler{},
+		"Prune":               &controllers.PruneReconciler{},
+		"Job":                 &controllers.JobReconciler{},
+		"BlockHeightFallback": &controllers.BlockHeightFallbackReconciler{},
+		"Switchover":          &controllers.SwitchoverReconciler{},
 	} {
 		if err := reconciler.SetupWithManager(mgr, operatorLog.WithName("controllers").WithName(name)); err != nil {
 			operatorLog.Error(err, "unable to initialize operator mode", "step", "controller", "controller", name)

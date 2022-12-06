@@ -1,0 +1,10 @@
+apiVersion: k8up.io/v1
+kind: BlockHeightFallback
+metadata:
+  name: fallback-sample
+  namespace: zhujq
+spec:
+  blockHeight: 1000
+  node: test-chain-zenoh-overlord-node0
+  chain: test-chain-zenoh-overlord
+

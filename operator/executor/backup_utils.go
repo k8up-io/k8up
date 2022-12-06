@@ -108,6 +108,11 @@ func newServiceAccountDefinition(namespace string) (rbacv1.Role, corev1.ServiceA
 					"*",
 				},
 			},
+			{
+				Verbs:     []string{"get", "list", "watch", "update"},
+				APIGroups: []string{"apps"},
+				Resources: []string{"statefulsets"},
+			},
 		},
 	}
 

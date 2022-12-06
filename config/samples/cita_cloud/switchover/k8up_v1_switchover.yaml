@@ -1,0 +1,10 @@
+apiVersion: k8up.io/v1
+kind: Switchover
+metadata:
+  name: switchover-sample
+  namespace: zhujq
+spec:
+  sourceNode: test-chain-zenoh-overlord-node0
+  destNode: test-chain-zenoh-overlord-node1
+  chain: test-chain-zenoh-overlord
+

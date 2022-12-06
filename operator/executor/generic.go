@@ -207,6 +207,10 @@ func NewExecutor(config job.Config) queue.Executor {
 		return NewPruneExecutor(config)
 	case k8upv1.RestoreType:
 		return NewRestoreExecutor(config)
+	case k8upv1.FallbackType:
+		return NewBlockHeightFallbackExecutor(config)
+	case k8upv1.SwitchoverType:
+		return NewSwitchoverExecutor(config)
 	}
 	return nil
 }

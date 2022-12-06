@@ -2,6 +2,9 @@ package main
 
 import (
 	"fmt"
+	"github.com/k8up-io/k8up/v2/cmd/citacloud/fallback"
+	"github.com/k8up-io/k8up/v2/cmd/citacloud/switchover"
+
 	"log"
 	"os"
 	"runtime"
@@ -80,6 +83,8 @@ func app() *cli.App {
 		Commands: []*cli.Command{
 			operator.Command,
 			restic.Command,
+			fallback.Command,
+			switchover.Command,
 		},
 	}
 }
