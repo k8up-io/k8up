@@ -16,21 +16,17 @@ import (
 // ScheduleHandler handles the reconciles for the schedules. Schedules are a special
 // type of k8up objects as they will only trigger jobs indirectly.
 type ScheduleHandler struct {
-	schedule           *k8upv1.Schedule
-	effectiveSchedules map[k8upv1.JobType]k8upv1.EffectiveSchedule
+	schedule *k8upv1.Schedule
 	job.Config
 	requireStatusUpdate bool
 }
 
 // NewScheduleHandler will return a new ScheduleHandler.
-func NewScheduleHandler(
-	config job.Config, schedule *k8upv1.Schedule,
-	effectiveSchedules map[k8upv1.JobType]k8upv1.EffectiveSchedule) *ScheduleHandler {
+func NewScheduleHandler(config job.Config, schedule *k8upv1.Schedule) *ScheduleHandler {
 
 	return &ScheduleHandler{
-		schedule:           schedule,
-		effectiveSchedules: effectiveSchedules,
-		Config:             config,
+		schedule: schedule,
+		Config:   config,
 	}
 }
 
@@ -52,8 +48,8 @@ func (s *ScheduleHandler) Handle() error {
 		return err
 	}
 
-	if err := s.synchronizeEffectiveSchedulesResources(); err != nil {
-		// at this point, conditions are already set and updated.
+	if err := s.Client.Status().Update(s.CTX, s.schedule); err != nil {
+		// Update effective schedules.
 		return err
 	}
 
@@ -168,11 +164,5 @@ func (s *ScheduleHandler) finalizeSchedule() error {
 	namespacedName := k8upv1.MapToNamespacedName(s.schedule)
 	controllerutil.RemoveFinalizer(s.schedule, k8upv1.ScheduleFinalizerName)
 	scheduler.GetScheduler().RemoveSchedules(namespacedName)
-	for jobType := range s.effectiveSchedules {
-		s.cleanupEffectiveSchedules(jobType, "")
-	}
-	if err := s.synchronizeEffectiveSchedulesResources(); err != nil {
-		return err
-	}
 	return s.updateSchedule()
 }
