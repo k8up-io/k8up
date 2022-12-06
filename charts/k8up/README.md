@@ -1,6 +1,6 @@
 # k8up
 
-![Version: 3.0.2](https://img.shields.io/badge/Version-3.0.2-informational?style=flat-square)
+![Version: 3.1.0](https://img.shields.io/badge/Version-3.1.0-informational?style=flat-square)
 
 Kubernetes and OpenShift Backup Operator based on restic
 
@@ -13,7 +13,7 @@ helm repo add k8up-io https://k8up-io.github.io/k8up
 helm install k8up k8up-io/k8up
 ```
 ```bash
-kubectl apply -f https://github.com/k8up-io/k8up/releases/download/k8up-3.0.2/k8up-crd.yaml
+kubectl apply -f https://github.com/k8up-io/k8up/releases/download/k8up-3.1.0/k8up-crd.yaml
 ```
 
 <!---
@@ -55,7 +55,7 @@ Document your changes in values.yaml and let `make docs:helm` generate this sect
 | k8up.globalResources.limits.memory | string | `""` | Global Memory resource limit applied to jobs. See [supported units][resource-units]. |
 | k8up.globalResources.requests.cpu | string | `""` | Global CPU resource requests applied to jobs. See [supported units][resource-units]. |
 | k8up.globalResources.requests.memory | string | `""` | Global Memory resource requests applied to jobs. See [supported units][resource-units]. |
-| k8up.operatorNamespace | string | `""` | Specifies the namespace in which K8up's `EffectiveSchedules` are stored. Defaults to release namespace if left empty. |
+| k8up.operatorNamespace | string | `""` | `DEPRECATED` This field is no longer used for recent K8up versions (v2.6+). It is still in the chart to support older image tags. |
 | k8up.timezone | string | `""` | Specifies the timezone K8up is using for scheduling. Empty value defaults to the timezone in which Kubernetes is deployed. Accepts `tz database` compatible entries, e.g. `Europe/Zurich` |
 | metrics.prometheusRule.additionalLabels | object | `{}` | Add labels to the PrometheusRule object |
 | metrics.prometheusRule.additionalRules | list | `[]` | Provide additional alert rules in addition to the defaults |

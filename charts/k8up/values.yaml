@@ -45,8 +45,8 @@ k8up:
   # -- Specifies whether leader election should be enabled.
   enableLeaderElection: true
 
-  # -- Specifies the namespace in which K8up's `EffectiveSchedules` are stored.
-  # Defaults to release namespace if left empty.
+  # -- `DEPRECATED` This field is no longer used for recent K8up versions (v2.6+).
+  # It is still in the chart to support older image tags.
   operatorNamespace: ""
 
   # -- Specify the resource requests and limits that the Pods should
