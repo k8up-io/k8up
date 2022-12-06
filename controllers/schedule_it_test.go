@@ -8,7 +8,6 @@ import (
 	k8upv1 "github.com/k8up-io/k8up/v2/api/v1"
 	"github.com/k8up-io/k8up/v2/controllers"
 	"github.com/k8up-io/k8up/v2/envtest"
-	"github.com/k8up-io/k8up/v2/operator/cfg"
 	"github.com/k8up-io/k8up/v2/operator/handler"
 	"github.com/k8up-io/k8up/v2/operator/scheduler"
 	"github.com/stretchr/testify/suite"
@@ -29,7 +28,6 @@ func Test_Schedule(t *testing.T) {
 }
 
 func (ts *ScheduleControllerTestSuite) BeforeTest(suiteName, testName string) {
-	cfg.Config.OperatorNamespace = ts.NS
 	ts.reconciler = &controllers.ScheduleReconciler{
 		Client: ts.Client,
 		Log:    ts.Logger.WithName(suiteName + "_" + testName),
