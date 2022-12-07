@@ -1,7 +1,8 @@
 {
   "extends": [
     "config:base",
-    ":gitSignOff"
+    ":gitSignOff",
+    ":disableDependencyDashboard"
   ],
   "labels": [
     "dependency"
@@ -13,12 +14,22 @@
     {
       "matchPackagePatterns": [
         "k8s.io/utils",
-        "sigs.k8s.io/controller-runtime/tools/setup-envtest"
+        "sigs.k8s.io/controller-runtime/tools/setup-envtest",
+        "github.com/minio/minio-go/v7"
       ],
       "schedule": [
         "on the first day of the month"
       ],
       "automerge": true
+    },
+    {
+      "matchPackagePatterns": [
+        "github.com/urfave/cli/v2"
+      ],
+      "groupName": "urfave/cli/v2",
+      "schedule": [
+        "on the first day of the month"
+      ]
     }
   ],
   "prBodyNotes": [
