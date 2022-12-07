@@ -3,7 +3,7 @@ package executor
 import (
 	"context"
 	stderrors "errors"
-	k8upv1 "github.com/k8up-io/k8up/v2/api/v1"
+	k8upv1 "github.com/k8up-io/k8up/v2/api/v1cita"
 	"github.com/k8up-io/k8up/v2/operator/cfg"
 	"github.com/k8up-io/k8up/v2/operator/job"
 	"github.com/k8up-io/k8up/v2/operator/observer"

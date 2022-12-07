@@ -1,4 +1,4 @@
-apiVersion: k8up.io/v1
+apiVersion: rivtower.com/v1cita
 kind: Backup
 metadata:
   name: full-backup-to-s3

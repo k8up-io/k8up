@@ -1,13 +1,7 @@
 package executor
 
 import (
-	"context"
 	stderrors "errors"
-	"fmt"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/utils/pointer"
-	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 	"strconv"
 
 	batchv1 "k8s.io/api/batch/v1"
@@ -110,90 +104,20 @@ func (b *BackupExecutor) listAndFilterPVCs(annotation string) ([]corev1.Volume, 
 	return volumes, nil
 }
 
-func (b *BackupExecutor) prepareVolumes() ([]corev1.Volume, error) {
-	volumes := []corev1.Volume{
-		{
-			Name: "backup-source",
-			VolumeSource: corev1.VolumeSource{
-				PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{
-					ClaimName: fmt.Sprintf("datadir-%s-0", b.backup.Spec.Node),
-					ReadOnly:  false,
-				},
-			},
-		},
-	}
-	if b.backup.Spec.Backend.Local != nil {
-		// create same pvc as node's pvc
-		pvcInfo, err := NewCITANode(b.CTX, b.Client, b.backup.Namespace, b.backup.Spec.Node).GetPVCInfo()
-		if err != nil {
-			return nil, err
-		}
-		destPVC := &corev1.PersistentVolumeClaim{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      b.backup.Name,
-				Namespace: b.backup.Namespace,
-			},
-			Spec: corev1.PersistentVolumeClaimSpec{
-				AccessModes:      []corev1.PersistentVolumeAccessMode{corev1.ReadWriteOnce},
-				Resources:        pvcInfo,
-				StorageClassName: pointer.String(b.backup.Spec.Backend.Local.StorageClass),
-			},
-		}
-		err = ctrl.SetControllerReference(b.backup, destPVC, b.Scheme)
-		if err != nil {
-			return nil, err
-		}
-		err = b.CreateObjectIfNotExisting(destPVC)
-		if err != nil {
-			return nil, err
-		}
-		// add to volumes
-		volumes = append(volumes, corev1.Volume{
-			Name: "backup-dest",
-			VolumeSource: corev1.VolumeSource{
-				PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{
-					ClaimName: destPVC.Name,
-					ReadOnly:  false,
-				},
-			}})
-	}
-	if b.backup.Spec.DataType.State != nil {
-		volumes = append(volumes, corev1.Volume{
-			Name: "cita-config",
-			VolumeSource: corev1.VolumeSource{
-				ConfigMap: &corev1.ConfigMapVolumeSource{
-					LocalObjectReference: corev1.LocalObjectReference{
-						Name: fmt.Sprintf("%s-config", b.backup.Spec.Node),
-					},
-				},
-			},
-		})
-	}
-	return volumes, nil
-}
-
 func (b *BackupExecutor) startBackup(backupJob *batchv1.Job) error {
-	node := NewCITANode(b.CTX, b.Client, b.backup.Namespace, b.backup.Spec.Node)
-	stopped, err := node.Stop()
+
+	ready, err := b.StartPreBackup()
 	if err != nil {
 		return err
 	}
-	if !stopped {
+	if !ready || b.backup.Status.IsWaitingForPreBackup() {
 		return nil
 	}
-	//if err != nil {
-	//	return err
-	//}
-	//if !ready || b.backup.Status.IsWaitingForPreBackup() {
-	//	return nil
-	//}
 
-	//b.registerBackupCallback()
-	b.registerCITANodeCallback()
+	b.registerBackupCallback()
 	b.RegisterJobSucceededConditionCallback()
 
-	volumes, err := b.prepareVolumes()
-	//volumes, err := b.listAndFilterPVCs(cfg.Config.BackupAnnotation)
+	volumes, err := b.listAndFilterPVCs(cfg.Config.BackupAnnotation)
 	if err != nil {
 		b.SetConditionFalseWithMessage(k8upv1.ConditionReady, k8upv1.ReasonRetrievalFailed, err.Error())
 		return err
@@ -203,27 +127,8 @@ func (b *BackupExecutor) startBackup(backupJob *batchv1.Job) error {
 	b.backup.Spec.AppendEnvFromToContainer(&backupJob.Spec.Template.Spec.Containers[0])
 	backupJob.Spec.Template.Spec.Volumes = volumes
 	backupJob.Spec.Template.Spec.ServiceAccountName = cfg.Config.ServiceAccount
-	if b.backup.Spec.DataType.Full != nil {
-		backupJob.Spec.Template.Spec.Containers[0].VolumeMounts = b.newVolumeMountsForFull()
-	}
-	if b.backup.Spec.DataType.State != nil {
-		backupJob.Spec.Template.Spec.Containers[0].VolumeMounts = b.newVolumeMountsForState()
-	}
-	if b.backup.Spec.Backend.Local != nil {
-		// mount new pvc
-		backupJob.Spec.Template.Spec.Containers[0].VolumeMounts = append(backupJob.Spec.Template.Spec.Containers[0].VolumeMounts, corev1.VolumeMount{
-			Name:      "backup-dest",
-			ReadOnly:  false,
-			MountPath: b.backup.Spec.Backend.Local.MountPath,
-		})
-	}
-
-	//backupJob.Spec.Template.Spec.Containers[0].Args = BuildTagArgs(b.backup.Spec.Tags)
-	args, err := b.args()
-	if err != nil {
-		return err
-	}
-	backupJob.Spec.Template.Spec.Containers[0].Args = args
+	backupJob.Spec.Template.Spec.Containers[0].VolumeMounts = b.newVolumeMounts(volumes)
+	backupJob.Spec.Template.Spec.Containers[0].Args = BuildTagArgs(b.backup.Spec.Tags)
 
 	if err = b.CreateObjectIfNotExisting(backupJob); err == nil {
 		b.SetStarted("the job '%v/%v' was created", backupJob.Namespace, backupJob.Name)
@@ -232,40 +137,6 @@ func (b *BackupExecutor) startBackup(backupJob *batchv1.Job) error {
 
 }
 
-func (b *BackupExecutor) args() ([]string, error) {
-	var args []string
-	if len(b.backup.Spec.Tags) > 0 {
-		args = append(args, BuildTagArgs(b.backup.Spec.Tags)...)
-	}
-	crypto, consensus, err := b.GetCryptoAndConsensus(b.backup.Namespace, b.backup.Spec.Node)
-	if err != nil {
-		return nil, err
-	}
-	switch {
-	case b.backup.Spec.DataType.Full != nil:
-		args = append(args, "-dataType", "full")
-		args = append(args, BuildIncludePathArgs(b.backup.Spec.DataType.Full.IncludePaths)...)
-	case b.backup.Spec.DataType.State != nil:
-		args = append(args, "-dataType", "state")
-		args = append(args, "-blockHeight", strconv.FormatInt(b.backup.Spec.DataType.State.BlockHeight, 10))
-		// todo:
-		args = append(args, "-crypto", crypto)
-		args = append(args, "-consensus", consensus)
-		args = append(args, "-backupDir", "/state_data")
-	default:
-		return nil, fmt.Errorf("undefined backup data type on '%v/%v'", b.backup.Namespace, b.backup.Name)
-	}
-	//switch {
-	//case b.backup.Spec.Backend.Local != nil:
-	//	args = append(args, "-backend", "local")
-	//}
-	return args, nil
-}
-
 func (b *BackupExecutor) cleanupOldBackups(name types.NamespacedName) {
 	b.cleanupOldResources(&k8upv1.BackupList{}, name, b.backup)
-}
-
-func (b *BackupExecutor) startCITANode(ctx context.Context, client client.Client, namespace, name string) {
-	NewCITANode(ctx, client, namespace, name).Start()
 }

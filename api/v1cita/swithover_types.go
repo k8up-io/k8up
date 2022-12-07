@@ -1,40 +1,19 @@
-package v1
+package v1cita
 
 import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+
+	k8upv1 "github.com/k8up-io/k8up/v2/api/v1"
 )
 
 // SwitchoverSpec defines the desired state of Switchover
 // Role conversion for two nodes in the same k8s cluster
 type SwitchoverSpec struct {
-	RunnableSpec `json:",inline"`
-	// KeepJobs amount of jobs to keep for later analysis.
-	//
-	// Deprecated: Use FailedJobsHistoryLimit and SuccessfulJobsHistoryLimit respectively.
-	// +optional
-	KeepJobs *int `json:"keepJobs,omitempty"`
-	// FailedJobsHistoryLimit amount of failed jobs to keep for later analysis.
-	// KeepJobs is used property is not specified.
-	// +optional
-	FailedJobsHistoryLimit *int `json:"failedJobsHistoryLimit,omitempty"`
-	// SuccessfulJobsHistoryLimit amount of successful jobs to keep for later analysis.
-	// KeepJobs is used property is not specified.
-	// +optional
-	SuccessfulJobsHistoryLimit *int `json:"successfulJobsHistoryLimit,omitempty"`
+	k8upv1.RunnableSpec `json:",inline"`
 
-	// PromURL sets a prometheus push URL where the backup container send metrics to
-	// +optional
-	PromURL string `json:"promURL,omitempty"`
-
-	// StatsURL sets an arbitrary URL where the restic container posts metrics and
-	// information about the snapshots to. This is in addition to the prometheus
-	// pushgateway.
-	StatsURL string `json:"statsURL,omitempty"`
-
-	// Tags is a list of arbitrary tags that get added to the backup via Restic's tagging system
-	Tags []string `json:"tags,omitempty"`
+	K8upCommon `json:",inline"`
 
 	// Chain
 	Chain string `json:"chain"`
@@ -53,7 +32,7 @@ type Switchover struct {
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
 	Spec   SwitchoverSpec `json:"spec,omitempty"`
-	Status Status         `json:"status,omitempty"`
+	Status k8upv1.Status  `json:"status,omitempty"`
 }
 
 //+kubebuilder:object:root=true
@@ -77,7 +56,7 @@ func (s *Switchover) GetMetaObject() metav1.Object {
 	return s
 }
 
-func (*Switchover) GetType() JobType {
+func (*Switchover) GetType() k8upv1.JobType {
 	return SwitchoverType
 }
 
@@ -87,12 +66,12 @@ func (s *Switchover) GetJobName() string {
 }
 
 // GetStatus retrieves the Status property
-func (s *Switchover) GetStatus() Status {
+func (s *Switchover) GetStatus() k8upv1.Status {
 	return s.Status
 }
 
 // SetStatus sets the Status property
-func (s *Switchover) SetStatus(status Status) {
+func (s *Switchover) SetStatus(status k8upv1.Status) {
 	s.Status = status
 }
 
@@ -130,8 +109,8 @@ func (s *Switchover) GetSuccessfulJobsHistoryLimit() *int {
 }
 
 // GetJobObjects returns a sortable list of jobs
-func (s *SwitchoverList) GetJobObjects() JobObjectList {
-	items := make(JobObjectList, len(s.Items))
+func (s *SwitchoverList) GetJobObjects() k8upv1.JobObjectList {
+	items := make(k8upv1.JobObjectList, len(s.Items))
 	for i := range s.Items {
 		items[i] = &s.Items[i]
 	}

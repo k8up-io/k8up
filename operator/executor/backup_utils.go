@@ -28,31 +28,6 @@ func (b *BackupExecutor) newVolumeMounts(claims []corev1.Volume) []corev1.Volume
 	return mounts
 }
 
-func (b *BackupExecutor) newVolumeMountsForFull() []corev1.VolumeMount {
-	return []corev1.VolumeMount{
-		{
-			Name:      "backup-source",
-			MountPath: "/data/backup-source",
-			ReadOnly:  true,
-		},
-	}
-}
-
-func (b *BackupExecutor) newVolumeMountsForState() []corev1.VolumeMount {
-	return []corev1.VolumeMount{
-		{
-			Name:      "backup-source",
-			MountPath: "/data/backup-source",
-			ReadOnly:  false,
-		},
-		{
-			Name:      "cita-config",
-			MountPath: "/cita-config",
-			ReadOnly:  true,
-		},
-	}
-}
-
 func containsAccessMode(s []corev1.PersistentVolumeAccessMode, e string) bool {
 	for _, a := range s {
 		if string(a) == e {
@@ -67,15 +42,6 @@ func (b *BackupExecutor) registerBackupCallback() {
 	observer.GetObserver().RegisterCallback(name.String(), func(_ observer.ObservableJob) {
 		b.StopPreBackupDeployments()
 		b.cleanupOldBackups(name)
-	})
-}
-
-func (b *BackupExecutor) registerCITANodeCallback() {
-	name := b.GetJobNamespacedName()
-	observer.GetObserver().RegisterCallback(name.String(), func(_ observer.ObservableJob) {
-		//b.StopPreBackupDeployments()
-		//b.cleanupOldBackups(name)
-		b.startCITANode(b.CTX, b.Client, b.backup.Namespace, b.backup.Spec.Node)
 	})
 }
 
@@ -107,11 +73,6 @@ func newServiceAccountDefinition(namespace string) (rbacv1.Role, corev1.ServiceA
 				Verbs: []string{
 					"*",
 				},
-			},
-			{
-				Verbs:     []string{"get", "list", "watch", "update"},
-				APIGroups: []string{"apps"},
-				Resources: []string{"statefulsets"},
 			},
 		},
 	}

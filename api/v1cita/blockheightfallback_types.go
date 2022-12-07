@@ -1,39 +1,17 @@
-package v1
+package v1cita
 
 import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+
+	k8upv1 "github.com/k8up-io/k8up/v2/api/v1"
 )
 
 type BlockHeightFallbackSpec struct {
-	RunnableSpec `json:",inline"`
+	k8upv1.RunnableSpec `json:",inline"`
 
-	// KeepJobs amount of jobs to keep for later analysis.
-	//
-	// Deprecated: Use FailedJobsHistoryLimit and SuccessfulJobsHistoryLimit respectively.
-	// +optional
-	KeepJobs *int `json:"keepJobs,omitempty"`
-	// FailedJobsHistoryLimit amount of failed jobs to keep for later analysis.
-	// KeepJobs is used property is not specified.
-	// +optional
-	FailedJobsHistoryLimit *int `json:"failedJobsHistoryLimit,omitempty"`
-	// SuccessfulJobsHistoryLimit amount of successful jobs to keep for later analysis.
-	// KeepJobs is used property is not specified.
-	// +optional
-	SuccessfulJobsHistoryLimit *int `json:"successfulJobsHistoryLimit,omitempty"`
-
-	// PromURL sets a prometheus push URL where the backup container send metrics to
-	// +optional
-	PromURL string `json:"promURL,omitempty"`
-
-	// StatsURL sets an arbitrary URL where the restic container posts metrics and
-	// information about the snapshots to. This is in addition to the prometheus
-	// pushgateway.
-	StatsURL string `json:"statsURL,omitempty"`
-
-	// Tags is a list of arbitrary tags that get added to the backup via Restic's tagging system
-	Tags []string `json:"tags,omitempty"`
+	K8upCommon `json:",inline"`
 
 	// Chain
 	Chain string `json:"chain,omitempty"`
@@ -53,7 +31,7 @@ type BlockHeightFallback struct {
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
 	Spec   BlockHeightFallbackSpec `json:"spec,omitempty"`
-	Status Status                  `json:"status,omitempty"`
+	Status k8upv1.Status           `json:"status,omitempty"`
 }
 
 //+kubebuilder:object:root=true
@@ -77,7 +55,7 @@ func (b *BlockHeightFallback) GetMetaObject() metav1.Object {
 	return b
 }
 
-func (*BlockHeightFallback) GetType() JobType {
+func (*BlockHeightFallback) GetType() k8upv1.JobType {
 	return FallbackType
 }
 
@@ -87,12 +65,12 @@ func (b *BlockHeightFallback) GetJobName() string {
 }
 
 // GetStatus retrieves the Status property
-func (b *BlockHeightFallback) GetStatus() Status {
+func (b *BlockHeightFallback) GetStatus() k8upv1.Status {
 	return b.Status
 }
 
 // SetStatus sets the Status property
-func (b *BlockHeightFallback) SetStatus(status Status) {
+func (b *BlockHeightFallback) SetStatus(status k8upv1.Status) {
 	b.Status = status
 }
 
@@ -130,8 +108,8 @@ func (b *BlockHeightFallback) GetSuccessfulJobsHistoryLimit() *int {
 }
 
 // GetJobObjects returns a sortable list of jobs
-func (b *BlockHeightFallbackList) GetJobObjects() JobObjectList {
-	items := make(JobObjectList, len(b.Items))
+func (b *BlockHeightFallbackList) GetJobObjects() k8upv1.JobObjectList {
+	items := make(k8upv1.JobObjectList, len(b.Items))
 	for i := range b.Items {
 		items[i] = &b.Items[i]
 	}

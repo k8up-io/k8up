@@ -356,26 +356,6 @@ spec:
                         type: string
                     type: object
                 type: object
-              chain:
-                description: Chain
-                type: string
-              dataType:
-                description: DataType
-                properties:
-                  full:
-                    properties:
-                      includePaths:
-                        items:
-                          type: string
-                        type: array
-                    type: object
-                  state:
-                    properties:
-                      blockHeight:
-                        format: int64
-                        type: integer
-                    type: object
-                type: object
               failedJobsHistoryLimit:
                 description: FailedJobsHistoryLimit amount of failed jobs to keep
                   for later analysis. KeepJobs is used property is not specified.
@@ -385,9 +365,6 @@ spec:
                   \n Deprecated: Use FailedJobsHistoryLimit and SuccessfulJobsHistoryLimit
                   respectively."
                 type: integer
-              node:
-                description: Node
-                type: string
               podSecurityContext:
                 description: PodSecurityContext describes the security context with
                   which this action shall be executed.

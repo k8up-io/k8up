@@ -15,8 +15,10 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 
 	k8upv1 "github.com/k8up-io/k8up/v2/api/v1"
+	citav1 "github.com/k8up-io/k8up/v2/api/v1cita"
 	"github.com/k8up-io/k8up/v2/cmd"
 	"github.com/k8up-io/k8up/v2/controllers"
+	controllerscita "github.com/k8up-io/k8up/v2/controllers-cita"
 	"github.com/k8up-io/k8up/v2/operator/cfg"
 	"github.com/k8up-io/k8up/v2/operator/executor"
 	// +kubebuilder:scaffold:imports
@@ -65,6 +67,7 @@ var (
 			&cli.StringFlag{Destination: &cfg.Config.GlobalMemoryResourceLimit, Name: "global-memory-limit", EnvVars: []string{"BACKUP_GLOBAL_MEMORY_LIMIT"}, Usage: "set the memory limit for scheduled jobs"},
 
 			&cli.StringFlag{Destination: &cfg.Config.BackupImage, Name: "image", EnvVars: []string{"BACKUP_IMAGE"}, Value: "ghcr.io/k8up-io/k8up:latest", Usage: "URL of the restic image"},
+			&cli.StringFlag{Destination: &cfg.Config.BackupImagePullPolicy, Name: "pull-policy", EnvVars: []string{"BACKUP_IMAGE_PULL_POLICY"}, Value: "IfNotPresent", Usage: "Pull policy of the restic image"},
 			&cli.StringSliceFlag{Name: argCommandRestic, EnvVars: []string{"BACKUP_COMMAND_RESTIC"}, Value: cli.NewStringSlice("/usr/local/bin/k8up", "restic"), Usage: "The command that is executed for restic backups."},
 			&cli.StringSliceFlag{Name: argResticOptions, EnvVars: []string{"BACKUP_RESTIC_OPTIONS"}, Usage: "Pass custom restic options in the form 'key=value,key2=value2'. See https://restic.readthedocs.io/en/stable/manual_rest.html?highlight=--option#usage-help"},
 			&cli.StringFlag{Destination: &cfg.Config.MountPath, Name: "datapath", Aliases: []string{"mountpath"}, EnvVars: []string{"BACKUP_DATAPATH"}, Value: "/data", Usage: "to which path the PVCs should get mounted in the backup container"},
@@ -120,8 +123,10 @@ func operatorMain(c *cli.Context) error {
 		"Check":               &controllers.CheckReconciler{},
 		"Prune":               &controllers.PruneReconciler{},
 		"Job":                 &controllers.JobReconciler{},
-		"BlockHeightFallback": &controllers.BlockHeightFallbackReconciler{},
-		"Switchover":          &controllers.SwitchoverReconciler{},
+		"CITABackup":          &controllerscita.BackupReconciler{},
+		"CITARestore":         &controllerscita.RestoreReconciler{},
+		"BlockHeightFallback": &controllerscita.BlockHeightFallbackReconciler{},
+		"Switchover":          &controllerscita.SwitchoverReconciler{},
 	} {
 		if err := reconciler.SetupWithManager(mgr, operatorLog.WithName("controllers").WithName(name)); err != nil {
 			operatorLog.Error(err, "unable to initialize operator mode", "step", "controller", "controller", name)
@@ -143,6 +148,7 @@ func k8upScheme() *runtime.Scheme {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 	utilruntime.Must(batchv1.AddToScheme(scheme))
 	utilruntime.Must(k8upv1.AddToScheme(scheme))
+	utilruntime.Must(citav1.AddToScheme(scheme))
 	// +kubebuilder:scaffold:scheme
 	return scheme
 }

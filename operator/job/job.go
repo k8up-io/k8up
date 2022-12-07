@@ -73,7 +73,7 @@ func GenerateGenericJob(obj k8upv1.JobObject, config Config) (*batchv1.Job, erro
 						{
 							Name:            obj.GetType().String(),
 							Image:           cfg.Config.BackupImage,
-							ImagePullPolicy: "Always",
+							ImagePullPolicy: corev1.PullPolicy(cfg.Config.BackupImagePullPolicy),
 							Command:         cfg.Config.BackupCommandRestic,
 							Resources:       config.Obj.GetResources(),
 						},

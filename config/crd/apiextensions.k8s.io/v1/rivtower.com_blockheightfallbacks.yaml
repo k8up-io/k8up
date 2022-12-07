@@ -5,20 +5,23 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.10.0
   creationTimestamp: null
-  name: switchovers.k8up.io
+  name: blockheightfallbacks.rivtower.com
 spec:
-  group: k8up.io
+  group: rivtower.com
   names:
-    kind: Switchover
-    listKind: SwitchoverList
-    plural: switchovers
-    singular: switchover
+    kind: BlockHeightFallback
+    listKind: BlockHeightFallbackList
+    plural: blockheightfallbacks
+    shortNames:
+    - bhf
+    singular: blockheightfallback
   scope: Namespaced
   versions:
-  - name: v1
+  - name: v1cita
     schema:
       openAPIV3Schema:
-        description: Switchover is the Schema for the switchovers API
+        description: BlockHeightFallback is the Schema for the blockheightfallbacks
+          API
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -33,8 +36,6 @@ spec:
           metadata:
             type: object
           spec:
-            description: SwitchoverSpec defines the desired state of Switchover Role
-              conversion for two nodes in the same k8s cluster
             properties:
               activeDeadlineSeconds:
                 description: ActiveDeadlineSeconds specifies the duration in seconds
@@ -338,11 +339,12 @@ spec:
                         type: string
                     type: object
                 type: object
+              blockHeight:
+                description: BlockHeight
+                format: int64
+                type: integer
               chain:
                 description: Chain
-                type: string
-              destNode:
-                description: DestNode
                 type: string
               failedJobsHistoryLimit:
                 description: FailedJobsHistoryLimit amount of failed jobs to keep
@@ -353,6 +355,9 @@ spec:
                   \n Deprecated: Use FailedJobsHistoryLimit and SuccessfulJobsHistoryLimit
                   respectively."
                 type: integer
+              node:
+                description: Node
+                type: string
               podSecurityContext:
                 description: PodSecurityContext describes the security context with
                   which this action shall be executed.
@@ -548,9 +553,6 @@ spec:
                       to an implementation-defined value. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
                     type: object
                 type: object
-              sourceNode:
-                description: SourceNode
-                type: string
               statsURL:
                 description: StatsURL sets an arbitrary URL where the restic container
                   posts metrics and information about the snapshots to. This is in
@@ -567,9 +569,7 @@ spec:
                   type: string
                 type: array
             required:
-            - chain
-            - destNode
-            - sourceNode
+            - blockHeight
             type: object
           status:
             description: Status defines the observed state of a generic K8up job.

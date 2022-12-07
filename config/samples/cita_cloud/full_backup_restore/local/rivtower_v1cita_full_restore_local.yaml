@@ -1,0 +1,24 @@
+apiVersion: rivtower.com/v1cita
+kind: Restore
+metadata:
+  name: full-restore-from-local
+  namespace: zhujq
+spec:
+  chain: test-chain-zenoh-overlord
+  node: test-chain-zenoh-overlord-node0
+  backup: full-backup-to-local
+#  podSecurityContext:
+#    runAsGroup: 1000
+#    runAsUser: 1000
+#    fsGroup: 1000
+  restoreMethod:
+    folder:
+      claimName: datadir-test-chain-zenoh-overlord-node0-0
+
+  backend:
+    repoPasswordSecretRef:
+      name: backup-repo
+      key: password
+    local:
+      mountPath: "/hello"
+      storageClass: "nas-client-provisioner"

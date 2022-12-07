@@ -1,18 +1,20 @@
-package controllers
+package controllers_cita
 
 import (
 	"context"
+	"time"
+
 	"github.com/go-logr/logr"
-	k8upv1 "github.com/k8up-io/k8up/v2/api/v1"
-	"github.com/k8up-io/k8up/v2/operator/cfg"
-	"github.com/k8up-io/k8up/v2/operator/handler"
-	"github.com/k8up-io/k8up/v2/operator/job"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
-	"time"
+
+	"github.com/k8up-io/k8up/v2/api/v1cita"
+	"github.com/k8up-io/k8up/v2/operator/cfg"
+	"github.com/k8up-io/k8up/v2/operator/handler"
+	"github.com/k8up-io/k8up/v2/operator/job"
 )
 
 // BlockHeightFallbackReconciler reconciles a BlockHeightFallback object
@@ -22,13 +24,13 @@ type BlockHeightFallbackReconciler struct {
 	Scheme *runtime.Scheme
 }
 
-//+kubebuilder:rbac:groups=k8up.io,resources=blockheightfallbacks,verbs=get;list;watch;create;update;patch;delete
-//+kubebuilder:rbac:groups=k8up.io,resources=blockheightfallbacks/status,verbs=get;update;patch
+//+kubebuilder:rbac:groups=rivtower.com,resources=blockheightfallbacks,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=rivtower.com,resources=blockheightfallbacks/status,verbs=get;update;patch
 
 func (r *BlockHeightFallbackReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := r.Log.WithValues("fallback", req.NamespacedName)
 
-	bhf := &k8upv1.BlockHeightFallback{}
+	bhf := &v1cita.BlockHeightFallback{}
 	err := r.Get(ctx, req.NamespacedName, bhf)
 	if err != nil {
 		if errors.IsNotFound(err) {
@@ -57,7 +59,7 @@ func (r *BlockHeightFallbackReconciler) SetupWithManager(mgr ctrl.Manager, l log
 	r.Scheme = mgr.GetScheme()
 	r.Log = l
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&k8upv1.BlockHeightFallback{}).
+		For(&v1cita.BlockHeightFallback{}).
 		WithEventFilter(predicate.GenerationChangedPredicate{}).
 		Complete(r)
 }

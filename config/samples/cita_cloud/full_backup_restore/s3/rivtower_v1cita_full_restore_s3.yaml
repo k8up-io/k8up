@@ -1,0 +1,30 @@
+apiVersion: rivtower.com/v1cita
+kind: Restore
+metadata:
+  name: full-restore-from-s3
+  namespace: zhujq
+spec:
+  chain: test-chain-zenoh-overlord
+  node: test-chain-zenoh-overlord-node0
+  backup: full-backup-to-s3
+#  podSecurityContext:
+#    runAsGroup: 1000
+#    runAsUser: 1000
+#    fsGroup: 1000
+  restoreMethod:
+    folder:
+      claimName: datadir-test-chain-zenoh-overlord-node0-0
+
+  backend:
+    repoPasswordSecretRef:
+      name: backup-repo
+      key: password
+    s3:
+      endpoint: http://192.168.10.122:30289
+      bucket: k8up-full
+      accessKeyIDSecretRef:
+        name: minio-credentials
+        key: username
+      secretAccessKeySecretRef:
+        name: minio-credentials
+        key: password

@@ -1,53 +1,38 @@
-package v1
+package v1cita
 
 import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+
+	k8upv1 "github.com/k8up-io/k8up/v2/api/v1"
 )
 
 // BackupSpec defines a single backup. It must contain all information to connect to
 // the backup repository when applied. If used with defaults or schedules the operator will
 // ensure that the defaults are applied before creating the object on the API.
 type BackupSpec struct {
-	RunnableSpec `json:",inline"`
-
-	// KeepJobs amount of jobs to keep for later analysis.
-	//
-	// Deprecated: Use FailedJobsHistoryLimit and SuccessfulJobsHistoryLimit respectively.
-	// +optional
-	KeepJobs *int `json:"keepJobs,omitempty"`
-	// FailedJobsHistoryLimit amount of failed jobs to keep for later analysis.
-	// KeepJobs is used property is not specified.
-	// +optional
-	FailedJobsHistoryLimit *int `json:"failedJobsHistoryLimit,omitempty"`
-	// SuccessfulJobsHistoryLimit amount of successful jobs to keep for later analysis.
-	// KeepJobs is used property is not specified.
-	// +optional
-	SuccessfulJobsHistoryLimit *int `json:"successfulJobsHistoryLimit,omitempty"`
-
-	// PromURL sets a prometheus push URL where the backup container send metrics to
-	// +optional
-	PromURL string `json:"promURL,omitempty"`
-
-	// StatsURL sets an arbitrary URL where the restic container posts metrics and
-	// information about the snapshots to. This is in addition to the prometheus
-	// pushgateway.
-	StatsURL string `json:"statsURL,omitempty"`
-
-	// Tags is a list of arbitrary tags that get added to the backup via Restic's tagging system
-	Tags []string `json:"tags,omitempty"`
+	// inherit k8upv1.BackupSpec
+	k8upv1.BackupSpec `json:",inline"`
+	// Chain
+	Chain string `json:"chain,omitempty"`
+	// Node
+	Node string `json:"node,omitempty"`
+	// DataType
+	DataType *DataType `json:"dataType,omitempty"`
 }
 
-type BackupTemplate struct {
-	Tags    *[]string `json:"tags,omitempty"`
-	Backend Backend   `json:"backend,omitempty"`
-	Env     Env       `json:"env,omitempty"`
+type DataType struct {
+	Full  *FullType  `json:"full,omitempty"`
+	State *StateType `json:"state,omitempty"`
 }
 
-type Env struct {
-	Key   string `json:"key,omitempty"`
-	Value string `json:"value,omitempty"`
+type FullType struct {
+	IncludePaths []string `json:"includePaths,omitempty"`
+}
+
+type StateType struct {
+	BlockHeight int64 `json:"blockHeight,omitempty"`
 }
 
 // +kubebuilder:object:root=true
@@ -62,8 +47,8 @@ type Backup struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   BackupSpec `json:"spec,omitempty"`
-	Status Status     `json:"status,omitempty"`
+	Spec   BackupSpec    `json:"spec,omitempty"`
+	Status k8upv1.Status `json:"status,omitempty"`
 }
 
 // +kubebuilder:object:root=true
@@ -87,8 +72,8 @@ func (b *Backup) GetMetaObject() metav1.Object {
 	return b
 }
 
-func (*Backup) GetType() JobType {
-	return BackupType
+func (*Backup) GetType() k8upv1.JobType {
+	return CITABackupType
 }
 
 // GetJobName returns the name of the underlying batch/v1 job.
@@ -97,12 +82,12 @@ func (b *Backup) GetJobName() string {
 }
 
 // GetStatus retrieves the Status property
-func (b *Backup) GetStatus() Status {
+func (b *Backup) GetStatus() k8upv1.Status {
 	return b.Status
 }
 
 // SetStatus sets the Status property
-func (b *Backup) SetStatus(status Status) {
+func (b *Backup) SetStatus(status k8upv1.Status) {
 	b.Status = status
 }
 
@@ -140,40 +125,10 @@ func (b *Backup) GetSuccessfulJobsHistoryLimit() *int {
 }
 
 // GetJobObjects returns a sortable list of jobs
-func (b *BackupList) GetJobObjects() JobObjectList {
-	items := make(JobObjectList, len(b.Items))
+func (b *BackupList) GetJobObjects() k8upv1.JobObjectList {
+	items := make(k8upv1.JobObjectList, len(b.Items))
 	for i := range b.Items {
 		items[i] = &b.Items[i]
 	}
 	return items
-}
-
-// GetDeepCopy returns a deep copy
-func (in *BackupSchedule) GetDeepCopy() ScheduleSpecInterface {
-	return in.DeepCopy()
-}
-
-// GetRunnableSpec returns a pointer to RunnableSpec
-func (in *BackupSchedule) GetRunnableSpec() *RunnableSpec {
-	return &in.RunnableSpec
-}
-
-// GetSchedule returns the schedule definition
-func (in *BackupSchedule) GetSchedule() ScheduleDefinition {
-	return in.Schedule
-}
-
-// GetObjectCreator returns the ObjectCreator instance
-func (in *BackupSchedule) GetObjectCreator() ObjectCreator {
-	return in
-}
-
-func (b *BackupSpec) CreateObject(name, namespace string) runtime.Object {
-	return &Backup{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: namespace,
-		},
-		Spec: *b,
-	}
 }

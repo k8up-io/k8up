@@ -6,17 +6,18 @@ package executor
 
 import (
 	"fmt"
-	appv1 "k8s.io/api/apps/v1"
 	"strings"
 
 	"github.com/go-logr/logr"
 	"github.com/imdario/mergo"
+	appv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	k8upv1 "github.com/k8up-io/k8up/v2/api/v1"
+	citav1 "github.com/k8up-io/k8up/v2/api/v1cita"
 	"github.com/k8up-io/k8up/v2/operator/cfg"
 	"github.com/k8up-io/k8up/v2/operator/executor/cleaner"
 	"github.com/k8up-io/k8up/v2/operator/job"
@@ -207,9 +208,13 @@ func NewExecutor(config job.Config) queue.Executor {
 		return NewPruneExecutor(config)
 	case k8upv1.RestoreType:
 		return NewRestoreExecutor(config)
-	case k8upv1.FallbackType:
+	case citav1.CITABackupType:
+		return NewCITABackupExecutor(config)
+	case citav1.CITARestoreType:
+		return NewCITARestoreExecutor(config)
+	case citav1.FallbackType:
 		return NewBlockHeightFallbackExecutor(config)
-	case k8upv1.SwitchoverType:
+	case citav1.SwitchoverType:
 		return NewSwitchoverExecutor(config)
 	}
 	return nil

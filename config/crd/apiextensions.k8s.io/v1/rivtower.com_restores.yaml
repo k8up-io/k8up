@@ -5,23 +5,32 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.10.0
   creationTimestamp: null
-  name: blockheightfallbacks.k8up.io
+  name: restores.rivtower.com
 spec:
-  group: k8up.io
+  group: rivtower.com
   names:
-    kind: BlockHeightFallback
-    listKind: BlockHeightFallbackList
-    plural: blockheightfallbacks
-    shortNames:
-    - bhf
-    singular: blockheightfallback
+    kind: Restore
+    listKind: RestoreList
+    plural: restores
+    singular: restore
   scope: Namespaced
   versions:
-  - name: v1
+  - additionalPrinterColumns:
+    - description: Reference to Schedule
+      jsonPath: .metadata.ownerReferences[?(@.kind == "Schedule")].name
+      name: Schedule Ref
+      type: string
+    - description: Status of Completion
+      jsonPath: .status.conditions[?(@.type == "Completed")].reason
+      name: Completion
+      type: string
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    name: v1cita
     schema:
       openAPIV3Schema:
-        description: BlockHeightFallback is the Schema for the blockheightfallbacks
-          API
+        description: Restore is the Schema for the restores API
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -36,6 +45,8 @@ spec:
           metadata:
             type: object
           spec:
+            description: RestoreSpec can either contain an S3 restore point or a local
+              one. For the local one you need to define an existing PVC.
             properties:
               activeDeadlineSeconds:
                 description: ActiveDeadlineSeconds specifies the duration in seconds
@@ -339,10 +350,9 @@ spec:
                         type: string
                     type: object
                 type: object
-              blockHeight:
-                description: BlockHeight
-                format: int64
-                type: integer
+              backup:
+                description: Backup
+                type: string
               chain:
                 description: Chain
                 type: string
@@ -522,10 +532,6 @@ spec:
                         type: string
                     type: object
                 type: object
-              promURL:
-                description: PromURL sets a prometheus push URL where the backup container
-                  send metrics to
-                type: string
               resources:
                 description: Resources describes the compute resource requirements
                   (cpu, memory, etc.)
@@ -553,10 +559,73 @@ spec:
                       to an implementation-defined value. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
                     type: object
                 type: object
-              statsURL:
-                description: StatsURL sets an arbitrary URL where the restic container
-                  posts metrics and information about the snapshots to. This is in
-                  addition to the prometheus pushgateway.
+              restoreFilter:
+                type: string
+              restoreMethod:
+                description: RestoreMethod contains how and where the restore should
+                  happen all the settings are mutual exclusive.
+                properties:
+                  folder:
+                    properties:
+                      claimName:
+                        description: 'claimName is the name of a PersistentVolumeClaim
+                          in the same namespace as the pod using this volume. More
+                          info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#persistentvolumeclaims'
+                        type: string
+                      readOnly:
+                        description: readOnly Will force the ReadOnly setting in VolumeMounts.
+                          Default false.
+                        type: boolean
+                    required:
+                    - claimName
+                    type: object
+                  s3:
+                    properties:
+                      accessKeyIDSecretRef:
+                        description: SecretKeySelector selects a key of a Secret.
+                        properties:
+                          key:
+                            description: The key of the secret to select from.  Must
+                              be a valid secret key.
+                            type: string
+                          name:
+                            description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                              TODO: Add other useful fields. apiVersion, kind, uid?'
+                            type: string
+                          optional:
+                            description: Specify whether the Secret or its key must
+                              be defined
+                            type: boolean
+                        required:
+                        - key
+                        type: object
+                        x-kubernetes-map-type: atomic
+                      bucket:
+                        type: string
+                      endpoint:
+                        type: string
+                      secretAccessKeySecretRef:
+                        description: SecretKeySelector selects a key of a Secret.
+                        properties:
+                          key:
+                            description: The key of the secret to select from.  Must
+                              be a valid secret key.
+                            type: string
+                          name:
+                            description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                              TODO: Add other useful fields. apiVersion, kind, uid?'
+                            type: string
+                          optional:
+                            description: Specify whether the Secret or its key must
+                              be defined
+                            type: boolean
+                        required:
+                        - key
+                        type: object
+                        x-kubernetes-map-type: atomic
+                    type: object
+                type: object
+              snapshot:
                 type: string
               successfulJobsHistoryLimit:
                 description: SuccessfulJobsHistoryLimit amount of successful jobs
@@ -568,8 +637,6 @@ spec:
                 items:
                   type: string
                 type: array
-            required:
-            - blockHeight
             type: object
           status:
             description: Status defines the observed state of a generic K8up job.

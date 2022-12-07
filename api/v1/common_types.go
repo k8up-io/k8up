@@ -44,9 +44,6 @@ const (
 	PruneType    JobType = "prune"
 	ScheduleType JobType = "schedule"
 
-	FallbackType   JobType = "fallback"
-	SwitchoverType JobType = "switchover"
-
 	// ConditionCompleted is given when the resource has completed its main function.
 	ConditionCompleted ConditionType = "Completed"
 	// ConditionReady is given when all preconditions are met.

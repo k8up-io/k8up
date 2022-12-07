@@ -1,10 +1,8 @@
 package executor
 
 import (
-	"context"
 	"errors"
 	"fmt"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 	"strconv"
 
 	batchv1 "k8s.io/api/batch/v1"
@@ -22,7 +20,6 @@ const restorePath = "/restore"
 
 type RestoreExecutor struct {
 	generic
-	backup *k8upv1.Backup
 }
 
 // NewRestoreExecutor will return a new executor for Restore jobs.
@@ -49,49 +46,31 @@ func (r *RestoreExecutor) Execute() error {
 		return nil
 	}
 
-	backup := &k8upv1.Backup{}
-	err := r.getObject(restore.Namespace, restore.Spec.Backup, backup)
-	if err != nil {
-		return err
-	}
-	r.backup = backup
+	r.startRestore(restore)
 
-	return r.startRestore(restore)
-
-	//return nil
+	return nil
 }
 
-func (r *RestoreExecutor) startRestore(restore *k8upv1.Restore) error {
-	node := NewCITANode(r.CTX, r.Client, restore.Namespace, restore.Spec.Node)
-	stopped, err := node.Stop()
-	if err != nil {
-		return err
-	}
-	if !stopped {
-		return nil
-	}
-
-	//r.registerRestoreCallback(restore)
-	r.registerCITANodeCallback(restore)
+func (r *RestoreExecutor) startRestore(restore *k8upv1.Restore) {
+	r.registerRestoreCallback(restore)
 	r.RegisterJobSucceededConditionCallback()
 
 	restoreJob, err := r.buildRestoreObject(restore)
 	if err != nil {
 		r.Log.Error(err, "unable to build restore object")
 		r.SetConditionFalseWithMessage(k8upv1.ConditionReady, k8upv1.ReasonCreationFailed, "unable to build restore object: %v", err)
-		return err
+		return
 	}
 
 	if err := r.Client.Create(r.CTX, restoreJob); err != nil {
 		if !apierrors.IsAlreadyExists(err) {
 			r.Log.Error(err, "could not create job")
 			r.SetConditionFalseWithMessage(k8upv1.ConditionReady, k8upv1.ReasonCreationFailed, "could not create job: %v", err)
-			return err
+			return
 		}
 	}
 
 	r.SetStarted("the job '%v/%v' was created", restoreJob.Namespace, restoreJob.Name)
-	return nil
 }
 
 func (r *RestoreExecutor) registerRestoreCallback(restore *k8upv1.Restore) {
@@ -99,19 +78,6 @@ func (r *RestoreExecutor) registerRestoreCallback(restore *k8upv1.Restore) {
 	observer.GetObserver().RegisterCallback(name.String(), func(_ observer.ObservableJob) {
 		r.cleanupOldRestores(name, restore)
 	})
-}
-
-func (r *RestoreExecutor) registerCITANodeCallback(restore *k8upv1.Restore) {
-	name := r.GetJobNamespacedName()
-	observer.GetObserver().RegisterCallback(name.String(), func(_ observer.ObservableJob) {
-		//b.StopPreBackupDeployments()
-		//b.cleanupOldBackups(name)
-		r.startCITANode(r.CTX, r.Client, restore.Namespace, restore.Spec.Node)
-	})
-}
-
-func (r *RestoreExecutor) startCITANode(ctx context.Context, client client.Client, namespace, name string) {
-	NewCITANode(ctx, client, namespace, name).Start()
 }
 
 func (r *RestoreExecutor) cleanupOldRestores(name types.NamespacedName, restore *k8upv1.Restore) {
@@ -158,10 +124,6 @@ func (r *RestoreExecutor) args(restore *k8upv1.Restore) ([]string, error) {
 		args = append(args, "-restoreSnap", restore.Spec.Snapshot)
 	}
 
-	crypto, consensus, err := r.GetCryptoAndConsensus(r.backup.Namespace, r.backup.Spec.Node)
-	if err != nil {
-		return nil, err
-	}
 	switch {
 	case restore.Spec.RestoreMethod.Folder != nil:
 		args = append(args, "-restoreType", "folder")
@@ -169,18 +131,6 @@ func (r *RestoreExecutor) args(restore *k8upv1.Restore) ([]string, error) {
 		args = append(args, "-restoreType", "s3")
 	default:
 		return nil, fmt.Errorf("undefined restore method (-restoreType) on '%v/%v'", restore.Namespace, restore.Name)
-	}
-	switch {
-	case r.backup.Spec.DataType.Full != nil:
-		args = append(args, "-dataType", "full")
-		args = append(args, BuildIncludePathArgs(r.backup.Spec.DataType.Full.IncludePaths)...)
-	case r.backup.Spec.DataType.State != nil:
-		args = append(args, "-dataType", "state")
-		args = append(args, "-blockHeight", strconv.FormatInt(r.backup.Spec.DataType.State.BlockHeight, 10))
-		// todo:
-		args = append(args, "-crypto", crypto)
-		args = append(args, "-consensus", consensus)
-		args = append(args, "-restoreDir", "/state_data")
 	}
 	return args, nil
 }
@@ -204,41 +154,6 @@ func (r *RestoreExecutor) volumeConfig(restore *k8upv1.Restore) ([]corev1.Volume
 			MountPath: restorePath,
 		}
 		mounts = append(mounts, tmpMount)
-	}
-
-	if restore.Spec.Backend.Local != nil {
-		// local pvc backup and local pvc restore
-		volumes = append(volumes, corev1.Volume{
-			Name: "restore-source",
-			VolumeSource: corev1.VolumeSource{
-				PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{
-					ClaimName: restore.Spec.Backup,
-				},
-			},
-		})
-		mounts = append(mounts, corev1.VolumeMount{
-			Name:      "restore-source",
-			ReadOnly:  false,
-			MountPath: restore.Spec.Backend.Local.MountPath,
-		})
-	}
-
-	if r.backup.Spec.DataType.State != nil {
-		// add config.toml volume
-		volumes = append(volumes, corev1.Volume{
-			Name: "cita-config",
-			VolumeSource: corev1.VolumeSource{
-				ConfigMap: &corev1.ConfigMapVolumeSource{
-					LocalObjectReference: corev1.LocalObjectReference{
-						Name: fmt.Sprintf("%s-config", restore.Spec.Node),
-					},
-				},
-			},
-		})
-		mounts = append(mounts, corev1.VolumeMount{
-			Name:      "cita-config",
-			MountPath: "/cita-config",
-			ReadOnly:  true})
 	}
 
 	return volumes, mounts

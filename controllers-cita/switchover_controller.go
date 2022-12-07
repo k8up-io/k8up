@@ -1,18 +1,20 @@
-package controllers
+package controllers_cita
 
 import (
 	"context"
+	"time"
+
 	"github.com/go-logr/logr"
-	k8upv1 "github.com/k8up-io/k8up/v2/api/v1"
-	"github.com/k8up-io/k8up/v2/operator/cfg"
-	"github.com/k8up-io/k8up/v2/operator/handler"
-	"github.com/k8up-io/k8up/v2/operator/job"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
-	"time"
+
+	"github.com/k8up-io/k8up/v2/api/v1cita"
+	"github.com/k8up-io/k8up/v2/operator/cfg"
+	"github.com/k8up-io/k8up/v2/operator/handler"
+	"github.com/k8up-io/k8up/v2/operator/job"
 )
 
 // SwitchoverReconciler reconciles a Switchover object
@@ -22,10 +24,13 @@ type SwitchoverReconciler struct {
 	Scheme *runtime.Scheme
 }
 
+//+kubebuilder:rbac:groups=rivtower.com,resources=switchovers,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=rivtower.com,resources=switchovers/status,verbs=get;update;patch
+
 func (r *SwitchoverReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := r.Log.WithValues("switchover", req.NamespacedName)
 
-	switchover := &k8upv1.Switchover{}
+	switchover := &v1cita.Switchover{}
 	err := r.Get(ctx, req.NamespacedName, switchover)
 	if err != nil {
 		if errors.IsNotFound(err) {
@@ -54,7 +59,7 @@ func (r *SwitchoverReconciler) SetupWithManager(mgr ctrl.Manager, l logr.Logger)
 	r.Scheme = mgr.GetScheme()
 	r.Log = l
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&k8upv1.Switchover{}).
+		For(&v1cita.Switchover{}).
 		WithEventFilter(predicate.GenerationChangedPredicate{}).
 		Complete(r)
 }

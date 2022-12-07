@@ -129,6 +129,7 @@ func run(ctx context.Context, resticCLI *resticCli.Restic, mainLogger logr.Logge
 		}
 		if cfg.Config.DataType == cfg.StateDataType {
 			// execute CITA state recover finally
+			mainLogger.Info("cloud-op", "block height", cfg.Config.BlockHeight, "crypto", cfg.Config.CITACrypto, "consensus", cfg.Config.CITAConsensus)
 			err := resticCLI.DoCITAStateRecover(cfg.Config.BlockHeight,
 				"/restore",
 				"/cita-config",
@@ -138,9 +139,8 @@ func run(ctx context.Context, resticCLI *resticCli.Restic, mainLogger logr.Logge
 			if err != nil {
 				return err
 			}
-		} else {
-			return nil
 		}
+		return nil
 	}
 
 	if cfg.Config.DataType == cfg.StateDataType {
