@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/k8up-io/k8up/v2/operator/jobcontroller"
 	"k8s.io/apimachinery/pkg/api/resource"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 
@@ -119,7 +120,7 @@ func operatorMain(c *cli.Context) error {
 		"Archive":  &controllers.ArchiveReconciler{},
 		"Check":    &controllers.CheckReconciler{},
 		"Prune":    &controllers.PruneReconciler{},
-		"Job":      &controllers.JobReconciler{},
+		"Job":      &jobcontroller.JobReconciler{},
 	} {
 		if err := reconciler.SetupWithManager(mgr, operatorLog.WithName("controllers").WithName(name)); err != nil {
 			operatorLog.Error(err, "unable to initialize operator mode", "step", "controller", "controller", name)

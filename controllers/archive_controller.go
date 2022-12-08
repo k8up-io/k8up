@@ -52,7 +52,7 @@ func (r *ArchiveReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	if archive.Spec.RestoreSpec == nil {
 		archive.Spec.RestoreSpec = &k8upv1.RestoreSpec{}
 	}
-	config := job.NewConfig(ctx, r.Client, log, archive, r.Scheme, repository)
+	config := job.NewConfig(ctx, r.Client, log, archive, repository)
 
 	archiveHandler := handler.NewHandler(config)
 	return ctrl.Result{RequeueAfter: time.Second * 30}, archiveHandler.Handle()

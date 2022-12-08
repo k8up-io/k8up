@@ -58,7 +58,7 @@ func (r *BackupReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 	if backup.Spec.Backend != nil {
 		repository = backup.Spec.Backend.String()
 	}
-	config := job.NewConfig(ctx, r.Client, log, backup, r.Scheme, repository)
+	config := job.NewConfig(ctx, r.Client, log, backup, repository)
 
 	backupHandler := handler.NewHandler(config)
 	return ctrl.Result{RequeueAfter: time.Second * 30}, backupHandler.Handle()

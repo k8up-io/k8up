@@ -30,7 +30,7 @@ type VolumeMountExpectation struct {
 }
 
 func newConfig() *job.Config {
-	cfg := job.NewConfig(context.TODO(), nil, logr.Discard(), &k8upv1.Restore{}, testScheme, "")
+	cfg := job.NewConfig(context.TODO(), nil, logr.Discard(), &k8upv1.Restore{}, "")
 	return &cfg
 }
 

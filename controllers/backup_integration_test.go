@@ -158,7 +158,7 @@ func (ts *BackupTestSuite) Test_GivenCompletedJob_WhenBackupStarted_ThenComplete
 	// Arrange
 	ts.BackupResource = ts.newBackup()
 	ts.BackupResource.UID = uuid.NewUUID()
-	config := job.Config{Scheme: ts.Scheme, Obj: ts.BackupResource, Client: ts.Client, Repository: "s3:/", Log: ts.Logger}
+	config := job.Config{Obj: ts.BackupResource, Client: ts.Client, Repository: "s3:/", Log: ts.Logger}
 	backupJob, err := job.GenerateGenericJob(ts.BackupResource, config)
 	ts.Require().NoError(err)
 	ts.EnsureResources(ts.BackupResource, backupJob)

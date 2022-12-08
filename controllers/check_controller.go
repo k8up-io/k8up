@@ -50,7 +50,7 @@ func (r *CheckReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		repository = check.Spec.Backend.String()
 	}
 
-	config := job.NewConfig(ctx, r.Client, logger, check, r.Scheme, repository)
+	config := job.NewConfig(ctx, r.Client, logger, check, repository)
 
 	checkHandler := handler.NewHandler(config)
 	return ctrl.Result{RequeueAfter: time.Second * 30}, checkHandler.Handle()
