@@ -102,6 +102,22 @@ spec:
         key: password
 ----
 
+=== Restore to PVC as non-root user
+
+For some storage volumes it may be necessary to adjust permissions as non-root user, otherwise the restore could fail due to "permission denied" errors.
+If you encounter such a situation, try setting the following security context in the `Restore` spec:
+
+[source,yaml]
+----
+apiVersion: k8up.io/v1
+kind: Restore
+...
+spec:
+  podSecurityContext:
+    fsGroup: 65532
+    fsGroupChangePolicy: OnRootMismatch
+----
+
 == Manual restore via Restic
 
 To manually restore you’ll need:
