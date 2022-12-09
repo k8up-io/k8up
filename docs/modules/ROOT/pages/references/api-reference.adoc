@@ -23,8 +23,6 @@ TIP: A more sophisticated documentation is available under https://doc.crds.dev/
 - xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-backuplist[$$BackupList$$]
 - xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-check[$$Check$$]
 - xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-checklist[$$CheckList$$]
-- xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-effectiveschedule[$$EffectiveSchedule$$]
-- xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-effectiveschedulelist[$$EffectiveScheduleList$$]
 - xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-prebackuppod[$$PreBackupPod$$]
 - xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-prebackuppodlist[$$PreBackupPodList$$]
 - xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-prune[$$Prune$$]
@@ -333,59 +331,18 @@ CheckSpec defines the desired state of Check. It needs to contain the repository
 [id="{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-effectiveschedule"]
 === EffectiveSchedule 
 
-EffectiveSchedule is the Schema to persist schedules generated from Randomized schedules.
+
 
 .Appears In:
 ****
-- xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-effectiveschedulelist[$$EffectiveScheduleList$$]
+- xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-schedulestatus[$$ScheduleStatus$$]
 ****
 
 [cols="25a,75a", options="header"]
 |===
 | Field | Description
-| *`apiVersion`* __string__ | `k8up.io/v1`
-| *`kind`* __string__ | `EffectiveSchedule`
-| *`metadata`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#objectmeta-v1-meta[$$ObjectMeta$$]__ | Refer to Kubernetes API documentation for fields of `metadata`.
-
-| *`spec`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-effectiveschedulespec[$$EffectiveScheduleSpec$$]__ | 
-|===
-
-
-[id="{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-effectiveschedulelist"]
-=== EffectiveScheduleList 
-
-EffectiveScheduleList contains a list of EffectiveSchedule
-
-
-
-[cols="25a,75a", options="header"]
-|===
-| Field | Description
-| *`apiVersion`* __string__ | `k8up.io/v1`
-| *`kind`* __string__ | `EffectiveScheduleList`
-| *`metadata`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#listmeta-v1-meta[$$ListMeta$$]__ | Refer to Kubernetes API documentation for fields of `metadata`.
-
-| *`items`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-effectiveschedule[$$EffectiveSchedule$$] array__ | 
-|===
-
-
-[id="{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-effectiveschedulespec"]
-=== EffectiveScheduleSpec 
-
-EffectiveScheduleSpec defines the desired state of EffectiveSchedule
-
-.Appears In:
-****
-- xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-effectiveschedule[$$EffectiveSchedule$$]
-****
-
-[cols="25a,75a", options="header"]
-|===
-| Field | Description
-| *`generatedSchedule`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-scheduledefinition[$$ScheduleDefinition$$]__ | GeneratedSchedule is the effective schedule that is added to Cron
-| *`originalSchedule`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-scheduledefinition[$$ScheduleDefinition$$]__ | OriginalSchedule is the original user-defined schedule definition in the Schedule object.
-| *`jobType`* __JobType__ | JobType defines to which job type this schedule applies
-| *`scheduleRefs`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-scheduleref[$$ScheduleRef$$] array__ | ScheduleRefs holds a list of schedules for which the generated schedule applies to. The list may omit entries that aren't generated from smart schedules.
+| *`jobType`* __JobType__ | 
+| *`generatedSchedule`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-scheduledefinition[$$ScheduleDefinition$$]__ | 
 |===
 
 
@@ -834,7 +791,7 @@ ScheduleDefinition is the actual cron-type expression that defines the interval 
 
 .Appears In:
 ****
-- xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-effectiveschedulespec[$$EffectiveScheduleSpec$$]
+- xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-effectiveschedule[$$EffectiveSchedule$$]
 - xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-schedulecommon[$$ScheduleCommon$$]
 ****
 
@@ -855,24 +812,6 @@ ScheduleList contains a list of Schedule
 | *`metadata`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#listmeta-v1-meta[$$ListMeta$$]__ | Refer to Kubernetes API documentation for fields of `metadata`.
 
 | *`items`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-schedule[$$Schedule$$] array__ | 
-|===
-
-
-[id="{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-scheduleref"]
-=== ScheduleRef 
-
-ScheduleRef represents a reference to a Schedule resource
-
-.Appears In:
-****
-- xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-effectiveschedulespec[$$EffectiveScheduleSpec$$]
-****
-
-[cols="25a,75a", options="header"]
-|===
-| Field | Description
-| *`name`* __string__ | 
-| *`namespace`* __string__ | 
 |===
 
 

@@ -83,6 +83,13 @@ type ScheduleStatus struct {
 	// They are an extension mechanism which allows tools and other controllers to collect summary information about
 	// resources without needing to understand resource-specific status details.
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
+	// EffectiveSchedules contains a list of schedules generated from randomizing schedules.
+	EffectiveSchedules []EffectiveSchedule `json:"effectiveSchedules,omitempty"`
+}
+
+type EffectiveSchedule struct {
+	JobType           JobType            `json:"jobType,omitempty"`
+	GeneratedSchedule ScheduleDefinition `json:"generatedSchedule,omitempty"`
 }
 
 // +kubebuilder:object:root=true
@@ -195,9 +202,4 @@ func (s ScheduleDefinition) IsNonStandard() bool {
 // Two examples are '@daily-random' and '@weekly-random'.
 func (s ScheduleDefinition) IsRandom() bool {
 	return s.IsNonStandard() && strings.HasSuffix(string(s), "-random")
-}
-
-// IsReferencedBy returns true if the given ref matches the schedule's name and namespace.
-func (s *Schedule) IsReferencedBy(ref ScheduleRef) bool {
-	return ref.Namespace == s.Namespace && ref.Name == s.Name
 }

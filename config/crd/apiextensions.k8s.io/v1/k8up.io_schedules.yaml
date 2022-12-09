@@ -3494,6 +3494,20 @@ spec:
                   - type
                   type: object
                 type: array
+              effectiveSchedules:
+                description: EffectiveSchedules contains a list of schedules generated
+                  from randomizing schedules.
+                items:
+                  properties:
+                    generatedSchedule:
+                      description: ScheduleDefinition is the actual cron-type expression
+                        that defines the interval of the actions.
+                      type: string
+                    jobType:
+                      description: JobType defines what job type this is.
+                      type: string
+                  type: object
+                type: array
             type: object
         type: object
     served: true
