@@ -13,7 +13,7 @@ restore_dir ?= $(integrationtest_dir)/restore
 
 stats_url ?= http://localhost:8091
 
-restic_version ?= 0.12.1
+restic_version ?= $(shell go mod edit -json | jq -r '.Require[] | select(.Path == "github.com/restic/restic").Version' | sed "s/v//")
 restic_path ?= $(go_bin)/restic
 restic_pid ?= $(integrationtest_dir)/restic.pid
 restic_url ?= https://github.com/restic/restic/releases/download/v$(restic_version)/restic_$(restic_version)_$(os)_$(arch).bz2
