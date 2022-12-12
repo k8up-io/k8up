@@ -260,4 +260,86 @@ rules:
       - delete
       - get
       - list
+  - apiGroups:
+      - rivtower.com
+    resources:
+      - backups
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - rivtower.com
+    resources:
+      - backups/finalizers
+      - backups/status
+    verbs:
+      - get
+      - patch
+      - update
+  - apiGroups:
+      - rivtower.com
+    resources:
+      - blockheightfallbacks
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - rivtower.com
+    resources:
+      - blockheightfallbacks/status
+    verbs:
+      - get
+      - patch
+      - update
+  - apiGroups:
+      - rivtower.com
+    resources:
+      - restores
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - rivtower.com
+    resources:
+      - restores/finalizers
+      - restores/status
+    verbs:
+      - get
+      - patch
+      - update
+  - apiGroups:
+      - rivtower.com
+    resources:
+      - switchovers
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - rivtower.com
+    resources:
+      - switchovers/status
+    verbs:
+      - get
+      - patch
+      - update
 {{- end -}}
