@@ -4,6 +4,7 @@ on:
   push:
     branches:
     - master
+    - master-cita
 
 jobs:
   dist:
@@ -33,19 +34,19 @@ jobs:
     - name: Build docker images
       run: make docker-build -e IMG_TAG=${GITHUB_REF#refs/heads/}
 
-    - name: Login to quay.io
-      uses: docker/login-action@v2
-      with:
-        registry: quay.io
-        username: ${{ secrets.QUAY_IO_USERNAME }}
-        password: ${{ secrets.QUAY_IO_PASSWORD }}
-
-    - name: Login to GHCR
-      uses: docker/login-action@v2
-      with:
-        registry: ghcr.io
-        username: ${{ github.repository_owner }}
-        password: ${{ secrets.GITHUB_TOKEN }}
-
-    - name: Push docker images
-      run: make docker-push -e IMG_TAG=${GITHUB_REF#refs/heads/}
+#    - name: Login to quay.io
+#      uses: docker/login-action@v2
+#      with:
+#        registry: quay.io
+#        username: ${{ secrets.QUAY_IO_USERNAME }}
+#        password: ${{ secrets.QUAY_IO_PASSWORD }}
+#
+#    - name: Login to GHCR
+#      uses: docker/login-action@v2
+#      with:
+#        registry: ghcr.io
+#        username: ${{ github.repository_owner }}
+#        password: ${{ secrets.GITHUB_TOKEN }}
+#
+#    - name: Push docker images
+#      run: make docker-push -e IMG_TAG=${GITHUB_REF#refs/heads/}
