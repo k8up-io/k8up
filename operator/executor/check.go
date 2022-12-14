@@ -90,9 +90,9 @@ func (c *CheckExecutor) setupEnvVars() []corev1.EnvVar {
 
 	vars.SetString("PROM_URL", cfg.Config.PromURL)
 
-	err := vars.Merge(DefaultEnv(c.Obj.GetMetaObject().GetNamespace()))
+	err := vars.Merge(DefaultEnv(c.Obj.GetNamespace()))
 	if err != nil {
-		c.Log.Error(err, "error while merging the environment variables", "name", c.Obj.GetMetaObject().GetName(), "namespace", c.Obj.GetMetaObject().GetNamespace())
+		c.Log.Error(err, "error while merging the environment variables", "name", c.Obj.GetName(), "namespace", c.Obj.GetNamespace())
 	}
 
 	return vars.Convert()

@@ -108,10 +108,10 @@ func (s *ScheduleHandler) mergeResourcesWithDefaults(specInstance *k8upv1.Runnab
 	resources := &specInstance.Resources
 
 	if err := mergo.Merge(resources, s.schedule.Spec.ResourceRequirementsTemplate); err != nil {
-		s.Log.Info("could not merge specific resources with schedule defaults", "err", err.Error(), "schedule", s.Obj.GetMetaObject().GetName(), "namespace", s.Obj.GetMetaObject().GetNamespace())
+		s.Log.Info("could not merge specific resources with schedule defaults", "err", err.Error(), "schedule", s.Obj.GetName(), "namespace", s.Obj.GetNamespace())
 	}
 	if err := mergo.Merge(resources, cfg.Config.GetGlobalDefaultResources()); err != nil {
-		s.Log.Info("could not merge specific resources with global defaults", "err", err.Error(), "schedule", s.Obj.GetMetaObject().GetName(), "namespace", s.Obj.GetMetaObject().GetNamespace())
+		s.Log.Info("could not merge specific resources with global defaults", "err", err.Error(), "schedule", s.Obj.GetName(), "namespace", s.Obj.GetNamespace())
 	}
 }
 
@@ -122,7 +122,7 @@ func (s *ScheduleHandler) mergeBackendWithDefaults(specInstance *k8upv1.Runnable
 	}
 
 	if err := mergo.Merge(specInstance.Backend, s.schedule.Spec.Backend); err != nil {
-		s.Log.Info("could not merge the schedule's backend with the resource's backend", "err", err.Error(), "schedule", s.Obj.GetMetaObject().GetName(), "namespace", s.Obj.GetMetaObject().GetNamespace())
+		s.Log.Info("could not merge the schedule's backend with the resource's backend", "err", err.Error(), "schedule", s.Obj.GetName(), "namespace", s.Obj.GetNamespace())
 	}
 }
 
@@ -136,7 +136,7 @@ func (s *ScheduleHandler) mergeSecurityContextWithDefaults(specInstance *k8upv1.
 	}
 
 	if err := mergo.Merge(specInstance.PodSecurityContext, s.schedule.Spec.PodSecurityContext); err != nil {
-		s.Log.Info("could not merge the schedule's security context with the resource's security context", "err", err.Error(), "schedule", s.Obj.GetMetaObject().GetName(), "namespace", s.Obj.GetMetaObject().GetNamespace())
+		s.Log.Info("could not merge the schedule's security context with the resource's security context", "err", err.Error(), "schedule", s.Obj.GetName(), "namespace", s.Obj.GetNamespace())
 	}
 }
 

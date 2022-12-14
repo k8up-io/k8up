@@ -108,11 +108,11 @@ func (g *generic) GetRepository() string {
 }
 
 func (g *generic) GetJobNamespace() string {
-	return g.Obj.GetMetaObject().GetNamespace()
+	return g.Obj.GetNamespace()
 }
 
 func (g *generic) GetJobNamespacedName() types.NamespacedName {
-	return types.NamespacedName{Namespace: g.Obj.GetMetaObject().GetNamespace(), Name: g.Obj.GetJobName()}
+	return types.NamespacedName{Namespace: g.Obj.GetNamespace(), Name: g.Obj.GetJobName()}
 }
 
 func (g *generic) GetJobType() k8upv1.JobType {

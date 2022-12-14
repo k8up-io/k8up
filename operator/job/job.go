@@ -53,7 +53,7 @@ func GenerateGenericJob(obj k8upv1.JobObject, config Config) (*batchv1.Job, erro
 	job := &batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      obj.GetJobName(),
-			Namespace: obj.GetMetaObject().GetNamespace(),
+			Namespace: obj.GetNamespace(),
 			Labels: map[string]string{
 				K8uplabel:            "true",
 				k8upv1.LabelK8upType: obj.GetType().String(),
@@ -83,7 +83,7 @@ func GenerateGenericJob(obj k8upv1.JobObject, config Config) (*batchv1.Job, erro
 		},
 	}
 
-	err := ctrl.SetControllerReference(obj.GetMetaObject(), job, config.Scheme)
+	err := ctrl.SetControllerReference(obj, job, config.Client.Scheme())
 
 	return job, err
 }

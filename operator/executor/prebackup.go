@@ -82,7 +82,7 @@ func (b *BackupExecutor) allDeploymentsAreReady(deployments []*appsv1.Deployment
 func (b *BackupExecutor) StopPreBackupDeployments() {
 	templates, err := b.fetchPreBackupPodTemplates()
 	if err != nil {
-		b.Log.Error(err, "could not fetch pod templates", "name", b.Obj.GetMetaObject().GetName(), "namespace", b.Obj.GetMetaObject().GetNamespace())
+		b.Log.Error(err, "could not fetch pod templates", "name", b.Obj.GetName(), "namespace", b.Obj.GetNamespace())
 		b.SetConditionFalseWithMessage(k8upv1.ConditionPreBackupPodReady, k8upv1.ReasonRetrievalFailed, "could not fetch pod templates: %v", err)
 		return
 	}
@@ -111,7 +111,7 @@ func (b *BackupExecutor) deletePreBackupDeployment(deployment *appsv1.Deployment
 		PropagationPolicy: &option,
 	})
 	if err != nil && !errors.IsNotFound(err) {
-		b.Log.Error(err, "could not delete deployment", "name", b.Obj.GetMetaObject().GetName(), "namespace", b.Obj.GetMetaObject().GetNamespace())
+		b.Log.Error(err, "could not delete deployment", "name", b.Obj.GetName(), "namespace", b.Obj.GetNamespace())
 		b.SetConditionFalseWithMessage(k8upv1.ConditionPreBackupPodReady, k8upv1.ReasonDeletionFailed, "could not delete deployment: %v", err.Error())
 	}
 }

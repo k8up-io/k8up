@@ -119,9 +119,9 @@ func (a *ArchiveExecutor) setupEnvVars(archive *k8upv1.Archive) []corev1.EnvVar 
 		}
 	}
 
-	err := vars.Merge(DefaultEnv(a.Obj.GetMetaObject().GetNamespace()))
+	err := vars.Merge(DefaultEnv(a.Obj.GetNamespace()))
 	if err != nil {
-		a.Log.Error(err, "error while merging the environment variables", "name", a.Obj.GetMetaObject().GetName(), "namespace", a.Obj.GetMetaObject().GetNamespace())
+		a.Log.Error(err, "error while merging the environment variables", "name", a.Obj.GetName(), "namespace", a.Obj.GetNamespace())
 	}
 
 	return vars.Convert()

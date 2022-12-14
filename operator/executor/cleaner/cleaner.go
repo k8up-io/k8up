@@ -57,7 +57,7 @@ func (c *ObjectCleaner) cleanOldObjects(ctx context.Context, jobObjects k8upv1.J
 	sort.Sort(jobObjects)
 	for i := 0; i < numToDelete; i++ {
 		if err := c.deleteJob(ctx, jobObjects[i]); err != nil {
-			c.Log.Error(err, "could not delete old job", "namespace", jobObjects[i].GetMetaObject().GetNamespace())
+			c.Log.Error(err, "could not delete old job", "namespace", jobObjects[i].GetNamespace())
 			return i, fmt.Errorf("could not delete old %s: %w", jobObjects[i].GetType(), err)
 		}
 	}
@@ -66,11 +66,11 @@ func (c *ObjectCleaner) cleanOldObjects(ctx context.Context, jobObjects k8upv1.J
 }
 
 func (c *ObjectCleaner) deleteJob(ctx context.Context, job k8upv1.JobObject) error {
-	name := job.GetMetaObject().GetName()
-	ns := job.GetMetaObject().GetNamespace()
+	name := job.GetName()
+	ns := job.GetNamespace()
 	c.Log.Info("cleaning old job", "namespace", ns, "name", name)
 	option := metav1.DeletePropagationForeground
-	err := c.Client.Delete(ctx, job.GetRuntimeObject().(client.Object), &client.DeleteOptions{
+	err := c.Client.Delete(ctx, job, &client.DeleteOptions{
 		PropagationPolicy: &option,
 	})
 	if err != nil && !errors.IsNotFound(err) {

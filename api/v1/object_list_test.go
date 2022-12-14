@@ -75,8 +75,8 @@ func TestGetObjectList(t *testing.T) {
 			name1 := "obj1"
 			name2 := "obj2"
 			list := tC.createList(name1, name2).GetJobObjects()
-			assert.Equal(t, name1, list[0].GetMetaObject().GetName())
-			assert.Equal(t, name2, list[1].GetMetaObject().GetName())
+			assert.Equal(t, name1, list[0].GetName())
+			assert.Equal(t, name2, list[1].GetName())
 		})
 	}
 }
