@@ -83,8 +83,8 @@ func newScheduler() *Scheduler {
 // SyncSchedules will add the given schedule to the running cron.
 func (s *Scheduler) SyncSchedules(jobs JobList) error {
 	namespacedName := types.NamespacedName{
-		Name:      jobs.Config.Obj.GetMetaObject().GetName(),
-		Namespace: jobs.Config.Obj.GetMetaObject().GetNamespace(),
+		Name:      jobs.Config.Obj.GetName(),
+		Namespace: jobs.Config.Obj.GetNamespace(),
 	}
 
 	s.RemoveSchedules(namespacedName)
@@ -164,7 +164,7 @@ func (s *Scheduler) RemoveSchedules(namespacedName types.NamespacedName) {
 
 func (s *Scheduler) createObject(jobType k8upv1.JobType, namespace string, obj k8upv1.ObjectCreator, config job.Config) {
 
-	name := generateName(jobType, config.Obj.GetMetaObject().GetName())
+	name := generateName(jobType, config.Obj.GetName())
 
 	rtObj := obj.CreateObject(name, namespace)
 
@@ -174,9 +174,9 @@ func (s *Scheduler) createObject(jobType k8upv1.JobType, namespace string, obj k
 		return
 	}
 
-	err := controllerutil.SetOwnerReference(config.Obj.GetMetaObject(), jobObject.GetMetaObject(), config.Scheme)
+	err := controllerutil.SetOwnerReference(config.Obj, jobObject, config.Client.Scheme())
 	if err != nil {
-		config.Log.Error(err, "cannot set owner on object", "name", jobObject.GetMetaObject().GetName())
+		config.Log.Error(err, "cannot set owner on object", "name", jobObject.GetName())
 	}
 
 	err = config.Client.Create(config.CTX, rtObj.(client.Object))

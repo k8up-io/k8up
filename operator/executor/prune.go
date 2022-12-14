@@ -136,9 +136,9 @@ func (p *PruneExecutor) setupEnvVars(prune *k8upv1.Prune) []corev1.EnvVar {
 
 	vars.SetString("PROM_URL", cfg.Config.PromURL)
 
-	err := vars.Merge(DefaultEnv(p.Obj.GetMetaObject().GetNamespace()))
+	err := vars.Merge(DefaultEnv(p.Obj.GetNamespace()))
 	if err != nil {
-		p.Log.Error(err, "error while merging the environment variables", "name", p.Obj.GetMetaObject().GetName(), "namespace", p.Obj.GetMetaObject().GetNamespace())
+		p.Log.Error(err, "error while merging the environment variables", "name", p.Obj.GetName(), "namespace", p.Obj.GetNamespace())
 	}
 
 	return vars.Convert()

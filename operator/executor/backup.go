@@ -65,7 +65,7 @@ func (b *BackupExecutor) listAndFilterPVCs(annotation string) ([]corev1.Volume, 
 	volumes := make([]corev1.Volume, 0)
 	claimlist := &corev1.PersistentVolumeClaimList{}
 
-	b.Log.Info("Listing all PVCs", "annotation", annotation, "namespace", b.Obj.GetMetaObject().GetNamespace())
+	b.Log.Info("Listing all PVCs", "annotation", annotation, "namespace", b.Obj.GetNamespace())
 	if err := b.fetchPVCs(claimlist); err != nil {
 		return volumes, err
 	}

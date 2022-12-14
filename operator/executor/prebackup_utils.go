@@ -20,7 +20,7 @@ import (
 func (b *BackupExecutor) fetchPreBackupPodTemplates() (*k8upv1.PreBackupPodList, error) {
 	podList := &k8upv1.PreBackupPodList{}
 
-	err := b.Client.List(b.CTX, podList, client.InNamespace(b.Obj.GetMetaObject().GetNamespace()))
+	err := b.Client.List(b.CTX, podList, client.InNamespace(b.Obj.GetNamespace()))
 	if err != nil {
 		return nil, fmt.Errorf("could not list pod templates: %w", err)
 	}
@@ -49,7 +49,7 @@ func (b *BackupExecutor) generateDeployments(templates []k8upv1.PreBackupPod) []
 		deployment := &appsv1.Deployment{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      template.GetName(),
-				Namespace: b.Obj.GetMetaObject().GetNamespace(),
+				Namespace: b.Obj.GetNamespace(),
 				Labels: labels.Set{
 					"k8up.io/preBackupPod": template.Name,
 				},
@@ -63,9 +63,9 @@ func (b *BackupExecutor) generateDeployments(templates []k8upv1.PreBackupPod) []
 			},
 		}
 
-		err := controllerutil.SetOwnerReference(b.Config.Obj.GetMetaObject(), deployment, b.Scheme)
+		err := controllerutil.SetOwnerReference(b.Config.Obj, deployment, b.Client.Scheme())
 		if err != nil {
-			b.Config.Log.Error(err, "cannot set the owner reference", "name", b.Config.Obj.GetMetaObject().GetName(), "namespace", b.Config.Obj.GetMetaObject().GetNamespace())
+			b.Config.Log.Error(err, "cannot set the owner reference", "name", b.Config.Obj.GetName(), "namespace", b.Config.Obj.GetNamespace())
 		}
 
 		deployments = append(deployments, deployment)

@@ -123,9 +123,9 @@ func (b *BackupExecutor) setupEnvVars() []corev1.EnvVar {
 	vars.SetString("BACKUPCOMMAND_ANNOTATION", cfg.Config.BackupCommandAnnotation)
 	vars.SetString("FILEEXTENSION_ANNOTATION", cfg.Config.FileExtensionAnnotation)
 
-	err := vars.Merge(DefaultEnv(b.Obj.GetMetaObject().GetNamespace()))
+	err := vars.Merge(DefaultEnv(b.Obj.GetNamespace()))
 	if err != nil {
-		b.Log.Error(err, "error while merging the environment variables", "name", b.Obj.GetMetaObject().GetName(), "namespace", b.Obj.GetMetaObject().GetNamespace())
+		b.Log.Error(err, "error while merging the environment variables", "name", b.Obj.GetName(), "namespace", b.Obj.GetNamespace())
 	}
 
 	return vars.Convert()

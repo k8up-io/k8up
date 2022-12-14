@@ -182,9 +182,9 @@ func (r *RestoreExecutor) setupEnvVars(restore *k8upv1.Restore) []corev1.EnvVar 
 		vars.SetString(cfg.ResticRepositoryEnvName, restore.Spec.Backend.String())
 	}
 
-	err := vars.Merge(DefaultEnv(r.Obj.GetMetaObject().GetNamespace()))
+	err := vars.Merge(DefaultEnv(r.Obj.GetNamespace()))
 	if err != nil {
-		r.Log.Error(err, "error while merging the environment variables", "name", r.Obj.GetMetaObject().GetName(), "namespace", r.Obj.GetMetaObject().GetNamespace())
+		r.Log.Error(err, "error while merging the environment variables", "name", r.Obj.GetName(), "namespace", r.Obj.GetNamespace())
 	}
 
 	return vars.Convert()
