@@ -1,7 +1,7 @@
 package executor
 
 import (
-	stderrors "errors"
+	"fmt"
 	"strconv"
 
 	batchv1 "k8s.io/api/batch/v1"
@@ -37,13 +37,20 @@ func (b *BackupExecutor) GetConcurrencyLimit() int {
 func (b *BackupExecutor) Execute() error {
 	backupObject, ok := b.Obj.(*k8upv1.Backup)
 	if !ok {
-		return stderrors.New("object is not a backup")
+		return fmt.Errorf("object is not a backup: %v", b.Obj)
 	}
 	b.backup = backupObject
+	status := backupObject.Status
 
-	if b.Obj.GetStatus().Started {
-		b.RegisterJobSucceededConditionCallback() // ensure that completed jobs can complete backups between operator restarts.
+	if status.HasFailed() || status.HasSucceeded() {
+		name := b.GetJobNamespacedName()
+		b.StopPreBackupDeployments()
+		b.cleanupOldBackups(name)
 		return nil
+	}
+
+	if status.HasStarted() {
+		return nil // nothing to do, wait until finished
 	}
 
 	err := b.createServiceAccountAndBinding()
@@ -114,9 +121,6 @@ func (b *BackupExecutor) startBackup(backupJob *batchv1.Job) error {
 		return nil
 	}
 
-	b.registerBackupCallback()
-	b.RegisterJobSucceededConditionCallback()
-
 	volumes, err := b.listAndFilterPVCs(cfg.Config.BackupAnnotation)
 	if err != nil {
 		b.SetConditionFalseWithMessage(k8upv1.ConditionReady, k8upv1.ReasonRetrievalFailed, err.Error())
@@ -130,11 +134,7 @@ func (b *BackupExecutor) startBackup(backupJob *batchv1.Job) error {
 	backupJob.Spec.Template.Spec.Containers[0].VolumeMounts = b.newVolumeMounts(volumes)
 	backupJob.Spec.Template.Spec.Containers[0].Args = BuildTagArgs(b.backup.Spec.Tags)
 
-	if err = b.CreateObjectIfNotExisting(backupJob); err == nil {
-		b.SetStarted("the job '%v/%v' was created", backupJob.Namespace, backupJob.Name)
-	}
-	return err
-
+	return b.CreateObjectIfNotExisting(backupJob)
 }
 
 func (b *BackupExecutor) cleanupOldBackups(name types.NamespacedName) {

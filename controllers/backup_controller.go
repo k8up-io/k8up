@@ -6,6 +6,7 @@ import (
 
 	"github.com/go-logr/logr"
 	"k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -50,8 +51,12 @@ func (r *BackupReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 		return ctrl.Result{}, err
 	}
 
-	if backup.Status.HasFinished() {
-		return ctrl.Result{}, nil
+	prebackupCond := meta.FindStatusCondition(backup.Status.Conditions, k8upv1.ConditionPreBackupPodReady.String())
+	if backup.Status.HasFinished() && prebackupCond != nil {
+		if prebackupCond.Reason == k8upv1.ReasonFinished.String() || prebackupCond.Reason == k8upv1.ReasonFailed.String() {
+			// only ignore future reconciles if we have stopped all prebackup deployments in an earlier reconciliation.
+			return ctrl.Result{}, nil
+		}
 	}
 
 	repository := cfg.Config.GetGlobalRepository()
