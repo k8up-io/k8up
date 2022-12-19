@@ -18,13 +18,13 @@ const archivePath = "/archive"
 
 // ArchiveExecutor will execute the batch.job for archive.
 type ArchiveExecutor struct {
-	generic
+	Generic
 }
 
 // NewArchiveExecutor will return a new executor for archive jobs.
 func NewArchiveExecutor(config job.Config) *ArchiveExecutor {
 	return &ArchiveExecutor{
-		generic: generic{config},
+		Generic: Generic{config},
 	}
 }
 
@@ -128,5 +128,5 @@ func (a *ArchiveExecutor) setupEnvVars(archive *k8upv1.Archive) []corev1.EnvVar 
 }
 
 func (a *ArchiveExecutor) cleanupOldArchives(name types.NamespacedName, archive *k8upv1.Archive) {
-	a.cleanupOldResources(&k8upv1.ArchiveList{}, name, archive)
+	a.CleanupOldResources(&k8upv1.ArchiveList{}, name, archive)
 }

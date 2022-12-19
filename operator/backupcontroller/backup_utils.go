@@ -1,15 +1,15 @@
-package executor
+package backupcontroller
 
 import (
 	"path"
 
+	"github.com/k8up-io/k8up/v2/operator/executor"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/k8up-io/k8up/v2/operator/cfg"
-	"github.com/k8up-io/k8up/v2/operator/observer"
 )
 
 func (b *BackupExecutor) fetchPVCs(list client.ObjectList) error {
@@ -35,14 +35,6 @@ func containsAccessMode(s []corev1.PersistentVolumeAccessMode, e string) bool {
 		}
 	}
 	return false
-}
-
-func (b *BackupExecutor) registerBackupCallback() {
-	name := b.GetJobNamespacedName()
-	observer.GetObserver().RegisterCallback(name.String(), func(_ observer.ObservableJob) {
-		b.StopPreBackupDeployments()
-		b.cleanupOldBackups(name)
-	})
 }
 
 func (b *BackupExecutor) createServiceAccountAndBinding() error {
@@ -107,7 +99,7 @@ func newServiceAccountDefinition(namespace string) (rbacv1.Role, corev1.ServiceA
 }
 
 func (b *BackupExecutor) setupEnvVars() []corev1.EnvVar {
-	vars := NewEnvVarConverter()
+	vars := executor.NewEnvVarConverter()
 
 	if b.backup != nil {
 		if b.backup.Spec.Backend != nil {
@@ -123,7 +115,7 @@ func (b *BackupExecutor) setupEnvVars() []corev1.EnvVar {
 	vars.SetString("BACKUPCOMMAND_ANNOTATION", cfg.Config.BackupCommandAnnotation)
 	vars.SetString("FILEEXTENSION_ANNOTATION", cfg.Config.FileExtensionAnnotation)
 
-	err := vars.Merge(DefaultEnv(b.Obj.GetNamespace()))
+	err := vars.Merge(executor.DefaultEnv(b.Obj.GetNamespace()))
 	if err != nil {
 		b.Log.Error(err, "error while merging the environment variables", "name", b.Obj.GetName(), "namespace", b.Obj.GetNamespace())
 	}

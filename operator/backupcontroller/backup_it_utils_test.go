@@ -1,6 +1,6 @@
 //go:build integration
 
-package controllers_test
+package backupcontroller
 
 import (
 	"context"

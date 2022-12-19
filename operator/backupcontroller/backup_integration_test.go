@@ -1,6 +1,6 @@
 //go:build integration
 
-package controllers_test
+package backupcontroller
 
 import (
 	"context"
@@ -8,7 +8,6 @@ import (
 	"time"
 
 	k8upv1 "github.com/k8up-io/k8up/v2/api/v1"
-	"github.com/k8up-io/k8up/v2/controllers"
 	"github.com/k8up-io/k8up/v2/envtest"
 	"github.com/stretchr/testify/suite"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -21,7 +20,7 @@ type BackupTestSuite struct {
 	PreBackupPodName string
 	CancelCtx        context.CancelFunc
 	BackupResource   *k8upv1.Backup
-	Controller       controllers.BackupReconciler
+	Controller       BackupReconciler
 }
 
 func Test_Backup(t *testing.T) {
@@ -29,10 +28,8 @@ func Test_Backup(t *testing.T) {
 }
 
 func (ts *BackupTestSuite) BeforeTest(_, _ string) {
-	ts.Controller = controllers.BackupReconciler{
-		Client: ts.Client,
-		Log:    ts.Logger,
-		Scheme: ts.Scheme,
+	ts.Controller = BackupReconciler{
+		Kube: ts.Client,
 	}
 	ts.PreBackupPodName = "pre-backup-pod"
 	ts.Ctx, ts.CancelCtx = context.WithCancel(context.Background())

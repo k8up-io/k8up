@@ -1,9 +1,10 @@
-package executor
+package backupcontroller
 
 import (
 	"fmt"
 	"strconv"
 
+	"github.com/k8up-io/k8up/v2/operator/executor"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -16,14 +17,14 @@ import (
 // BackupExecutor creates a batch.job object on the cluster. It merges all the
 // information provided by defaults and the CRDs to ensure the backup has all information to run.
 type BackupExecutor struct {
-	generic
+	executor.Generic
 	backup *k8upv1.Backup
 }
 
 // NewBackupExecutor returns a new BackupExecutor.
 func NewBackupExecutor(config job.Config) *BackupExecutor {
 	return &BackupExecutor{
-		generic: generic{config},
+		Generic: executor.Generic{Config: config},
 	}
 }
 
@@ -132,11 +133,11 @@ func (b *BackupExecutor) startBackup(backupJob *batchv1.Job) error {
 	backupJob.Spec.Template.Spec.Volumes = volumes
 	backupJob.Spec.Template.Spec.ServiceAccountName = cfg.Config.ServiceAccount
 	backupJob.Spec.Template.Spec.Containers[0].VolumeMounts = b.newVolumeMounts(volumes)
-	backupJob.Spec.Template.Spec.Containers[0].Args = BuildTagArgs(b.backup.Spec.Tags)
+	backupJob.Spec.Template.Spec.Containers[0].Args = executor.BuildTagArgs(b.backup.Spec.Tags)
 
 	return b.CreateObjectIfNotExisting(backupJob)
 }
 
 func (b *BackupExecutor) cleanupOldBackups(name types.NamespacedName) {
-	b.cleanupOldResources(&k8upv1.BackupList{}, name, b.backup)
+	b.CleanupOldResources(&k8upv1.BackupList{}, name, b.backup)
 }
