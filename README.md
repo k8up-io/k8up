@@ -1,7 +1,6 @@
 [![Build](https://img.shields.io/github/workflow/status/k8up-io/k8up/Test)][build]
 ![Go version](https://img.shields.io/github/go-mod/go-version/k8up-io/k8up)
 [![Version](https://img.shields.io/github/v/release/k8up-io/k8up)][releases]
-[![Maintainability](https://img.shields.io/codeclimate/maintainability/k8up-io/k8up)][codeclimate]
 [![GitHub downloads](https://img.shields.io/github/downloads/k8up-io/k8up/total)][releases]
 [![License](https://img.shields.io/github/license/k8up-io/k8up)][license]
 [![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/5388/badge)](https://bestpractices.coreinfrastructure.org/projects/5388)
@@ -138,4 +137,3 @@ Apply them using `kubectl apply -f config/samples/somesample.yaml`
 [releases]: https://github.com/k8up-io/k8up/releases
 [license]: https://github.com/k8up-io/k8up/blob/master/LICENSE
 [detik]: https://github.com/bats-core/bats-detik
-[codeclimate]: https://codeclimate.com/github/k8up-io/k8up
