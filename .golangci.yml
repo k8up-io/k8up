@@ -1,0 +1,8 @@
+issues:
+  exclude-rules:
+    - linters:
+        - staticcheck
+      text: "k8upv1.LegacyLabelK8upType is deprecated: LegacyLabelK8upType is the former label key that identified the job type"
+    - linters:
+        - staticcheck
+      text: "k8upv1.LegacyScheduleFinalizerName is deprecated: Migrate to ScheduleFinalizerName"

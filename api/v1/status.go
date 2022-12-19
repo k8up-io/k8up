@@ -115,15 +115,11 @@ func (in *Status) SetFinished(message string) {
 }
 
 func isPreBackupFailed(condition metav1.Condition) bool {
-	if matchAnyReason(condition,
+	return !matchAnyReason(condition,
 		ReasonSucceeded,
 		ReasonWaiting,
 		ReasonNoPreBackupPodsFound,
-		ReasonReady) {
-		return false
-	}
-	// All other reasons are failures
-	return true
+		ReasonReady)
 }
 
 func matchAnyReason(condition metav1.Condition, reasons ...ConditionReason) bool {

@@ -16,7 +16,7 @@ import (
 const (
 	jobFinalizerName string = "k8up.io/jobobserver"
 
-	// Deprecated
+	// Deprecated: Migrate to jobFinalizerName as the new finalizer name
 	legacyJobFinalizerName string = "k8up.syn.tools/jobobserver"
 )
 

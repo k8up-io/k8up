@@ -18,7 +18,6 @@ import (
 type ScheduleHandler struct {
 	schedule *k8upv1.Schedule
 	job.Config
-	requireStatusUpdate bool
 }
 
 // NewScheduleHandler will return a new ScheduleHandler.
