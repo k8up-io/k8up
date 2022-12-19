@@ -5,6 +5,8 @@ package executor
 import (
 	"time"
 
+	k8upv1 "github.com/k8up-io/k8up/v2/api/v1"
+	"github.com/k8up-io/k8up/v2/operator/locker"
 	"k8s.io/apimachinery/pkg/api/errors"
 
 	"github.com/k8up-io/k8up/v2/operator/observer"
@@ -21,15 +23,18 @@ type QueueWorker struct {
 	// trigger is used to trigger an execution loop. So we don't need to poll
 	// the whole time.
 	trigger chan bool
+
+	// locker is used to query Kubernetes API about job concurrency and exclusivity.
+	locker *locker.Locker
 }
 
-// GetExecutor will return the singleton instance for the executor.
-func GetExecutor() *QueueWorker {
+// StartExecutor will start the singleton instance of the Executor.
+// If already started, it will no-op.
+func StartExecutor(locker *locker.Locker) {
 	if worker == nil {
-		worker = &QueueWorker{trigger: make(chan bool)}
+		worker = &QueueWorker{trigger: make(chan bool), locker: locker}
 		go worker.executeQueue()
 	}
-	return worker
 }
 
 func (qe *QueueWorker) executeQueue() {
@@ -49,14 +54,24 @@ func (qe *QueueWorker) loopRepositoryJobs(repository string) {
 		jobType := job.GetJobType()
 		jobLimit := job.GetConcurrencyLimit()
 
-		var shouldRun bool
+		shouldRun := false
 		if job.Exclusive() {
 			// TODO: discard an exclusive job if there's any other exclusive job running
 			// and mark that in the status. So it is skippable.
 			shouldRun = !observer.GetObserver().IsAnyJobRunning(repository)
 		} else {
-			shouldRun = !observer.GetObserver().IsExclusiveJobRunning(repository) &&
-				!observer.GetObserver().IsConcurrentJobsLimitReached(jobType, jobLimit)
+			isExclusiveJobRunning := observer.GetObserver().IsExclusiveJobRunning(repository)
+			if jobType == k8upv1.BackupType {
+				// only the backup type is currently implemented without the observer
+				reached, err := qe.locker.IsConcurrentJobsLimitReached(jobType, jobLimit)
+				if err != nil {
+					job.Logger().Error(err, "cannot schedule job", "type", jobType, "repository", job.GetRepository())
+				}
+				shouldRun = !isExclusiveJobRunning && !reached
+			} else {
+				shouldRun = !isExclusiveJobRunning &&
+					!observer.GetObserver().IsConcurrentJobsLimitReached(jobType, jobLimit)
+			}
 		}
 
 		if !shouldRun {

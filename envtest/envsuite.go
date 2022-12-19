@@ -12,6 +12,7 @@ import (
 
 	"github.com/go-logr/logr"
 	"github.com/go-logr/zapr"
+	"github.com/k8up-io/k8up/v2/operator/locker"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/zap/zaptest"
 	appsv1 "k8s.io/api/apps/v1"
@@ -94,7 +95,7 @@ func (ts *Suite) SetupSuite() {
 	ts.Require().NoError(err)
 	ts.Require().NotNil(k8sClient)
 
-	executor.GetExecutor()
+	executor.StartExecutor(&locker.Locker{Kube: k8sClient})
 
 	ts.Env = testEnv
 	ts.Config = config
