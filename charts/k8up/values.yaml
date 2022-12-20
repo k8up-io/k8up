@@ -4,13 +4,13 @@
 replicaCount: 1
 image:
   # -- Operator image pull policy
-  pullPolicy: Always
+  pullPolicy: IfNotPresent
   # -- Operator image registry
   registry: ghcr.io
   # -- Operator image repository
   repository: k8up-io/k8up
   # -- Operator image tag (version)
-  tag: v2
+  tag: v2.5.2
 
 imagePullSecrets: []
 serviceAccount:
