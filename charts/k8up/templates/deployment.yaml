@@ -30,10 +30,8 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           args: [ operator ]
           env:
-          {{- with .Values.k8up.backupImage }}
             - name: BACKUP_IMAGE
-              value: "{{ .repository}}:{{ .tag }}"
-          {{- end }}
+              value: "{{ include "k8up.backupImage" . }}"
           {{- with .Values.k8up.timezone }}
             - name: TZ
               value: {{ . }}

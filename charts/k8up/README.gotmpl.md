@@ -66,3 +66,5 @@ The image tag is now pinned again and not using a floating tag.
 
 * Parameter changed: `image.tag` now defaults to a pinned version. Each new K8up version now requires also a new chart version.
 * Parameter changed: `image.pullPolicy` now defaults to `IfNotPresent` instead of `Always`.
+* Parameter changed: `k8up.backupImage.repository` is now unset, which defaults to the same image as defined in `image.{registry/repository}`.
+* Parameter changed: `k8up.backupImage.tag` is now unset, which defaults to the same image tag as defined in `image.tag`.

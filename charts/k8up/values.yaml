@@ -32,10 +32,13 @@ k8up:
   #       key: access-key-id
 
   backupImage:
-    # -- The backup runner image repository
-    repository: ghcr.io/k8up-io/k8up
+    # -- The backup runner image repository.
+    # Defaults to `{image.registry}/{image.repository}`.
+    # Specify an image repository including registry, e.g. `example.com/repo/image`
+    repository: ""
     # -- The backup runner image tag
-    tag: v2
+    # Defaults to `{image.tag}`
+    tag: ""
 
   # -- Specifies the timezone K8up is using for scheduling.
   # Empty value defaults to the timezone in which Kubernetes is deployed.

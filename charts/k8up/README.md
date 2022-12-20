@@ -46,8 +46,8 @@ Document your changes in values.yaml and let `make docs:helm` generate this sect
 | image.repository | string | `"k8up-io/k8up"` | Operator image repository |
 | image.tag | string | `"v2.5.2"` | Operator image tag (version) |
 | imagePullSecrets | list | `[]` |  |
-| k8up.backupImage.repository | string | `"ghcr.io/k8up-io/k8up"` | The backup runner image repository |
-| k8up.backupImage.tag | string | `"v2"` | The backup runner image tag |
+| k8up.backupImage.repository | string | `""` | The backup runner image repository. Defaults to `{image.registry}/{image.repository}`. Specify an image repository including registry, e.g. `example.com/repo/image` |
+| k8up.backupImage.tag | string | `""` | The backup runner image tag Defaults to `{image.tag}` |
 | k8up.enableLeaderElection | bool | `true` | Specifies whether leader election should be enabled. |
 | k8up.envVars | list | `[]` | envVars allows the specification of additional environment variables. See [values.yaml](values.yaml) how to specify See documentation which variables are supported. |
 | k8up.globalResources | object | empty values | Specify the resource requests and limits that the Pods should have when they are scheduled by K8up. You are still able to override those via K8up resources, but this gives cluster administrators custom defaults. |
@@ -127,6 +127,9 @@ The image tag is now pinned again and not using a floating tag.
 
 * Parameter changed: `image.tag` now defaults to a pinned version. Each new K8up version now requires also a new chart version.
 * Parameter changed: `image.pullPolicy` now defaults to `IfNotPresent` instead of `Always`.
+* Parameter changed: `k8up.backupImage.repository` is now unset, which defaults to the same image as defined in `image.{registry/repository}`.
+* Parameter changed: `k8up.backupImage.tag` is now unset, which defaults to the same image tag as defined in `image.tag`.
+
 ## Source Code
 
 * <https://github.com/k8up-io/k8up>

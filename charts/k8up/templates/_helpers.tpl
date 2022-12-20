@@ -71,3 +71,12 @@ Create the name of the service account to use
     {{ default "default" .Values.serviceAccount.name }}
 {{- end -}}
 {{- end -}}
+
+{{/*
+Backup Image
+*/}}
+{{- define "k8up.backupImage" -}}
+{{- with .Values -}}
+{{ if .k8up.backupImage.repository }}{{ .k8up.backupImage.repository }}{{ else }}{{ .image.registry}}/{{ .image.repository }}{{ end }}:{{ if .k8up.backupImage.tag }}{{ .k8up.backupImage.tag }}{{ else }}{{ .image.tag }}{{ end }}
+{{- end -}}
+{{- end -}}
