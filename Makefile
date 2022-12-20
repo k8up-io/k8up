@@ -74,8 +74,6 @@ deploy: kind-load-image install ## Deploy controller in the configured Kubernete
 		--set image.registry=$(E2E_REGISTRY) \
 		--set image.repository=$(E2E_REPO) \
 		--set image.tag=$(E2E_TAG) \
-		--set k8up.backupImage.repository=$(E2E_REGISTRY)/$(E2E_REPO) \
-		--set k8up.backupImage.tag=$(E2E_TAG) \
 		--wait $(deploy_args)
 
 .PHONY: generate
