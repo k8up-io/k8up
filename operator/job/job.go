@@ -12,7 +12,6 @@ import (
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -32,18 +31,16 @@ type Config struct {
 	Log        logr.Logger
 	CTX        context.Context
 	Obj        k8upv1.JobObject
-	Scheme     *runtime.Scheme
 	Repository string
 }
 
 // NewConfig returns a new configuration.
-func NewConfig(ctx context.Context, client client.Client, log logr.Logger, obj k8upv1.JobObject, scheme *runtime.Scheme, repository string) Config {
+func NewConfig(ctx context.Context, client client.Client, log logr.Logger, obj k8upv1.JobObject, repository string) Config {
 	return Config{
 		Client:     client,
 		Log:        log,
 		CTX:        ctx,
 		Obj:        obj,
-		Scheme:     scheme,
 		Repository: repository,
 	}
 }

@@ -15,14 +15,14 @@ import (
 
 // CheckExecutor will execute the batch.job for checks.
 type CheckExecutor struct {
-	generic
+	Generic
 	check *k8upv1.Check
 }
 
 // NewCheckExecutor will return a new executor for check jobs.
 func NewCheckExecutor(config job.Config) *CheckExecutor {
 	return &CheckExecutor{
-		generic: generic{config},
+		Generic: Generic{config},
 	}
 }
 
@@ -106,5 +106,5 @@ func (c *CheckExecutor) registerCheckCallback() {
 }
 
 func (c *CheckExecutor) cleanupOldChecks(name types.NamespacedName, check *k8upv1.Check) {
-	c.cleanupOldResources(&k8upv1.CheckList{}, name, check)
+	c.CleanupOldResources(&k8upv1.CheckList{}, name, check)
 }

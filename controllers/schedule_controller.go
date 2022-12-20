@@ -51,7 +51,7 @@ func (r *ScheduleReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 	if schedule.Spec.Archive != nil && schedule.Spec.Archive.RestoreSpec == nil {
 		schedule.Spec.Archive.RestoreSpec = &k8upv1.RestoreSpec{}
 	}
-	config := job.NewConfig(ctx, r.Client, log, schedule, r.Scheme, repository)
+	config := job.NewConfig(ctx, r.Client, log, schedule, repository)
 
 	return ctrl.Result{}, handler.NewScheduleHandler(config, schedule).Handle()
 }

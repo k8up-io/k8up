@@ -5,17 +5,11 @@ import (
 	"testing"
 
 	"github.com/go-logr/logr"
+	k8upv1 "github.com/k8up-io/k8up/v2/api/v1"
+	"github.com/k8up-io/k8up/v2/operator/job"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/runtime"
-
-	k8upv1 "github.com/k8up-io/k8up/v2/api/v1"
-	"github.com/k8up-io/k8up/v2/operator/job"
-)
-
-var (
-	testScheme = runtime.NewScheme()
 )
 
 type PVCExpectation struct {
@@ -30,7 +24,7 @@ type VolumeMountExpectation struct {
 }
 
 func newConfig() *job.Config {
-	cfg := job.NewConfig(context.TODO(), nil, logr.Discard(), &k8upv1.Restore{}, testScheme, "")
+	cfg := job.NewConfig(context.TODO(), nil, logr.Discard(), &k8upv1.Restore{}, "")
 	return &cfg
 }
 

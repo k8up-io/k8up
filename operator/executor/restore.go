@@ -19,13 +19,13 @@ import (
 const restorePath = "/restore"
 
 type RestoreExecutor struct {
-	generic
+	Generic
 }
 
 // NewRestoreExecutor will return a new executor for Restore jobs.
 func NewRestoreExecutor(config job.Config) *RestoreExecutor {
 	return &RestoreExecutor{
-		generic: generic{config},
+		Generic: Generic{config},
 	}
 }
 
@@ -81,7 +81,7 @@ func (r *RestoreExecutor) registerRestoreCallback(restore *k8upv1.Restore) {
 }
 
 func (r *RestoreExecutor) cleanupOldRestores(name types.NamespacedName, restore *k8upv1.Restore) {
-	r.cleanupOldResources(&k8upv1.RestoreList{}, name, restore)
+	r.CleanupOldResources(&k8upv1.RestoreList{}, name, restore)
 
 }
 

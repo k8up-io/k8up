@@ -68,7 +68,7 @@ Each condition also contains a human-readable message that describes the status 
 |===
 | Condition | Reasons | Description
 
-.6+| `PreBackupPodsReady`
+.7+| `PreBackupPodsReady`
 | NoPreBackupPodsFound
 | No PreBackupPod definitions have been found, backups are created without them.
 
@@ -86,5 +86,8 @@ Each condition also contains a human-readable message that describes the status 
 
 | Ready
 | `PreBackupPod` deployments ready.
+
+| Finished
+| `PreBackupPod` deployments cleaned up after backup finished.
 
 |===

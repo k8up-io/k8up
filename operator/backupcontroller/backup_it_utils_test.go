@@ -1,6 +1,6 @@
 //go:build integration
 
-package controllers_test
+package backupcontroller
 
 import (
 	"context"
@@ -20,7 +20,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	k8upv1 "github.com/k8up-io/k8up/v2/api/v1"
-	k8upObserver "github.com/k8up-io/k8up/v2/operator/observer"
 )
 
 const (
@@ -275,19 +274,6 @@ func (ts *BackupTestSuite) markBackupAsFinished(backup *k8upv1.Backup) {
 			{Type: "Completed", Status: metav1.ConditionTrue, LastTransitionTime: metav1.Now(), Reason: "Succeeded", Message: "backup successful"},
 		},
 	}
-}
-
-func (ts *BackupTestSuite) notifyObserverOfBackupJobStatusChange(status k8upObserver.EventType) {
-	observer := k8upObserver.GetObserver()
-	event := observer.GetJobByName(ts.BackupResource.Namespace + "/" + ts.BackupResource.Name)
-	event.Job = &batchv1.Job{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      ts.BackupResource.GetJobName(),
-			Namespace: ts.BackupResource.Namespace,
-		},
-	}
-	event.Event = status
-	observer.GetUpdateChannel() <- event
 }
 
 func (ts *BackupTestSuite) newBackupWithTags() *k8upv1.Backup {

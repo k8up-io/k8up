@@ -48,7 +48,7 @@ func (r *PruneReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	if prune.Spec.Backend != nil {
 		repository = prune.Spec.Backend.String()
 	}
-	config := job.NewConfig(ctx, r.Client, log, prune, r.Scheme, repository)
+	config := job.NewConfig(ctx, r.Client, log, prune, repository)
 
 	pruneHandler := handler.NewHandler(config)
 	return ctrl.Result{RequeueAfter: time.Second * 30}, pruneHandler.Handle()

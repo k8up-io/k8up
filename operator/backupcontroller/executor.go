@@ -1,9 +1,10 @@
-package executor
+package backupcontroller
 
 import (
-	stderrors "errors"
+	"fmt"
 	"strconv"
 
+	"github.com/k8up-io/k8up/v2/operator/executor"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -16,14 +17,14 @@ import (
 // BackupExecutor creates a batch.job object on the cluster. It merges all the
 // information provided by defaults and the CRDs to ensure the backup has all information to run.
 type BackupExecutor struct {
-	generic
+	executor.Generic
 	backup *k8upv1.Backup
 }
 
 // NewBackupExecutor returns a new BackupExecutor.
 func NewBackupExecutor(config job.Config) *BackupExecutor {
 	return &BackupExecutor{
-		generic: generic{config},
+		Generic: executor.Generic{Config: config},
 	}
 }
 
@@ -37,13 +38,20 @@ func (b *BackupExecutor) GetConcurrencyLimit() int {
 func (b *BackupExecutor) Execute() error {
 	backupObject, ok := b.Obj.(*k8upv1.Backup)
 	if !ok {
-		return stderrors.New("object is not a backup")
+		return fmt.Errorf("object is not a backup: %v", b.Obj)
 	}
 	b.backup = backupObject
+	status := backupObject.Status
 
-	if b.Obj.GetStatus().Started {
-		b.RegisterJobSucceededConditionCallback() // ensure that completed jobs can complete backups between operator restarts.
+	if status.HasFailed() || status.HasSucceeded() {
+		name := b.GetJobNamespacedName()
+		b.StopPreBackupDeployments()
+		b.cleanupOldBackups(name)
 		return nil
+	}
+
+	if status.HasStarted() {
+		return nil // nothing to do, wait until finished
 	}
 
 	err := b.createServiceAccountAndBinding()
@@ -114,9 +122,6 @@ func (b *BackupExecutor) startBackup(backupJob *batchv1.Job) error {
 		return nil
 	}
 
-	b.registerBackupCallback()
-	b.RegisterJobSucceededConditionCallback()
-
 	volumes, err := b.listAndFilterPVCs(cfg.Config.BackupAnnotation)
 	if err != nil {
 		b.SetConditionFalseWithMessage(k8upv1.ConditionReady, k8upv1.ReasonRetrievalFailed, err.Error())
@@ -128,15 +133,11 @@ func (b *BackupExecutor) startBackup(backupJob *batchv1.Job) error {
 	backupJob.Spec.Template.Spec.Volumes = volumes
 	backupJob.Spec.Template.Spec.ServiceAccountName = cfg.Config.ServiceAccount
 	backupJob.Spec.Template.Spec.Containers[0].VolumeMounts = b.newVolumeMounts(volumes)
-	backupJob.Spec.Template.Spec.Containers[0].Args = BuildTagArgs(b.backup.Spec.Tags)
+	backupJob.Spec.Template.Spec.Containers[0].Args = executor.BuildTagArgs(b.backup.Spec.Tags)
 
-	if err = b.CreateObjectIfNotExisting(backupJob); err == nil {
-		b.SetStarted("the job '%v/%v' was created", backupJob.Namespace, backupJob.Name)
-	}
-	return err
-
+	return b.CreateObjectIfNotExisting(backupJob)
 }
 
 func (b *BackupExecutor) cleanupOldBackups(name types.NamespacedName) {
-	b.cleanupOldResources(&k8upv1.BackupList{}, name, b.backup)
+	b.CleanupOldResources(&k8upv1.BackupList{}, name, b.backup)
 }

@@ -7,13 +7,10 @@ import (
 	"sync"
 
 	"github.com/go-logr/logr"
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promauto"
+	k8upv1 "github.com/k8up-io/k8up/v2/api/v1"
+	"github.com/k8up-io/k8up/v2/operator/monitoring"
 	batchv1 "k8s.io/api/batch/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/metrics"
-
-	k8upv1 "github.com/k8up-io/k8up/v2/api/v1"
 )
 
 const (
@@ -27,26 +24,6 @@ const (
 
 var (
 	observer *Observer
-
-	promLabels = []string{
-		"namespace",
-		"jobType",
-	}
-
-	metricsFailureCounter = promauto.NewCounterVec(prometheus.CounterOpts{
-		Name: "k8up_jobs_failed_counter",
-		Help: "The total number of jobs that failed",
-	}, promLabels)
-
-	metricsSuccessCounter = promauto.NewCounterVec(prometheus.CounterOpts{
-		Name: "k8up_jobs_successful_counter",
-		Help: "The total number of jobs that went through cleanly",
-	}, promLabels)
-
-	metricsTotalCounter = promauto.NewCounterVec(prometheus.CounterOpts{
-		Name: "k8up_jobs_total",
-		Help: "The total amount of all jobs run",
-	}, promLabels)
 )
 
 // Observer handles the internal state of the observed batchv1.job objects.
@@ -77,11 +54,6 @@ type ObservableJobCallback func(ObservableJob)
 
 // EventType describes an event for the observer
 type EventType string
-
-func init() {
-	// Register custom metrics with the global prometheus registry
-	metrics.Registry.MustRegister(metricsFailureCounter, metricsSuccessCounter, metricsTotalCounter)
-}
 
 // GetObserver returns the currently active observer
 func GetObserver() *Observer {
@@ -121,7 +93,7 @@ func (o *Observer) handleEvent(event ObservableJob) {
 
 	switch event.Event {
 	case Failed:
-		incFailureCounters(event.Job.Namespace, event.JobType)
+		monitoring.IncFailureCounters(event.Job.Namespace, event.JobType)
 		invokeCallbacks(event)
 	case Succeeded:
 		o.observedJobs[jobName] = event
@@ -130,7 +102,7 @@ func (o *Observer) handleEvent(event ObservableJob) {
 		// reporting succeeded jobs on operator restart
 		if exists {
 			o.log.Info("job succeeded", "jobName", jobName)
-			incSuccessCounters(event.Job.Namespace, event.JobType)
+			monitoring.IncSuccessCounters(event.Job.Namespace, event.JobType)
 		}
 	case Delete:
 		o.log.Info("deleting job from observer", "jobName", jobName)
@@ -253,14 +225,4 @@ func (o *Observer) RegisterCallback(name string, callback ObservableJobCallback)
 		event.callbacks = append(event.callbacks, callback)
 		o.observedJobs[name] = event
 	}
-}
-
-func incFailureCounters(namespace string, jobType k8upv1.JobType) {
-	metricsFailureCounter.WithLabelValues(namespace, jobType.String()).Inc()
-	metricsTotalCounter.WithLabelValues(namespace, jobType.String()).Inc()
-}
-
-func incSuccessCounters(namespace string, jobType k8upv1.JobType) {
-	metricsSuccessCounter.WithLabelValues(namespace, jobType.String()).Inc()
-	metricsTotalCounter.WithLabelValues(namespace, jobType.String()).Inc()
 }

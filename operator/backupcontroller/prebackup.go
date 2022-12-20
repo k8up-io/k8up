@@ -1,4 +1,4 @@
-package executor
+package backupcontroller
 
 import (
 	appsv1 "k8s.io/api/apps/v1"
@@ -99,7 +99,7 @@ func (b *BackupExecutor) StopPreBackupDeployments() {
 		b.deletePreBackupDeployment(deployment)
 	}
 
-	b.SetConditionTrue(k8upv1.ConditionPreBackupPodReady, k8upv1.ReasonReady)
+	b.SetConditionTrue(k8upv1.ConditionPreBackupPodReady, k8upv1.ReasonFinished)
 }
 
 // deletePreBackupDeployment deletes the given deployment, if existing.

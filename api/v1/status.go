@@ -112,6 +112,27 @@ func (in *Status) SetFinished(message string) {
 		Reason:  ReasonFinished.String(),
 		Message: message,
 	})
+	meta.RemoveStatusCondition(&in.Conditions, ConditionReady.String())
+}
+
+// SetFailed sets ConditionCompleted to true with ReasonFailed.
+func (in *Status) SetFailed(message string) {
+	meta.SetStatusCondition(&in.Conditions, metav1.Condition{
+		Type:    ConditionCompleted.String(),
+		Status:  metav1.ConditionTrue,
+		Reason:  ReasonFailed.String(),
+		Message: message,
+	})
+}
+
+// SetSucceeded sets ConditionCompleted to true with ReasonSucceeded.
+func (in *Status) SetSucceeded(message string) {
+	meta.SetStatusCondition(&in.Conditions, metav1.Condition{
+		Type:    ConditionCompleted.String(),
+		Status:  metav1.ConditionTrue,
+		Reason:  ReasonSucceeded.String(),
+		Message: message,
+	})
 }
 
 func isPreBackupFailed(condition metav1.Condition) bool {

@@ -4,6 +4,9 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/k8up-io/k8up/v2/operator/backupcontroller"
+	"github.com/k8up-io/k8up/v2/operator/jobcontroller"
+	"github.com/k8up-io/k8up/v2/operator/locker"
 	"k8s.io/apimachinery/pkg/api/resource"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 
@@ -93,8 +96,6 @@ func operatorMain(c *cli.Context) error {
 	cfg.Config.BackupCommandRestic = c.StringSlice(argCommandRestic)
 	cfg.Config.ResticOptions = strings.Join(c.StringSlice(argResticOptions), ",")
 
-	executor.GetExecutor()
-
 	err := validateQuantityFlags(c)
 	if err != nil {
 		return err
@@ -112,14 +113,17 @@ func operatorMain(c *cli.Context) error {
 		return fmt.Errorf("unable to initialize controller runtime: %w", err)
 	}
 
+	lock := &locker.Locker{Kube: mgr.GetClient()}
+	executor.StartExecutor(lock)
+
 	for name, reconciler := range map[string]controllers.ReconcilerSetup{
 		"Schedule": &controllers.ScheduleReconciler{},
-		"Backup":   &controllers.BackupReconciler{},
+		"Backup":   &backupcontroller.BackupReconciler{},
 		"Restore":  &controllers.RestoreReconciler{},
 		"Archive":  &controllers.ArchiveReconciler{},
 		"Check":    &controllers.CheckReconciler{},
 		"Prune":    &controllers.PruneReconciler{},
-		"Job":      &controllers.JobReconciler{},
+		"Job":      &jobcontroller.JobReconciler{},
 	} {
 		if err := reconciler.SetupWithManager(mgr, operatorLog.WithName("controllers").WithName(name)); err != nil {
 			operatorLog.Error(err, "unable to initialize operator mode", "step", "controller", "controller", name)

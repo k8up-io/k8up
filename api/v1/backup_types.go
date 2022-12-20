@@ -1,6 +1,8 @@
 package v1
 
 import (
+	"reflect"
+
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -177,3 +179,7 @@ func (b *BackupSpec) CreateObject(name, namespace string) runtime.Object {
 		Spec: *b,
 	}
 }
+
+var (
+	BackupKind = reflect.TypeOf(Backup{}).Name()
+)

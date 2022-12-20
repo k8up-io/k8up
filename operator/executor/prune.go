@@ -18,13 +18,13 @@ import (
 
 // PruneExecutor will execute the batch.job for Prunes.
 type PruneExecutor struct {
-	generic
+	Generic
 }
 
 // NewPruneExecutor will return a new executor for Prune jobs.
 func NewPruneExecutor(config job.Config) *PruneExecutor {
 	return &PruneExecutor{
-		generic: generic{config},
+		Generic: Generic{config},
 	}
 }
 
@@ -89,7 +89,7 @@ func (p *PruneExecutor) registerPruneCallback(prune *k8upv1.Prune) {
 }
 
 func (p *PruneExecutor) cleanupOldPrunes(name types.NamespacedName, prune *k8upv1.Prune) {
-	p.cleanupOldResources(&k8upv1.PruneList{}, name, prune)
+	p.CleanupOldResources(&k8upv1.PruneList{}, name, prune)
 }
 
 func (p *PruneExecutor) setupEnvVars(prune *k8upv1.Prune) []corev1.EnvVar {
