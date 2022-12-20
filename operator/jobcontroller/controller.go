@@ -100,6 +100,8 @@ func (r *JobReconciler) Handle(ctx context.Context, obj *batchv1.Job) error {
 		fallthrough
 	case k8upv1.RestoreType:
 		fallthrough
+	case k8upv1.CheckType:
+		fallthrough
 	case k8upv1.BackupType:
 		return r.updateOwner(ctx, obj)
 	default:
@@ -126,6 +128,9 @@ func (r *JobReconciler) updateOwner(ctx context.Context, batchJob *batchv1.Job) 
 	case k8upv1.RestoreKind:
 		result = &k8upv1.Restore{}
 		jobType = k8upv1.RestoreType
+	case k8upv1.CheckKind:
+		result = &k8upv1.Check{}
+		jobType = k8upv1.CheckType
 	default:
 		return fmt.Errorf("unrecognized controller kind in owner reference: %s", controllerReference.Kind)
 	}

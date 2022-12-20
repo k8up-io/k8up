@@ -6,6 +6,7 @@ import (
 
 	"github.com/k8up-io/k8up/v2/operator/archivecontroller"
 	"github.com/k8up-io/k8up/v2/operator/backupcontroller"
+	"github.com/k8up-io/k8up/v2/operator/checkcontroller"
 	"github.com/k8up-io/k8up/v2/operator/jobcontroller"
 	"github.com/k8up-io/k8up/v2/operator/locker"
 	"github.com/k8up-io/k8up/v2/operator/restorecontroller"
@@ -124,7 +125,7 @@ func operatorMain(c *cli.Context) error {
 		"Backup":   &backupcontroller.BackupReconciler{},
 		"Restore":  &restorecontroller.RestoreReconciler{},
 		"Archive":  &archivecontroller.ArchiveReconciler{},
-		"Check":    &controllers.CheckReconciler{},
+		"Check":    &checkcontroller.CheckReconciler{},
 		"Prune":    &controllers.PruneReconciler{},
 		"Job":      &jobcontroller.JobReconciler{},
 	} {

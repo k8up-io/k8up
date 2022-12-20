@@ -195,8 +195,6 @@ func (g *Generic) CleanupOldResources(typ jobObjectList, name types.NamespacedNa
 // NewExecutor will return the right Executor for the given job object.
 func NewExecutor(config job.Config) queue.Executor {
 	switch config.Obj.GetType() {
-	case k8upv1.CheckType:
-		return NewCheckExecutor(config)
 	case k8upv1.PruneType:
 		return NewPruneExecutor(config)
 	}

@@ -1,28 +1,29 @@
-package executor
+package checkcontroller
 
 import (
 	stderrors "errors"
 
+	"github.com/k8up-io/k8up/v2/operator/executor"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
+	controllerruntime "sigs.k8s.io/controller-runtime"
 
 	k8upv1 "github.com/k8up-io/k8up/v2/api/v1"
 	"github.com/k8up-io/k8up/v2/operator/cfg"
 	"github.com/k8up-io/k8up/v2/operator/job"
-	"github.com/k8up-io/k8up/v2/operator/observer"
 )
 
 // CheckExecutor will execute the batch.job for checks.
 type CheckExecutor struct {
-	Generic
+	executor.Generic
 	check *k8upv1.Check
 }
 
 // NewCheckExecutor will return a new executor for check jobs.
 func NewCheckExecutor(config job.Config) *CheckExecutor {
 	return &CheckExecutor{
-		Generic: Generic{config},
+		Generic: executor.Generic{Config: config},
 	}
 }
 
@@ -44,40 +45,32 @@ func (c *CheckExecutor) Execute() error {
 	}
 	c.check = checkObject
 
-	if c.Obj.GetStatus().Started {
-		c.RegisterJobSucceededConditionCallback() // ensure that completed jobs can complete backups between operator restarts.
+	batchJob := &batchv1.Job{}
+	batchJob.Name = checkObject.GetJobName()
+	batchJob.Namespace = checkObject.Namespace
+
+	_, err := controllerruntime.CreateOrUpdate(c.CTX, c.Client, batchJob, func() error {
+		mutateErr := job.MutateBatchJob(batchJob, checkObject, c.Config)
+		if mutateErr != nil {
+			return mutateErr
+		}
+
+		batchJob.Spec.Template.Spec.Containers[0].Env = c.setupEnvVars()
+		c.check.Spec.AppendEnvFromToContainer(&batchJob.Spec.Template.Spec.Containers[0])
+		batchJob.Spec.Template.Spec.Containers[0].Args = []string{"-check"}
+		batchJob.Labels[job.K8upExclusive] = "true"
 		return nil
-	}
-
-	checkJob, err := job.GenerateGenericJob(c.Obj, c.Config)
+	})
 	if err != nil {
-		c.SetConditionFalseWithMessage(k8upv1.ConditionReady, k8upv1.ReasonCreationFailed, "could not get job template: %v", err)
+		c.SetConditionFalseWithMessage(k8upv1.ConditionReady, k8upv1.ReasonCreationFailed, "could not create job: %v", err)
 		return err
 	}
-	checkJob.GetLabels()[job.K8upExclusive] = "true"
-
-	return c.startCheck(checkJob)
-}
-
-func (c *CheckExecutor) startCheck(checkJob *batchv1.Job) error {
-	c.RegisterJobSucceededConditionCallback()
-	c.registerCheckCallback()
-
-	checkJob.Spec.Template.Spec.Containers[0].Env = c.setupEnvVars()
-	c.check.Spec.AppendEnvFromToContainer(&checkJob.Spec.Template.Spec.Containers[0])
-	checkJob.Spec.Template.Spec.Containers[0].Args = []string{"-check"}
-
-	err := c.CreateObjectIfNotExisting(checkJob)
-	if err != nil {
-		return err
-	}
-
-	c.SetStarted("the job '%v/%v' was created", checkJob.Namespace, checkJob.Name)
+	c.SetStarted("the job '%v/%v' was created", batchJob.Namespace, batchJob.Name)
 	return nil
 }
 
 func (c *CheckExecutor) setupEnvVars() []corev1.EnvVar {
-	vars := NewEnvVarConverter()
+	vars := executor.NewEnvVarConverter()
 
 	if c.check != nil {
 		if c.check.Spec.Backend != nil {
@@ -90,19 +83,12 @@ func (c *CheckExecutor) setupEnvVars() []corev1.EnvVar {
 
 	vars.SetString("PROM_URL", cfg.Config.PromURL)
 
-	err := vars.Merge(DefaultEnv(c.Obj.GetNamespace()))
+	err := vars.Merge(executor.DefaultEnv(c.Obj.GetNamespace()))
 	if err != nil {
 		c.Log.Error(err, "error while merging the environment variables", "name", c.Obj.GetName(), "namespace", c.Obj.GetNamespace())
 	}
 
 	return vars.Convert()
-}
-
-func (c *CheckExecutor) registerCheckCallback() {
-	name := c.GetJobNamespacedName()
-	observer.GetObserver().RegisterCallback(name.String(), func(_ observer.ObservableJob) {
-		c.cleanupOldChecks(name, c.check)
-	})
 }
 
 func (c *CheckExecutor) cleanupOldChecks(name types.NamespacedName, check *k8upv1.Check) {

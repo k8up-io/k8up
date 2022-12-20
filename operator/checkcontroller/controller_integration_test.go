@@ -1,6 +1,6 @@
 //go:build integration
 
-package controllers_test
+package checkcontroller
 
 import (
 	"context"
@@ -17,7 +17,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	k8upv1 "github.com/k8up-io/k8up/v2/api/v1"
-	"github.com/k8up-io/k8up/v2/controllers"
 	"github.com/k8up-io/k8up/v2/envtest"
 	"github.com/k8up-io/k8up/v2/operator/observer"
 )
@@ -70,18 +69,18 @@ func (ts *CheckTestSuite) TestJobCleanup() {
 	createJobs := 6
 	ts.givenCheckResources(createJobs)
 
-	ts.whenReconcile()
-	ts.expectNumberOfJobsEventually(createJobs)
-
 	successfulJobs := 2
 	failedJobs := 3
 	for i := 0; i < successfulJobs; i++ {
-		ts.whenJobCallbackIsInvoked(ts.GivenChecks[i], observer.Succeeded)
+		ts.GivenChecks[i].Status.SetSucceeded("finished")
+		ts.UpdateStatus(ts.GivenChecks[i])
 	}
 	for i := successfulJobs; i < successfulJobs+failedJobs; i++ {
-		ts.whenJobCallbackIsInvoked(ts.GivenChecks[i], observer.Failed)
+		ts.GivenChecks[i].Status.SetFailed("finished")
+		ts.UpdateStatus(ts.GivenChecks[i])
 	}
 
+	ts.whenReconcile()
 	ts.expectCheckCleanupEventually((successfulJobs - ts.KeepSuccessful) + (failedJobs - ts.KeepFailed))
 }
 
@@ -137,10 +136,8 @@ func (ts *CheckTestSuite) givenCheckResources(amount int) {
 
 func (ts *CheckTestSuite) whenReconcile() (lastResult controllerruntime.Result) {
 	for _, check := range ts.GivenChecks {
-		controller := controllers.CheckReconciler{
-			Client: ts.Client,
-			Log:    ts.Logger,
-			Scheme: ts.Scheme,
+		controller := CheckReconciler{
+			Kube: ts.Client,
 		}
 
 		key := types.NamespacedName{
