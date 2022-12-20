@@ -6,9 +6,6 @@ image:
   repository: $E2E_REPO
   tag: $E2E_TAG
 k8up:
-  backupImage:
-    repository: $E2E_REGISTRY/$E2E_REPO
-    tag: $E2E_TAG
   env:
     - name: K8UP_DEBUG
       value: "true"
