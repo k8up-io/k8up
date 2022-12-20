@@ -98,9 +98,13 @@ vet: ## Run go vet against code
 	go vet ./...
 
 .PHONY: lint
-lint: generate fmt vet docs-generate ## Invokes the fmt and vet targets
+lint: generate fmt vet golangci-lint docs-generate ## Invokes all linting targets
 	@echo 'Check for uncommitted changes ...'
 	git diff --exit-code
+
+.PHONY: golangci-lint
+golangci-lint: $(golangci_bin) ## Run golangci linters
+	$(golangci_bin) run --timeout 5m --out-format colored-line-number ./...
 
 .PHONY: docker-build
 docker-build: $(BIN_FILENAME) ## Build the docker image
@@ -148,3 +152,6 @@ $(minio_sentinel): export KUBECONFIG = $(KIND_KUBECONFIG)
 $(minio_sentinel): kind-setup
 	kubectl apply -f $(SAMPLES_ROOT_DIR)/deployments/minio.yaml
 	@touch $@
+
+$(golangci_bin): | $(go_bin)
+	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b "$(go_bin)"

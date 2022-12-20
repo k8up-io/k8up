@@ -15,6 +15,8 @@ go_bin ?= $(PWD)/.work/bin
 $(go_bin):
 	@mkdir -p $@
 
+golangci_bin = $(go_bin)/golangci-lint
+
 CRD_FILE ?= k8up-crd.yaml
 CRD_ROOT_DIR ?= config/crd/apiextensions.k8s.io
 CRD_DOCS_REF_PATH ?= docs/modules/ROOT/pages/references/api-reference.adoc

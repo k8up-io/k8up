@@ -54,14 +54,12 @@ restic() {
 		--rm \
 		--attach \
 		--restart Never \
-		--wait \
 		--namespace "${DETIK_CLIENT_NAMESPACE-"k8up-system"}" \
 		--image "${E2E_IMAGE}" \
 		--env "AWS_ACCESS_KEY_ID=myaccesskey" \
 		--env "AWS_SECRET_ACCESS_KEY=mysecretkey" \
 		--env "RESTIC_PASSWORD=myreposecret" \
 		--pod-running-timeout 10s \
-		--timeout 3s \
 		--quiet \
 		--command -- \
 		restic \
