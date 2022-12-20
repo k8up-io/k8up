@@ -7,6 +7,7 @@ import (
 
 	k8upv1 "github.com/k8up-io/k8up/v2/api/v1"
 	"github.com/k8up-io/k8up/v2/operator/cfg"
+	"k8s.io/apimachinery/pkg/labels"
 
 	"github.com/go-logr/logr"
 	batchv1 "k8s.io/api/batch/v1"
@@ -83,4 +84,30 @@ func GenerateGenericJob(obj k8upv1.JobObject, config Config) (*batchv1.Job, erro
 	err := ctrl.SetControllerReference(obj, job, config.Client.Scheme())
 
 	return job, err
+}
+
+// MutateBatchJob mutates the given Job with generic spec applicable to all K8up-spawned Jobs.
+func MutateBatchJob(batchJob *batchv1.Job, jobObj k8upv1.JobObject, config Config) error {
+	gen, err := GenerateGenericJob(jobObj, config)
+	batchJob.Spec.ActiveDeadlineSeconds = gen.Spec.ActiveDeadlineSeconds
+	batchJob.Spec.Template.Labels = gen.Spec.Template.Labels
+	batchJob.Spec.Template.Spec.RestartPolicy = gen.Spec.Template.Spec.RestartPolicy
+	batchJob.Spec.Template.Spec.SecurityContext = gen.Spec.Template.Spec.SecurityContext
+
+	containers := batchJob.Spec.Template.Spec.Containers
+	if len(containers) == 0 {
+		containers = make([]corev1.Container, 1)
+	}
+	containers[0].Name = gen.Spec.Template.Spec.Containers[0].Name
+	containers[0].Image = gen.Spec.Template.Spec.Containers[0].Image
+	containers[0].Command = gen.Spec.Template.Spec.Containers[0].Command
+	containers[0].Resources = gen.Spec.Template.Spec.Containers[0].Resources
+	batchJob.Spec.Template.Spec.Containers = containers
+
+	batchJob.OwnerReferences = gen.OwnerReferences
+	batchJob.Labels = labels.Merge(batchJob.Labels, labels.Set{
+		K8uplabel:            "true",
+		k8upv1.LabelK8upType: jobObj.GetType().String(),
+	})
+	return err
 }

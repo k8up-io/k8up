@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/k8up-io/k8up/v2/operator/archivecontroller"
 	"github.com/k8up-io/k8up/v2/operator/backupcontroller"
 	"github.com/k8up-io/k8up/v2/operator/jobcontroller"
 	"github.com/k8up-io/k8up/v2/operator/locker"
@@ -120,7 +121,7 @@ func operatorMain(c *cli.Context) error {
 		"Schedule": &controllers.ScheduleReconciler{},
 		"Backup":   &backupcontroller.BackupReconciler{},
 		"Restore":  &controllers.RestoreReconciler{},
-		"Archive":  &controllers.ArchiveReconciler{},
+		"Archive":  &archivecontroller.ArchiveReconciler{},
 		"Check":    &controllers.CheckReconciler{},
 		"Prune":    &controllers.PruneReconciler{},
 		"Job":      &jobcontroller.JobReconciler{},

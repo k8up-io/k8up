@@ -98,6 +98,8 @@ func (r *JobReconciler) Handle(ctx context.Context, obj *batchv1.Job) error {
 	switch k8upv1.JobType(jobType) {
 	case k8upv1.BackupType:
 		return r.updateOwner(ctx, obj)
+	case k8upv1.ArchiveType:
+		return r.updateOwner(ctx, obj)
 	default:
 		observer.GetObserver().GetUpdateChannel() <- oj
 		return nil
