@@ -1,14 +1,12 @@
 //go:build integration
 
-package controllers_test
+package schedulecontroller
 
 import (
 	"testing"
 
 	k8upv1 "github.com/k8up-io/k8up/v2/api/v1"
-	"github.com/k8up-io/k8up/v2/controllers"
 	"github.com/k8up-io/k8up/v2/envtest"
-	"github.com/k8up-io/k8up/v2/operator/handler"
 	"github.com/stretchr/testify/suite"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -16,7 +14,7 @@ import (
 type (
 	ScheduleControllerTestSuite struct {
 		envtest.Suite
-		reconciler              *controllers.ScheduleReconciler
+		reconciler              *ScheduleReconciler
 		givenSchedule           *k8upv1.Schedule
 		givenEffectiveSchedules []k8upv1.EffectiveSchedule
 	}
@@ -27,15 +25,13 @@ func Test_Schedule(t *testing.T) {
 }
 
 func (ts *ScheduleControllerTestSuite) BeforeTest(suiteName, testName string) {
-	ts.reconciler = &controllers.ScheduleReconciler{
-		Client: ts.Client,
-		Log:    ts.Logger.WithName(suiteName + "_" + testName),
-		Scheme: ts.Scheme,
+	ts.reconciler = &ScheduleReconciler{
+		Kube: ts.Client,
 	}
 }
 
 func (ts *ScheduleControllerTestSuite) Test_GivenScheduleWithRandomSchedules_WhenReconcile_ThenUpdateEffectiveScheduleInStatus() {
-	ts.givenScheduleResource(handler.ScheduleDailyRandom)
+	ts.givenScheduleResource(ScheduleDailyRandom)
 
 	ts.whenReconciling(ts.givenSchedule)
 
@@ -62,7 +58,7 @@ func (ts *ScheduleControllerTestSuite) Test_GivenEffectiveScheduleWithRandomSche
 }
 
 func (ts *ScheduleControllerTestSuite) Test_GivenEffectiveScheduleWithRandomSchedules_WhenReconcile_ThenUpdateScheduleInStatus() {
-	ts.givenScheduleResource(handler.ScheduleHourlyRandom)
+	ts.givenScheduleResource(ScheduleHourlyRandom)
 	ts.givenEffectiveSchedule()
 
 	ts.whenReconciling(ts.givenSchedule)

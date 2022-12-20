@@ -1,4 +1,4 @@
-package handler
+package schedulecontroller
 
 import (
 	"crypto/sha1"
@@ -18,7 +18,7 @@ const (
 	ScheduleWeeklyRandom   = "@weekly-random"
 )
 
-func (s *ScheduleHandler) createSeed(schedule *k8upv1.Schedule, jobType k8upv1.JobType) string {
+func createSeed(schedule *k8upv1.Schedule, jobType k8upv1.JobType) string {
 	return schedule.Namespace + "/" + schedule.Name + "@" + jobType.String()
 }
 

@@ -8,6 +8,7 @@ import (
 	"github.com/k8up-io/k8up/v2/operator/backupcontroller"
 	"github.com/k8up-io/k8up/v2/operator/jobcontroller"
 	"github.com/k8up-io/k8up/v2/operator/locker"
+	"github.com/k8up-io/k8up/v2/operator/schedulecontroller"
 	"k8s.io/apimachinery/pkg/api/resource"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 
@@ -118,7 +119,7 @@ func operatorMain(c *cli.Context) error {
 	executor.StartExecutor(lock)
 
 	for name, reconciler := range map[string]controllers.ReconcilerSetup{
-		"Schedule": &controllers.ScheduleReconciler{},
+		"Schedule": &schedulecontroller.ScheduleReconciler{},
 		"Backup":   &backupcontroller.BackupReconciler{},
 		"Restore":  &controllers.RestoreReconciler{},
 		"Archive":  &archivecontroller.ArchiveReconciler{},

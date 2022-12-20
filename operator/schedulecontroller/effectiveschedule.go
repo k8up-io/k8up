@@ -1,4 +1,4 @@
-package handler
+package schedulecontroller
 
 import (
 	k8upv1 "github.com/k8up-io/k8up/v2/api/v1"

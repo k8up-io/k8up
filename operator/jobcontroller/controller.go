@@ -11,7 +11,7 @@ import (
 	"github.com/k8up-io/k8up/v2/operator/observer"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -39,7 +39,7 @@ func (r *JobReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.R
 	err := r.Kube.Get(ctx, req.NamespacedName, jobObj)
 	if err != nil {
 
-		if errors.IsNotFound(err) {
+		if apierrors.IsNotFound(err) {
 			return reconcile.Result{}, nil
 		}
 
@@ -118,6 +118,9 @@ func (r *JobReconciler) updateOwner(ctx context.Context, batchJob *batchv1.Job) 
 	case k8upv1.BackupKind:
 		result = &k8upv1.Backup{}
 		jobType = k8upv1.BackupType
+	case k8upv1.ArchiveKind:
+		result = &k8upv1.Archive{}
+		jobType = k8upv1.ArchiveType
 	default:
 		return fmt.Errorf("unrecognized controller kind in owner reference: %s", controllerReference.Kind)
 	}
@@ -125,7 +128,7 @@ func (r *JobReconciler) updateOwner(ctx context.Context, batchJob *batchv1.Job) 
 	// fetch the owner object
 	err := r.Kube.Get(ctx, types.NamespacedName{Name: controllerReference.Name, Namespace: batchJob.Namespace}, result)
 	if err != nil {
-		return fmt.Errorf("cannot get resource: %s/%s/%s", controllerReference.Kind, batchJob.Namespace, batchJob.Name)
+		return fmt.Errorf("cannot get resource: %s/%s/%s: %w", controllerReference.Kind, batchJob.Namespace, batchJob.Name, err)
 	}
 
 	log := ctrl.LoggerFrom(ctx)
