@@ -2,7 +2,7 @@ package backupcontroller
 
 import (
 	"github.com/go-logr/logr"
-	"github.com/k8up-io/k8up/v2/api/v1"
+	k8upv1 "github.com/k8up-io/k8up/v2/api/v1"
 	"sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 )
@@ -25,7 +25,7 @@ func (r *BackupReconciler) SetupWithManager(mgr controllerruntime.Manager, _ log
 	r.Kube = mgr.GetClient()
 	return controllerruntime.NewControllerManagedBy(mgr).
 		Named(name).
-		For(&v1.Backup{}).
+		For(&k8upv1.Backup{}).
 		WithEventFilter(predicate.GenerationChangedPredicate{}).
 		Complete(r)
 }

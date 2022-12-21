@@ -151,20 +151,20 @@ func (r *JobReconciler) updateOwner(ctx context.Context, batchJob *batchv1.Job) 
 		if !ownerStatus.HasSucceeded() {
 			// only increase success counter if new condition
 			monitoring.IncSuccessCounters(batchJob.Namespace, jobType)
+			log.Info("Job succeeded")
 		}
 		ownerStatus.SetSucceeded(message)
 		ownerStatus.SetFinished(fmt.Sprintf("job '%s' completed successfully", batchJob.Name))
-		log.Info("job succeeded", "jobName", batchJob.Name)
 	}
 	failedCond := FindStatusCondition(batchJob.Status.Conditions, batchv1.JobFailed)
 	if failedCond != nil && failedCond.Status == corev1.ConditionTrue {
 		if !ownerStatus.HasFailed() {
 			// only increase fail counter if new condition
 			monitoring.IncFailureCounters(batchJob.Namespace, jobType)
+			log.Info("Job failed")
 		}
 		ownerStatus.SetFailed(message)
 		ownerStatus.SetFinished(fmt.Sprintf("job '%s' has failed", batchJob.Name))
-		log.Info("job failed", "jobName", batchJob.Name)
 	}
 	if successCond == nil && failedCond == nil {
 		ownerStatus.SetStarted(message)

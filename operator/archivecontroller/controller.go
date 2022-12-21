@@ -20,7 +20,7 @@ type ArchiveReconciler struct {
 
 // Reconcile is the entrypoint to manage the given resource.
 func (r *ArchiveReconciler) Reconcile(ctx context.Context, req controllerruntime.Request) (controllerruntime.Result, error) {
-	log := controllerruntime.LoggerFrom(ctx).WithValues("archive", req.NamespacedName)
+	log := controllerruntime.LoggerFrom(ctx)
 
 	archive := &k8upv1.Archive{}
 	err := r.Kube.Get(ctx, req.NamespacedName, archive)
