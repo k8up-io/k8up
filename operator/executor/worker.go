@@ -68,6 +68,8 @@ func (qe *QueueWorker) loopRepositoryJobs(repository string) {
 				fallthrough
 			case k8upv1.CheckType:
 				fallthrough
+			case k8upv1.PruneType:
+				fallthrough
 			case k8upv1.BackupType:
 				// only the backup type is currently implemented without the observer
 				reached, err := qe.locker.IsConcurrentJobsLimitReached(jobType, jobLimit)

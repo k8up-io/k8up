@@ -9,6 +9,7 @@ import (
 	"github.com/k8up-io/k8up/v2/operator/checkcontroller"
 	"github.com/k8up-io/k8up/v2/operator/jobcontroller"
 	"github.com/k8up-io/k8up/v2/operator/locker"
+	"github.com/k8up-io/k8up/v2/operator/prunecontroller"
 	"github.com/k8up-io/k8up/v2/operator/restorecontroller"
 	"github.com/k8up-io/k8up/v2/operator/schedulecontroller"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -126,7 +127,7 @@ func operatorMain(c *cli.Context) error {
 		"Restore":  &restorecontroller.RestoreReconciler{},
 		"Archive":  &archivecontroller.ArchiveReconciler{},
 		"Check":    &checkcontroller.CheckReconciler{},
-		"Prune":    &controllers.PruneReconciler{},
+		"Prune":    &prunecontroller.PruneReconciler{},
 		"Job":      &jobcontroller.JobReconciler{},
 	} {
 		if err := reconciler.SetupWithManager(mgr, operatorLog.WithName("controllers").WithName(name)); err != nil {

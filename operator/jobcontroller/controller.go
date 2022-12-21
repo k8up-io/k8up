@@ -117,20 +117,17 @@ func (r *JobReconciler) updateOwner(ctx context.Context, batchJob *batchv1.Job) 
 	}
 
 	var result k8upv1.JobObject
-	var jobType k8upv1.JobType
 	switch controllerReference.Kind {
 	case k8upv1.BackupKind:
 		result = &k8upv1.Backup{}
-		jobType = k8upv1.BackupType
 	case k8upv1.ArchiveKind:
 		result = &k8upv1.Archive{}
-		jobType = k8upv1.ArchiveType
 	case k8upv1.RestoreKind:
 		result = &k8upv1.Restore{}
-		jobType = k8upv1.RestoreType
 	case k8upv1.CheckKind:
 		result = &k8upv1.Check{}
-		jobType = k8upv1.CheckType
+	case k8upv1.PruneKind:
+		result = &k8upv1.Prune{}
 	default:
 		return fmt.Errorf("unrecognized controller kind in owner reference: %s", controllerReference.Kind)
 	}
