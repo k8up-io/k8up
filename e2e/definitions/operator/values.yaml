@@ -6,8 +6,6 @@ image:
   repository: $E2E_REPO
   tag: $E2E_TAG
 k8up:
-  env:
+  envVars:
     - name: K8UP_DEBUG
       value: "true"
-    - name: BACKUP_ENABLE_LEADER_ELECTION
-      value: $BACKUP_ENABLE_LEADER_ELECTION
