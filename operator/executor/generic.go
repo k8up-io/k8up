@@ -199,8 +199,6 @@ func NewExecutor(config job.Config) queue.Executor {
 		return NewCheckExecutor(config)
 	case k8upv1.PruneType:
 		return NewPruneExecutor(config)
-	case k8upv1.RestoreType:
-		return NewRestoreExecutor(config)
 	}
 	return nil
 }

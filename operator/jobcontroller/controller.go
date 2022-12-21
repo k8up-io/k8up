@@ -96,9 +96,11 @@ func (r *JobReconciler) Handle(ctx context.Context, obj *batchv1.Job) error {
 	}
 
 	switch k8upv1.JobType(jobType) {
-	case k8upv1.BackupType:
-		return r.updateOwner(ctx, obj)
 	case k8upv1.ArchiveType:
+		fallthrough
+	case k8upv1.RestoreType:
+		fallthrough
+	case k8upv1.BackupType:
 		return r.updateOwner(ctx, obj)
 	default:
 		observer.GetObserver().GetUpdateChannel() <- oj
@@ -121,6 +123,9 @@ func (r *JobReconciler) updateOwner(ctx context.Context, batchJob *batchv1.Job) 
 	case k8upv1.ArchiveKind:
 		result = &k8upv1.Archive{}
 		jobType = k8upv1.ArchiveType
+	case k8upv1.RestoreKind:
+		result = &k8upv1.Restore{}
+		jobType = k8upv1.RestoreType
 	default:
 		return fmt.Errorf("unrecognized controller kind in owner reference: %s", controllerReference.Kind)
 	}
@@ -128,6 +133,9 @@ func (r *JobReconciler) updateOwner(ctx context.Context, batchJob *batchv1.Job) 
 	// fetch the owner object
 	err := r.Kube.Get(ctx, types.NamespacedName{Name: controllerReference.Name, Namespace: batchJob.Namespace}, result)
 	if err != nil {
+		if apierrors.IsNotFound(err) {
+			return nil // owner doesn't exist anymore, nothing to do.
+		}
 		return fmt.Errorf("cannot get resource: %s/%s/%s: %w", controllerReference.Kind, batchJob.Namespace, batchJob.Name, err)
 	}
 
