@@ -83,6 +83,7 @@ rules:
   - delete
   - get
   - list
+  - watch
 - apiGroups:
   - k8up.io
   resources:
@@ -258,3 +259,4 @@ rules:
   - delete
   - get
   - list
+  - watch
