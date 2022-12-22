@@ -15,9 +15,9 @@ import (
 // +kubebuilder:rbac:groups=batch,resources=jobs,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=core,resources=pods,verbs="*"
 // +kubebuilder:rbac:groups=core,resources=pods/exec,verbs="*"
-// +kubebuilder:rbac:groups=core,resources=serviceaccounts,verbs=get;list;create;delete
+// +kubebuilder:rbac:groups=core,resources=serviceaccounts,verbs=get;list;watch;create;delete
 // +kubebuilder:rbac:groups=core,resources=persistentvolumeclaims,verbs=get;list;watch
-// +kubebuilder:rbac:groups=rbac.authorization.k8s.io,resources=roles;rolebindings,verbs=get;list;create;delete
+// +kubebuilder:rbac:groups=rbac.authorization.k8s.io,resources=roles;rolebindings,verbs=get;list;watch;create;delete
 
 // SetupWithManager configures the reconciler.
 func (r *BackupReconciler) SetupWithManager(mgr controllerruntime.Manager, _ logr.Logger) error {
