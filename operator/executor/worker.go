@@ -6,8 +6,6 @@ import (
 	"time"
 
 	"github.com/k8up-io/k8up/v2/operator/locker"
-	"k8s.io/apimachinery/pkg/api/errors"
-
 	"github.com/k8up-io/k8up/v2/operator/observer"
 	"github.com/k8up-io/k8up/v2/operator/queue"
 )
@@ -75,9 +73,7 @@ func (qe *QueueWorker) loopRepositoryJobs(repository string) {
 
 		err := job.Execute()
 		if err != nil {
-			if !errors.IsAlreadyExists(err) {
-				job.Logger().Error(err, "cannot create job", "repository", repository)
-			}
+			job.Logger().Error(err, "failed to execute", "repository", repository)
 		}
 
 		// Skip the rest for this repository if we just started an exclusive job.
