@@ -73,7 +73,7 @@ func (c *Config) SetStarted(message string, args ...interface{}) {
 		if errors.IsNotFound(err) {
 			return
 		}
-		c.Log.Error(err, "could not patch status")
+		c.Log.Error(err, "could not update status")
 	}
 }
 
@@ -88,7 +88,7 @@ func (c *Config) SetFinished(namespace, name string) {
 		if errors.IsNotFound(err) {
 			return
 		}
-		c.Log.Error(err, "could not patch status")
+		c.Log.Error(err, "could not update status")
 	}
 }
 
