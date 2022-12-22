@@ -3,12 +3,9 @@ package jobcontroller
 import (
 	"context"
 	"fmt"
-	"strconv"
 
 	k8upv1 "github.com/k8up-io/k8up/v2/api/v1"
-	"github.com/k8up-io/k8up/v2/operator/job"
 	"github.com/k8up-io/k8up/v2/operator/monitoring"
-	"github.com/k8up-io/k8up/v2/operator/observer"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -22,9 +19,6 @@ import (
 
 const (
 	jobFinalizerName string = "k8up.io/jobobserver"
-
-	// Deprecated: Migrate to jobFinalizerName as the new finalizer name
-	legacyJobFinalizerName string = "k8up.syn.tools/jobobserver"
 )
 
 // JobReconciler reconciles a Job object
@@ -50,24 +44,18 @@ func (r *JobReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.R
 }
 
 func (r *JobReconciler) Handle(ctx context.Context, obj *batchv1.Job) error {
+	if err := r.updateOwner(ctx, obj); err != nil {
+		return fmt.Errorf("could not update owner: %w", err)
+	}
 
-	jobEvent := observer.Create
 	_, err := controllerutil.CreateOrUpdate(ctx, r.Kube, obj, func() error {
 		if !obj.GetDeletionTimestamp().IsZero() {
-			jobEvent = observer.Delete
 			controllerutil.RemoveFinalizer(obj, jobFinalizerName)
-			controllerutil.RemoveFinalizer(obj, legacyJobFinalizerName)
+			controllerutil.RemoveFinalizer(obj, "k8up.syn.tools/jobobserver") // legacy finalizer
 			return nil
 		}
 		if obj.Status.Active > 0 {
-			jobEvent = observer.Running
 			controllerutil.AddFinalizer(obj, jobFinalizerName)
-		}
-		if obj.Status.Succeeded > 0 {
-			jobEvent = observer.Succeeded
-		}
-		if obj.Status.Failed > 0 {
-			jobEvent = observer.Failed
 		}
 		return nil
 	})
@@ -75,39 +63,7 @@ func (r *JobReconciler) Handle(ctx context.Context, obj *batchv1.Job) error {
 		return fmt.Errorf("could not update finalizers: %w", err)
 	}
 
-	exclusive, err := strconv.ParseBool(obj.GetLabels()[job.K8upExclusive])
-	if err != nil {
-		exclusive = false
-	}
-
-	jobType, exists := obj.GetLabels()[k8upv1.LabelK8upType]
-	if !exists {
-		jobType, exists = obj.GetLabels()[k8upv1.LegacyLabelK8upType]
-	}
-	if !exists {
-		jobType = k8upv1.ScheduleType.String()
-	}
-
-	oj := observer.ObservableJob{
-		Job:       obj,
-		JobType:   k8upv1.JobType(jobType),
-		Exclusive: exclusive,
-		Event:     jobEvent,
-	}
-
-	switch k8upv1.JobType(jobType) {
-	case k8upv1.ArchiveType:
-		fallthrough
-	case k8upv1.RestoreType:
-		fallthrough
-	case k8upv1.CheckType:
-		fallthrough
-	case k8upv1.BackupType:
-		return r.updateOwner(ctx, obj)
-	default:
-		observer.GetObserver().GetUpdateChannel() <- oj
-		return nil
-	}
+	return nil
 }
 
 func (r *JobReconciler) updateOwner(ctx context.Context, batchJob *batchv1.Job) error {
@@ -152,7 +108,7 @@ func (r *JobReconciler) updateOwner(ctx context.Context, batchJob *batchv1.Job) 
 	if successCond != nil && successCond.Status == corev1.ConditionTrue {
 		if !ownerStatus.HasSucceeded() {
 			// only increase success counter if new condition
-			monitoring.IncSuccessCounters(batchJob.Namespace, jobType)
+			monitoring.IncSuccessCounters(batchJob.Namespace, result.GetType())
 			log.Info("Job succeeded")
 		}
 		ownerStatus.SetSucceeded(message)
@@ -162,7 +118,7 @@ func (r *JobReconciler) updateOwner(ctx context.Context, batchJob *batchv1.Job) 
 	if failedCond != nil && failedCond.Status == corev1.ConditionTrue {
 		if !ownerStatus.HasFailed() {
 			// only increase fail counter if new condition
-			monitoring.IncFailureCounters(batchJob.Namespace, jobType)
+			monitoring.IncFailureCounters(batchJob.Namespace, result.GetType())
 			log.Info("Job failed")
 		}
 		ownerStatus.SetFailed(message)

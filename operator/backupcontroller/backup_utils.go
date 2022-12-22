@@ -6,7 +6,7 @@ import (
 	"github.com/k8up-io/k8up/v2/operator/executor"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	controllerruntime "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/k8up-io/k8up/v2/operator/cfg"
@@ -38,64 +38,52 @@ func containsAccessMode(s []corev1.PersistentVolumeAccessMode, e string) bool {
 }
 
 func (b *BackupExecutor) createServiceAccountAndBinding() error {
-	role, sa, binding := newServiceAccountDefinition(b.backup.Namespace)
-	for _, obj := range []client.Object{&role, &sa, &binding} {
-		if err := b.CreateObjectIfNotExisting(obj); err != nil {
-			return err
-		}
+	sa := &corev1.ServiceAccount{}
+	sa.Name = cfg.Config.ServiceAccount
+	sa.Namespace = b.backup.Namespace
+	_, err := controllerruntime.CreateOrUpdate(b.CTX, b.Client, sa, func() error {
+		return nil
+	})
+	if err != nil {
+		return err
 	}
-	return nil
-}
 
-func newServiceAccountDefinition(namespace string) (rbacv1.Role, corev1.ServiceAccount, rbacv1.RoleBinding) {
-	role := rbacv1.Role{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      cfg.Config.PodExecRoleName,
-			Namespace: namespace,
-		},
-		Rules: []rbacv1.PolicyRule{
+	role := &rbacv1.Role{}
+	role.Name = cfg.Config.PodExecRoleName
+	role.Namespace = b.backup.Namespace
+	_, err = controllerruntime.CreateOrUpdate(b.CTX, b.Client, role, func() error {
+		role.Rules = []rbacv1.PolicyRule{
 			{
-				APIGroups: []string{
-					"",
-				},
-				Resources: []string{
-					"pods",
-					"pods/exec",
-				},
-				Verbs: []string{
-					"*",
-				},
+				APIGroups: []string{""},
+				Resources: []string{"pods", "pods/exec"},
+				Verbs:     []string{"*"},
 			},
-		},
-	}
+		}
+		return nil
+	})
 
-	roleBinding := rbacv1.RoleBinding{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      cfg.Config.PodExecRoleName + "-namespaced",
-			Namespace: namespace,
-		},
-		Subjects: []rbacv1.Subject{
+	if err != nil {
+		return err
+	}
+	roleBinding := &rbacv1.RoleBinding{}
+	roleBinding.Name = cfg.Config.PodExecRoleName + "-namespaced"
+	roleBinding.Namespace = b.backup.Namespace
+	_, err = controllerruntime.CreateOrUpdate(b.CTX, b.Client, roleBinding, func() error {
+		roleBinding.Subjects = []rbacv1.Subject{
 			{
 				Kind:      "ServiceAccount",
-				Namespace: namespace,
-				Name:      cfg.Config.ServiceAccount,
+				Namespace: b.backup.Namespace,
+				Name:      sa.Name,
 			},
-		},
-		RoleRef: rbacv1.RoleRef{
+		}
+		roleBinding.RoleRef = rbacv1.RoleRef{
 			Kind:     "Role",
-			Name:     cfg.Config.ServiceAccount,
+			Name:     role.Name,
 			APIGroup: "rbac.authorization.k8s.io",
-		},
-	}
-
-	sa := corev1.ServiceAccount{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      cfg.Config.ServiceAccount,
-			Namespace: namespace,
-		},
-	}
-
-	return role, sa, roleBinding
+		}
+		return nil
+	})
+	return err
 }
 
 func (b *BackupExecutor) setupEnvVars() []corev1.EnvVar {

@@ -1,7 +1,6 @@
 package backupcontroller
 
 import (
-	"github.com/go-logr/logr"
 	k8upv1 "github.com/k8up-io/k8up/v2/api/v1"
 	"sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
@@ -20,7 +19,7 @@ import (
 // +kubebuilder:rbac:groups=rbac.authorization.k8s.io,resources=roles;rolebindings,verbs=get;list;watch;create;delete
 
 // SetupWithManager configures the reconciler.
-func (r *BackupReconciler) SetupWithManager(mgr controllerruntime.Manager, _ logr.Logger) error {
+func (r *BackupReconciler) SetupWithManager(mgr controllerruntime.Manager) error {
 	name := "backup.k8up.io"
 	r.Kube = mgr.GetClient()
 	return controllerruntime.NewControllerManagedBy(mgr).

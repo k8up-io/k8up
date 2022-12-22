@@ -10,7 +10,6 @@ import (
 	"github.com/go-logr/logr"
 	"github.com/imdario/mergo"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -18,8 +17,6 @@ import (
 	"github.com/k8up-io/k8up/v2/operator/cfg"
 	"github.com/k8up-io/k8up/v2/operator/executor/cleaner"
 	"github.com/k8up-io/k8up/v2/operator/job"
-	"github.com/k8up-io/k8up/v2/operator/observer"
-	"github.com/k8up-io/k8up/v2/operator/queue"
 )
 
 type Generic struct {
@@ -119,43 +116,6 @@ func (g *Generic) GetJobType() k8upv1.JobType {
 	return g.Obj.GetType()
 }
 
-// RegisterJobSucceededConditionCallback registers an observer on the job which updates ConditionJobSucceeded when
-// the job succeeds or fails, respectively.
-func (g *Generic) RegisterJobSucceededConditionCallback() {
-	name := g.GetJobNamespacedName()
-	observer.GetObserver().RegisterCallback(name.String(), func(event observer.ObservableJob) {
-		switch event.Event {
-		case observer.Succeeded:
-			g.SetFinished(event.Job.Namespace, event.Job.Name)
-			g.SetConditionTrueWithMessage(k8upv1.ConditionCompleted,
-				k8upv1.ReasonSucceeded,
-				"the job '%v/%v' ended successfully",
-				event.Job.Namespace, event.Job.Name)
-		case observer.Failed:
-			g.SetFinished(event.Job.Namespace, event.Job.Name)
-			g.SetConditionTrueWithMessage(k8upv1.ConditionCompleted,
-				k8upv1.ReasonFailed,
-				"the job '%v/%v' failed, please check its log for details",
-				event.Job.Namespace, event.Job.Name)
-		}
-	})
-}
-
-// CreateObjectIfNotExisting tries to create the given object, but ignores AlreadyExistsError.
-// If it fails for any other reason, the Ready condition is set to False with the error message and reason.
-func (g *Generic) CreateObjectIfNotExisting(obj client.Object) error {
-	err := g.Client.Create(g.CTX, obj)
-	if err != nil && !errors.IsAlreadyExists(err) {
-		g.SetConditionFalseWithMessage(k8upv1.ConditionReady,
-			k8upv1.ReasonCreationFailed,
-			"unable to create %v '%v/%v': %v",
-			obj.GetObjectKind().GroupVersionKind().Kind,
-			obj.GetNamespace(), obj.GetName(), err.Error())
-		return err
-	}
-	return nil
-}
-
 // listOldResources retrieves a list of the given resource type in the given namespace and fills the Item property
 // of objList. On errors, the error is being logged and the Scrubbed condition set to False with reason RetrievalFailed.
 func (g *Generic) listOldResources(namespace string, objList client.ObjectList) error {
@@ -190,15 +150,6 @@ func (g *Generic) CleanupOldResources(typ jobObjectList, name types.NamespacedNa
 	}
 	g.SetConditionTrueWithMessage(k8upv1.ConditionScrubbed, k8upv1.ReasonSucceeded, "Deleted %v resources", deleted)
 
-}
-
-// NewExecutor will return the right Executor for the given job object.
-func NewExecutor(config job.Config) queue.Executor {
-	switch config.Obj.GetType() {
-	case k8upv1.PruneType:
-		return NewPruneExecutor(config)
-	}
-	return nil
 }
 
 // DefaultEnv returns an environment that contains the default values for the fields.

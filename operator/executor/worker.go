@@ -5,7 +5,6 @@ package executor
 import (
 	"time"
 
-	k8upv1 "github.com/k8up-io/k8up/v2/api/v1"
 	"github.com/k8up-io/k8up/v2/operator/locker"
 	"k8s.io/apimachinery/pkg/api/errors"
 
@@ -60,27 +59,13 @@ func (qe *QueueWorker) loopRepositoryJobs(repository string) {
 			// and mark that in the status. So it is skippable.
 			shouldRun = !observer.GetObserver().IsAnyJobRunning(repository)
 		} else {
-			isExclusiveJobRunning := observer.GetObserver().IsExclusiveJobRunning(repository)
-			switch jobType {
-			case k8upv1.ArchiveType:
-				fallthrough
-			case k8upv1.RestoreType:
-				fallthrough
-			case k8upv1.CheckType:
-				fallthrough
-			case k8upv1.PruneType:
-				fallthrough
-			case k8upv1.BackupType:
-				// only the backup type is currently implemented without the observer
-				reached, err := qe.locker.IsConcurrentJobsLimitReached(jobType, jobLimit)
-				if err != nil {
-					job.Logger().Error(err, "cannot schedule job", "type", jobType, "repository", job.GetRepository())
-				}
-				shouldRun = !isExclusiveJobRunning && !reached
-			default:
-				shouldRun = !isExclusiveJobRunning &&
-					!observer.GetObserver().IsConcurrentJobsLimitReached(jobType, jobLimit)
+			reached, err := qe.locker.IsConcurrentJobsLimitReached(jobType, jobLimit)
+			if err != nil {
+				job.Logger().Error(err, "cannot schedule job", "type", jobType, "repository", job.GetRepository())
 			}
+			isExclusiveJobRunning := observer.GetObserver().IsExclusiveJobRunning(repository)
+			shouldRun = !isExclusiveJobRunning && !reached
+
 		}
 
 		if !shouldRun {
