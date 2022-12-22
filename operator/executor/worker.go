@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/k8up-io/k8up/v2/operator/locker"
-	"github.com/k8up-io/k8up/v2/operator/observer"
 	"github.com/k8up-io/k8up/v2/operator/queue"
 )
 
@@ -53,15 +52,22 @@ func (qe *QueueWorker) loopRepositoryJobs(repository string) {
 
 		shouldRun := false
 		if job.Exclusive() {
-			// TODO: discard an exclusive job if there's any other exclusive job running
-			// and mark that in the status. So it is skippable.
-			shouldRun = !observer.GetObserver().IsAnyJobRunning(repository)
+			running, err := qe.locker.IsAnyJobRunningForRepository(repository)
+			if err != nil {
+				job.Logger().Error(err, "cannot determine if job should run")
+				continue
+			}
+			shouldRun = !running
 		} else {
 			reached, err := qe.locker.IsConcurrentJobsLimitReached(jobType, jobLimit)
 			if err != nil {
-				job.Logger().Error(err, "cannot schedule job", "type", jobType, "repository", job.GetRepository())
+				job.Logger().Error(err, "cannot determine if concurrency limit reached", "type", jobType, "repository", job.GetRepository())
 			}
-			isExclusiveJobRunning := observer.GetObserver().IsExclusiveJobRunning(repository)
+			isExclusiveJobRunning, err := qe.locker.IsExclusiveJobRunning(repository)
+			if err != nil {
+				job.Logger().Error(err, "cannot determine if job should run")
+				continue
+			}
 			shouldRun = !isExclusiveJobRunning && !reached
 
 		}

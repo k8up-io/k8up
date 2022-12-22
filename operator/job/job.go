@@ -4,9 +4,11 @@ package job
 
 import (
 	"context"
+	"strings"
 
 	k8upv1 "github.com/k8up-io/k8up/v2/api/v1"
 	"github.com/k8up-io/k8up/v2/operator/cfg"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 
 	"github.com/go-logr/logr"
@@ -22,6 +24,9 @@ const (
 	K8uplabel = "k8upjob"
 	// K8upExclusive is needed to determine if a given job is considered exclusive or not.
 	K8upExclusive = "k8upjob/exclusive"
+
+	// K8upRepositoryAnnotation is a annotation that contains the restic repository string.
+	K8upRepositoryAnnotation = "k8up.io/repository"
 )
 
 // Config represents the whole context for a given job. It contains everything
@@ -47,6 +52,12 @@ func NewConfig(ctx context.Context, client client.Client, log logr.Logger, obj k
 
 // MutateBatchJob mutates the given Job with generic spec applicable to all K8up-spawned Jobs.
 func MutateBatchJob(batchJob *batchv1.Job, jobObj k8upv1.JobObject, config Config) error {
+	metav1.SetMetaDataAnnotation(&batchJob.ObjectMeta, K8upRepositoryAnnotation, strings.TrimSpace(config.Repository))
+	batchJob.Labels = labels.Merge(batchJob.Labels, labels.Set{
+		K8uplabel:            "true",
+		k8upv1.LabelK8upType: jobObj.GetType().String(),
+	})
+
 	batchJob.Spec.ActiveDeadlineSeconds = config.Obj.GetActiveDeadlineSeconds()
 	batchJob.Spec.Template.Labels = labels.Merge(batchJob.Spec.Template.Labels, labels.Set{
 		K8uplabel: "true",
@@ -64,9 +75,5 @@ func MutateBatchJob(batchJob *batchv1.Job, jobObj k8upv1.JobObject, config Confi
 	containers[0].Resources = config.Obj.GetResources()
 	batchJob.Spec.Template.Spec.Containers = containers
 
-	batchJob.Labels = labels.Merge(batchJob.Labels, labels.Set{
-		K8uplabel:            "true",
-		k8upv1.LabelK8upType: jobObj.GetType().String(),
-	})
 	return controllerruntime.SetControllerReference(jobObj, batchJob, config.Client.Scheme())
 }
