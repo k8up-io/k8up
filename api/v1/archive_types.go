@@ -1,6 +1,8 @@
 package v1
 
 import (
+	"reflect"
+
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -137,3 +139,7 @@ func (in *ArchiveSchedule) GetSchedule() ScheduleDefinition {
 func (in *ArchiveSchedule) GetObjectCreator() ObjectCreator {
 	return in
 }
+
+var (
+	ArchiveKind = reflect.TypeOf(Archive{}).Name()
+)

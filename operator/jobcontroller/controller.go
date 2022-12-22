@@ -11,7 +11,7 @@ import (
 	"github.com/k8up-io/k8up/v2/operator/observer"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -39,7 +39,7 @@ func (r *JobReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.R
 	err := r.Kube.Get(ctx, req.NamespacedName, jobObj)
 	if err != nil {
 
-		if errors.IsNotFound(err) {
+		if apierrors.IsNotFound(err) {
 			return reconcile.Result{}, nil
 		}
 
@@ -96,6 +96,10 @@ func (r *JobReconciler) Handle(ctx context.Context, obj *batchv1.Job) error {
 	}
 
 	switch k8upv1.JobType(jobType) {
+	case k8upv1.ArchiveType:
+		fallthrough
+	case k8upv1.RestoreType:
+		fallthrough
 	case k8upv1.BackupType:
 		return r.updateOwner(ctx, obj)
 	default:
@@ -116,6 +120,12 @@ func (r *JobReconciler) updateOwner(ctx context.Context, batchJob *batchv1.Job) 
 	case k8upv1.BackupKind:
 		result = &k8upv1.Backup{}
 		jobType = k8upv1.BackupType
+	case k8upv1.ArchiveKind:
+		result = &k8upv1.Archive{}
+		jobType = k8upv1.ArchiveType
+	case k8upv1.RestoreKind:
+		result = &k8upv1.Restore{}
+		jobType = k8upv1.RestoreType
 	default:
 		return fmt.Errorf("unrecognized controller kind in owner reference: %s", controllerReference.Kind)
 	}
@@ -123,7 +133,10 @@ func (r *JobReconciler) updateOwner(ctx context.Context, batchJob *batchv1.Job) 
 	// fetch the owner object
 	err := r.Kube.Get(ctx, types.NamespacedName{Name: controllerReference.Name, Namespace: batchJob.Namespace}, result)
 	if err != nil {
-		return fmt.Errorf("cannot get resource: %s/%s/%s", controllerReference.Kind, batchJob.Namespace, batchJob.Name)
+		if apierrors.IsNotFound(err) {
+			return nil // owner doesn't exist anymore, nothing to do.
+		}
+		return fmt.Errorf("cannot get resource: %s/%s/%s: %w", controllerReference.Kind, batchJob.Namespace, batchJob.Name, err)
 	}
 
 	log := ctrl.LoggerFrom(ctx)
@@ -138,20 +151,20 @@ func (r *JobReconciler) updateOwner(ctx context.Context, batchJob *batchv1.Job) 
 		if !ownerStatus.HasSucceeded() {
 			// only increase success counter if new condition
 			monitoring.IncSuccessCounters(batchJob.Namespace, jobType)
+			log.Info("Job succeeded")
 		}
 		ownerStatus.SetSucceeded(message)
 		ownerStatus.SetFinished(fmt.Sprintf("job '%s' completed successfully", batchJob.Name))
-		log.Info("job succeeded", "jobName", batchJob.Name)
 	}
 	failedCond := FindStatusCondition(batchJob.Status.Conditions, batchv1.JobFailed)
 	if failedCond != nil && failedCond.Status == corev1.ConditionTrue {
 		if !ownerStatus.HasFailed() {
 			// only increase fail counter if new condition
 			monitoring.IncFailureCounters(batchJob.Namespace, jobType)
+			log.Info("Job failed")
 		}
 		ownerStatus.SetFailed(message)
 		ownerStatus.SetFinished(fmt.Sprintf("job '%s' has failed", batchJob.Name))
-		log.Info("job failed", "jobName", batchJob.Name)
 	}
 	if successCond == nil && failedCond == nil {
 		ownerStatus.SetStarted(message)

@@ -61,14 +61,19 @@ func (qe *QueueWorker) loopRepositoryJobs(repository string) {
 			shouldRun = !observer.GetObserver().IsAnyJobRunning(repository)
 		} else {
 			isExclusiveJobRunning := observer.GetObserver().IsExclusiveJobRunning(repository)
-			if jobType == k8upv1.BackupType {
+			switch jobType {
+			case k8upv1.ArchiveType:
+				fallthrough
+			case k8upv1.RestoreType:
+				fallthrough
+			case k8upv1.BackupType:
 				// only the backup type is currently implemented without the observer
 				reached, err := qe.locker.IsConcurrentJobsLimitReached(jobType, jobLimit)
 				if err != nil {
 					job.Logger().Error(err, "cannot schedule job", "type", jobType, "repository", job.GetRepository())
 				}
 				shouldRun = !isExclusiveJobRunning && !reached
-			} else {
+			default:
 				shouldRun = !isExclusiveJobRunning &&
 					!observer.GetObserver().IsConcurrentJobsLimitReached(jobType, jobLimit)
 			}

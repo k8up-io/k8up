@@ -73,7 +73,7 @@ func (b *BackupExecutor) listAndFilterPVCs(annotation string) ([]corev1.Volume, 
 	volumes := make([]corev1.Volume, 0)
 	claimlist := &corev1.PersistentVolumeClaimList{}
 
-	b.Log.Info("Listing all PVCs", "annotation", annotation, "namespace", b.Obj.GetNamespace())
+	b.Log.Info("Listing all PVCs", "annotation", annotation)
 	if err := b.fetchPVCs(claimlist); err != nil {
 		return volumes, err
 	}
@@ -84,17 +84,17 @@ func (b *BackupExecutor) listAndFilterPVCs(annotation string) ([]corev1.Volume, 
 		tmpAnnotation, ok := annotations[annotation]
 
 		if !containsAccessMode(item.Spec.AccessModes, "ReadWriteMany") && !ok {
-			b.Log.Info("PVC isn't RWX", "namespace", item.GetNamespace(), "name", item.GetName())
+			b.Log.Info("PVC isn't RWX", "pvc", item.GetName())
 			continue
 		}
 
 		if !ok {
-			b.Log.Info("PVC doesn't have annotation, adding to list", "namespace", item.GetNamespace(), "name", item.GetName())
+			b.Log.Info("PVC doesn't have annotation, adding to list", "pvc", item.GetName())
 		} else if anno, _ := strconv.ParseBool(tmpAnnotation); !anno {
-			b.Log.Info("PVC skipped due to annotation", "namespace", item.GetNamespace(), "name", item.GetName(), "annotation", tmpAnnotation)
+			b.Log.Info("PVC skipped due to annotation", "pvc", item.GetName(), "annotation", tmpAnnotation)
 			continue
 		} else {
-			b.Log.Info("Adding to list", "namespace", item.GetNamespace(), "name", item.Name)
+			b.Log.Info("Adding to list", "pvc", item.Name)
 		}
 
 		tmpVol := corev1.Volume{

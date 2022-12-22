@@ -1,6 +1,6 @@
 //go:build integration
 
-package controllers_test
+package restorecontroller
 
 import (
 	"context"
@@ -15,7 +15,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	k8upv1 "github.com/k8up-io/k8up/v2/api/v1"
-	"github.com/k8up-io/k8up/v2/controllers"
 	"github.com/k8up-io/k8up/v2/envtest"
 )
 
@@ -66,10 +65,8 @@ func (r *RestoreTestSuite) givenRestoreResource() {
 }
 
 func (r *RestoreTestSuite) whenReconcile() controllerruntime.Result {
-	controller := controllers.RestoreReconciler{
-		Client: r.Client,
-		Log:    r.Logger,
-		Scheme: r.Scheme,
+	controller := RestoreReconciler{
+		Kube: r.Client,
 	}
 
 	key := types.NamespacedName{

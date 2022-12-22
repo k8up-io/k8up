@@ -96,7 +96,6 @@ prepare() {
 
 	replace_in_file "${target_file}" E2E_IMAGE "'${E2E_IMAGE}'"
 	replace_in_file "${target_file}" ID "$(id -u)"
-	replace_in_file "${target_file}" BACKUP_ENABLE_LEADER_ELECTION "'${BACKUP_ENABLE_LEADER_ELECTION}'"
 	replace_in_file "${target_file}" BACKUP_FILE_NAME "${BACKUP_FILE_NAME}"
 	replace_in_file "${target_file}" BACKUP_FILE_CONTENT "${BACKUP_FILE_CONTENT}"
 }

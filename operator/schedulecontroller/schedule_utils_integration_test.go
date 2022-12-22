@@ -1,6 +1,6 @@
 //go:build integration
 
-package controllers_test
+package schedulecontroller
 
 import (
 	"k8s.io/apimachinery/pkg/api/meta"

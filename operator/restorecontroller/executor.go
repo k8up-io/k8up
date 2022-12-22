@@ -1,31 +1,31 @@
-package executor
+package restorecontroller
 
 import (
 	"errors"
 	"fmt"
 	"strconv"
 
+	"github.com/k8up-io/k8up/v2/operator/executor"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
 	k8upv1 "github.com/k8up-io/k8up/v2/api/v1"
 	"github.com/k8up-io/k8up/v2/operator/cfg"
 	"github.com/k8up-io/k8up/v2/operator/job"
-	"github.com/k8up-io/k8up/v2/operator/observer"
 )
 
 const restorePath = "/restore"
 
 type RestoreExecutor struct {
-	Generic
+	executor.Generic
 }
 
 // NewRestoreExecutor will return a new executor for Restore jobs.
 func NewRestoreExecutor(config job.Config) *RestoreExecutor {
 	return &RestoreExecutor{
-		Generic: Generic{config},
+		Generic: executor.Generic{Config: config},
 	}
 }
 
@@ -41,79 +41,52 @@ func (r *RestoreExecutor) Execute() error {
 		return errors.New("object is not a restore")
 	}
 
-	if restore.GetStatus().Started {
-		r.RegisterJobSucceededConditionCallback() // ensure that completed jobs can complete backups between operator restarts.
+	restoreJob, err := r.createRestoreObject(restore)
+	if err != nil {
+		r.Log.Error(err, "unable to create or update restore object")
+		r.SetConditionFalseWithMessage(k8upv1.ConditionReady, k8upv1.ReasonCreationFailed, "unable to create restore object: %v", err)
 		return nil
 	}
 
-	r.startRestore(restore)
+	r.SetStarted("the job '%v/%v' was created", restoreJob.Namespace, restoreJob.Name)
 
 	return nil
 }
 
-func (r *RestoreExecutor) startRestore(restore *k8upv1.Restore) {
-	r.registerRestoreCallback(restore)
-	r.RegisterJobSucceededConditionCallback()
-
-	restoreJob, err := r.buildRestoreObject(restore)
-	if err != nil {
-		r.Log.Error(err, "unable to build restore object")
-		r.SetConditionFalseWithMessage(k8upv1.ConditionReady, k8upv1.ReasonCreationFailed, "unable to build restore object: %v", err)
-		return
-	}
-
-	if err := r.Client.Create(r.CTX, restoreJob); err != nil {
-		if !apierrors.IsAlreadyExists(err) {
-			r.Log.Error(err, "could not create job")
-			r.SetConditionFalseWithMessage(k8upv1.ConditionReady, k8upv1.ReasonCreationFailed, "could not create job: %v", err)
-			return
-		}
-	}
-
-	r.SetStarted("the job '%v/%v' was created", restoreJob.Namespace, restoreJob.Name)
-}
-
-func (r *RestoreExecutor) registerRestoreCallback(restore *k8upv1.Restore) {
-	name := r.GetJobNamespacedName()
-	observer.GetObserver().RegisterCallback(name.String(), func(_ observer.ObservableJob) {
-		r.cleanupOldRestores(name, restore)
-	})
-}
-
 func (r *RestoreExecutor) cleanupOldRestores(name types.NamespacedName, restore *k8upv1.Restore) {
 	r.CleanupOldResources(&k8upv1.RestoreList{}, name, restore)
-
 }
 
-func (r *RestoreExecutor) buildRestoreObject(restore *k8upv1.Restore) (*batchv1.Job, error) {
-	j, err := job.GenerateGenericJob(restore, r.Config)
-	if err != nil {
-		return nil, err
-	}
+func (r *RestoreExecutor) createRestoreObject(restore *k8upv1.Restore) (*batchv1.Job, error) {
+	batchJob := &batchv1.Job{}
+	batchJob.Name = restore.GetJobName()
+	batchJob.Namespace = restore.Namespace
+	_, err := controllerutil.CreateOrUpdate(r.CTX, r.Client, batchJob, func() error {
+		mutateErr := job.MutateBatchJob(batchJob, restore, r.Config)
+		if mutateErr != nil {
+			return mutateErr
+		}
+		batchJob.Labels[job.K8upExclusive] = strconv.FormatBool(r.Exclusive())
+		batchJob.Spec.Template.Spec.Containers[0].Env = r.setupEnvVars(restore)
+		restore.Spec.AppendEnvFromToContainer(&batchJob.Spec.Template.Spec.Containers[0])
 
-	j.GetLabels()[job.K8upExclusive] = strconv.FormatBool(r.Exclusive())
+		volumes, volumeMounts := r.volumeConfig(restore)
+		batchJob.Spec.Template.Spec.Volumes = volumes
+		batchJob.Spec.Template.Spec.Containers[0].VolumeMounts = volumeMounts
 
-	j.Spec.Template.Spec.Containers[0].Env = r.setupEnvVars(restore)
-	restore.Spec.AppendEnvFromToContainer(&j.Spec.Template.Spec.Containers[0])
+		args, argsErr := r.args(restore)
+		batchJob.Spec.Template.Spec.Containers[0].Args = args
+		return argsErr
+	})
 
-	volumes, volumeMounts := r.volumeConfig(restore)
-	j.Spec.Template.Spec.Volumes = volumes
-	j.Spec.Template.Spec.Containers[0].VolumeMounts = volumeMounts
-
-	args, err := r.args(restore)
-	if err != nil {
-		return nil, err
-	}
-	j.Spec.Template.Spec.Containers[0].Args = args
-
-	return j, nil
+	return batchJob, err
 }
 
 func (r *RestoreExecutor) args(restore *k8upv1.Restore) ([]string, error) {
 	args := []string{"-restore"}
 
 	if len(restore.Spec.Tags) > 0 {
-		args = append(args, BuildTagArgs(restore.Spec.Tags)...)
+		args = append(args, executor.BuildTagArgs(restore.Spec.Tags)...)
 	}
 
 	if restore.Spec.RestoreFilter != "" {
@@ -160,7 +133,7 @@ func (r *RestoreExecutor) volumeConfig(restore *k8upv1.Restore) ([]corev1.Volume
 }
 
 func (r *RestoreExecutor) setupEnvVars(restore *k8upv1.Restore) []corev1.EnvVar {
-	vars := NewEnvVarConverter()
+	vars := executor.NewEnvVarConverter()
 
 	if restore.Spec.RestoreMethod.S3 != nil {
 		for key, value := range restore.Spec.RestoreMethod.S3.RestoreEnvVars() {
@@ -182,7 +155,7 @@ func (r *RestoreExecutor) setupEnvVars(restore *k8upv1.Restore) []corev1.EnvVar 
 		vars.SetString(cfg.ResticRepositoryEnvName, restore.Spec.Backend.String())
 	}
 
-	err := vars.Merge(DefaultEnv(r.Obj.GetNamespace()))
+	err := vars.Merge(executor.DefaultEnv(r.Obj.GetNamespace()))
 	if err != nil {
 		r.Log.Error(err, "error while merging the environment variables", "name", r.Obj.GetName(), "namespace", r.Obj.GetNamespace())
 	}

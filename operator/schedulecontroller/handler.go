@@ -1,4 +1,4 @@
-package handler
+package schedulecontroller
 
 import (
 	"fmt"
@@ -147,7 +147,7 @@ func (s *ScheduleHandler) updateSchedule() error {
 }
 
 func (s *ScheduleHandler) createRandomSchedule(jobType k8upv1.JobType, originalSchedule k8upv1.ScheduleDefinition) (k8upv1.ScheduleDefinition, error) {
-	seed := s.createSeed(s.schedule, jobType)
+	seed := createSeed(s.schedule, jobType)
 	randomizedSchedule, err := randomizeSchedule(seed, originalSchedule)
 	if err != nil {
 		return originalSchedule, err

@@ -35,7 +35,7 @@ func (r *BackupReconciler) Reconcile(ctx context.Context, req controllerruntime.
 
 	prebackupCond := meta.FindStatusCondition(backup.Status.Conditions, v1.ConditionPreBackupPodReady.String())
 	if backup.Status.HasFinished() && prebackupCond != nil {
-		if prebackupCond.Reason == v1.ReasonFinished.String() || prebackupCond.Reason == v1.ReasonFailed.String() {
+		if prebackupCond.Reason == v1.ReasonFinished.String() || prebackupCond.Reason == v1.ReasonFailed.String() || prebackupCond.Reason == v1.ReasonNoPreBackupPodsFound.String() {
 			// only ignore future reconciles if we have stopped all prebackup deployments in an earlier reconciliation.
 			return controllerruntime.Result{}, nil
 		}
