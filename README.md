@@ -1,4 +1,4 @@
-[![Build](https://img.shields.io/github/workflow/status/k8up-io/k8up/Test)][build]
+[![Build](https://img.shields.io/github/actions/workflow/status/k8up-io/k8up/.github/workflows/test.yml?branch=master)][build]
 ![Go version](https://img.shields.io/github/go-mod/go-version/k8up-io/k8up)
 [![Version](https://img.shields.io/github/v/release/k8up-io/k8up)][releases]
 [![GitHub downloads](https://img.shields.io/github/downloads/k8up-io/k8up/total)][releases]
