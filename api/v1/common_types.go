@@ -85,6 +85,8 @@ const (
 	LegacyLabelK8upType = "k8up.syn.tools/type"
 	// LabelManagedBy identifies the tool being used to manage the operation of a resource
 	LabelManagedBy = "app.kubernetes.io/managed-by"
+	// LabelRepositoryHash is the label key that identifies the Restic repository
+	LabelRepositoryHash = "k8up.io/repository-hash"
 )
 
 // String casts the value to string.
