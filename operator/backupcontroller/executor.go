@@ -4,14 +4,14 @@ import (
 	"fmt"
 	"strconv"
 
+	k8upv1 "github.com/k8up-io/k8up/v2/api/v1"
+	"github.com/k8up-io/k8up/v2/operator/cfg"
 	"github.com/k8up-io/k8up/v2/operator/executor"
+	"github.com/k8up-io/k8up/v2/operator/job"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
-
-	k8upv1 "github.com/k8up-io/k8up/v2/api/v1"
-	"github.com/k8up-io/k8up/v2/operator/cfg"
-	"github.com/k8up-io/k8up/v2/operator/job"
+	controllerruntime "sigs.k8s.io/controller-runtime"
 )
 
 // BackupExecutor creates a batch.job object on the cluster. It merges all the
@@ -59,12 +59,7 @@ func (b *BackupExecutor) Execute() error {
 		return err
 	}
 
-	genericJob, err := job.GenerateGenericJob(b.Obj, b.Config)
-	if err != nil {
-		return err
-	}
-
-	return b.startBackup(genericJob)
+	return b.startBackup()
 }
 
 // listAndFilterPVCs lists all PVCs in the given namespace and filters them for K8up specific usage.
@@ -112,7 +107,7 @@ func (b *BackupExecutor) listAndFilterPVCs(annotation string) ([]corev1.Volume, 
 	return volumes, nil
 }
 
-func (b *BackupExecutor) startBackup(backupJob *batchv1.Job) error {
+func (b *BackupExecutor) startBackup() error {
 
 	ready, err := b.StartPreBackup()
 	if err != nil {
@@ -128,14 +123,26 @@ func (b *BackupExecutor) startBackup(backupJob *batchv1.Job) error {
 		return err
 	}
 
-	backupJob.Spec.Template.Spec.Containers[0].Env = b.setupEnvVars()
-	b.backup.Spec.AppendEnvFromToContainer(&backupJob.Spec.Template.Spec.Containers[0])
-	backupJob.Spec.Template.Spec.Volumes = volumes
-	backupJob.Spec.Template.Spec.ServiceAccountName = cfg.Config.ServiceAccount
-	backupJob.Spec.Template.Spec.Containers[0].VolumeMounts = b.newVolumeMounts(volumes)
-	backupJob.Spec.Template.Spec.Containers[0].Args = executor.BuildTagArgs(b.backup.Spec.Tags)
+	batchJob := &batchv1.Job{}
+	batchJob.Name = b.backup.GetJobName()
+	batchJob.Namespace = b.backup.Namespace
 
-	return b.CreateObjectIfNotExisting(backupJob)
+	_, err = controllerruntime.CreateOrUpdate(b.CTX, b.Client, batchJob, func() error {
+		mutateErr := job.MutateBatchJob(batchJob, b.backup, b.Config)
+		if mutateErr != nil {
+			return mutateErr
+		}
+
+		batchJob.Spec.Template.Spec.Containers[0].Env = b.setupEnvVars()
+		b.backup.Spec.AppendEnvFromToContainer(&batchJob.Spec.Template.Spec.Containers[0])
+		batchJob.Spec.Template.Spec.Volumes = volumes
+		batchJob.Spec.Template.Spec.ServiceAccountName = cfg.Config.ServiceAccount
+		batchJob.Spec.Template.Spec.Containers[0].VolumeMounts = b.newVolumeMounts(volumes)
+		batchJob.Spec.Template.Spec.Containers[0].Args = executor.BuildTagArgs(b.backup.Spec.Tags)
+		return nil
+	})
+
+	return err
 }
 
 func (b *BackupExecutor) cleanupOldBackups(name types.NamespacedName) {

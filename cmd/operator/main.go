@@ -4,28 +4,24 @@ import (
 	"fmt"
 	"strings"
 
+	k8upv1 "github.com/k8up-io/k8up/v2/api/v1"
+	"github.com/k8up-io/k8up/v2/cmd"
 	"github.com/k8up-io/k8up/v2/operator/archivecontroller"
 	"github.com/k8up-io/k8up/v2/operator/backupcontroller"
+	"github.com/k8up-io/k8up/v2/operator/cfg"
+	"github.com/k8up-io/k8up/v2/operator/checkcontroller"
+	"github.com/k8up-io/k8up/v2/operator/executor"
 	"github.com/k8up-io/k8up/v2/operator/jobcontroller"
 	"github.com/k8up-io/k8up/v2/operator/locker"
+	"github.com/k8up-io/k8up/v2/operator/prunecontroller"
 	"github.com/k8up-io/k8up/v2/operator/restorecontroller"
 	"github.com/k8up-io/k8up/v2/operator/schedulecontroller"
-	"k8s.io/apimachinery/pkg/api/resource"
-	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
-
 	"github.com/urfave/cli/v2"
-	batchv1 "k8s.io/api/batch/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	ctrl "sigs.k8s.io/controller-runtime"
-
-	k8upv1 "github.com/k8up-io/k8up/v2/api/v1"
-	"github.com/k8up-io/k8up/v2/cmd"
-	"github.com/k8up-io/k8up/v2/controllers"
-	"github.com/k8up-io/k8up/v2/operator/cfg"
-	"github.com/k8up-io/k8up/v2/operator/executor"
-	// +kubebuilder:scaffold:imports
 )
 
 const (
@@ -119,18 +115,18 @@ func operatorMain(c *cli.Context) error {
 	lock := &locker.Locker{Kube: mgr.GetClient()}
 	executor.StartExecutor(lock)
 
-	for name, reconciler := range map[string]controllers.ReconcilerSetup{
+	for name, reconciler := range map[string]ReconcilerSetup{
 		"Schedule": &schedulecontroller.ScheduleReconciler{},
 		"Backup":   &backupcontroller.BackupReconciler{},
 		"Restore":  &restorecontroller.RestoreReconciler{},
 		"Archive":  &archivecontroller.ArchiveReconciler{},
-		"Check":    &controllers.CheckReconciler{},
-		"Prune":    &controllers.PruneReconciler{},
+		"Check":    &checkcontroller.CheckReconciler{},
+		"Prune":    &prunecontroller.PruneReconciler{},
 		"Job":      &jobcontroller.JobReconciler{},
 	} {
-		if err := reconciler.SetupWithManager(mgr, operatorLog.WithName("controllers").WithName(name)); err != nil {
-			operatorLog.Error(err, "unable to initialize operator mode", "step", "controller", "controller", name)
-			return fmt.Errorf("unable to setup reconciler: %w", err)
+		if setupErr := reconciler.SetupWithManager(mgr); setupErr != nil {
+			operatorLog.Error(setupErr, "unable to initialize operator mode", "step", "controller", "controller", name)
+			return fmt.Errorf("unable to setup reconciler: %w", setupErr)
 		}
 	}
 	// +kubebuilder:scaffold:builder
@@ -146,7 +142,6 @@ func operatorMain(c *cli.Context) error {
 func k8upScheme() *runtime.Scheme {
 	scheme := runtime.NewScheme()
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
-	utilruntime.Must(batchv1.AddToScheme(scheme))
 	utilruntime.Must(k8upv1.AddToScheme(scheme))
 	// +kubebuilder:scaffold:scheme
 	return scheme
@@ -173,4 +168,9 @@ func validateQuantityFlags(ctx *cli.Context) error {
 	}
 
 	return nil
+}
+
+// ReconcilerSetup is a common interface to configure reconcilers.
+type ReconcilerSetup interface {
+	SetupWithManager(mgr ctrl.Manager) error
 }

@@ -15,14 +15,11 @@ type Locker struct {
 }
 
 // jobListFn is a function that by default lists job with the Kubernetes Client, but allows unit testing without the client.
-var jobListFn = func(locker *Locker, jobType k8upv1.JobType) (batchv1.JobList, error) {
+var jobListFn = func(locker *Locker, listOptions ...client.ListOption) (batchv1.JobList, error) {
 	// list all jobs that match labels.
 	// controller-runtime by default caches GET and LIST requests, so performance-wise all the results should be in the cache already.
 	list := batchv1.JobList{}
-	err := locker.Kube.List(context.Background(), &list, client.MatchingLabels{
-		k8upv1.LabelK8upType: jobType.String(),
-		job.K8uplabel:        "true",
-	})
+	err := locker.Kube.List(context.Background(), &list, listOptions...)
 	return list, err
 }
 
@@ -36,7 +33,10 @@ func (l *Locker) IsConcurrentJobsLimitReached(jobType k8upv1.JobType, jobLimit i
 		// no limit set
 		return false, nil
 	}
-	list, err := jobListFn(l, jobType)
+	list, err := jobListFn(l, client.MatchingLabels{
+		job.K8uplabel:        "true",
+		k8upv1.LabelK8upType: jobType.String(),
+	})
 	if err != nil {
 		return false, fmt.Errorf("cannot determine job concurrency: %w", err)
 	}

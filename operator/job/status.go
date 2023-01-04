@@ -36,28 +36,22 @@ func (c *Config) SetConditionFalseWithMessage(condition k8upv1.ConditionType, re
 }
 
 // patchConditions patches the Status object on the K8s controller with the given Conditions
-func (c *Config) patchConditions(conditionStatus metav1.ConditionStatus, reason k8upv1.ConditionReason, message string, conditions ...k8upv1.ConditionType) {
-	runtimeObject := c.Obj
-	patch := client.MergeFrom(runtimeObject.DeepCopyObject().(client.Object))
-
+func (c *Config) patchConditions(conditionStatus metav1.ConditionStatus, reason k8upv1.ConditionReason, message string, condition k8upv1.ConditionType) {
 	status := c.Obj.GetStatus()
-
-	for _, condition := range conditions {
-		meta.SetStatusCondition(&status.Conditions, metav1.Condition{
-			Type:    condition.String(),
-			Status:  conditionStatus,
-			Message: message,
-			Reason:  reason.String(),
-		})
-	}
-
+	meta.SetStatusCondition(&status.Conditions, metav1.Condition{
+		Type:    condition.String(),
+		Status:  conditionStatus,
+		Message: message,
+		Reason:  reason.String(),
+	})
 	c.Obj.SetStatus(status)
-	err := c.Client.Status().Patch(c.CTX, c.Obj.(client.Object), patch)
+
+	err := c.Client.Status().Update(c.CTX, c.Obj)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			return
 		}
-		c.Log.Error(err, "could not patch status conditions")
+		c.Log.Error(err, "could not patch status condition")
 	}
 }
 
@@ -68,7 +62,8 @@ func (c *Config) SetStarted(message string, args ...interface{}) {
 	status.SetStarted(fmt.Sprintf(message, args...))
 	c.Obj.SetStatus(status)
 
-	err := c.Client.Status().Update(c.CTX, c.Obj)
+	patch := client.MergeFrom(c.Obj.DeepCopyObject().(client.Object))
+	err := c.Client.Status().Patch(c.CTX, c.Obj, patch)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			return
@@ -83,7 +78,8 @@ func (c *Config) SetFinished(namespace, name string) {
 	status.SetFinished(fmt.Sprintf("the Job '%s/%s' ended", namespace, name))
 	c.Obj.SetStatus(status)
 
-	err := c.Client.Status().Update(c.CTX, c.Obj)
+	patch := client.MergeFrom(c.Obj.DeepCopyObject().(client.Object))
+	err := c.Client.Status().Patch(c.CTX, c.Obj, patch)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			return

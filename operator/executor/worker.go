@@ -5,11 +5,7 @@ package executor
 import (
 	"time"
 
-	k8upv1 "github.com/k8up-io/k8up/v2/api/v1"
 	"github.com/k8up-io/k8up/v2/operator/locker"
-	"k8s.io/apimachinery/pkg/api/errors"
-
-	"github.com/k8up-io/k8up/v2/operator/observer"
 	"github.com/k8up-io/k8up/v2/operator/queue"
 )
 
@@ -56,27 +52,24 @@ func (qe *QueueWorker) loopRepositoryJobs(repository string) {
 
 		shouldRun := false
 		if job.Exclusive() {
-			// TODO: discard an exclusive job if there's any other exclusive job running
-			// and mark that in the status. So it is skippable.
-			shouldRun = !observer.GetObserver().IsAnyJobRunning(repository)
-		} else {
-			isExclusiveJobRunning := observer.GetObserver().IsExclusiveJobRunning(repository)
-			switch jobType {
-			case k8upv1.ArchiveType:
-				fallthrough
-			case k8upv1.RestoreType:
-				fallthrough
-			case k8upv1.BackupType:
-				// only the backup type is currently implemented without the observer
-				reached, err := qe.locker.IsConcurrentJobsLimitReached(jobType, jobLimit)
-				if err != nil {
-					job.Logger().Error(err, "cannot schedule job", "type", jobType, "repository", job.GetRepository())
-				}
-				shouldRun = !isExclusiveJobRunning && !reached
-			default:
-				shouldRun = !isExclusiveJobRunning &&
-					!observer.GetObserver().IsConcurrentJobsLimitReached(jobType, jobLimit)
+			running, err := qe.locker.IsAnyJobRunningForRepository(repository)
+			if err != nil {
+				job.Logger().Error(err, "cannot determine if job should run")
+				continue
 			}
+			shouldRun = !running
+		} else {
+			reached, err := qe.locker.IsConcurrentJobsLimitReached(jobType, jobLimit)
+			if err != nil {
+				job.Logger().Error(err, "cannot determine if concurrency limit reached", "type", jobType, "repository", job.GetRepository())
+			}
+			isExclusiveJobRunning, err := qe.locker.IsExclusiveJobRunning(repository)
+			if err != nil {
+				job.Logger().Error(err, "cannot determine if job should run")
+				continue
+			}
+			shouldRun = !isExclusiveJobRunning && !reached
+
 		}
 
 		if !shouldRun {
@@ -86,9 +79,7 @@ func (qe *QueueWorker) loopRepositoryJobs(repository string) {
 
 		err := job.Execute()
 		if err != nil {
-			if !errors.IsAlreadyExists(err) {
-				job.Logger().Error(err, "cannot create job", "repository", repository)
-			}
+			job.Logger().Error(err, "failed to execute", "repository", repository)
 		}
 
 		// Skip the rest for this repository if we just started an exclusive job.

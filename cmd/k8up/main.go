@@ -9,8 +9,9 @@ import (
 
 	"github.com/go-logr/logr"
 	"github.com/urfave/cli/v2"
+	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
-	"sigs.k8s.io/controller-runtime/pkg/log/zap"
+	controllerzap "sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	"github.com/k8up-io/k8up/v2/cmd"
 	"github.com/k8up-io/k8up/v2/cmd/operator"
@@ -89,6 +90,9 @@ func newLogger(name string, debug bool) logr.Logger {
 	if debug {
 		level = zapcore.DebugLevel
 	}
-	logger := zap.New(zap.UseDevMode(true), zap.Level(level))
+	cfg := zap.NewDevelopmentConfig()
+	cfg.EncoderConfig.EncodeTime = zapcore.RFC3339TimeEncoder
+	enc := zapcore.NewConsoleEncoder(cfg.EncoderConfig)
+	logger := controllerzap.New(controllerzap.Level(level), controllerzap.Encoder(enc))
 	return logger.WithName(name)
 }

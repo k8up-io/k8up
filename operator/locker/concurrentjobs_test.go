@@ -6,6 +6,7 @@ import (
 	k8upv1 "github.com/k8up-io/k8up/v2/api/v1"
 	"github.com/stretchr/testify/assert"
 	batchv1 "k8s.io/api/batch/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 func TestLocker_IsConcurrentJobsLimitReached(t *testing.T) {
@@ -53,7 +54,7 @@ func TestLocker_IsConcurrentJobsLimitReached(t *testing.T) {
 				// reset function, just to be safe
 				jobListFn = oldFn
 			}()
-			jobListFn = func(locker *Locker, jobType k8upv1.JobType) (batchv1.JobList, error) {
+			jobListFn = func(locker *Locker, listOption ...client.ListOption) (batchv1.JobList, error) {
 				// fake response
 				return batchv1.JobList{Items: tc.givenJobs}, nil
 			}

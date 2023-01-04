@@ -1,6 +1,8 @@
 package v1
 
 import (
+	"reflect"
+
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -169,3 +171,7 @@ func (in *PruneSchedule) GetObjectCreator() ObjectCreator {
 func init() {
 	SchemeBuilder.Register(&Prune{}, &PruneList{})
 }
+
+var (
+	PruneKind = reflect.TypeOf(Prune{}).Name()
+)

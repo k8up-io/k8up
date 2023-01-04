@@ -1,4 +1,4 @@
-package archivecontroller
+package checkcontroller
 
 import (
 	"context"
@@ -13,42 +13,40 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-// ArchiveReconciler reconciles a Archive object
-type ArchiveReconciler struct {
+// CheckReconciler reconciles a Check object
+type CheckReconciler struct {
 	Kube client.Client
 }
 
 // Reconcile is the entrypoint to manage the given resource.
-func (r *ArchiveReconciler) Reconcile(ctx context.Context, req controllerruntime.Request) (controllerruntime.Result, error) {
+func (r *CheckReconciler) Reconcile(ctx context.Context, req controllerruntime.Request) (controllerruntime.Result, error) {
 	log := controllerruntime.LoggerFrom(ctx)
 
-	archive := &k8upv1.Archive{}
-	err := r.Kube.Get(ctx, req.NamespacedName, archive)
+	check := &k8upv1.Check{}
+	err := r.Kube.Get(ctx, req.NamespacedName, check)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			return controllerruntime.Result{}, nil
 		}
-		log.Error(err, "Failed to get Archive")
+		log.Error(err, "Failed to get Check")
 		return controllerruntime.Result{}, err
 	}
 
-	if archive.Status.HasStarted() {
+	if check.Status.HasStarted() {
 		return controllerruntime.Result{}, nil
 	}
 
 	repository := cfg.Config.GetGlobalRepository()
-	if archive.Spec.Backend != nil {
-		repository = archive.Spec.Backend.String()
+	if check.Spec.Backend != nil {
+		repository = check.Spec.Backend.String()
 	}
-	if archive.Spec.RestoreSpec == nil {
-		archive.Spec.RestoreSpec = &k8upv1.RestoreSpec{}
-	}
-	config := job.NewConfig(ctx, r.Kube, log, archive, repository)
 
-	executor := NewArchiveExecutor(config)
+	config := job.NewConfig(ctx, r.Kube, log, check, repository)
 
-	if archive.Status.HasFinished() {
-		executor.cleanupOldArchives(executor.GetJobNamespacedName(), archive)
+	executor := NewCheckExecutor(config)
+
+	if check.Status.HasFinished() {
+		executor.cleanupOldChecks(executor.GetJobNamespacedName(), check)
 		return controllerruntime.Result{}, nil
 	}
 

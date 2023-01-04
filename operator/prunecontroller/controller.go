@@ -1,4 +1,4 @@
-package archivecontroller
+package prunecontroller
 
 import (
 	"context"
@@ -13,42 +13,36 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-// ArchiveReconciler reconciles a Archive object
-type ArchiveReconciler struct {
+// PruneReconciler reconciles a Prune object
+type PruneReconciler struct {
 	Kube client.Client
 }
 
 // Reconcile is the entrypoint to manage the given resource.
-func (r *ArchiveReconciler) Reconcile(ctx context.Context, req controllerruntime.Request) (controllerruntime.Result, error) {
+func (r *PruneReconciler) Reconcile(ctx context.Context, req controllerruntime.Request) (controllerruntime.Result, error) {
 	log := controllerruntime.LoggerFrom(ctx)
 
-	archive := &k8upv1.Archive{}
-	err := r.Kube.Get(ctx, req.NamespacedName, archive)
+	prune := &k8upv1.Prune{}
+	err := r.Kube.Get(ctx, req.NamespacedName, prune)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			return controllerruntime.Result{}, nil
 		}
-		log.Error(err, "Failed to get Archive")
 		return controllerruntime.Result{}, err
 	}
 
-	if archive.Status.HasStarted() {
+	if prune.Status.HasStarted() {
 		return controllerruntime.Result{}, nil
 	}
-
 	repository := cfg.Config.GetGlobalRepository()
-	if archive.Spec.Backend != nil {
-		repository = archive.Spec.Backend.String()
+	if prune.Spec.Backend != nil {
+		repository = prune.Spec.Backend.String()
 	}
-	if archive.Spec.RestoreSpec == nil {
-		archive.Spec.RestoreSpec = &k8upv1.RestoreSpec{}
-	}
-	config := job.NewConfig(ctx, r.Kube, log, archive, repository)
+	config := job.NewConfig(ctx, r.Kube, log, prune, repository)
+	executor := NewPruneExecutor(config)
 
-	executor := NewArchiveExecutor(config)
-
-	if archive.Status.HasFinished() {
-		executor.cleanupOldArchives(executor.GetJobNamespacedName(), archive)
+	if prune.Status.HasFinished() {
+		executor.cleanupOldPrunes(executor.GetJobNamespacedName(), prune)
 		return controllerruntime.Result{}, nil
 	}
 

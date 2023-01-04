@@ -1,30 +1,30 @@
-package executor
+package prunecontroller
 
 import (
 	"errors"
 	"strconv"
 	"strings"
 
+	"github.com/k8up-io/k8up/v2/operator/executor"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
 	k8upv1 "github.com/k8up-io/k8up/v2/api/v1"
 	"github.com/k8up-io/k8up/v2/operator/cfg"
 	"github.com/k8up-io/k8up/v2/operator/job"
-	"github.com/k8up-io/k8up/v2/operator/observer"
 )
 
 // PruneExecutor will execute the batch.job for Prunes.
 type PruneExecutor struct {
-	Generic
+	executor.Generic
 }
 
 // NewPruneExecutor will return a new executor for Prune jobs.
 func NewPruneExecutor(config job.Config) *PruneExecutor {
 	return &PruneExecutor{
-		Generic: Generic{config},
+		Generic: executor.Generic{Config: config},
 	}
 }
 
@@ -40,20 +40,28 @@ func (p *PruneExecutor) Execute() error {
 		return errors.New("object is not a prune")
 	}
 
-	if prune.GetStatus().Started {
-		p.RegisterJobSucceededConditionCallback() // ensure that completed jobs can complete backups between operator restarts.
-		return nil
-	}
+	batchJob := &batchv1.Job{}
+	batchJob.Name = prune.GetJobName()
+	batchJob.Namespace = prune.Namespace
 
-	jobObj, err := job.GenerateGenericJob(prune, p.Config)
+	_, err := controllerutil.CreateOrUpdate(p.CTX, p.Client, batchJob, func() error {
+		mutateErr := job.MutateBatchJob(batchJob, prune, p.Config)
+		if mutateErr != nil {
+			return mutateErr
+		}
+
+		batchJob.Spec.Template.Spec.Containers[0].Env = p.setupEnvVars(prune)
+		prune.Spec.AppendEnvFromToContainer(&batchJob.Spec.Template.Spec.Containers[0])
+		batchJob.Spec.Template.Spec.Containers[0].Args = append([]string{"-prune"}, executor.BuildTagArgs(prune.Spec.Retention.Tags)...)
+		batchJob.Labels[job.K8upExclusive] = "true"
+		return nil
+	})
 	if err != nil {
-		p.SetConditionFalseWithMessage(k8upv1.ConditionReady, k8upv1.ReasonCreationFailed, "could not get job template: %v", err)
+		p.SetConditionFalseWithMessage(k8upv1.ConditionReady, k8upv1.ReasonCreationFailed, "could not create job: %v", err)
 		return err
 	}
-	jobObj.GetLabels()[job.K8upExclusive] = "true"
 
-	p.startPrune(jobObj, prune)
-
+	p.SetStarted("the job '%v/%v' was created", batchJob.Namespace, batchJob.Name)
 	return nil
 }
 
@@ -62,38 +70,12 @@ func (p *PruneExecutor) Exclusive() bool {
 	return true
 }
 
-func (p *PruneExecutor) startPrune(pruneJob *batchv1.Job, prune *k8upv1.Prune) {
-	p.registerPruneCallback(prune)
-	p.RegisterJobSucceededConditionCallback()
-
-	pruneJob.Spec.Template.Spec.Containers[0].Env = p.setupEnvVars(prune)
-	prune.Spec.AppendEnvFromToContainer(&pruneJob.Spec.Template.Spec.Containers[0])
-	pruneJob.Spec.Template.Spec.Containers[0].Args = append([]string{"-prune"}, BuildTagArgs(prune.Spec.Retention.Tags)...)
-
-	if err := p.Client.Create(p.CTX, pruneJob); err != nil {
-		if !apierrors.IsAlreadyExists(err) {
-			p.Log.Error(err, "could not create job")
-			p.SetConditionFalseWithMessage(k8upv1.ConditionReady, k8upv1.ReasonCreationFailed, "could not create job: %v", err)
-			return
-		}
-	}
-
-	p.SetStarted("the job '%v/%v' was created", pruneJob.Namespace, pruneJob.Name)
-}
-
-func (p *PruneExecutor) registerPruneCallback(prune *k8upv1.Prune) {
-	name := p.GetJobNamespacedName()
-	observer.GetObserver().RegisterCallback(name.String(), func(_ observer.ObservableJob) {
-		p.cleanupOldPrunes(name, prune)
-	})
-}
-
 func (p *PruneExecutor) cleanupOldPrunes(name types.NamespacedName, prune *k8upv1.Prune) {
 	p.CleanupOldResources(&k8upv1.PruneList{}, name, prune)
 }
 
 func (p *PruneExecutor) setupEnvVars(prune *k8upv1.Prune) []corev1.EnvVar {
-	vars := NewEnvVarConverter()
+	vars := executor.NewEnvVarConverter()
 
 	// FIXME(mw): this is ugly
 
@@ -136,7 +118,7 @@ func (p *PruneExecutor) setupEnvVars(prune *k8upv1.Prune) []corev1.EnvVar {
 
 	vars.SetString("PROM_URL", cfg.Config.PromURL)
 
-	err := vars.Merge(DefaultEnv(p.Obj.GetNamespace()))
+	err := vars.Merge(executor.DefaultEnv(p.Obj.GetNamespace()))
 	if err != nil {
 		p.Log.Error(err, "error while merging the environment variables", "name", p.Obj.GetName(), "namespace", p.Obj.GetNamespace())
 	}
