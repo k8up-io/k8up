@@ -38,8 +38,8 @@ func (b *BackupExecutor) Execute(ctx context.Context) error {
 	status := b.backup.Status
 
 	if status.HasFailed() || status.HasSucceeded() {
-		b.StopPreBackupDeployments(ctx)
 		b.cleanupOldBackups(ctx)
+		b.StopPreBackupDeployments(ctx)
 		return nil
 	}
 
