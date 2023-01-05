@@ -2,7 +2,6 @@ package checkcontroller
 
 import (
 	"context"
-	stderrors "errors"
 
 	"github.com/k8up-io/k8up/v2/operator/executor"
 	batchv1 "k8s.io/api/batch/v1"
@@ -24,6 +23,7 @@ type CheckExecutor struct {
 func NewCheckExecutor(config job.Config) *CheckExecutor {
 	return &CheckExecutor{
 		Generic: executor.Generic{Config: config},
+		check:   config.Obj.(*k8upv1.Check),
 	}
 }
 
@@ -38,38 +38,33 @@ func (*CheckExecutor) Exclusive() bool {
 }
 
 // Execute creates the actual batch.job on the k8s api.
-func (c *CheckExecutor) Execute() error {
-	checkObject, ok := c.Obj.(*k8upv1.Check)
-	if !ok {
-		return stderrors.New("object is not a check")
-	}
-	c.check = checkObject
-
+func (c *CheckExecutor) Execute(ctx context.Context) error {
 	batchJob := &batchv1.Job{}
-	batchJob.Name = checkObject.GetJobName()
-	batchJob.Namespace = checkObject.Namespace
+	batchJob.Name = c.check.GetJobName()
+	batchJob.Namespace = c.check.Namespace
 
-	_, err := controllerruntime.CreateOrUpdate(c.CTX, c.Client, batchJob, func() error {
-		mutateErr := job.MutateBatchJob(batchJob, checkObject, c.Config)
+	_, err := controllerruntime.CreateOrUpdate(ctx, c.Client, batchJob, func() error {
+		mutateErr := job.MutateBatchJob(batchJob, c.check, c.Config)
 		if mutateErr != nil {
 			return mutateErr
 		}
 
-		batchJob.Spec.Template.Spec.Containers[0].Env = c.setupEnvVars()
+		batchJob.Spec.Template.Spec.Containers[0].Env = c.setupEnvVars(ctx)
 		c.check.Spec.AppendEnvFromToContainer(&batchJob.Spec.Template.Spec.Containers[0])
 		batchJob.Spec.Template.Spec.Containers[0].Args = []string{"-check"}
 		batchJob.Labels[job.K8upExclusive] = "true"
 		return nil
 	})
 	if err != nil {
-		c.SetConditionFalseWithMessage(c.CTX, k8upv1.ConditionReady, k8upv1.ReasonCreationFailed, "could not create job: %v", err)
+		c.SetConditionFalseWithMessage(ctx, k8upv1.ConditionReady, k8upv1.ReasonCreationFailed, "could not create job: %v", err)
 		return err
 	}
-	c.SetStarted(c.CTX, "the job '%v/%v' was created", batchJob.Namespace, batchJob.Name)
+	c.SetStarted(ctx, "the job '%v/%v' was created", batchJob.Namespace, batchJob.Name)
 	return nil
 }
 
-func (c *CheckExecutor) setupEnvVars() []corev1.EnvVar {
+func (c *CheckExecutor) setupEnvVars(ctx context.Context) []corev1.EnvVar {
+	log := controllerruntime.LoggerFrom(ctx)
 	vars := executor.NewEnvVarConverter()
 
 	if c.check != nil {
@@ -85,7 +80,7 @@ func (c *CheckExecutor) setupEnvVars() []corev1.EnvVar {
 
 	err := vars.Merge(executor.DefaultEnv(c.Obj.GetNamespace()))
 	if err != nil {
-		c.Log.Error(err, "error while merging the environment variables", "name", c.Obj.GetName(), "namespace", c.Obj.GetNamespace())
+		log.Error(err, "error while merging the environment variables", "name", c.Obj.GetName(), "namespace", c.Obj.GetNamespace())
 	}
 
 	return vars.Convert()
