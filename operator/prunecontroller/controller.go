@@ -42,7 +42,7 @@ func (r *PruneReconciler) Reconcile(ctx context.Context, req controllerruntime.R
 	executor := NewPruneExecutor(config)
 
 	if prune.Status.HasFinished() {
-		executor.cleanupOldPrunes(executor.GetJobNamespacedName(), prune)
+		executor.cleanupOldPrunes(ctx, prune)
 		return controllerruntime.Result{}, nil
 	}
 

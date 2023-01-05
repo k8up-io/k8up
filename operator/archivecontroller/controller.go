@@ -48,7 +48,7 @@ func (r *ArchiveReconciler) Reconcile(ctx context.Context, req controllerruntime
 	executor := NewArchiveExecutor(config)
 
 	if archive.Status.HasFinished() {
-		executor.cleanupOldArchives(executor.GetJobNamespacedName(), archive)
+		executor.cleanupOldArchives(ctx, archive)
 		return controllerruntime.Result{}, nil
 	}
 

@@ -1,6 +1,7 @@
 package backupcontroller
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 
@@ -10,7 +11,6 @@ import (
 	"github.com/k8up-io/k8up/v2/operator/job"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/types"
 	controllerruntime "sigs.k8s.io/controller-runtime"
 )
 
@@ -44,9 +44,8 @@ func (b *BackupExecutor) Execute() error {
 	status := backupObject.Status
 
 	if status.HasFailed() || status.HasSucceeded() {
-		name := b.GetJobNamespacedName()
 		b.StopPreBackupDeployments()
-		b.cleanupOldBackups(name)
+		b.cleanupOldBackups(b.CTX)
 		return nil
 	}
 
@@ -119,7 +118,7 @@ func (b *BackupExecutor) startBackup() error {
 
 	volumes, err := b.listAndFilterPVCs(cfg.Config.BackupAnnotation)
 	if err != nil {
-		b.SetConditionFalseWithMessage(k8upv1.ConditionReady, k8upv1.ReasonRetrievalFailed, err.Error())
+		b.SetConditionFalseWithMessage(b.CTX, k8upv1.ConditionReady, k8upv1.ReasonRetrievalFailed, err.Error())
 		return err
 	}
 
@@ -145,6 +144,6 @@ func (b *BackupExecutor) startBackup() error {
 	return err
 }
 
-func (b *BackupExecutor) cleanupOldBackups(name types.NamespacedName) {
-	b.CleanupOldResources(&k8upv1.BackupList{}, name, b.backup)
+func (e *BackupExecutor) cleanupOldBackups(ctx context.Context) {
+	e.CleanupOldResources(ctx, &k8upv1.BackupList{}, e.backup.Namespace, e.backup)
 }

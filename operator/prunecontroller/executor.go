@@ -1,6 +1,7 @@
 package prunecontroller
 
 import (
+	"context"
 	"errors"
 	"strconv"
 	"strings"
@@ -8,7 +9,6 @@ import (
 	"github.com/k8up-io/k8up/v2/operator/executor"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
 	k8upv1 "github.com/k8up-io/k8up/v2/api/v1"
@@ -57,11 +57,11 @@ func (p *PruneExecutor) Execute() error {
 		return nil
 	})
 	if err != nil {
-		p.SetConditionFalseWithMessage(k8upv1.ConditionReady, k8upv1.ReasonCreationFailed, "could not create job: %v", err)
+		p.SetConditionFalseWithMessage(p.CTX, k8upv1.ConditionReady, k8upv1.ReasonCreationFailed, "could not create job: %v", err)
 		return err
 	}
 
-	p.SetStarted("the job '%v/%v' was created", batchJob.Namespace, batchJob.Name)
+	p.SetStarted(p.CTX, "the job '%v/%v' was created", batchJob.Namespace, batchJob.Name)
 	return nil
 }
 
@@ -70,8 +70,8 @@ func (p *PruneExecutor) Exclusive() bool {
 	return true
 }
 
-func (p *PruneExecutor) cleanupOldPrunes(name types.NamespacedName, prune *k8upv1.Prune) {
-	p.CleanupOldResources(&k8upv1.PruneList{}, name, prune)
+func (p *PruneExecutor) cleanupOldPrunes(ctx context.Context, prune *k8upv1.Prune) {
+	p.CleanupOldResources(ctx, &k8upv1.PruneList{}, prune.Namespace, prune)
 }
 
 func (p *PruneExecutor) setupEnvVars(prune *k8upv1.Prune) []corev1.EnvVar {

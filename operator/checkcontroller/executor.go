@@ -1,12 +1,12 @@
 package checkcontroller
 
 import (
+	"context"
 	stderrors "errors"
 
 	"github.com/k8up-io/k8up/v2/operator/executor"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/types"
 	controllerruntime "sigs.k8s.io/controller-runtime"
 
 	k8upv1 "github.com/k8up-io/k8up/v2/api/v1"
@@ -62,10 +62,10 @@ func (c *CheckExecutor) Execute() error {
 		return nil
 	})
 	if err != nil {
-		c.SetConditionFalseWithMessage(k8upv1.ConditionReady, k8upv1.ReasonCreationFailed, "could not create job: %v", err)
+		c.SetConditionFalseWithMessage(c.CTX, k8upv1.ConditionReady, k8upv1.ReasonCreationFailed, "could not create job: %v", err)
 		return err
 	}
-	c.SetStarted("the job '%v/%v' was created", batchJob.Namespace, batchJob.Name)
+	c.SetStarted(c.CTX, "the job '%v/%v' was created", batchJob.Namespace, batchJob.Name)
 	return nil
 }
 
@@ -91,6 +91,6 @@ func (c *CheckExecutor) setupEnvVars() []corev1.EnvVar {
 	return vars.Convert()
 }
 
-func (c *CheckExecutor) cleanupOldChecks(name types.NamespacedName, check *k8upv1.Check) {
-	c.CleanupOldResources(&k8upv1.CheckList{}, name, check)
+func (c *CheckExecutor) cleanupOldChecks(ctx context.Context, check *k8upv1.Check) {
+	c.CleanupOldResources(ctx, &k8upv1.CheckList{}, check.Namespace, check)
 }

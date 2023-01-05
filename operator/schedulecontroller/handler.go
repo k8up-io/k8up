@@ -43,7 +43,7 @@ func (s *ScheduleHandler) Handle() error {
 
 	err = scheduler.GetScheduler().SyncSchedules(jobList)
 	if err != nil {
-		s.SetConditionFalseWithMessage(k8upv1.ConditionReady, k8upv1.ReasonFailed, "cannot add to cron: %v", err.Error())
+		s.SetConditionFalseWithMessage(s.CTX, k8upv1.ConditionReady, k8upv1.ReasonFailed, "cannot add to cron: %v", err.Error())
 		return err
 	}
 
@@ -52,7 +52,7 @@ func (s *ScheduleHandler) Handle() error {
 		return err
 	}
 
-	s.SetConditionTrue(k8upv1.ConditionReady, k8upv1.ReasonReady)
+	s.SetConditionTrue(s.CTX, k8upv1.ConditionReady, k8upv1.ReasonReady)
 
 	if controllerutil.ContainsFinalizer(s.schedule, k8upv1.LegacyScheduleFinalizerName) {
 		controllerutil.AddFinalizer(s.schedule, k8upv1.ScheduleFinalizerName)

@@ -1,10 +1,11 @@
 package archivecontroller
 
 import (
+	"context"
+
 	"github.com/k8up-io/k8up/v2/operator/executor"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
 	k8upv1 "github.com/k8up-io/k8up/v2/api/v1"
@@ -52,11 +53,11 @@ func (a *ArchiveExecutor) Execute() error {
 	})
 	if err != nil {
 		a.Log.Error(err, "could not create job")
-		a.SetConditionFalseWithMessage(k8upv1.ConditionReady, k8upv1.ReasonCreationFailed, "could not create job: %v", err)
+		a.SetConditionFalseWithMessage(a.CTX, k8upv1.ConditionReady, k8upv1.ReasonCreationFailed, "could not create job: %v", err)
 		return err
 	}
 
-	a.SetStarted("the job '%v/%v' was created", batchJob.Namespace, batchJob.Name)
+	a.SetStarted(a.CTX, "the job '%v/%v' was created", batchJob.Namespace, batchJob.Name)
 	return nil
 }
 
@@ -100,6 +101,6 @@ func (a *ArchiveExecutor) setupEnvVars(archive *k8upv1.Archive) []corev1.EnvVar 
 	return vars.Convert()
 }
 
-func (a *ArchiveExecutor) cleanupOldArchives(name types.NamespacedName, archive *k8upv1.Archive) {
-	a.CleanupOldResources(&k8upv1.ArchiveList{}, name, archive)
+func (a *ArchiveExecutor) cleanupOldArchives(ctx context.Context, archive *k8upv1.Archive) {
+	a.CleanupOldResources(ctx, &k8upv1.ArchiveList{}, archive.Namespace, archive)
 }

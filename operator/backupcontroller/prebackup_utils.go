@@ -82,14 +82,14 @@ func (b *BackupExecutor) fetchOrCreatePreBackupDeployment(deployment *appsv1.Dep
 	if fetchErr != nil {
 		if !errors.IsNotFound(fetchErr) {
 			err := fmt.Errorf("error getting pre backup pod '%v': %w", name.String(), fetchErr)
-			b.SetConditionFalseWithMessage(k8upv1.ConditionPreBackupPodReady, k8upv1.ReasonRetrievalFailed, err.Error())
+			b.SetConditionFalseWithMessage(b.CTX, k8upv1.ConditionPreBackupPodReady, k8upv1.ReasonRetrievalFailed, err.Error())
 			return err
 		}
 
 		createErr := b.Client.Create(b.CTX, deployment)
 		if createErr != nil {
 			err := fmt.Errorf("error creating pre backup pod '%v': %w", name.String(), createErr)
-			b.SetConditionFalseWithMessage(k8upv1.ConditionPreBackupPodReady, k8upv1.ReasonCreationFailed, err.Error())
+			b.SetConditionFalseWithMessage(b.CTX, k8upv1.ConditionPreBackupPodReady, k8upv1.ReasonCreationFailed, err.Error())
 			return err
 		}
 		b.Log.Info("started pre backup pod", "preBackup", name.String())

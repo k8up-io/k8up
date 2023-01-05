@@ -1,6 +1,7 @@
 package restorecontroller
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"strconv"
@@ -8,7 +9,6 @@ import (
 	"github.com/k8up-io/k8up/v2/operator/executor"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
 	k8upv1 "github.com/k8up-io/k8up/v2/api/v1"
@@ -44,17 +44,17 @@ func (r *RestoreExecutor) Execute() error {
 	restoreJob, err := r.createRestoreObject(restore)
 	if err != nil {
 		r.Log.Error(err, "unable to create or update restore object")
-		r.SetConditionFalseWithMessage(k8upv1.ConditionReady, k8upv1.ReasonCreationFailed, "unable to create restore object: %v", err)
+		r.SetConditionFalseWithMessage(r.CTX, k8upv1.ConditionReady, k8upv1.ReasonCreationFailed, "unable to create restore object: %v", err)
 		return nil
 	}
 
-	r.SetStarted("the job '%v/%v' was created", restoreJob.Namespace, restoreJob.Name)
+	r.SetStarted(r.CTX, "the job '%v/%v' was created", restoreJob.Namespace, restoreJob.Name)
 
 	return nil
 }
 
-func (r *RestoreExecutor) cleanupOldRestores(name types.NamespacedName, restore *k8upv1.Restore) {
-	r.CleanupOldResources(&k8upv1.RestoreList{}, name, restore)
+func (r *RestoreExecutor) cleanupOldRestores(ctx context.Context, restore *k8upv1.Restore) {
+	r.CleanupOldResources(ctx, &k8upv1.RestoreList{}, restore.Namespace, restore)
 }
 
 func (r *RestoreExecutor) createRestoreObject(restore *k8upv1.Restore) (*batchv1.Job, error) {

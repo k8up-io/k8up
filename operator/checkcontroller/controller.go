@@ -46,7 +46,7 @@ func (r *CheckReconciler) Reconcile(ctx context.Context, req controllerruntime.R
 	executor := NewCheckExecutor(config)
 
 	if check.Status.HasFinished() {
-		executor.cleanupOldChecks(executor.GetJobNamespacedName(), check)
+		executor.cleanupOldChecks(ctx, check)
 		return controllerruntime.Result{}, nil
 	}
 

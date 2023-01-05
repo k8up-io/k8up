@@ -43,7 +43,7 @@ func (r *RestoreReconciler) Reconcile(ctx context.Context, req controllerruntime
 	executor := NewRestoreExecutor(config)
 
 	if restore.Status.HasFinished() {
-		executor.cleanupOldRestores(executor.GetJobNamespacedName(), restore)
+		executor.cleanupOldRestores(ctx, restore)
 		return controllerruntime.Result{}, nil
 	}
 
