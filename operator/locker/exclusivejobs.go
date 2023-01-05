@@ -62,3 +62,17 @@ func (l *Locker) GetJobsByRepository(repository string, exclusive bool) ([]batch
 	}
 	return list.Items, nil
 }
+
+// ShouldRunJob returns true if no exclusive job is running for the same Restic repository and the concurrency limit isn't reached.
+func (l *Locker) ShouldRunJob(config job.Config, concurrencyLimit int) (bool, error) {
+	reached, err := l.IsConcurrentJobsLimitReached(config.Obj.GetType(), concurrencyLimit)
+	if err != nil {
+		return false, fmt.Errorf("cannot determine if concurrency limit reached: %w", err)
+	}
+	isExclusiveJobRunning, err := l.IsExclusiveJobRunning(config.Repository)
+	if err != nil {
+		return false, fmt.Errorf("cannot determine if job should run: %w", err)
+	}
+	shouldRun := !isExclusiveJobRunning && !reached
+	return shouldRun, nil
+}

@@ -74,7 +74,8 @@ func TestBackupExecutor_setupEnvVars(t *testing.T) {
 				Obj: backup,
 			})
 			exec.backup = backup
-			result := exec.setupEnvVars()
+			result, err := exec.setupEnvVars()
+			assert.NoError(t, err)
 			for _, expectedEnv := range tt.expectedEnvVars {
 				assert.Contains(t, result, expectedEnv)
 			}

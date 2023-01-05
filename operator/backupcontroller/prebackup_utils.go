@@ -3,12 +3,14 @@ package backupcontroller
 import (
 	"fmt"
 
+	"golang.org/x/net/context"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/utils/pointer"
+	controllerruntime "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
@@ -17,10 +19,10 @@ import (
 )
 
 // fetchPreBackupPodTemplates fetches all PreBackupPods from the same namespace as the originating backup.
-func (b *BackupExecutor) fetchPreBackupPodTemplates() (*k8upv1.PreBackupPodList, error) {
+func (b *BackupExecutor) fetchPreBackupPodTemplates(ctx context.Context) (*k8upv1.PreBackupPodList, error) {
 	podList := &k8upv1.PreBackupPodList{}
 
-	err := b.Client.List(b.CTX, podList, client.InNamespace(b.Obj.GetNamespace()))
+	err := b.Client.List(ctx, podList, client.InNamespace(b.Obj.GetNamespace()))
 	if err != nil {
 		return nil, fmt.Errorf("could not list pod templates: %w", err)
 	}
@@ -29,7 +31,8 @@ func (b *BackupExecutor) fetchPreBackupPodTemplates() (*k8upv1.PreBackupPodList,
 }
 
 // generateDeployments creates a new PreBackupDeployment for each given PreBackupPod template.
-func (b *BackupExecutor) generateDeployments(templates []k8upv1.PreBackupPod) []*appsv1.Deployment {
+func (b *BackupExecutor) generateDeployments(ctx context.Context, templates []k8upv1.PreBackupPod) []*appsv1.Deployment {
+	log := controllerruntime.LoggerFrom(ctx)
 	deployments := make([]*appsv1.Deployment, 0)
 
 	for _, template := range templates {
@@ -65,7 +68,7 @@ func (b *BackupExecutor) generateDeployments(templates []k8upv1.PreBackupPod) []
 
 		err := controllerutil.SetOwnerReference(b.Config.Obj, deployment, b.Client.Scheme())
 		if err != nil {
-			b.Config.Log.Error(err, "cannot set the owner reference", "name", b.Config.Obj.GetName(), "namespace", b.Config.Obj.GetNamespace())
+			log.Error(err, "cannot set the owner reference", "name", b.Config.Obj.GetName(), "namespace", b.Config.Obj.GetNamespace())
 		}
 
 		deployments = append(deployments, deployment)
@@ -76,23 +79,24 @@ func (b *BackupExecutor) generateDeployments(templates []k8upv1.PreBackupPod) []
 
 // fetchOrCreatePreBackupDeployment fetches a deployment with the given name or creates it if not existing.
 // On errors, the ConditionPreBackupPodsReady will be set to false and the error is returned.
-func (b *BackupExecutor) fetchOrCreatePreBackupDeployment(deployment *appsv1.Deployment) error {
+func (b *BackupExecutor) fetchOrCreatePreBackupDeployment(ctx context.Context, deployment *appsv1.Deployment) error {
 	name := k8upv1.MapToNamespacedName(deployment)
-	fetchErr := b.Client.Get(b.CTX, name, deployment)
+	log := controllerruntime.LoggerFrom(ctx)
+	fetchErr := b.Generic.Client.Get(ctx, name, deployment)
 	if fetchErr != nil {
 		if !errors.IsNotFound(fetchErr) {
 			err := fmt.Errorf("error getting pre backup pod '%v': %w", name.String(), fetchErr)
-			b.SetConditionFalseWithMessage(b.CTX, k8upv1.ConditionPreBackupPodReady, k8upv1.ReasonRetrievalFailed, err.Error())
+			b.SetConditionFalseWithMessage(ctx, k8upv1.ConditionPreBackupPodReady, k8upv1.ReasonRetrievalFailed, err.Error())
 			return err
 		}
 
-		createErr := b.Client.Create(b.CTX, deployment)
+		createErr := b.Client.Create(ctx, deployment)
 		if createErr != nil {
 			err := fmt.Errorf("error creating pre backup pod '%v': %w", name.String(), createErr)
-			b.SetConditionFalseWithMessage(b.CTX, k8upv1.ConditionPreBackupPodReady, k8upv1.ReasonCreationFailed, err.Error())
+			b.SetConditionFalseWithMessage(ctx, k8upv1.ConditionPreBackupPodReady, k8upv1.ReasonCreationFailed, err.Error())
 			return err
 		}
-		b.Log.Info("started pre backup pod", "preBackup", name.String())
+		log.Info("started pre backup pod", "preBackup", name.String())
 	}
 	return nil
 }
