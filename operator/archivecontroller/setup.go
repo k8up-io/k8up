@@ -10,9 +10,9 @@ import (
 // +kubebuilder:rbac:groups=k8up.io,resources=archives/status;archives/finalizers,verbs=get;update;patch
 
 // SetupWithManager configures the reconciler.
-func (r *ArchiveReconciler) SetupWithManager(mgr controllerruntime.Manager) error {
+func SetupWithManager(mgr controllerruntime.Manager) error {
 	name := "archive.k8up.io"
-	r.Kube = mgr.GetClient()
+	r := &ArchiveReconciler{Kube: mgr.GetClient()}
 	return controllerruntime.NewControllerManagedBy(mgr).
 		For(&v1.Archive{}).
 		Named(name).

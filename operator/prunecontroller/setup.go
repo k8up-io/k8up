@@ -10,9 +10,9 @@ import (
 // +kubebuilder:rbac:groups=k8up.io,resources=prunes/status;prunes/finalizers,verbs=get;update;patch
 
 // SetupWithManager configures the reconciler.
-func (r *PruneReconciler) SetupWithManager(mgr ctrl.Manager) error {
+func SetupWithManager(mgr ctrl.Manager) error {
 	name := "prune.k8up.io"
-	r.Kube = mgr.GetClient()
+	r := &PruneReconciler{Kube: mgr.GetClient()}
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&k8upv1.Prune{}).
 		Named(name).

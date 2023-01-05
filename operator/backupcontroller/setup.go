@@ -19,9 +19,11 @@ import (
 // +kubebuilder:rbac:groups=rbac.authorization.k8s.io,resources=roles;rolebindings,verbs=get;list;watch;create;delete
 
 // SetupWithManager configures the reconciler.
-func (r *BackupReconciler) SetupWithManager(mgr controllerruntime.Manager) error {
+func SetupWithManager(mgr controllerruntime.Manager) error {
 	name := "backup.k8up.io"
-	r.Kube = mgr.GetClient()
+	r := &BackupReconciler{
+		Kube: mgr.GetClient(),
+	}
 	return controllerruntime.NewControllerManagedBy(mgr).
 		Named(name).
 		For(&k8upv1.Backup{}).

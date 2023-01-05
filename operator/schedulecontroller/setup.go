@@ -13,9 +13,9 @@ import (
 // +kubebuilder:rbac:groups=k8up.io,resources=effectiveschedules/finalizers,verbs=update
 
 // SetupWithManager configures the reconciler.
-func (r *ScheduleReconciler) SetupWithManager(mgr ctrl.Manager) error {
+func SetupWithManager(mgr ctrl.Manager) error {
 	name := "schedule.k8up.io"
-	r.Kube = mgr.GetClient()
+	r := &ScheduleReconciler{Kube: mgr.GetClient()}
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&k8upv1.Schedule{}).
 		Named(name).

@@ -115,16 +115,16 @@ func operatorMain(c *cli.Context) error {
 	lock := &locker.Locker{Kube: mgr.GetClient()}
 	executor.StartExecutor(lock)
 
-	for name, reconciler := range map[string]ReconcilerSetup{
-		"Schedule": &schedulecontroller.ScheduleReconciler{},
-		"Backup":   &backupcontroller.BackupReconciler{},
-		"Restore":  &restorecontroller.RestoreReconciler{},
-		"Archive":  &archivecontroller.ArchiveReconciler{},
-		"Check":    &checkcontroller.CheckReconciler{},
-		"Prune":    &prunecontroller.PruneReconciler{},
-		"Job":      &jobcontroller.JobReconciler{},
+	for name, setupFn := range map[string]func(mgr ctrl.Manager) error{
+		"Schedule": schedulecontroller.SetupWithManager,
+		"Backup":   backupcontroller.SetupWithManager,
+		"Restore":  restorecontroller.SetupWithManager,
+		"Archive":  archivecontroller.SetupWithManager,
+		"Check":    checkcontroller.SetupWithManager,
+		"Prune":    prunecontroller.SetupWithManager,
+		"Job":      jobcontroller.SetupWithManager,
 	} {
-		if setupErr := reconciler.SetupWithManager(mgr); setupErr != nil {
+		if setupErr := setupFn(mgr); setupErr != nil {
 			operatorLog.Error(setupErr, "unable to initialize operator mode", "step", "controller", "controller", name)
 			return fmt.Errorf("unable to setup reconciler: %w", setupErr)
 		}
@@ -168,9 +168,4 @@ func validateQuantityFlags(ctx *cli.Context) error {
 	}
 
 	return nil
-}
-
-// ReconcilerSetup is a common interface to configure reconcilers.
-type ReconcilerSetup interface {
-	SetupWithManager(mgr ctrl.Manager) error
 }

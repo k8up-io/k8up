@@ -10,9 +10,9 @@ import (
 // +kubebuilder:rbac:groups=k8up.io,resources=checks/status;checks/finalizers,verbs=get;update;patch
 
 // SetupWithManager configures the reconciler.
-func (r *CheckReconciler) SetupWithManager(mgr ctrl.Manager) error {
+func SetupWithManager(mgr ctrl.Manager) error {
 	name := "check.k8up.io"
-	r.Kube = mgr.GetClient()
+	r := &CheckReconciler{Kube: mgr.GetClient()}
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&k8upv1.Check{}).
 		Named(name).

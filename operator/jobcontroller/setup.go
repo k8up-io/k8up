@@ -13,7 +13,7 @@ import (
 // +kubebuilder:rbac:groups=batch,resources=jobs/status;jobs/finalizers,verbs=get;update;patch
 
 // SetupWithManager configures the reconciler.
-func (r *JobReconciler) SetupWithManager(mgr ctrl.Manager) error {
+func SetupWithManager(mgr ctrl.Manager) error {
 	name := "job.k8up.io"
 	pred, err := predicate.LabelSelectorPredicate(metav1.LabelSelector{MatchLabels: map[string]string{
 		job.K8uplabel: "true",
@@ -21,7 +21,7 @@ func (r *JobReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	if err != nil {
 		return err
 	}
-	r.Kube = mgr.GetClient()
+	r := &JobReconciler{Kube: mgr.GetClient()}
 	return ctrl.NewControllerManagedBy(mgr).
 		Named(name).
 		For(&batchv1.Job{}, builder.WithPredicates(pred)).
