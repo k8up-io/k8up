@@ -26,6 +26,7 @@ type PruneExecutor struct {
 func NewPruneExecutor(config job.Config) *PruneExecutor {
 	return &PruneExecutor{
 		Generic: executor.Generic{Config: config},
+		prune:   config.Obj.(*k8upv1.Prune),
 	}
 }
 

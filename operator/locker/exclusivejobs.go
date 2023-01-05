@@ -20,7 +20,7 @@ func (l *Locker) IsAnyJobRunningForRepository(repository string) (bool, error) {
 	}
 
 	for _, batchJob := range listOfJobs {
-		if batchJob.Status.Active >= 0 {
+		if batchJob.Status.Active > 0 {
 			return true, nil
 		}
 	}
@@ -39,7 +39,7 @@ func (l *Locker) IsExclusiveJobRunning(repository string) (bool, error) {
 	}
 
 	for _, batchJob := range listOfJobs {
-		if batchJob.Status.Active >= 0 && batchJob.Labels[job.K8upExclusive] == "true" {
+		if batchJob.Status.Active > 0 && batchJob.Labels[job.K8upExclusive] == "true" {
 			return true, nil
 		}
 	}
