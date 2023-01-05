@@ -49,8 +49,18 @@ func (ctrl *controller[T, L]) Reconcile(ctx context.Context, request controllerr
 		// some other error
 		return reconcile.Result{}, err
 	}
+	var res controllerruntime.Result
+	var provisionErr error
 	if !obj.GetDeletionTimestamp().IsZero() {
-		return ctrl.reconciler.Deprovision(ctx, obj)
+		res, provisionErr = ctrl.reconciler.Deprovision(ctx, obj)
+	} else {
+		res, provisionErr = ctrl.reconciler.Provision(ctx, obj)
 	}
-	return ctrl.reconciler.Provision(ctx, obj)
+	if apierrors.IsConflict(err) { // ignore "the object has been modified; please apply your changes to the latest version and try again" error, but requeue
+		log := controllerruntime.LoggerFrom(ctx)
+		log.Info("Object has been modified, retrying...", "error", provisionErr.Error())
+		res.Requeue = true
+		return res, nil
+	}
+	return res, provisionErr
 }
