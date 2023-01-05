@@ -51,12 +51,12 @@ func (c *ObjectCleaner) CleanOldObjects(ctx context.Context, jobObjects k8upv1.J
 // Returns the amount of deleted objects and possible errors.
 func (c *ObjectCleaner) cleanOldObjects(ctx context.Context, jobObjects k8upv1.JobObjectList, maxObjects int) (int, error) {
 	numToDelete := len(jobObjects) - maxObjects
-	log := controllerruntime.LoggerFrom(ctx)
-	log.Info("Cleaning old jobs", "have", len(jobObjects), "want", maxObjects, "deleting", numToDelete)
-
 	if numToDelete <= 0 {
 		return 0, nil
 	}
+
+	log := controllerruntime.LoggerFrom(ctx)
+	log.Info("Cleaning old jobs", "have", len(jobObjects), "max", maxObjects, "deleting", numToDelete)
 
 	sort.Sort(jobObjects)
 	for i := 0; i < numToDelete; i++ {

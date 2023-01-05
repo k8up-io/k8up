@@ -2,6 +2,7 @@ package jobcontroller
 
 import (
 	"github.com/k8up-io/k8up/v2/operator/job"
+	"github.com/k8up-io/k8up/v2/operator/reconciler"
 	batchv1 "k8s.io/api/batch/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -21,7 +22,9 @@ func SetupWithManager(mgr ctrl.Manager) error {
 	if err != nil {
 		return err
 	}
-	r := &JobReconciler{Kube: mgr.GetClient()}
+	r := reconciler.NewReconciler[*batchv1.Job, *batchv1.JobList](mgr.GetClient(), &JobReconciler{
+		Kube: mgr.GetClient(),
+	})
 	return ctrl.NewControllerManagedBy(mgr).
 		Named(name).
 		For(&batchv1.Job{}, builder.WithPredicates(pred)).
