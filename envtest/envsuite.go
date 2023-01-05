@@ -8,11 +8,9 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
-	"time"
 
 	"github.com/go-logr/logr"
 	"github.com/go-logr/zapr"
-	"github.com/k8up-io/k8up/v2/operator/locker"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/zap/zaptest"
 	appsv1 "k8s.io/api/apps/v1"
@@ -27,7 +25,6 @@ import (
 	"k8s.io/apimachinery/pkg/util/rand"
 	"k8s.io/apimachinery/pkg/util/validation"
 	"k8s.io/client-go/rest"
-	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
 	"sigs.k8s.io/controller-runtime/pkg/log"
@@ -35,7 +32,6 @@ import (
 
 	k8upv1 "github.com/k8up-io/k8up/v2/api/v1"
 	"github.com/k8up-io/k8up/v2/operator/cfg"
-	"github.com/k8up-io/k8up/v2/operator/executor"
 )
 
 var InvalidNSNameCharacters = regexp.MustCompile("[^a-z0-9-]")
@@ -95,8 +91,6 @@ func (ts *Suite) SetupSuite() {
 	ts.Require().NoError(err)
 	ts.Require().NotNil(k8sClient)
 
-	executor.StartExecutor(&locker.Locker{Kube: k8sClient})
-
 	ts.Env = testEnv
 	ts.Config = config
 	ts.Client = k8sClient
@@ -117,33 +111,6 @@ func (ts *Suite) TearDownSuite() {
 	err := ts.Env.Stop()
 	ts.Require().NoErrorf(err, "error while stopping test environment")
 	ts.Logger.Info("test environment stopped")
-}
-
-type AssertFunc func(timedCtx context.Context) (done bool, err error)
-
-func (ts *Suite) RepeatedAssert(timeout time.Duration, interval time.Duration, failureMsg string, assertFunc AssertFunc) {
-	timedCtx, cancel := context.WithTimeout(ts.Ctx, timeout)
-	defer cancel()
-
-	i := 0
-	for {
-		select {
-		case <-time.After(interval):
-			i++
-			done, err := assertFunc(timedCtx)
-			ts.Require().NoError(err)
-			if done {
-				return
-			}
-		case <-timedCtx.Done():
-			if failureMsg == "" {
-				failureMsg = timedCtx.Err().Error()
-			}
-
-			ts.FailNowf(failureMsg, "Failed after %s (%d attempts)", timeout, i)
-			return
-		}
-	}
 }
 
 // NewNS instantiates a new Namespace object with the given name.
@@ -224,16 +191,6 @@ func (ts *Suite) FetchResource(name types.NamespacedName, object client.Object) 
 // Test fails on errors.
 func (ts *Suite) FetchResources(objectList client.ObjectList, opts ...client.ListOption) {
 	ts.Require().NoError(ts.Client.List(ts.Ctx, objectList, opts...))
-}
-
-// MapToRequest maps the given object into a reconcile Request.
-func (ts *Suite) MapToRequest(object metav1.Object) ctrl.Request {
-	return ctrl.Request{
-		NamespacedName: types.NamespacedName{
-			Name:      object.GetName(),
-			Namespace: object.GetNamespace(),
-		},
-	}
 }
 
 // SetupTest is invoked just before every test starts

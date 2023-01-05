@@ -10,9 +10,7 @@ import (
 	"github.com/k8up-io/k8up/v2/operator/backupcontroller"
 	"github.com/k8up-io/k8up/v2/operator/cfg"
 	"github.com/k8up-io/k8up/v2/operator/checkcontroller"
-	"github.com/k8up-io/k8up/v2/operator/executor"
 	"github.com/k8up-io/k8up/v2/operator/jobcontroller"
-	"github.com/k8up-io/k8up/v2/operator/locker"
 	"github.com/k8up-io/k8up/v2/operator/prunecontroller"
 	"github.com/k8up-io/k8up/v2/operator/restorecontroller"
 	"github.com/k8up-io/k8up/v2/operator/schedulecontroller"
@@ -111,9 +109,6 @@ func operatorMain(c *cli.Context) error {
 		operatorLog.Error(err, "unable to initialize operator mode", "step", "manager")
 		return fmt.Errorf("unable to initialize controller runtime: %w", err)
 	}
-
-	lock := &locker.Locker{Kube: mgr.GetClient()}
-	executor.StartExecutor(lock)
 
 	for name, setupFn := range map[string]func(mgr ctrl.Manager) error{
 		"Schedule": schedulecontroller.SetupWithManager,
