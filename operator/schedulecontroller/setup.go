@@ -2,6 +2,7 @@ package schedulecontroller
 
 import (
 	k8upv1 "github.com/k8up-io/k8up/v2/api/v1"
+	"github.com/k8up-io/k8up/v2/operator/reconciler"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 )
@@ -15,7 +16,9 @@ import (
 // SetupWithManager configures the reconciler.
 func SetupWithManager(mgr ctrl.Manager) error {
 	name := "schedule.k8up.io"
-	r := &ScheduleReconciler{Kube: mgr.GetClient()}
+	r := reconciler.NewReconciler[*k8upv1.Schedule, *k8upv1.ScheduleList](mgr.GetClient(), &ScheduleReconciler{
+		Kube: mgr.GetClient(),
+	})
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&k8upv1.Schedule{}).
 		Named(name).

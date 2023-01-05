@@ -72,7 +72,7 @@ func (ts *ScheduleControllerTestSuite) Test_GivenEffectiveScheduleWithRandomSche
 }
 
 func (ts *ScheduleControllerTestSuite) whenReconciling(givenSchedule *k8upv1.Schedule) {
-	newResult, err := ts.reconciler.Reconcile(ts.Ctx, ts.MapToRequest(givenSchedule))
+	newResult, err := ts.reconciler.Provision(ts.Ctx, givenSchedule)
 	ts.Assert().NoError(err)
 	ts.Assert().False(newResult.Requeue)
 }
