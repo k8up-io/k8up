@@ -9,6 +9,7 @@ import (
 	"github.com/k8up-io/k8up/v2/operator/executor"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
+	controllerruntime "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
 	k8upv1 "github.com/k8up-io/k8up/v2/api/v1"
@@ -35,20 +36,21 @@ func (r *RestoreExecutor) GetConcurrencyLimit() int {
 }
 
 // Execute creates the actual batch.job on the k8s api.
-func (r *RestoreExecutor) Execute() error {
+func (r *RestoreExecutor) Execute(ctx context.Context) error {
+	log := controllerruntime.LoggerFrom(ctx)
 	restore, ok := r.Obj.(*k8upv1.Restore)
 	if !ok {
 		return errors.New("object is not a restore")
 	}
 
-	restoreJob, err := r.createRestoreObject(restore)
+	restoreJob, err := r.createRestoreObject(ctx, restore)
 	if err != nil {
-		r.Log.Error(err, "unable to create or update restore object")
-		r.SetConditionFalseWithMessage(r.CTX, k8upv1.ConditionReady, k8upv1.ReasonCreationFailed, "unable to create restore object: %v", err)
+		log.Error(err, "unable to create or update restore object")
+		r.SetConditionFalseWithMessage(ctx, k8upv1.ConditionReady, k8upv1.ReasonCreationFailed, "unable to create restore object: %v", err)
 		return nil
 	}
 
-	r.SetStarted(r.CTX, "the job '%v/%v' was created", restoreJob.Namespace, restoreJob.Name)
+	r.SetStarted(ctx, "the job '%v/%v' was created", restoreJob.Namespace, restoreJob.Name)
 
 	return nil
 }
@@ -57,17 +59,17 @@ func (r *RestoreExecutor) cleanupOldRestores(ctx context.Context, restore *k8upv
 	r.CleanupOldResources(ctx, &k8upv1.RestoreList{}, restore.Namespace, restore)
 }
 
-func (r *RestoreExecutor) createRestoreObject(restore *k8upv1.Restore) (*batchv1.Job, error) {
+func (r *RestoreExecutor) createRestoreObject(ctx context.Context, restore *k8upv1.Restore) (*batchv1.Job, error) {
 	batchJob := &batchv1.Job{}
 	batchJob.Name = restore.GetJobName()
 	batchJob.Namespace = restore.Namespace
-	_, err := controllerutil.CreateOrUpdate(r.CTX, r.Client, batchJob, func() error {
+	_, err := controllerutil.CreateOrUpdate(ctx, r.Client, batchJob, func() error {
 		mutateErr := job.MutateBatchJob(batchJob, restore, r.Config)
 		if mutateErr != nil {
 			return mutateErr
 		}
 		batchJob.Labels[job.K8upExclusive] = strconv.FormatBool(r.Exclusive())
-		batchJob.Spec.Template.Spec.Containers[0].Env = r.setupEnvVars(restore)
+		batchJob.Spec.Template.Spec.Containers[0].Env = r.setupEnvVars(ctx, restore)
 		restore.Spec.AppendEnvFromToContainer(&batchJob.Spec.Template.Spec.Containers[0])
 
 		volumes, volumeMounts := r.volumeConfig(restore)
@@ -132,7 +134,8 @@ func (r *RestoreExecutor) volumeConfig(restore *k8upv1.Restore) ([]corev1.Volume
 	return volumes, mounts
 }
 
-func (r *RestoreExecutor) setupEnvVars(restore *k8upv1.Restore) []corev1.EnvVar {
+func (r *RestoreExecutor) setupEnvVars(ctx context.Context, restore *k8upv1.Restore) []corev1.EnvVar {
+	log := controllerruntime.LoggerFrom(ctx)
 	vars := executor.NewEnvVarConverter()
 
 	if restore.Spec.RestoreMethod.S3 != nil {
@@ -157,7 +160,7 @@ func (r *RestoreExecutor) setupEnvVars(restore *k8upv1.Restore) []corev1.EnvVar 
 
 	err := vars.Merge(executor.DefaultEnv(r.Obj.GetNamespace()))
 	if err != nil {
-		r.Log.Error(err, "error while merging the environment variables", "name", r.Obj.GetName(), "namespace", r.Obj.GetNamespace())
+		log.Error(err, "error while merging the environment variables", "name", r.Obj.GetName(), "namespace", r.Obj.GetNamespace())
 	}
 
 	return vars.Convert()
