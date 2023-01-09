@@ -30,11 +30,6 @@ func NewPruneExecutor(config job.Config) *PruneExecutor {
 	}
 }
 
-// GetConcurrencyLimit returns the concurrent jobs limit
-func (p *PruneExecutor) GetConcurrencyLimit() int {
-	return cfg.Config.GlobalConcurrentPruneJobsLimit
-}
-
 // Execute creates the actual batch.job on the k8s api.
 func (p *PruneExecutor) Execute(ctx context.Context) error {
 

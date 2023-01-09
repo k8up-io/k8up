@@ -9,7 +9,6 @@ import (
 
 	k8upv1 "github.com/k8up-io/k8up/v2/api/v1"
 	"github.com/k8up-io/k8up/v2/envtest"
-	"github.com/k8up-io/k8up/v2/operator/locker"
 	"github.com/stretchr/testify/suite"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -30,8 +29,7 @@ func Test_Backup(t *testing.T) {
 
 func (ts *BackupTestSuite) BeforeTest(_, _ string) {
 	ts.Controller = BackupReconciler{
-		Kube:   ts.Client,
-		Locker: &locker.Locker{Kube: ts.Client},
+		Kube: ts.Client,
 	}
 	ts.PreBackupPodName = "pre-backup-pod"
 	ts.Ctx, ts.CancelCtx = context.WithCancel(context.Background())

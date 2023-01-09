@@ -1,6 +1,7 @@
 package scheduler
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"sync"
@@ -179,7 +180,7 @@ func (s *Scheduler) createObject(jobType k8upv1.JobType, namespace string, obj k
 		config.Log.Error(err, "cannot set owner on object", "name", jobObject.GetName())
 	}
 
-	err = config.Client.Create(config.CTX, rtObj.(client.Object))
+	err = config.Client.Create(context.Background(), rtObj.(client.Object))
 	if err != nil {
 		config.Log.Error(err, "could not trigger k8up newJobs", "name", namespace+"/"+name)
 	}

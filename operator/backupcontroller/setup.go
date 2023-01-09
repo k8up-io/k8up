@@ -2,7 +2,6 @@ package backupcontroller
 
 import (
 	k8upv1 "github.com/k8up-io/k8up/v2/api/v1"
-	"github.com/k8up-io/k8up/v2/operator/locker"
 	"github.com/k8up-io/k8up/v2/operator/reconciler"
 	"sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
@@ -24,8 +23,7 @@ import (
 func SetupWithManager(mgr controllerruntime.Manager) error {
 	name := "backup.k8up.io"
 	r := reconciler.NewReconciler[*k8upv1.Backup, *k8upv1.BackupList](mgr.GetClient(), &BackupReconciler{
-		Kube:   mgr.GetClient(),
-		Locker: &locker.Locker{Kube: mgr.GetClient()},
+		Kube: mgr.GetClient(),
 	})
 	return controllerruntime.NewControllerManagedBy(mgr).
 		Named(name).

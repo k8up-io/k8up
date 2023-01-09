@@ -2,7 +2,6 @@ package checkcontroller
 
 import (
 	k8upv1 "github.com/k8up-io/k8up/v2/api/v1"
-	"github.com/k8up-io/k8up/v2/operator/locker"
 	"github.com/k8up-io/k8up/v2/operator/reconciler"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
@@ -15,8 +14,7 @@ import (
 func SetupWithManager(mgr ctrl.Manager) error {
 	name := "check.k8up.io"
 	r := reconciler.NewReconciler[*k8upv1.Check, *k8upv1.CheckList](mgr.GetClient(), &CheckReconciler{
-		Kube:   mgr.GetClient(),
-		Locker: &locker.Locker{Kube: mgr.GetClient()},
+		Kube: mgr.GetClient(),
 	})
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&k8upv1.Check{}).

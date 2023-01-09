@@ -14,8 +14,7 @@ import (
 
 // CheckReconciler reconciles a Check object
 type CheckReconciler struct {
-	Kube   client.Client
-	Locker *locker.Locker
+	Kube client.Client
 }
 
 func (r *CheckReconciler) NewObject() *k8upv1.Check {
@@ -47,16 +46,12 @@ func (r *CheckReconciler) Provision(ctx context.Context, check *k8upv1.Check) (c
 		return controllerruntime.Result{}, nil
 	}
 
-	shouldRun, err := r.Locker.ShouldRunJob(config, executor.GetConcurrencyLimit())
-	if err != nil {
-		return controllerruntime.Result{RequeueAfter: time.Second * 30}, err
+	lock := locker.GetForRepository(r.Kube, repository)
+	didRun, err := lock.TryRunExclusively(ctx, executor.Execute)
+	if !didRun && err == nil {
+		log.Info("Delaying check task, another job is running")
 	}
-	if shouldRun {
-		return controllerruntime.Result{RequeueAfter: time.Second * 30}, executor.Execute(ctx)
-	} else {
-		log.Info("Skipping job due to exclusivity or concurrency limit")
-	}
-	return controllerruntime.Result{RequeueAfter: time.Second * 30}, nil
+	return controllerruntime.Result{RequeueAfter: time.Second * 30}, err
 }
 
 func (r *CheckReconciler) Deprovision(_ context.Context, _ *k8upv1.Check) (controllerruntime.Result, error) {

@@ -14,8 +14,7 @@ import (
 
 // ArchiveReconciler reconciles Archive objects
 type ArchiveReconciler struct {
-	Kube   client.Client
-	Locker *locker.Locker
+	Kube client.Client
 }
 
 func (r *ArchiveReconciler) NewObject() *k8upv1.Archive {
@@ -48,16 +47,12 @@ func (r *ArchiveReconciler) Provision(ctx context.Context, archive *k8upv1.Archi
 		return controllerruntime.Result{}, nil
 	}
 
-	shouldRun, err := r.Locker.ShouldRunJob(config, executor.GetConcurrencyLimit())
-	if err != nil {
-		return controllerruntime.Result{RequeueAfter: time.Second * 30}, err
-	}
-	if shouldRun {
-		return controllerruntime.Result{RequeueAfter: time.Second * 30}, executor.Execute(ctx)
-	} else {
+	lock := locker.GetForRepository(r.Kube, repository)
+	didRun, err := lock.TryRun(ctx, config, executor.GetConcurrencyLimit(), executor.Execute)
+	if !didRun && err == nil {
 		log.Info("Skipping job due to exclusivity or concurrency limit")
 	}
-	return controllerruntime.Result{RequeueAfter: time.Second * 30}, nil
+	return controllerruntime.Result{RequeueAfter: time.Second * 30}, err
 }
 
 func (r *ArchiveReconciler) Deprovision(_ context.Context, _ *k8upv1.Archive) (controllerruntime.Result, error) {

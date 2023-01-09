@@ -6,7 +6,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/k8up-io/k8up/v2/operator/locker"
 	"github.com/stretchr/testify/suite"
 	batchv1 "k8s.io/api/batch/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -65,8 +64,7 @@ func (ts *RestoreTestSuite) givenRestoreResource() {
 
 func (ts *RestoreTestSuite) whenReconcile() controllerruntime.Result {
 	controller := RestoreReconciler{
-		Kube:   ts.Client,
-		Locker: &locker.Locker{Kube: ts.Client},
+		Kube: ts.Client,
 	}
 
 	result, err := controller.Provision(ts.Ctx, ts.GivenRestore)

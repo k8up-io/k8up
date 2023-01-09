@@ -16,8 +16,7 @@ import (
 
 // BackupReconciler reconciles a Backup object
 type BackupReconciler struct {
-	Kube   client.Client
-	Locker *locker.Locker
+	Kube client.Client
 }
 
 func (r *BackupReconciler) NewObject() *k8upv1.Backup {
@@ -31,12 +30,8 @@ func (r *BackupReconciler) NewObjectList() *k8upv1.BackupList {
 func (r *BackupReconciler) Provision(ctx context.Context, obj *k8upv1.Backup) (reconcile.Result, error) {
 	log := controllerruntime.LoggerFrom(ctx)
 
-	prebackupCond := meta.FindStatusCondition(obj.Status.Conditions, k8upv1.ConditionPreBackupPodReady.String())
-	if obj.Status.HasFinished() && prebackupCond != nil {
-		if prebackupCond.Reason == k8upv1.ReasonFinished.String() || prebackupCond.Reason == k8upv1.ReasonFailed.String() || prebackupCond.Reason == k8upv1.ReasonNoPreBackupPodsFound.String() {
-			// only ignore future reconciles if we have stopped all prebackup deployments in an earlier reconciliation.
-			return controllerruntime.Result{}, nil
-		}
+	if obj.Status.HasStarted() {
+		return controllerruntime.Result{RequeueAfter: 30 * time.Second}, nil // nothing to do, wait until finished
 	}
 
 	repository := cfg.Config.GetGlobalRepository()
@@ -46,16 +41,26 @@ func (r *BackupReconciler) Provision(ctx context.Context, obj *k8upv1.Backup) (r
 	config := job.NewConfig(ctx, r.Kube, log, obj, repository)
 	executor := NewBackupExecutor(config)
 
-	shouldRun, err := r.Locker.ShouldRunJob(config, executor.GetConcurrencyLimit())
-	if err != nil {
-		return controllerruntime.Result{RequeueAfter: time.Second * 30}, err
+	if obj.Status.HasFinished() {
+		cleanupCond := meta.FindStatusCondition(obj.Status.Conditions, k8upv1.ConditionScrubbed.String())
+		if cleanupCond == nil || cleanupCond.Reason != k8upv1.ReasonSucceeded.String() {
+			executor.cleanupOldBackups(ctx)
+		}
+
+		executor.StopPreBackupDeployments(ctx)
+		prebackupCond := meta.FindStatusCondition(obj.Status.Conditions, k8upv1.ConditionPreBackupPodReady.String())
+		if prebackupCond.Reason == k8upv1.ReasonFinished.String() || prebackupCond.Reason == k8upv1.ReasonFailed.String() || prebackupCond.Reason == k8upv1.ReasonNoPreBackupPodsFound.String() {
+			// only ignore future reconciles if we have stopped all prebackup deployments in an earlier reconciliation.
+			return controllerruntime.Result{}, nil
+		}
 	}
-	if shouldRun {
-		return controllerruntime.Result{RequeueAfter: time.Second * 30}, executor.Execute(ctx)
-	} else {
+
+	lock := locker.GetForRepository(r.Kube, repository)
+	didRun, err := lock.TryRun(ctx, config, executor.GetConcurrencyLimit(), executor.Execute)
+	if !didRun && err == nil {
 		log.Info("Skipping job due to exclusivity or concurrency limit")
 	}
-	return controllerruntime.Result{RequeueAfter: time.Second * 30}, nil
+	return controllerruntime.Result{RequeueAfter: time.Second * 30}, err
 }
 
 func (r *BackupReconciler) Deprovision(_ context.Context, _ *k8upv1.Backup) (controllerruntime.Result, error) {

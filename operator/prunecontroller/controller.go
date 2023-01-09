@@ -14,8 +14,7 @@ import (
 
 // PruneReconciler reconciles a Prune object
 type PruneReconciler struct {
-	Kube   client.Client
-	Locker *locker.Locker
+	Kube client.Client
 }
 
 func (r *PruneReconciler) NewObject() *k8upv1.Prune {
@@ -44,18 +43,12 @@ func (r *PruneReconciler) Provision(ctx context.Context, prune *k8upv1.Prune) (c
 		return controllerruntime.Result{}, nil
 	}
 
-	running, err := r.Locker.IsAnyJobRunningForRepository(repository)
-	if err != nil {
-		return controllerruntime.Result{RequeueAfter: time.Second * 30}, err
-	}
-
-	shouldRun := !running
-	if shouldRun {
-		return controllerruntime.Result{RequeueAfter: time.Second * 8}, executor.Execute(ctx)
-	} else {
+	lock := locker.GetForRepository(r.Kube, repository)
+	didRun, err := lock.TryRunExclusively(ctx, executor.Execute)
+	if !didRun && err == nil {
 		log.Info("Delaying prune task, another job is running")
 	}
-	return controllerruntime.Result{RequeueAfter: time.Second * 30}, nil
+	return controllerruntime.Result{RequeueAfter: time.Second * 8}, err
 }
 
 func (r *PruneReconciler) Deprovision(_ context.Context, _ *k8upv1.Prune) (controllerruntime.Result, error) {
