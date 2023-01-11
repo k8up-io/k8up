@@ -29,8 +29,6 @@
 * xref:references/status.adoc[Status and Conditions]
 
 .Explanation
-* Runbooks
-** xref:explanations/runbooks/K8upJobStuck.adoc[K8upJobStuck]
 * xref:explanations/backup.adoc[Backup Methods]
 * xref:explanations/architecture.adoc[Architecture]
 * xref:explanations/ide.adoc[IDE Integration]
