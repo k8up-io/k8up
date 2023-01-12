@@ -7,8 +7,7 @@ import (
 	k8upv1 "github.com/k8up-io/k8up/v2/api/v1"
 	"github.com/k8up-io/k8up/v2/operator/cfg"
 	"github.com/k8up-io/k8up/v2/operator/job"
-	"github.com/k8up-io/k8up/v2/operator/queue"
-	"k8s.io/apimachinery/pkg/api/errors"
+	"github.com/k8up-io/k8up/v2/operator/locker"
 	controllerruntime "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -18,19 +17,16 @@ type CheckReconciler struct {
 	Kube client.Client
 }
 
-// Reconcile is the entrypoint to manage the given resource.
-func (r *CheckReconciler) Reconcile(ctx context.Context, req controllerruntime.Request) (controllerruntime.Result, error) {
-	log := controllerruntime.LoggerFrom(ctx)
+func (r *CheckReconciler) NewObject() *k8upv1.Check {
+	return &k8upv1.Check{}
+}
 
-	check := &k8upv1.Check{}
-	err := r.Kube.Get(ctx, req.NamespacedName, check)
-	if err != nil {
-		if errors.IsNotFound(err) {
-			return controllerruntime.Result{}, nil
-		}
-		log.Error(err, "Failed to get Check")
-		return controllerruntime.Result{}, err
-	}
+func (r *CheckReconciler) NewObjectList() *k8upv1.CheckList {
+	return &k8upv1.CheckList{}
+}
+
+func (r *CheckReconciler) Provision(ctx context.Context, check *k8upv1.Check) (controllerruntime.Result, error) {
+	log := controllerruntime.LoggerFrom(ctx)
 
 	if check.Status.HasStarted() {
 		return controllerruntime.Result{}, nil
@@ -46,11 +42,18 @@ func (r *CheckReconciler) Reconcile(ctx context.Context, req controllerruntime.R
 	executor := NewCheckExecutor(config)
 
 	if check.Status.HasFinished() {
-		executor.cleanupOldChecks(executor.GetJobNamespacedName(), check)
+		executor.cleanupOldChecks(ctx, check)
 		return controllerruntime.Result{}, nil
 	}
 
-	log.V(1).Info("adding job to the queue")
-	queue.GetExecQueue().Add(executor)
-	return controllerruntime.Result{RequeueAfter: time.Second * 30}, nil
+	lock := locker.GetForRepository(r.Kube, repository)
+	didRun, err := lock.TryRunExclusively(ctx, executor.Execute)
+	if !didRun && err == nil {
+		log.Info("Delaying check task, another job is running")
+	}
+	return controllerruntime.Result{RequeueAfter: time.Second * 30}, err
+}
+
+func (r *CheckReconciler) Deprovision(_ context.Context, _ *k8upv1.Check) (controllerruntime.Result, error) {
+	return controllerruntime.Result{}, nil
 }

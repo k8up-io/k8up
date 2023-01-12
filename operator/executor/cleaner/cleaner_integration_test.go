@@ -1,6 +1,6 @@
 //go:build integration
 
-package cleaner_test
+package cleaner_test // needs dedicated package to avoid import cycle
 
 import (
 	"testing"
@@ -8,6 +8,7 @@ import (
 	k8upv1 "github.com/k8up-io/k8up/v2/api/v1"
 	"github.com/k8up-io/k8up/v2/envtest"
 	"github.com/k8up-io/k8up/v2/operator/executor/cleaner"
+
 	"github.com/k8up-io/k8up/v2/operator/job"
 	"github.com/stretchr/testify/suite"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -51,7 +52,7 @@ func (ts *CleanerTestSuite) withJobs() {
 }
 
 func (ts *CleanerTestSuite) runCleanup() {
-	objCleaner := &cleaner.ObjectCleaner{Client: ts.Client, Limits: newLimiter(1, 1), Log: ts.Logger}
+	objCleaner := cleaner.NewObjectCleaner(ts.Client, newLimiter(1, 1))
 	deleted, err := objCleaner.CleanOldObjects(ts.Ctx, ts.fetchJobs().GetJobObjects())
 	ts.Assertions.NoError(err)
 	ts.Assertions.Equal(2, deleted)

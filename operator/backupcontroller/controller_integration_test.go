@@ -41,7 +41,7 @@ func (ts *BackupTestSuite) Test_GivenBackup_ExpectBackupJob() {
 	result := ts.whenReconciling(ts.BackupResource)
 	ts.Assert().GreaterOrEqual(result.RequeueAfter, 30*time.Second)
 
-	ts.expectABackupJobEventually()
+	ts.expectABackupJob()
 }
 
 func (ts *BackupTestSuite) Test_GivenBackupWithSecurityContext_ExpectBackupJobWithSecurityContext() {
@@ -50,7 +50,7 @@ func (ts *BackupTestSuite) Test_GivenBackupWithSecurityContext_ExpectBackupJobWi
 	result := ts.whenReconciling(ts.BackupResource)
 	ts.Require().GreaterOrEqual(result.RequeueAfter, 30*time.Second)
 
-	backupJob := ts.expectABackupJobEventually()
+	backupJob := ts.expectABackupJob()
 	ts.Assert().NotNil(backupJob.Spec.Template.Spec.SecurityContext)
 	ts.Assert().Equal(*ts.BackupResource.Spec.PodSecurityContext, *backupJob.Spec.Template.Spec.SecurityContext)
 	ts.Assert().Equal(int64(500), *backupJob.Spec.ActiveDeadlineSeconds)
@@ -61,13 +61,13 @@ func (ts *BackupTestSuite) Test_GivenPreBackupPods_ExpectPreBackupDeployment() {
 
 	result := ts.whenReconciling(ts.BackupResource)
 	ts.Assert().GreaterOrEqual(result.RequeueAfter, 30*time.Second)
-	ts.expectAPreBackupDeploymentEventually()
+	ts.assertPrebackupDeploymentExists()
 	ts.assertConditionWaitingForPreBackup(ts.BackupResource)
 
 	ts.afterPreBackupDeploymentStarted()
 	_ = ts.whenReconciling(ts.BackupResource)
 	ts.assertConditionReadyForPreBackup(ts.BackupResource)
-	ts.expectABackupContainer()
+	ts.assertBackupExists()
 }
 
 func (ts *BackupTestSuite) Test_GivenPreBackupDeployment_WhenDeploymentStartsUp_ThenExpectBackupToBeWaiting() {
@@ -86,7 +86,7 @@ func (ts *BackupTestSuite) Test_GivenFailedPreBackupDeployment_WhenCreatingNewBa
 
 	result := ts.whenReconciling(ts.BackupResource)
 	ts.Assert().GreaterOrEqual(result.RequeueAfter, 30*time.Second)
-	ts.assertDeploymentIsDeleted(failedDeployment)
+	ts.Assert().False(ts.IsResourceExisting(ts.Ctx, failedDeployment))
 	ts.assertPreBackupPodConditionFailed(ts.BackupResource)
 }
 
@@ -95,11 +95,11 @@ func (ts *BackupTestSuite) Test_GivenFinishedPreBackupDeployment_WhenReconciling
 	// so that the callback is registered which eventually cleans up the PreBackupPods.
 	ts.EnsureResources(ts.newPreBackupPod(), ts.BackupResource)
 	_ = ts.whenReconciling(ts.BackupResource)
-	ts.expectAPreBackupDeploymentEventually()
+	ts.assertPrebackupDeploymentExists()
 
 	ts.afterPreBackupDeploymentStarted()
 	_ = ts.whenReconciling(ts.BackupResource)
-	ts.expectABackupJobEventually()
+	ts.expectABackupJob()
 
 	result := &k8upv1.Backup{}
 	ts.FetchResource(types.NamespacedName{Name: ts.BackupResource.Name, Namespace: ts.BackupResource.Namespace}, result)
@@ -108,19 +108,19 @@ func (ts *BackupTestSuite) Test_GivenFinishedPreBackupDeployment_WhenReconciling
 
 	_ = ts.whenReconciling(result)
 
-	ts.assertDeploymentIsDeleted(ts.newPreBackupDeployment())
+	ts.Assert().False(ts.IsResourceExisting(ts.Ctx, ts.newPreBackupDeployment()))
 }
 
 func (ts *BackupTestSuite) Test_GivenPreBackupPods_WhenRestartingK8up_ThenExpectToContinueWhereItLeftOff() {
 	ts.EnsureResources(ts.BackupResource, ts.newPreBackupPod())
 
 	_ = ts.whenReconciling(ts.BackupResource)
-	ts.expectAPreBackupDeploymentEventually()
+	ts.assertPrebackupDeploymentExists()
 
 	ts.whenCancellingTheContext()
 	ts.afterPreBackupDeploymentStarted()
 	_ = ts.whenReconciling(ts.BackupResource)
-	ts.expectABackupContainer()
+	ts.assertBackupExists()
 }
 
 func (ts *BackupTestSuite) Test_GivenFinishedBackup_WhenReconciling_ThenIgnore() {
@@ -146,8 +146,9 @@ func (ts *BackupTestSuite) Test_GivenFailedBackup_WhenReconciling_ThenIgnore() {
 }
 
 func (ts *BackupTestSuite) Test_GivenBackupWithTags_WhenCreatingBackupjob_ThenHaveTagArguments() {
-	ts.EnsureResources(ts.newBackupWithTags())
+	ts.BackupResource = ts.newBackupWithTags()
+	ts.EnsureResources(ts.BackupResource)
 	ts.whenReconciling(ts.BackupResource)
-	backupJob := ts.expectABackupJobEventually()
+	backupJob := ts.expectABackupJob()
 	ts.assertJobHasTagArguments(backupJob)
 }

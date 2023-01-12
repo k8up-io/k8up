@@ -66,7 +66,7 @@ deploy_args =
 .PHONY: deploy
 deploy: export KUBECONFIG = $(KIND_KUBECONFIG)
 deploy: kind-load-image install ## Deploy controller in the configured Kubernetes cluster in ~/.kube/config
-	helm upgrade --install k8up charts/k8up \
+	helm upgrade --install k8up ./charts/k8up \
 		--create-namespace \
 		--namespace k8up-system \
 		--set podAnnotations.imagesha="$(shell docker image inspect $(K8UP_E2E_IMG) | jq -r '.[].Id')" \
@@ -74,6 +74,7 @@ deploy: kind-load-image install ## Deploy controller in the configured Kubernete
 		--set image.registry=$(E2E_REGISTRY) \
 		--set image.repository=$(E2E_REPO) \
 		--set image.tag=$(E2E_TAG) \
+		--values ./e2e/definitions/operator/deploy.yaml \
 		--wait $(deploy_args)
 
 .PHONY: generate

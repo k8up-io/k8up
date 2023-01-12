@@ -14,7 +14,6 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
 const (
@@ -26,50 +25,48 @@ type JobReconciler struct {
 	Kube client.Client
 }
 
-// Reconcile is the entrypoint to manage the given resource.
-func (r *JobReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	jobObj := &batchv1.Job{}
+func (r *JobReconciler) NewObject() *batchv1.Job {
+	return &batchv1.Job{}
+}
 
-	err := r.Kube.Get(ctx, req.NamespacedName, jobObj)
-	if err != nil {
+func (r *JobReconciler) NewObjectList() *batchv1.JobList {
+	return &batchv1.JobList{}
+}
 
-		if apierrors.IsNotFound(err) {
-			return reconcile.Result{}, nil
-		}
+func (r *JobReconciler) Deprovision(ctx context.Context, obj *batchv1.Job) (ctrl.Result, error) {
+	return ctrl.Result{}, r.removeFinalizer(ctx, obj)
+}
 
-		return reconcile.Result{}, err
+func (r *JobReconciler) Provision(ctx context.Context, obj *batchv1.Job) (ctrl.Result, error) {
+	finalizerErr := r.removeFinalizer(ctx, obj)
+	if finalizerErr != nil {
+		return ctrl.Result{}, finalizerErr
 	}
-
-	return ctrl.Result{}, r.Handle(ctx, jobObj)
+	return ctrl.Result{}, r.Handle(ctx, obj)
 }
 
 func (r *JobReconciler) Handle(ctx context.Context, obj *batchv1.Job) error {
-	if err := r.updateOwner(ctx, obj); err != nil {
+	owner, err := r.fetchOwner(ctx, obj)
+	if err != nil {
+		if apierrors.IsNotFound(err) {
+			return nil // owner doesn't exist anymore, nothing to do.
+		}
+		return err
+	}
+	if !owner.GetDeletionTimestamp().IsZero() {
+		return nil // owner got deleted, probably from cleanup. Nothing to do.
+	}
+
+	if err := r.updateOwner(ctx, obj, owner); err != nil {
 		return fmt.Errorf("could not update owner: %w", err)
 	}
-
-	_, err := controllerutil.CreateOrUpdate(ctx, r.Kube, obj, func() error {
-		if !obj.GetDeletionTimestamp().IsZero() {
-			controllerutil.RemoveFinalizer(obj, jobFinalizerName)
-			controllerutil.RemoveFinalizer(obj, "k8up.syn.tools/jobobserver") // legacy finalizer
-			return nil
-		}
-		if obj.Status.Active > 0 {
-			controllerutil.AddFinalizer(obj, jobFinalizerName)
-		}
-		return nil
-	})
-	if err != nil {
-		return fmt.Errorf("could not update finalizers: %w", err)
-	}
-
 	return nil
 }
 
-func (r *JobReconciler) updateOwner(ctx context.Context, batchJob *batchv1.Job) error {
+func (r *JobReconciler) fetchOwner(ctx context.Context, batchJob *batchv1.Job) (k8upv1.JobObject, error) {
 	controllerReference := metav1.GetControllerOf(batchJob)
 	if controllerReference == nil {
-		return fmt.Errorf("job has no controller reference: %s/%s", batchJob.Namespace, batchJob.Name)
+		return nil, fmt.Errorf("job has no controller reference: %s/%s", batchJob.Namespace, batchJob.Name)
 	}
 
 	var result k8upv1.JobObject
@@ -85,22 +82,22 @@ func (r *JobReconciler) updateOwner(ctx context.Context, batchJob *batchv1.Job) 
 	case k8upv1.PruneKind:
 		result = &k8upv1.Prune{}
 	default:
-		return fmt.Errorf("unrecognized controller kind in owner reference: %s", controllerReference.Kind)
+		return nil, fmt.Errorf("unrecognized controller kind in owner reference: %s", controllerReference.Kind)
 	}
 
 	// fetch the owner object
 	err := r.Kube.Get(ctx, types.NamespacedName{Name: controllerReference.Name, Namespace: batchJob.Namespace}, result)
 	if err != nil {
-		if apierrors.IsNotFound(err) {
-			return nil // owner doesn't exist anymore, nothing to do.
-		}
-		return fmt.Errorf("cannot get resource: %s/%s/%s: %w", controllerReference.Kind, batchJob.Namespace, batchJob.Name, err)
+		return nil, fmt.Errorf("cannot get resource: %s/%s/%s: %w", controllerReference.Kind, batchJob.Namespace, batchJob.Name, err)
 	}
+	return result, nil
+}
 
+func (r *JobReconciler) updateOwner(ctx context.Context, batchJob *batchv1.Job, owner k8upv1.JobObject) error {
 	log := ctrl.LoggerFrom(ctx)
 
 	// update status conditions based on Job status
-	ownerStatus := result.GetStatus()
+	ownerStatus := owner.GetStatus()
 	message := fmt.Sprintf("job '%s' has %d active, %d succeeded and %d failed pods",
 		batchJob.Name, batchJob.Status.Active, batchJob.Status.Succeeded, batchJob.Status.Failed)
 
@@ -108,7 +105,7 @@ func (r *JobReconciler) updateOwner(ctx context.Context, batchJob *batchv1.Job) 
 	if successCond != nil && successCond.Status == corev1.ConditionTrue {
 		if !ownerStatus.HasSucceeded() {
 			// only increase success counter if new condition
-			monitoring.IncSuccessCounters(batchJob.Namespace, result.GetType())
+			monitoring.IncSuccessCounters(batchJob.Namespace, owner.GetType())
 			log.Info("Job succeeded")
 		}
 		ownerStatus.SetSucceeded(message)
@@ -118,7 +115,7 @@ func (r *JobReconciler) updateOwner(ctx context.Context, batchJob *batchv1.Job) 
 	if failedCond != nil && failedCond.Status == corev1.ConditionTrue {
 		if !ownerStatus.HasFailed() {
 			// only increase fail counter if new condition
-			monitoring.IncFailureCounters(batchJob.Namespace, result.GetType())
+			monitoring.IncFailureCounters(batchJob.Namespace, owner.GetType())
 			log.Info("Job failed")
 		}
 		ownerStatus.SetFailed(message)
@@ -127,6 +124,19 @@ func (r *JobReconciler) updateOwner(ctx context.Context, batchJob *batchv1.Job) 
 	if successCond == nil && failedCond == nil {
 		ownerStatus.SetStarted(message)
 	}
-	result.SetStatus(ownerStatus)
-	return r.Kube.Status().Update(ctx, result)
+	owner.SetStatus(ownerStatus)
+	return r.Kube.Status().Update(ctx, owner)
+}
+
+func (r *JobReconciler) removeFinalizer(ctx context.Context, obj *batchv1.Job) error {
+	_, err := controllerutil.CreateOrUpdate(ctx, r.Kube, obj, func() error {
+		// update to a new K8up version: Ensure that all finalizers get removed.
+		controllerutil.RemoveFinalizer(obj, jobFinalizerName)
+		controllerutil.RemoveFinalizer(obj, "k8up.syn.tools/jobobserver") // legacy finalizer
+		return nil
+	})
+	if err != nil {
+		return fmt.Errorf("could not update finalizers: %w", err)
+	}
+	return nil
 }

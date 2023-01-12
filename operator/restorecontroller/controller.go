@@ -7,8 +7,7 @@ import (
 	k8upv1 "github.com/k8up-io/k8up/v2/api/v1"
 	"github.com/k8up-io/k8up/v2/operator/cfg"
 	"github.com/k8up-io/k8up/v2/operator/job"
-	"github.com/k8up-io/k8up/v2/operator/queue"
-	"k8s.io/apimachinery/pkg/api/errors"
+	"github.com/k8up-io/k8up/v2/operator/locker"
 	controllerruntime "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -18,18 +17,16 @@ type RestoreReconciler struct {
 	Kube client.Client
 }
 
-// Reconcile is the entrypoint to manage the given resource.
-func (r *RestoreReconciler) Reconcile(ctx context.Context, req controllerruntime.Request) (controllerruntime.Result, error) {
-	log := controllerruntime.LoggerFrom(ctx).WithValues("restore", req.NamespacedName)
+func (r *RestoreReconciler) NewObject() *k8upv1.Restore {
+	return &k8upv1.Restore{}
+}
 
-	restore := &k8upv1.Restore{}
-	err := r.Kube.Get(ctx, req.NamespacedName, restore)
-	if err != nil {
-		if errors.IsNotFound(err) {
-			return controllerruntime.Result{}, nil
-		}
-		return controllerruntime.Result{}, err
-	}
+func (r *RestoreReconciler) NewObjectList() *k8upv1.RestoreList {
+	return &k8upv1.RestoreList{}
+}
+
+func (r *RestoreReconciler) Provision(ctx context.Context, restore *k8upv1.Restore) (controllerruntime.Result, error) {
+	log := controllerruntime.LoggerFrom(ctx)
 
 	if restore.Status.HasStarted() {
 		return controllerruntime.Result{}, nil
@@ -43,11 +40,18 @@ func (r *RestoreReconciler) Reconcile(ctx context.Context, req controllerruntime
 	executor := NewRestoreExecutor(config)
 
 	if restore.Status.HasFinished() {
-		executor.cleanupOldRestores(executor.GetJobNamespacedName(), restore)
+		executor.cleanupOldRestores(ctx, restore)
 		return controllerruntime.Result{}, nil
 	}
 
-	log.V(1).Info("adding job to the queue")
-	queue.GetExecQueue().Add(executor)
-	return controllerruntime.Result{RequeueAfter: time.Second * 30}, nil
+	lock := locker.GetForRepository(r.Kube, repository)
+	didRun, err := lock.TryRun(ctx, config, executor.GetConcurrencyLimit(), executor.Execute)
+	if !didRun && err == nil {
+		log.Info("Skipping job due to exclusivity or concurrency limit")
+	}
+	return controllerruntime.Result{RequeueAfter: time.Second * 30}, err
+}
+
+func (r *RestoreReconciler) Deprovision(_ context.Context, _ *k8upv1.Restore) (controllerruntime.Result, error) {
+	return controllerruntime.Result{}, nil
 }

@@ -107,9 +107,8 @@ func (ts *JobTestSuite) assertCondition(conditions []metav1.Condition, condType 
 	ts.Assert().Equal(status, cond.Status, "condition %s isn't %s", condType, status)
 }
 
-func (ts *JobTestSuite) whenReconciling(object metav1.Object) controllerruntime.Result {
-	req := ts.MapToRequest(object)
-	result, err := ts.Controller.Reconcile(ts.Ctx, req)
+func (ts *JobTestSuite) whenReconciling(object *batchv1.Job) controllerruntime.Result {
+	result, err := ts.Controller.Provision(ts.Ctx, object)
 	ts.Require().NoError(err)
 
 	return result

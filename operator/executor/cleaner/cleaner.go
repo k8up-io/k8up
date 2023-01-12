@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/go-logr/logr"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	controllerruntime "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	k8upv1 "github.com/k8up-io/k8up/v2/api/v1"
@@ -19,13 +19,17 @@ import (
 type ObjectCleaner struct {
 	Client client.Client
 	Limits GetJobsHistoryLimiter
-	Log    logr.Logger
 }
 
 // GetJobsHistoryLimiter provides the limits on how many jobs to clean.
 type GetJobsHistoryLimiter interface {
 	GetSuccessfulJobsHistoryLimit() *int
 	GetFailedJobsHistoryLimit() *int
+}
+
+// NewObjectCleaner creates a new ObjectCleaner instance.
+func NewObjectCleaner(clt client.Client, Limits GetJobsHistoryLimiter) *ObjectCleaner {
+	return &ObjectCleaner{Client: clt, Limits: Limits}
 }
 
 // CleanOldObjects iterates over the given list and deletes them with the oldest object first until the amount returned from GetJobsHistoryLimiter remain.
@@ -47,17 +51,16 @@ func (c *ObjectCleaner) CleanOldObjects(ctx context.Context, jobObjects k8upv1.J
 // Returns the amount of deleted objects and possible errors.
 func (c *ObjectCleaner) cleanOldObjects(ctx context.Context, jobObjects k8upv1.JobObjectList, maxObjects int) (int, error) {
 	numToDelete := len(jobObjects) - maxObjects
-
-	c.Log.Info("cleaning old jobs", "have", len(jobObjects), "want", maxObjects, "deleting", numToDelete)
-
 	if numToDelete <= 0 {
 		return 0, nil
 	}
 
+	log := controllerruntime.LoggerFrom(ctx)
+	log.Info("Cleaning old jobs", "have", len(jobObjects), "max", maxObjects, "deleting", numToDelete)
+
 	sort.Sort(jobObjects)
 	for i := 0; i < numToDelete; i++ {
 		if err := c.deleteJob(ctx, jobObjects[i]); err != nil {
-			c.Log.Error(err, "could not delete old job", "namespace", jobObjects[i].GetNamespace())
 			return i, fmt.Errorf("could not delete old %s: %w", jobObjects[i].GetType(), err)
 		}
 	}
@@ -66,9 +69,8 @@ func (c *ObjectCleaner) cleanOldObjects(ctx context.Context, jobObjects k8upv1.J
 }
 
 func (c *ObjectCleaner) deleteJob(ctx context.Context, job k8upv1.JobObject) error {
-	name := job.GetName()
-	ns := job.GetNamespace()
-	c.Log.Info("cleaning old job", "namespace", ns, "name", name)
+	log := controllerruntime.LoggerFrom(ctx)
+	log.V(1).Info("Cleaning old job", "namespace", job.GetNamespace(), "name", job.GetName())
 	option := metav1.DeletePropagationForeground
 	err := c.Client.Delete(ctx, job, &client.DeleteOptions{
 		PropagationPolicy: &option,

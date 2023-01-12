@@ -1,6 +1,8 @@
 package backupcontroller
 
 import (
+	"context"
+	"fmt"
 	"path"
 
 	"github.com/k8up-io/k8up/v2/operator/executor"
@@ -12,8 +14,8 @@ import (
 	"github.com/k8up-io/k8up/v2/operator/cfg"
 )
 
-func (b *BackupExecutor) fetchPVCs(list client.ObjectList) error {
-	return b.Client.List(b.CTX, list, client.InNamespace(b.backup.Namespace))
+func (b *BackupExecutor) fetchPVCs(ctx context.Context, list client.ObjectList) error {
+	return b.Config.Client.List(ctx, list, client.InNamespace(b.backup.Namespace))
 }
 
 func (b *BackupExecutor) newVolumeMounts(claims []corev1.Volume) []corev1.VolumeMount {
@@ -37,11 +39,11 @@ func containsAccessMode(s []corev1.PersistentVolumeAccessMode, e string) bool {
 	return false
 }
 
-func (b *BackupExecutor) createServiceAccountAndBinding() error {
+func (b *BackupExecutor) createServiceAccountAndBinding(ctx context.Context) error {
 	sa := &corev1.ServiceAccount{}
 	sa.Name = cfg.Config.ServiceAccount
 	sa.Namespace = b.backup.Namespace
-	_, err := controllerruntime.CreateOrUpdate(b.CTX, b.Client, sa, func() error {
+	_, err := controllerruntime.CreateOrUpdate(ctx, b.Config.Client, sa, func() error {
 		return nil
 	})
 	if err != nil {
@@ -51,7 +53,7 @@ func (b *BackupExecutor) createServiceAccountAndBinding() error {
 	role := &rbacv1.Role{}
 	role.Name = cfg.Config.PodExecRoleName
 	role.Namespace = b.backup.Namespace
-	_, err = controllerruntime.CreateOrUpdate(b.CTX, b.Client, role, func() error {
+	_, err = controllerruntime.CreateOrUpdate(ctx, b.Config.Client, role, func() error {
 		role.Rules = []rbacv1.PolicyRule{
 			{
 				APIGroups: []string{""},
@@ -68,7 +70,7 @@ func (b *BackupExecutor) createServiceAccountAndBinding() error {
 	roleBinding := &rbacv1.RoleBinding{}
 	roleBinding.Name = cfg.Config.PodExecRoleName + "-namespaced"
 	roleBinding.Namespace = b.backup.Namespace
-	_, err = controllerruntime.CreateOrUpdate(b.CTX, b.Client, roleBinding, func() error {
+	_, err = controllerruntime.CreateOrUpdate(ctx, b.Config.Client, roleBinding, func() error {
 		roleBinding.Subjects = []rbacv1.Subject{
 			{
 				Kind:      "ServiceAccount",
@@ -86,7 +88,7 @@ func (b *BackupExecutor) createServiceAccountAndBinding() error {
 	return err
 }
 
-func (b *BackupExecutor) setupEnvVars() []corev1.EnvVar {
+func (b *BackupExecutor) setupEnvVars() ([]corev1.EnvVar, error) {
 	vars := executor.NewEnvVarConverter()
 
 	if b.backup != nil {
@@ -103,10 +105,9 @@ func (b *BackupExecutor) setupEnvVars() []corev1.EnvVar {
 	vars.SetString("BACKUPCOMMAND_ANNOTATION", cfg.Config.BackupCommandAnnotation)
 	vars.SetString("FILEEXTENSION_ANNOTATION", cfg.Config.FileExtensionAnnotation)
 
-	err := vars.Merge(executor.DefaultEnv(b.Obj.GetNamespace()))
+	err := vars.Merge(executor.DefaultEnv(b.backup.GetNamespace()))
 	if err != nil {
-		b.Log.Error(err, "error while merging the environment variables", "name", b.Obj.GetName(), "namespace", b.Obj.GetNamespace())
+		return nil, fmt.Errorf("cannot merge environment variables: %w", err)
 	}
-
-	return vars.Convert()
+	return vars.Convert(), nil
 }

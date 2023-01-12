@@ -5,13 +5,15 @@
 package executor
 
 import (
-	"github.com/go-logr/logr"
-	"k8s.io/apimachinery/pkg/types"
-	"sigs.k8s.io/controller-runtime/pkg/client"
+	"context"
 
+	"github.com/go-logr/logr"
 	k8upv1 "github.com/k8up-io/k8up/v2/api/v1"
 	"github.com/k8up-io/k8up/v2/operator/executor/cleaner"
 	"github.com/k8up-io/k8up/v2/operator/job"
+	"k8s.io/apimachinery/pkg/types"
+	controllerruntime "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 type Generic struct {
@@ -44,13 +46,14 @@ func (g *Generic) GetJobType() k8upv1.JobType {
 
 // listOldResources retrieves a list of the given resource type in the given namespace and fills the Item property
 // of objList. On errors, the error is being logged and the Scrubbed condition set to False with reason RetrievalFailed.
-func (g *Generic) listOldResources(namespace string, objList client.ObjectList) error {
-	err := g.Client.List(g.CTX, objList, &client.ListOptions{
+func (g *Generic) listOldResources(ctx context.Context, namespace string, objList client.ObjectList) error {
+	log := controllerruntime.LoggerFrom(ctx)
+	err := g.Client.List(ctx, objList, &client.ListOptions{
 		Namespace: namespace,
 	})
 	if err != nil {
-		g.Log.Error(err, "could not list objects to cleanup old resources", "Namespace", namespace, "kind", objList.GetObjectKind().GroupVersionKind().Kind)
-		g.SetConditionFalseWithMessage(k8upv1.ConditionScrubbed, k8upv1.ReasonRetrievalFailed, "could not list objects to cleanup old resources: %v", err)
+		log.Error(err, "could not list objects to cleanup old resources")
+		g.SetConditionFalseWithMessage(ctx, k8upv1.ConditionScrubbed, k8upv1.ReasonRetrievalFailed, "could not list objects to cleanup old resources: %v", err)
 		return err
 	}
 	return nil
@@ -62,18 +65,18 @@ type jobObjectList interface {
 	GetJobObjects() k8upv1.JobObjectList
 }
 
-func (g *Generic) CleanupOldResources(typ jobObjectList, name types.NamespacedName, limits cleaner.GetJobsHistoryLimiter) {
-	err := g.listOldResources(name.Namespace, typ)
+func (g *Generic) CleanupOldResources(ctx context.Context, typ jobObjectList, namespace string, limits cleaner.GetJobsHistoryLimiter) {
+	err := g.listOldResources(ctx, namespace, typ)
 	if err != nil {
 		return
 	}
 
-	cl := cleaner.ObjectCleaner{Client: g.Client, Limits: limits, Log: g.Logger()}
-	deleted, err := cl.CleanOldObjects(g.CTX, typ.GetJobObjects())
+	cl := cleaner.NewObjectCleaner(g.Client, limits)
+	deleted, err := cl.CleanOldObjects(ctx, typ.GetJobObjects())
 	if err != nil {
-		g.SetConditionFalseWithMessage(k8upv1.ConditionScrubbed, k8upv1.ReasonDeletionFailed, "could not cleanup old resources: %v", err)
+		g.SetConditionFalseWithMessage(ctx, k8upv1.ConditionScrubbed, k8upv1.ReasonDeletionFailed, "could not cleanup old resources: %s", err.Error())
 		return
 	}
-	g.SetConditionTrueWithMessage(k8upv1.ConditionScrubbed, k8upv1.ReasonSucceeded, "Deleted %v resources", deleted)
+	g.SetConditionTrueWithMessage(ctx, k8upv1.ConditionScrubbed, k8upv1.ReasonSucceeded, "Deleted %d resources", deleted)
 
 }

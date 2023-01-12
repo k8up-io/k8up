@@ -1,7 +1,7 @@
 package backupcontroller
 
 import (
-	"fmt"
+	"context"
 	"strconv"
 
 	k8upv1 "github.com/k8up-io/k8up/v2/api/v1"
@@ -10,7 +10,7 @@ import (
 	"github.com/k8up-io/k8up/v2/operator/job"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/types"
+
 	controllerruntime "sigs.k8s.io/controller-runtime"
 )
 
@@ -23,9 +23,7 @@ type BackupExecutor struct {
 
 // NewBackupExecutor returns a new BackupExecutor.
 func NewBackupExecutor(config job.Config) *BackupExecutor {
-	return &BackupExecutor{
-		Generic: executor.Generic{Config: config},
-	}
+	return &BackupExecutor{Generic: executor.Generic{Config: config}, backup: config.Obj.(*k8upv1.Backup)}
 }
 
 // GetConcurrencyLimit returns the concurrent jobs limit
@@ -35,41 +33,24 @@ func (b *BackupExecutor) GetConcurrencyLimit() int {
 
 // Execute triggers the actual batch.job creation on the cluster.
 // It will also register a callback function on the observer so the PreBackupPods can be removed after the backup has finished.
-func (b *BackupExecutor) Execute() error {
-	backupObject, ok := b.Obj.(*k8upv1.Backup)
-	if !ok {
-		return fmt.Errorf("object is not a backup: %v", b.Obj)
-	}
-	b.backup = backupObject
-	status := backupObject.Status
-
-	if status.HasFailed() || status.HasSucceeded() {
-		name := b.GetJobNamespacedName()
-		b.StopPreBackupDeployments()
-		b.cleanupOldBackups(name)
-		return nil
-	}
-
-	if status.HasStarted() {
-		return nil // nothing to do, wait until finished
-	}
-
-	err := b.createServiceAccountAndBinding()
+func (b *BackupExecutor) Execute(ctx context.Context) error {
+	err := b.createServiceAccountAndBinding(ctx)
 	if err != nil {
 		return err
 	}
 
-	return b.startBackup()
+	return b.startBackup(ctx)
 }
 
 // listAndFilterPVCs lists all PVCs in the given namespace and filters them for K8up specific usage.
 // Specifically, non-RWX PVCs will be skipped, as well PVCs that have the given annotation.
-func (b *BackupExecutor) listAndFilterPVCs(annotation string) ([]corev1.Volume, error) {
+func (b *BackupExecutor) listAndFilterPVCs(ctx context.Context, annotation string) ([]corev1.Volume, error) {
+	log := controllerruntime.LoggerFrom(ctx)
 	volumes := make([]corev1.Volume, 0)
 	claimlist := &corev1.PersistentVolumeClaimList{}
 
-	b.Log.Info("Listing all PVCs", "annotation", annotation)
-	if err := b.fetchPVCs(claimlist); err != nil {
+	log.Info("Listing all PVCs", "annotation", annotation)
+	if err := b.fetchPVCs(ctx, claimlist); err != nil {
 		return volumes, err
 	}
 
@@ -79,17 +60,17 @@ func (b *BackupExecutor) listAndFilterPVCs(annotation string) ([]corev1.Volume, 
 		tmpAnnotation, ok := annotations[annotation]
 
 		if !containsAccessMode(item.Spec.AccessModes, "ReadWriteMany") && !ok {
-			b.Log.Info("PVC isn't RWX", "pvc", item.GetName())
+			log.Info("PVC isn't RWX", "pvc", item.GetName())
 			continue
 		}
 
 		if !ok {
-			b.Log.Info("PVC doesn't have annotation, adding to list", "pvc", item.GetName())
+			log.Info("PVC doesn't have annotation, adding to list", "pvc", item.GetName())
 		} else if anno, _ := strconv.ParseBool(tmpAnnotation); !anno {
-			b.Log.Info("PVC skipped due to annotation", "pvc", item.GetName(), "annotation", tmpAnnotation)
+			log.Info("PVC skipped due to annotation", "pvc", item.GetName(), "annotation", tmpAnnotation)
 			continue
 		} else {
-			b.Log.Info("Adding to list", "pvc", item.Name)
+			log.Info("Adding to list", "pvc", item.Name)
 		}
 
 		tmpVol := corev1.Volume{
@@ -107,9 +88,9 @@ func (b *BackupExecutor) listAndFilterPVCs(annotation string) ([]corev1.Volume, 
 	return volumes, nil
 }
 
-func (b *BackupExecutor) startBackup() error {
+func (b *BackupExecutor) startBackup(ctx context.Context) error {
 
-	ready, err := b.StartPreBackup()
+	ready, err := b.StartPreBackup(ctx)
 	if err != nil {
 		return err
 	}
@@ -117,9 +98,9 @@ func (b *BackupExecutor) startBackup() error {
 		return nil
 	}
 
-	volumes, err := b.listAndFilterPVCs(cfg.Config.BackupAnnotation)
+	volumes, err := b.listAndFilterPVCs(ctx, cfg.Config.BackupAnnotation)
 	if err != nil {
-		b.SetConditionFalseWithMessage(k8upv1.ConditionReady, k8upv1.ReasonRetrievalFailed, err.Error())
+		b.Generic.SetConditionFalseWithMessage(ctx, k8upv1.ConditionReady, k8upv1.ReasonRetrievalFailed, err.Error())
 		return err
 	}
 
@@ -127,13 +108,17 @@ func (b *BackupExecutor) startBackup() error {
 	batchJob.Name = b.backup.GetJobName()
 	batchJob.Namespace = b.backup.Namespace
 
-	_, err = controllerruntime.CreateOrUpdate(b.CTX, b.Client, batchJob, func() error {
-		mutateErr := job.MutateBatchJob(batchJob, b.backup, b.Config)
+	_, err = controllerruntime.CreateOrUpdate(ctx, b.Generic.Config.Client, batchJob, func() error {
+		mutateErr := job.MutateBatchJob(batchJob, b.backup, b.Generic.Config)
 		if mutateErr != nil {
 			return mutateErr
 		}
 
-		batchJob.Spec.Template.Spec.Containers[0].Env = b.setupEnvVars()
+		vars, setupErr := b.setupEnvVars()
+		if setupErr != nil {
+			return setupErr
+		}
+		batchJob.Spec.Template.Spec.Containers[0].Env = vars
 		b.backup.Spec.AppendEnvFromToContainer(&batchJob.Spec.Template.Spec.Containers[0])
 		batchJob.Spec.Template.Spec.Volumes = volumes
 		batchJob.Spec.Template.Spec.ServiceAccountName = cfg.Config.ServiceAccount
@@ -145,6 +130,6 @@ func (b *BackupExecutor) startBackup() error {
 	return err
 }
 
-func (b *BackupExecutor) cleanupOldBackups(name types.NamespacedName) {
-	b.CleanupOldResources(&k8upv1.BackupList{}, name, b.backup)
+func (b *BackupExecutor) cleanupOldBackups(ctx context.Context) {
+	b.Generic.CleanupOldResources(ctx, &k8upv1.BackupList{}, b.backup.Namespace, b.backup)
 }

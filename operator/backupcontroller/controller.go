@@ -4,14 +4,14 @@ import (
 	"context"
 	"time"
 
-	"github.com/k8up-io/k8up/v2/api/v1"
+	k8upv1 "github.com/k8up-io/k8up/v2/api/v1"
 	"github.com/k8up-io/k8up/v2/operator/cfg"
 	"github.com/k8up-io/k8up/v2/operator/job"
-	"github.com/k8up-io/k8up/v2/operator/queue"
-	"k8s.io/apimachinery/pkg/api/errors"
+	"github.com/k8up-io/k8up/v2/operator/locker"
 	"k8s.io/apimachinery/pkg/api/meta"
 	"sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
 // BackupReconciler reconciles a Backup object
@@ -19,37 +19,50 @@ type BackupReconciler struct {
 	Kube client.Client
 }
 
-// Reconcile is the entrypoint to manage the given resource.
-func (r *BackupReconciler) Reconcile(ctx context.Context, req controllerruntime.Request) (controllerruntime.Result, error) {
+func (r *BackupReconciler) NewObject() *k8upv1.Backup {
+	return &k8upv1.Backup{}
+}
+
+func (r *BackupReconciler) NewObjectList() *k8upv1.BackupList {
+	return &k8upv1.BackupList{}
+}
+
+func (r *BackupReconciler) Provision(ctx context.Context, obj *k8upv1.Backup) (reconcile.Result, error) {
 	log := controllerruntime.LoggerFrom(ctx)
 
-	backup := &v1.Backup{}
-	err := r.Kube.Get(ctx, req.NamespacedName, backup)
-	if err != nil {
-		if errors.IsNotFound(err) {
-			return controllerruntime.Result{}, nil
-		}
-		log.Error(err, "Failed to get Backup")
-		return controllerruntime.Result{}, err
+	if obj.Status.HasStarted() {
+		return controllerruntime.Result{RequeueAfter: 30 * time.Second}, nil // nothing to do, wait until finished
 	}
 
-	prebackupCond := meta.FindStatusCondition(backup.Status.Conditions, v1.ConditionPreBackupPodReady.String())
-	if backup.Status.HasFinished() && prebackupCond != nil {
-		if prebackupCond.Reason == v1.ReasonFinished.String() || prebackupCond.Reason == v1.ReasonFailed.String() || prebackupCond.Reason == v1.ReasonNoPreBackupPodsFound.String() {
+	repository := cfg.Config.GetGlobalRepository()
+	if obj.Spec.Backend != nil {
+		repository = obj.Spec.Backend.String()
+	}
+	config := job.NewConfig(ctx, r.Kube, log, obj, repository)
+	executor := NewBackupExecutor(config)
+
+	if obj.Status.HasFinished() {
+		cleanupCond := meta.FindStatusCondition(obj.Status.Conditions, k8upv1.ConditionScrubbed.String())
+		if cleanupCond == nil || cleanupCond.Reason != k8upv1.ReasonSucceeded.String() {
+			executor.cleanupOldBackups(ctx)
+		}
+
+		executor.StopPreBackupDeployments(ctx)
+		prebackupCond := meta.FindStatusCondition(obj.Status.Conditions, k8upv1.ConditionPreBackupPodReady.String())
+		if prebackupCond.Reason == k8upv1.ReasonFinished.String() || prebackupCond.Reason == k8upv1.ReasonFailed.String() || prebackupCond.Reason == k8upv1.ReasonNoPreBackupPodsFound.String() {
 			// only ignore future reconciles if we have stopped all prebackup deployments in an earlier reconciliation.
 			return controllerruntime.Result{}, nil
 		}
 	}
 
-	repository := cfg.Config.GetGlobalRepository()
-	if backup.Spec.Backend != nil {
-		repository = backup.Spec.Backend.String()
+	lock := locker.GetForRepository(r.Kube, repository)
+	didRun, err := lock.TryRun(ctx, config, executor.GetConcurrencyLimit(), executor.Execute)
+	if !didRun && err == nil {
+		log.Info("Skipping job due to exclusivity or concurrency limit")
 	}
-	config := job.NewConfig(ctx, r.Kube, log, backup, repository)
+	return controllerruntime.Result{RequeueAfter: time.Second * 30}, err
+}
 
-	executor := NewBackupExecutor(config)
-
-	log.V(1).Info("adding job to the queue")
-	queue.GetExecQueue().Add(executor)
-	return controllerruntime.Result{RequeueAfter: time.Second * 30}, nil
+func (r *BackupReconciler) Deprovision(_ context.Context, _ *k8upv1.Backup) (controllerruntime.Result, error) {
+	return controllerruntime.Result{}, nil
 }

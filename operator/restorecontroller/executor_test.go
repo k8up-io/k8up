@@ -137,7 +137,7 @@ func TestRestore_setupEnvVars(t *testing.T) {
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
 			e := NewRestoreExecutor(*tt.GivenJobConfig)
-			envVars := e.setupEnvVars(tt.GivenResource)
+			envVars := e.setupEnvVars(context.TODO(), tt.GivenResource)
 
 			actualEnvVars, actualSecretKeyRefs := extractVarsAndSecretRefs(envVars)
 

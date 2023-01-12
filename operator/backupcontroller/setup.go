@@ -2,6 +2,7 @@ package backupcontroller
 
 import (
 	k8upv1 "github.com/k8up-io/k8up/v2/api/v1"
+	"github.com/k8up-io/k8up/v2/operator/reconciler"
 	"sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 )
@@ -19,9 +20,11 @@ import (
 // +kubebuilder:rbac:groups=rbac.authorization.k8s.io,resources=roles;rolebindings,verbs=get;list;watch;create;delete
 
 // SetupWithManager configures the reconciler.
-func (r *BackupReconciler) SetupWithManager(mgr controllerruntime.Manager) error {
+func SetupWithManager(mgr controllerruntime.Manager) error {
 	name := "backup.k8up.io"
-	r.Kube = mgr.GetClient()
+	r := reconciler.NewReconciler[*k8upv1.Backup, *k8upv1.BackupList](mgr.GetClient(), &BackupReconciler{
+		Kube: mgr.GetClient(),
+	})
 	return controllerruntime.NewControllerManagedBy(mgr).
 		Named(name).
 		For(&k8upv1.Backup{}).

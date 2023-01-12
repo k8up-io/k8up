@@ -10,9 +10,7 @@ import (
 	"github.com/k8up-io/k8up/v2/operator/backupcontroller"
 	"github.com/k8up-io/k8up/v2/operator/cfg"
 	"github.com/k8up-io/k8up/v2/operator/checkcontroller"
-	"github.com/k8up-io/k8up/v2/operator/executor"
 	"github.com/k8up-io/k8up/v2/operator/jobcontroller"
-	"github.com/k8up-io/k8up/v2/operator/locker"
 	"github.com/k8up-io/k8up/v2/operator/prunecontroller"
 	"github.com/k8up-io/k8up/v2/operator/restorecontroller"
 	"github.com/k8up-io/k8up/v2/operator/schedulecontroller"
@@ -112,19 +110,16 @@ func operatorMain(c *cli.Context) error {
 		return fmt.Errorf("unable to initialize controller runtime: %w", err)
 	}
 
-	lock := &locker.Locker{Kube: mgr.GetClient()}
-	executor.StartExecutor(lock)
-
-	for name, reconciler := range map[string]ReconcilerSetup{
-		"Schedule": &schedulecontroller.ScheduleReconciler{},
-		"Backup":   &backupcontroller.BackupReconciler{},
-		"Restore":  &restorecontroller.RestoreReconciler{},
-		"Archive":  &archivecontroller.ArchiveReconciler{},
-		"Check":    &checkcontroller.CheckReconciler{},
-		"Prune":    &prunecontroller.PruneReconciler{},
-		"Job":      &jobcontroller.JobReconciler{},
+	for name, setupFn := range map[string]func(mgr ctrl.Manager) error{
+		"Schedule": schedulecontroller.SetupWithManager,
+		"Backup":   backupcontroller.SetupWithManager,
+		"Restore":  restorecontroller.SetupWithManager,
+		"Archive":  archivecontroller.SetupWithManager,
+		"Check":    checkcontroller.SetupWithManager,
+		"Prune":    prunecontroller.SetupWithManager,
+		"Job":      jobcontroller.SetupWithManager,
 	} {
-		if setupErr := reconciler.SetupWithManager(mgr); setupErr != nil {
+		if setupErr := setupFn(mgr); setupErr != nil {
 			operatorLog.Error(setupErr, "unable to initialize operator mode", "step", "controller", "controller", name)
 			return fmt.Errorf("unable to setup reconciler: %w", setupErr)
 		}
@@ -168,9 +163,4 @@ func validateQuantityFlags(ctx *cli.Context) error {
 	}
 
 	return nil
-}
-
-// ReconcilerSetup is a common interface to configure reconcilers.
-type ReconcilerSetup interface {
-	SetupWithManager(mgr ctrl.Manager) error
 }

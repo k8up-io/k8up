@@ -7,30 +7,26 @@ import (
 	k8upv1 "github.com/k8up-io/k8up/v2/api/v1"
 	"github.com/k8up-io/k8up/v2/operator/cfg"
 	"github.com/k8up-io/k8up/v2/operator/job"
-	"github.com/k8up-io/k8up/v2/operator/queue"
-	"k8s.io/apimachinery/pkg/api/errors"
+	"github.com/k8up-io/k8up/v2/operator/locker"
 	controllerruntime "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-// ArchiveReconciler reconciles a Archive object
+// ArchiveReconciler reconciles Archive objects
 type ArchiveReconciler struct {
 	Kube client.Client
 }
 
-// Reconcile is the entrypoint to manage the given resource.
-func (r *ArchiveReconciler) Reconcile(ctx context.Context, req controllerruntime.Request) (controllerruntime.Result, error) {
-	log := controllerruntime.LoggerFrom(ctx)
+func (r *ArchiveReconciler) NewObject() *k8upv1.Archive {
+	return &k8upv1.Archive{}
+}
 
-	archive := &k8upv1.Archive{}
-	err := r.Kube.Get(ctx, req.NamespacedName, archive)
-	if err != nil {
-		if errors.IsNotFound(err) {
-			return controllerruntime.Result{}, nil
-		}
-		log.Error(err, "Failed to get Archive")
-		return controllerruntime.Result{}, err
-	}
+func (r *ArchiveReconciler) NewObjectList() *k8upv1.ArchiveList {
+	return &k8upv1.ArchiveList{}
+}
+
+func (r *ArchiveReconciler) Provision(ctx context.Context, archive *k8upv1.Archive) (controllerruntime.Result, error) {
+	log := controllerruntime.LoggerFrom(ctx)
 
 	if archive.Status.HasStarted() {
 		return controllerruntime.Result{}, nil
@@ -44,15 +40,21 @@ func (r *ArchiveReconciler) Reconcile(ctx context.Context, req controllerruntime
 		archive.Spec.RestoreSpec = &k8upv1.RestoreSpec{}
 	}
 	config := job.NewConfig(ctx, r.Kube, log, archive, repository)
-
 	executor := NewArchiveExecutor(config)
 
 	if archive.Status.HasFinished() {
-		executor.cleanupOldArchives(executor.GetJobNamespacedName(), archive)
+		executor.cleanupOldArchives(ctx, archive)
 		return controllerruntime.Result{}, nil
 	}
 
-	log.V(1).Info("adding job to the queue")
-	queue.GetExecQueue().Add(executor)
-	return controllerruntime.Result{RequeueAfter: time.Second * 30}, nil
+	lock := locker.GetForRepository(r.Kube, repository)
+	didRun, err := lock.TryRun(ctx, config, executor.GetConcurrencyLimit(), executor.Execute)
+	if !didRun && err == nil {
+		log.Info("Skipping job due to exclusivity or concurrency limit")
+	}
+	return controllerruntime.Result{RequeueAfter: time.Second * 30}, err
+}
+
+func (r *ArchiveReconciler) Deprovision(_ context.Context, _ *k8upv1.Archive) (controllerruntime.Result, error) {
+	return controllerruntime.Result{}, nil
 }

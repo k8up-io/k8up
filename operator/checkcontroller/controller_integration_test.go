@@ -3,8 +3,6 @@
 package checkcontroller
 
 import (
-	"context"
-	"fmt"
 	"strconv"
 	"testing"
 	"time"
@@ -12,7 +10,6 @@ import (
 	"github.com/stretchr/testify/suite"
 	batchv1 "k8s.io/api/batch/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/types"
 	controllerruntime "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -59,7 +56,7 @@ func (ts *CheckTestSuite) TestReconciliation() {
 	result := ts.whenReconcile()
 	ts.Assert().GreaterOrEqual(result.RequeueAfter, 30*time.Second)
 
-	ts.expectNumberOfJobsEventually(1)
+	ts.expectNumberOfJobs(1)
 }
 
 func (ts *CheckTestSuite) TestJobCleanup() {
@@ -81,32 +78,27 @@ func (ts *CheckTestSuite) TestJobCleanup() {
 	}
 
 	ts.whenReconcile()
-	ts.expectCheckCleanupEventually((successfulJobs - ts.KeepSuccessful) + (failedJobs - ts.KeepFailed))
+	ts.expectCheckCleanup((successfulJobs - ts.KeepSuccessful) + (failedJobs - ts.KeepFailed))
 }
 
-func (ts *CheckTestSuite) expectCheckCleanupEventually(expectedDeletes int) {
-	failureMsg := fmt.Sprintf("Not enough Checks deleted, expected %d.", expectedDeletes)
-	ts.RepeatedAssert(10*time.Second, time.Second, failureMsg, func(timedCtx context.Context) (done bool, err error) {
-		checkResourceList := &k8upv1.CheckList{}
-		err = ts.Client.List(ts.Ctx, checkResourceList, &client.ListOptions{
-			Namespace: ts.NS,
-		})
-		if err != nil {
-			return
-		}
-
-		amountOfDeletedItems := 0
-		for _, item := range checkResourceList.Items {
-			if item.DeletionTimestamp != nil {
-				amountOfDeletedItems++
-			}
-		}
-
-		ts.T().Logf("%d deleted Checks found", amountOfDeletedItems)
-		done = amountOfDeletedItems == expectedDeletes
-
-		return
+func (ts *CheckTestSuite) expectCheckCleanup(expectedDeletes int) {
+	checkResourceList := &k8upv1.CheckList{}
+	err := ts.Client.List(ts.Ctx, checkResourceList, &client.ListOptions{
+		Namespace: ts.NS,
 	})
+	if err != nil {
+		return
+	}
+
+	amountOfDeletedItems := 0
+	for _, item := range checkResourceList.Items {
+		if item.DeletionTimestamp != nil {
+			amountOfDeletedItems++
+		}
+	}
+
+	ts.T().Logf("%d deleted Checks found", amountOfDeletedItems)
+	ts.Assert().Equal(expectedDeletes, amountOfDeletedItems)
 }
 
 func (ts *CheckTestSuite) givenCheckResources(amount int) {
@@ -125,15 +117,7 @@ func (ts *CheckTestSuite) whenReconcile() (lastResult controllerruntime.Result) 
 			Kube: ts.Client,
 		}
 
-		key := types.NamespacedName{
-			Namespace: ts.NS,
-			Name:      check.GetMetaObject().GetName(),
-		}
-		request := controllerruntime.Request{
-			NamespacedName: key,
-		}
-
-		result, err := controller.Reconcile(ts.Ctx, request)
+		result, err := controller.Provision(ts.Ctx, check)
 		ts.Require().NoError(err)
 
 		lastResult = result
@@ -142,19 +126,13 @@ func (ts *CheckTestSuite) whenReconcile() (lastResult controllerruntime.Result) 
 	return
 }
 
-func (ts *CheckTestSuite) expectNumberOfJobsEventually(jobAmount int) {
-	ts.RepeatedAssert(10*time.Second, time.Second, "Jobs not found", func(timedCtx context.Context) (done bool, err error) {
-		jobs := &batchv1.JobList{}
-		err = ts.Client.List(timedCtx, jobs, &client.ListOptions{Namespace: ts.NS})
-		ts.Require().NoError(err)
+func (ts *CheckTestSuite) expectNumberOfJobs(jobAmount int) {
+	jobs := &batchv1.JobList{}
+	err := ts.Client.List(ts.Ctx, jobs, &client.ListOptions{Namespace: ts.NS})
+	ts.Require().NoError(err)
 
-		jobsLen := len(jobs.Items)
-		ts.T().Logf("%d Jobs found", jobsLen)
+	jobsLen := len(jobs.Items)
+	ts.T().Logf("%d Jobs found", jobsLen)
 
-		if jobsLen >= jobAmount {
-			return true, err
-		}
-
-		return
-	})
+	ts.Assert().GreaterOrEqual(jobsLen, jobAmount)
 }

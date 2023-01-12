@@ -4,16 +4,15 @@ package job
 
 import (
 	"context"
-	"strings"
-
-	k8upv1 "github.com/k8up-io/k8up/v2/api/v1"
-	"github.com/k8up-io/k8up/v2/operator/cfg"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/labels"
+	"crypto/sha256"
+	"fmt"
 
 	"github.com/go-logr/logr"
+	k8upv1 "github.com/k8up-io/k8up/v2/api/v1"
+	"github.com/k8up-io/k8up/v2/operator/cfg"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/labels"
 	controllerruntime "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -24,9 +23,6 @@ const (
 	K8uplabel = "k8upjob"
 	// K8upExclusive is needed to determine if a given job is considered exclusive or not.
 	K8upExclusive = "k8upjob/exclusive"
-
-	// K8upRepositoryAnnotation is a annotation that contains the restic repository string.
-	K8upRepositoryAnnotation = "k8up.io/repository"
 )
 
 // Config represents the whole context for a given job. It contains everything
@@ -52,10 +48,10 @@ func NewConfig(ctx context.Context, client client.Client, log logr.Logger, obj k
 
 // MutateBatchJob mutates the given Job with generic spec applicable to all K8up-spawned Jobs.
 func MutateBatchJob(batchJob *batchv1.Job, jobObj k8upv1.JobObject, config Config) error {
-	metav1.SetMetaDataAnnotation(&batchJob.ObjectMeta, K8upRepositoryAnnotation, strings.TrimSpace(config.Repository))
 	batchJob.Labels = labels.Merge(batchJob.Labels, labels.Set{
-		K8uplabel:            "true",
-		k8upv1.LabelK8upType: jobObj.GetType().String(),
+		K8uplabel:                  "true",
+		k8upv1.LabelK8upType:       jobObj.GetType().String(),
+		k8upv1.LabelRepositoryHash: Sha256Hash(config.Repository),
 	})
 
 	batchJob.Spec.ActiveDeadlineSeconds = config.Obj.GetActiveDeadlineSeconds()
@@ -76,4 +72,16 @@ func MutateBatchJob(batchJob *batchv1.Job, jobObj k8upv1.JobObject, config Confi
 	batchJob.Spec.Template.Spec.Containers = containers
 
 	return controllerruntime.SetControllerReference(jobObj, batchJob, config.Client.Scheme())
+}
+
+// Sha256Hash returns the SHA256 hash string of the given string
+// Returns empty string if v is empty.
+// The returned hash is shortened to 63 characters to fit into a label.
+func Sha256Hash(v string) string {
+	if v == "" {
+		return ""
+	}
+	h := sha256.New()
+	h.Write([]byte(v))
+	return fmt.Sprintf("%x", h.Sum(nil))[:63]
 }

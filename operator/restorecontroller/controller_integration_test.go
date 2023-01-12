@@ -3,14 +3,12 @@
 package restorecontroller
 
 import (
-	"context"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/suite"
 	batchv1 "k8s.io/api/batch/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/types"
 	controllerruntime "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -29,17 +27,17 @@ func Test_Restore(t *testing.T) {
 	suite.Run(t, new(RestoreTestSuite))
 }
 
-func (r *RestoreTestSuite) TestReconciliation() {
-	r.givenRestoreResource()
+func (ts *RestoreTestSuite) TestReconciliation() {
+	ts.givenRestoreResource()
 
-	result := r.whenReconcile()
+	result := ts.whenReconcile()
 
-	r.Assert().GreaterOrEqual(result.RequeueAfter, 30*time.Second)
-	r.expectAJobEventually()
+	ts.Assert().GreaterOrEqual(result.RequeueAfter, 30*time.Second)
+	ts.expectAJobEventually()
 }
 
-func (r *RestoreTestSuite) BeforeTest(suiteName, testName string) {
-	r.RestoreName = "restore-integration-test"
+func (ts *RestoreTestSuite) BeforeTest(suiteName, testName string) {
+	ts.RestoreName = "restore-integration-test"
 }
 
 func NewRestoreResource(restoreName, namespace string) *k8upv1.Restore {
@@ -59,44 +57,29 @@ func NewRestoreResource(restoreName, namespace string) *k8upv1.Restore {
 	}
 }
 
-func (r *RestoreTestSuite) givenRestoreResource() {
-	r.GivenRestore = NewRestoreResource(r.RestoreName, r.NS)
-	r.EnsureResources(r.GivenRestore)
+func (ts *RestoreTestSuite) givenRestoreResource() {
+	ts.GivenRestore = NewRestoreResource(ts.RestoreName, ts.NS)
+	ts.EnsureResources(ts.GivenRestore)
 }
 
-func (r *RestoreTestSuite) whenReconcile() controllerruntime.Result {
+func (ts *RestoreTestSuite) whenReconcile() controllerruntime.Result {
 	controller := RestoreReconciler{
-		Kube: r.Client,
+		Kube: ts.Client,
 	}
 
-	key := types.NamespacedName{
-		Namespace: r.NS,
-		Name:      r.RestoreName,
-	}
-	request := controllerruntime.Request{
-		NamespacedName: key,
-	}
-
-	result, err := controller.Reconcile(r.Ctx, request)
-	r.Require().NoError(err)
+	result, err := controller.Provision(ts.Ctx, ts.GivenRestore)
+	ts.Require().NoError(err)
 
 	return result
 }
 
-func (r *RestoreTestSuite) expectAJobEventually() {
-	r.RepeatedAssert(3*time.Second, time.Second, "Jobs not found", func(timedCtx context.Context) (done bool, err error) {
-		jobs := new(batchv1.JobList)
-		err = r.Client.List(timedCtx, jobs, &client.ListOptions{Namespace: r.NS})
-		r.Require().NoError(err)
+func (ts *RestoreTestSuite) expectAJobEventually() {
+	jobs := new(batchv1.JobList)
+	err := ts.Client.List(ts.Ctx, jobs, &client.ListOptions{Namespace: ts.NS})
+	ts.Require().NoError(err)
 
-		jobsLen := len(jobs.Items)
-		r.T().Logf("%d Jobs found", jobsLen)
+	jobsLen := len(jobs.Items)
+	ts.T().Logf("%d Jobs found", jobsLen)
 
-		if jobsLen > 0 {
-			r.Len(jobs.Items, 1)
-			return true, err
-		}
-
-		return
-	})
+	ts.Assert().Len(jobs.Items, 1)
 }
