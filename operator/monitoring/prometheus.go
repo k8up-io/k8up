@@ -26,6 +26,13 @@ var (
 		Name: "k8up_jobs_total",
 		Help: "The total amount of all jobs run",
 	}, promLabels)
+
+	scheduleGauge = promauto.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "k8up_schedules_gauge",
+		Help: "How many schedules this k8up manages",
+	}, []string{
+		"namespace",
+	})
 )
 
 func IncFailureCounters(namespace string, jobType v1.JobType) {
@@ -38,7 +45,20 @@ func IncSuccessCounters(namespace string, jobType v1.JobType) {
 	metricsTotalCounter.WithLabelValues(namespace, jobType.String()).Inc()
 }
 
+func IncRegisteredSchedulesGauge(namespace string) {
+	scheduleGauge.WithLabelValues(namespace).Inc()
+}
+
+func DecRegisteredSchedulesGauge(namespace string) {
+	scheduleGauge.WithLabelValues(namespace).Dec()
+}
+
 func init() {
 	// Register custom metrics with the global prometheus registry
-	metrics.Registry.MustRegister(metricsFailureCounter, metricsSuccessCounter, metricsTotalCounter)
+	metrics.Registry.MustRegister(
+		metricsFailureCounter,
+		metricsSuccessCounter,
+		metricsTotalCounter,
+		scheduleGauge,
+	)
 }

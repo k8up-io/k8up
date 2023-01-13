@@ -41,8 +41,10 @@ func (r *ScheduleReconciler) Provision(ctx context.Context, schedule *k8upv1.Sch
 }
 
 func (r *ScheduleReconciler) Deprovision(ctx context.Context, obj *k8upv1.Schedule) (controllerruntime.Result, error) {
-	namespacedName := k8upv1.MapToNamespacedName(obj)
-	scheduler.GetScheduler().RemoveSchedules(namespacedName)
+	for _, jobType := range []k8upv1.JobType{k8upv1.PruneType, k8upv1.ArchiveType, k8upv1.RestoreType, k8upv1.BackupType, k8upv1.CheckType} {
+		key := keyOf(obj, jobType)
+		scheduler.GetScheduler().RemoveSchedule(ctx, key)
+	}
 	controllerutil.RemoveFinalizer(obj, k8upv1.ScheduleFinalizerName)
 	return controllerruntime.Result{}, r.Kube.Update(ctx, obj)
 }

@@ -218,6 +218,33 @@ func TestScheduleHandler_mergePodSecurityContextWithDefaults(t *testing.T) {
 	}
 }
 
+func Test_generateName(t *testing.T) {
+	tests := map[string]struct {
+		jobType        k8upv1.JobType
+		prefix         string
+		expectedPrefix string
+	}{
+		"GivenShortPrefix_WhenGenerate_ThenUseFullPrefix": {
+			jobType:        k8upv1.ArchiveType,
+			prefix:         "my-schedule",
+			expectedPrefix: "my-schedule-archive-",
+		},
+		"GivenLongPrefix_WhenGenerate_ThenShortenPrefix": {
+			jobType:        k8upv1.ArchiveType,
+			prefix:         "my-schedule-with-a-really-long-name-that-could-clash-with-max-length",
+			expectedPrefix: "my-schedule-with-a-really-long-name-that-could-cl-archive-",
+		},
+	}
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			name := generateName(tt.jobType, tt.prefix)
+			assert.Contains(t, name, tt.expectedPrefix)
+			assert.LessOrEqual(t, len(name), 63)
+			assert.Equal(t, len(name), len(tt.expectedPrefix)+5)
+		})
+	}
+}
+
 func newS3Backend(endpoint, bucket string) k8upv1.Backend {
 	return k8upv1.Backend{
 		S3: &k8upv1.S3Spec{
