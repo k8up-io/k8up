@@ -39,7 +39,7 @@ func (a *ArchiveExecutor) Execute(ctx context.Context) error {
 	archive := a.Obj.(*k8upv1.Archive)
 
 	batchJob := &batchv1.Job{}
-	batchJob.Name = archive.GetJobName()
+	batchJob.Name = k8upv1.ArchiveType.String() + "-" + a.Obj.GetName()
 	batchJob.Namespace = archive.Namespace
 
 	_, err := controllerutil.CreateOrUpdate(ctx, a.Client, batchJob, func() error {

@@ -37,7 +37,7 @@ func (r *CheckReconciler) Provision(ctx context.Context, check *k8upv1.Check) (c
 		repository = check.Spec.Backend.String()
 	}
 
-	config := job.NewConfig(ctx, r.Kube, log, check, repository)
+	config := job.NewConfig(r.Kube, check, repository)
 
 	executor := NewCheckExecutor(config)
 

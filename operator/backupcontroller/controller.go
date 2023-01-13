@@ -38,7 +38,7 @@ func (r *BackupReconciler) Provision(ctx context.Context, obj *k8upv1.Backup) (r
 	if obj.Spec.Backend != nil {
 		repository = obj.Spec.Backend.String()
 	}
-	config := job.NewConfig(ctx, r.Kube, log, obj, repository)
+	config := job.NewConfig(r.Kube, obj, repository)
 	executor := NewBackupExecutor(config)
 
 	if obj.Status.HasFinished() {

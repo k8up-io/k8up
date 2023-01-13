@@ -34,7 +34,7 @@ func NewPruneExecutor(config job.Config) *PruneExecutor {
 func (p *PruneExecutor) Execute(ctx context.Context) error {
 
 	batchJob := &batchv1.Job{}
-	batchJob.Name = p.prune.GetJobName()
+	batchJob.Name = k8upv1.PruneType.String() + "-" + p.prune.Name
 	batchJob.Namespace = p.prune.Namespace
 
 	_, err := controllerutil.CreateOrUpdate(ctx, p.Client, batchJob, func() error {

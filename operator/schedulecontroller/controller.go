@@ -35,7 +35,7 @@ func (r *ScheduleReconciler) Provision(ctx context.Context, schedule *k8upv1.Sch
 	if schedule.Spec.Archive != nil && schedule.Spec.Archive.RestoreSpec == nil {
 		schedule.Spec.Archive.RestoreSpec = &k8upv1.RestoreSpec{}
 	}
-	config := job.NewConfig(ctx, r.Kube, log, schedule, repository)
+	config := job.NewConfig(r.Kube, schedule, repository)
 
 	return controllerruntime.Result{}, NewScheduleHandler(config, schedule, log).Handle(ctx)
 }

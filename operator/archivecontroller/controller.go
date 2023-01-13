@@ -39,7 +39,7 @@ func (r *ArchiveReconciler) Provision(ctx context.Context, archive *k8upv1.Archi
 	if archive.Spec.RestoreSpec == nil {
 		archive.Spec.RestoreSpec = &k8upv1.RestoreSpec{}
 	}
-	config := job.NewConfig(ctx, r.Kube, log, archive, repository)
+	config := job.NewConfig(r.Kube, archive, repository)
 	executor := NewArchiveExecutor(config)
 
 	if archive.Status.HasFinished() {

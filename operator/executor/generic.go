@@ -7,41 +7,15 @@ package executor
 import (
 	"context"
 
-	"github.com/go-logr/logr"
 	k8upv1 "github.com/k8up-io/k8up/v2/api/v1"
 	"github.com/k8up-io/k8up/v2/operator/executor/cleaner"
 	"github.com/k8up-io/k8up/v2/operator/job"
-	"k8s.io/apimachinery/pkg/types"
 	controllerruntime "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 type Generic struct {
 	job.Config
-}
-
-func (g *Generic) Logger() logr.Logger {
-	return g.Log
-}
-
-func (*Generic) Exclusive() bool {
-	return false
-}
-
-func (g *Generic) GetRepository() string {
-	return g.Repository
-}
-
-func (g *Generic) GetJobNamespace() string {
-	return g.Obj.GetNamespace()
-}
-
-func (g *Generic) GetJobNamespacedName() types.NamespacedName {
-	return types.NamespacedName{Namespace: g.Obj.GetNamespace(), Name: g.Obj.GetJobName()}
-}
-
-func (g *Generic) GetJobType() k8upv1.JobType {
-	return g.Obj.GetType()
 }
 
 // listOldResources retrieves a list of the given resource type in the given namespace and fills the Item property

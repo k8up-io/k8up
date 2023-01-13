@@ -5,7 +5,6 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 )
 
 // CheckSpec defines the desired state of Check. It needs to contain the repository
@@ -58,19 +57,6 @@ type CheckList struct {
 
 func init() {
 	SchemeBuilder.Register(&Check{}, &CheckList{})
-}
-
-func (c *Check) GetRuntimeObject() runtime.Object {
-	return c
-}
-
-func (c *Check) GetMetaObject() metav1.Object {
-	return c
-}
-
-// GetJobName returns the name of the underlying batch/v1 job.
-func (c *Check) GetJobName() string {
-	return c.GetType().String() + "-" + c.Name
 }
 
 func (c *Check) GetType() JobType {
@@ -142,21 +128,6 @@ func (in *CheckSchedule) GetRunnableSpec() *RunnableSpec {
 // GetSchedule returns the schedule definition
 func (in *CheckSchedule) GetSchedule() ScheduleDefinition {
 	return in.Schedule
-}
-
-// GetObjectCreator returns the ObjectCreator instance
-func (in *CheckSchedule) GetObjectCreator() ObjectCreator {
-	return in
-}
-
-func (c *CheckSpec) CreateObject(name, namespace string) runtime.Object {
-	return &Check{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: namespace,
-		},
-		Spec: *c,
-	}
 }
 
 var (

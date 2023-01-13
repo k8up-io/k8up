@@ -36,7 +36,7 @@ func (r *RestoreReconciler) Provision(ctx context.Context, restore *k8upv1.Resto
 	if restore.Spec.Backend != nil {
 		repository = restore.Spec.Backend.String()
 	}
-	config := job.NewConfig(ctx, r.Kube, log, restore, repository)
+	config := job.NewConfig(r.Kube, restore, repository)
 	executor := NewRestoreExecutor(config)
 
 	if restore.Status.HasFinished() {
