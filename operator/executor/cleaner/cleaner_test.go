@@ -1,4 +1,4 @@
-package job_test
+package cleaner
 
 import (
 	"testing"
@@ -8,7 +8,6 @@ import (
 	"k8s.io/apimachinery/pkg/util/uuid"
 
 	k8upv1 "github.com/k8up-io/k8up/v2/api/v1"
-	"github.com/k8up-io/k8up/v2/operator/job"
 )
 
 func TestGroupByStatus(t *testing.T) {
@@ -16,7 +15,7 @@ func TestGroupByStatus(t *testing.T) {
 	failedJob := createJob(completedStatusWithReason(k8upv1.ReasonFailed))
 	runningJob := createJob(k8upv1.Status{})
 
-	runningJobs, failedJobs, successfulJobs := job.GroupByStatus([]k8upv1.JobObject{&successJob, &failedJob, &runningJob})
+	runningJobs, failedJobs, successfulJobs := groupByStatus([]k8upv1.JobObject{&successJob, &failedJob, &runningJob})
 	assert.Len(t, runningJobs, 1)
 	assert.True(t, runningJobs[0] == &runningJob)
 	assert.Len(t, failedJobs, 1)

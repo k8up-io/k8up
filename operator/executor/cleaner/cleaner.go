@@ -12,7 +12,6 @@ import (
 
 	k8upv1 "github.com/k8up-io/k8up/v2/api/v1"
 	"github.com/k8up-io/k8up/v2/operator/cfg"
-	"github.com/k8up-io/k8up/v2/operator/job"
 )
 
 // ObjectCleaner cleans old, finished job objects.
@@ -37,7 +36,7 @@ func NewObjectCleaner(clt client.Client, Limits GetJobsHistoryLimiter) *ObjectCl
 // Returns the amount of deleted objects and possible errors.
 func (c *ObjectCleaner) CleanOldObjects(ctx context.Context, jobObjects k8upv1.JobObjectList) (int, error) {
 	maxSuccessfulObjects, maxFailedObjects := historyLimits(c.Limits)
-	_, failedJobs, successfulJobs := job.GroupByStatus(jobObjects)
+	_, failedJobs, successfulJobs := groupByStatus(jobObjects)
 
 	successDel, err := c.cleanOldObjects(ctx, successfulJobs, maxSuccessfulObjects)
 	if err != nil {
@@ -99,4 +98,23 @@ func getOrDefault(n *int, defaultN int) int {
 		return 0
 	}
 	return *n
+}
+
+// groupByStatus groups jobs by the running state
+func groupByStatus(jobs []k8upv1.JobObject) (running []k8upv1.JobObject, failed []k8upv1.JobObject, successful []k8upv1.JobObject) {
+	running = make([]k8upv1.JobObject, 0, len(jobs))
+	successful = make([]k8upv1.JobObject, 0, len(jobs))
+	failed = make([]k8upv1.JobObject, 0, len(jobs))
+	for _, job := range jobs {
+		if job.GetStatus().HasSucceeded() {
+			successful = append(successful, job)
+			continue
+		}
+		if job.GetStatus().HasFailed() {
+			failed = append(failed, job)
+			continue
+		}
+		running = append(running, job)
+	}
+	return
 }

@@ -1,15 +1,13 @@
 //go:build integration
 
-package cleaner_test // needs dedicated package to avoid import cycle
+package cleaner
 
 import (
 	"testing"
 
 	k8upv1 "github.com/k8up-io/k8up/v2/api/v1"
 	"github.com/k8up-io/k8up/v2/envtest"
-	"github.com/k8up-io/k8up/v2/operator/executor/cleaner"
 
-	"github.com/k8up-io/k8up/v2/operator/job"
 	"github.com/stretchr/testify/suite"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/uuid"
@@ -52,7 +50,7 @@ func (ts *CleanerTestSuite) withJobs() {
 }
 
 func (ts *CleanerTestSuite) runCleanup() {
-	objCleaner := cleaner.NewObjectCleaner(ts.Client, newLimiter(1, 1))
+	objCleaner := NewObjectCleaner(ts.Client, newLimiter(1, 1))
 	deleted, err := objCleaner.CleanOldObjects(ts.Ctx, ts.fetchJobs().GetJobObjects())
 	ts.Assertions.NoError(err)
 	ts.Assertions.Equal(2, deleted)
@@ -60,7 +58,7 @@ func (ts *CleanerTestSuite) runCleanup() {
 
 func (ts *CleanerTestSuite) assertJobsDeleted() {
 	afterClean := filterDeleted(ts.fetchJobs())
-	runningJobs, failedJobs, successfulJobs := job.GroupByStatus(afterClean.GetJobObjects())
+	runningJobs, failedJobs, successfulJobs := groupByStatus(afterClean.GetJobObjects())
 	ts.Assertions.Equal(3, len(runningJobs))
 	ts.Assertions.Equal(1, len(failedJobs))
 	ts.Assertions.Equal(1, len(successfulJobs))
@@ -75,16 +73,16 @@ func (ts *CleanerTestSuite) fetchJobs() *k8upv1.RestoreList {
 func jobList(ns string, running, failed, successful int) *k8upv1.RestoreList {
 	runningJobs := make([]k8upv1.Restore, running)
 	for i := range runningJobs {
-		runningJobs[i] = createJob(ns)
+		runningJobs[i] = createJobInNS(ns)
 	}
 	failedJobs := make([]k8upv1.Restore, failed)
 	for i := range failedJobs {
-		failedJobs[i] = createJob(ns)
+		failedJobs[i] = createJobInNS(ns)
 		markJobFailed(&failedJobs[i])
 	}
 	successfulJobs := make([]k8upv1.Restore, successful)
 	for i := range successfulJobs {
-		successfulJobs[i] = createJob(ns)
+		successfulJobs[i] = createJobInNS(ns)
 		markJobSuccessful(&successfulJobs[i])
 	}
 
@@ -104,7 +102,7 @@ func (ts *CleanerTestSuite) EnsureJobs(jobs *k8upv1.RestoreList) {
 	}
 }
 
-func createJob(ns string) k8upv1.Restore {
+func createJobInNS(ns string) k8upv1.Restore {
 	return k8upv1.Restore{
 		ObjectMeta: metav1.ObjectMeta{Namespace: ns, Name: "job-" + string(uuid.NewUUID())},
 		Spec:       k8upv1.RestoreSpec{},
