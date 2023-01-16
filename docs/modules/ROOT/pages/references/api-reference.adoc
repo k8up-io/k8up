@@ -409,8 +409,6 @@ CheckSpec defines the desired state of Check. It needs to contain the repository
 
 
 
-
-
 [id="{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-pod"]
 === Pod 
 

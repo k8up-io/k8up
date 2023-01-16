@@ -41,7 +41,7 @@ func (r *BackupReconciler) Provision(ctx context.Context, obj *k8upv1.Backup) (r
 	config := job.NewConfig(r.Kube, obj, repository)
 	executor := NewBackupExecutor(config)
 
-	if obj.Status.HasFinished() {
+	if obj.Status.HasFinished() || isPrebackupFailed(obj) {
 		cleanupCond := meta.FindStatusCondition(obj.Status.Conditions, k8upv1.ConditionScrubbed.String())
 		if cleanupCond == nil || cleanupCond.Reason != k8upv1.ReasonSucceeded.String() {
 			executor.cleanupOldBackups(ctx)

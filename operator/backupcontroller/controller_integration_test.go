@@ -134,6 +134,17 @@ func (ts *BackupTestSuite) Test_GivenFinishedBackup_WhenReconciling_ThenIgnore()
 	ts.Assert().Equal(float64(0), result.RequeueAfter.Seconds())
 }
 
+func (ts *BackupTestSuite) Test_GivenFailedPreBackup_WhenReconciling_ThenIgnore() {
+	ts.EnsureResources(ts.BackupResource)
+	ts.SetCondition(ts.BackupResource, &ts.BackupResource.Status.Conditions,
+		k8upv1.ConditionPreBackupPodReady, metav1.ConditionFalse, k8upv1.ReasonFailed)
+
+	result := ts.whenReconciling(ts.BackupResource)
+	ts.Assert().Equal(float64(0), result.RequeueAfter.Seconds())
+	ts.Assert().False(result.Requeue)
+	ts.assertPreBackupPodConditionFailed(ts.BackupResource) // should stay failed
+}
+
 func (ts *BackupTestSuite) Test_GivenFailedBackup_WhenReconciling_ThenIgnore() {
 	ts.EnsureResources(ts.BackupResource)
 	ts.SetCondition(ts.BackupResource, &ts.BackupResource.Status.Conditions,
