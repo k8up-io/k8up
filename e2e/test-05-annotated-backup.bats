@@ -23,8 +23,8 @@ DEBUG_DETIK="true"
 	kubectl apply -f definitions/secrets
 	yq e '.spec.podSecurityContext.runAsUser='$(id -u)'' definitions/backup/backup.yaml | kubectl apply -f -
 
-	try "at most 10 times every 1s to get backup named 'k8up-backup' and verify that '.status.started' is 'true'"
-	try "at most 10 times every 1s to get job named 'k8up-backup' and verify that '.status.active' is '1'"
+	try "at most 10 times every 5s to get backup named 'k8up-backup' and verify that '.status.started' is 'true'"
+	verify_object_value_by_label job 'k8up.io/owned-by=backup_k8up-backup' '.status.active' 1 true
 
 	wait_until backup/k8up-backup completed
 

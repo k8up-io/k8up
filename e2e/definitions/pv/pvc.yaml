@@ -9,8 +9,5 @@ spec:
   resources:
     requests:
       storage: 1Gi
-  storageClassName: hostpath
+  storageClassName: standard
   volumeMode: Filesystem
-  selector:
-    matchLabels:
-      pv.kubernetes.io/type: e2e-test

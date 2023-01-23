@@ -68,6 +68,10 @@ type Configuration struct {
 	PruneKeepWithinYearly  string
 
 	Tags []string
+
+	TargetPods []string
+
+	SleepDuration time.Duration
 }
 
 // Validate ensures a consistent configuration and returns an error should that not be the case

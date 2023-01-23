@@ -9,6 +9,7 @@ import (
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
@@ -23,6 +24,77 @@ import (
 const (
 	backupTag = "integrationTag"
 )
+
+func (ts *BackupTestSuite) newPvc(name string, accessMode corev1.PersistentVolumeAccessMode) *corev1.PersistentVolumeClaim {
+	return &corev1.PersistentVolumeClaim{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: ts.NS,
+		},
+		Spec: corev1.PersistentVolumeClaimSpec{
+			AccessModes: []corev1.PersistentVolumeAccessMode{accessMode},
+			Resources: corev1.ResourceRequirements{
+				Requests: map[corev1.ResourceName]resource.Quantity{
+					corev1.ResourceStorage: resource.MustParse("1Mi"),
+				},
+			},
+			VolumeName: name,
+		},
+	}
+}
+
+func (ts *BackupTestSuite) newPv(name string, nodeName string, accessMode corev1.PersistentVolumeAccessMode) *corev1.PersistentVolume {
+	return &corev1.PersistentVolume{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
+		Spec: corev1.PersistentVolumeSpec{
+			AccessModes: []corev1.PersistentVolumeAccessMode{accessMode},
+			Capacity: map[corev1.ResourceName]resource.Quantity{
+				corev1.ResourceStorage: resource.MustParse("1Mi"),
+			},
+			PersistentVolumeSource: corev1.PersistentVolumeSource{
+				HostPath: &corev1.HostPathVolumeSource{Path: "/tmp/integration-tests"},
+			},
+			NodeAffinity: &corev1.VolumeNodeAffinity{
+				Required: &corev1.NodeSelector{
+					NodeSelectorTerms: []corev1.NodeSelectorTerm{
+						{
+							MatchExpressions: []corev1.NodeSelectorRequirement{
+								{
+									Key:      corev1.LabelHostname,
+									Operator: corev1.NodeSelectorOpIn,
+									Values:   []string{nodeName},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+func (ts *BackupTestSuite) newPod(name, nodeName string, tolerations []corev1.Toleration, volumes []corev1.Volume) *corev1.Pod {
+	return &corev1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: ts.NS,
+		},
+		Spec: corev1.PodSpec{
+			NodeName:    nodeName,
+			Tolerations: tolerations,
+			Volumes:     volumes,
+			Containers: []corev1.Container{
+				{
+					Name:    "main",
+					Command: []string{"/bin/sh"},
+					Image:   "dummy",
+				},
+			},
+		},
+	}
+}
 
 func (ts *BackupTestSuite) newPreBackupPod() *k8upv1.PreBackupPod {
 	return &k8upv1.PreBackupPod{
@@ -243,7 +315,10 @@ func (ts *BackupTestSuite) newJob(owner client.Object) *batchv1.Job {
 	jb := &batchv1.Job{}
 	jb.Name = k8upv1.BackupType.String() + "-" + ts.BackupResource.Name
 	jb.Namespace = ts.NS
-	jb.Labels = labels.Set{k8upv1.LabelK8upType: k8upv1.BackupType.String()}
+	jb.Labels = labels.Set{
+		k8upv1.LabelK8upType:    k8upv1.BackupType.String(),
+		k8upv1.LabelK8upOwnedBy: k8upv1.BackupType.String() + "_" + ts.BackupResource.Name,
+	}
 	jb.Spec.Template.Spec.Containers = []corev1.Container{{Name: "container", Image: "image"}}
 	jb.Spec.Template.Spec.RestartPolicy = corev1.RestartPolicyOnFailure
 	ts.Assert().NoError(controllerruntime.SetControllerReference(owner, jb, ts.Scheme), "set controller ref")

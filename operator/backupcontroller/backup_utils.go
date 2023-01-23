@@ -30,9 +30,9 @@ func (b *BackupExecutor) newVolumeMounts(claims []corev1.Volume) []corev1.Volume
 	return mounts
 }
 
-func containsAccessMode(s []corev1.PersistentVolumeAccessMode, e string) bool {
+func containsAccessMode(s []corev1.PersistentVolumeAccessMode, e corev1.PersistentVolumeAccessMode) bool {
 	for _, a := range s {
-		if string(a) == e {
+		if a == e {
 			return true
 		}
 	}
