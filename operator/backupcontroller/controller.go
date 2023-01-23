@@ -9,7 +9,7 @@ import (
 	"github.com/k8up-io/k8up/v2/operator/job"
 	"github.com/k8up-io/k8up/v2/operator/locker"
 	"k8s.io/apimachinery/pkg/api/meta"
-	"sigs.k8s.io/controller-runtime"
+	controllerruntime "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
@@ -47,12 +47,13 @@ func (r *BackupReconciler) Provision(ctx context.Context, obj *k8upv1.Backup) (r
 			executor.cleanupOldBackups(ctx)
 		}
 
-		executor.StopPreBackupDeployments(ctx)
 		prebackupCond := meta.FindStatusCondition(obj.Status.Conditions, k8upv1.ConditionPreBackupPodReady.String())
 		if prebackupCond.Reason == k8upv1.ReasonFinished.String() || prebackupCond.Reason == k8upv1.ReasonFailed.String() || prebackupCond.Reason == k8upv1.ReasonNoPreBackupPodsFound.String() {
 			// only ignore future reconciles if we have stopped all prebackup deployments in an earlier reconciliation.
 			return controllerruntime.Result{}, nil
 		}
+		executor.StopPreBackupDeployments(ctx)
+		return controllerruntime.Result{RequeueAfter: time.Second * 30}, nil
 	}
 
 	lock := locker.GetForRepository(r.Kube, repository)

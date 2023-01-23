@@ -37,7 +37,7 @@ spec:
           name: backup-credentials
           key: password
   backup:
-    schedule: '* * * * *'
+    schedule: '*/2 * * * *'
     failedJobsHistoryLimit: 2
     successfulJobsHistoryLimit: 2
     promURL: http://minio.minio:9000
@@ -56,7 +56,7 @@ spec:
     schedule: '@hourly-random'
     promURL: http://minio.minio:9000
   prune:
-    schedule: '*/2 * * * *'
+    schedule: '*/4 * * * *'
     retention:
       keepLast: 5
       keepDaily: 14

@@ -160,6 +160,15 @@ func (ts *BackupTestSuite) assertPreBackupPodConditionSucceeded(backup *k8upv1.B
 	ts.Assert().Equal(metav1.ConditionFalse, preBackupCond.Status)
 }
 
+func (ts *BackupTestSuite) assertPreBackupPodConditionReady(backup *k8upv1.Backup) {
+	err := ts.Client.Get(ts.Ctx, k8upv1.MapToNamespacedName(backup), backup)
+	ts.Require().NoError(err)
+	preBackupCond := meta.FindStatusCondition(backup.Status.Conditions, k8upv1.ConditionPreBackupPodReady.String())
+	ts.Require().NotNil(preBackupCond)
+	ts.Assert().Equal(k8upv1.ReasonReady.String(), preBackupCond.Reason)
+	ts.Assert().Equal(metav1.ConditionTrue, preBackupCond.Status)
+}
+
 func (ts *BackupTestSuite) newPreBackupDeployment() *appsv1.Deployment {
 	return &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
