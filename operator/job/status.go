@@ -94,22 +94,3 @@ func (c *Config) SetFinished(ctx context.Context, namespace, name string) {
 		log.Error(err, "could not patch status")
 	}
 }
-
-// GroupByStatus groups jobs by the running state
-func GroupByStatus(jobs []k8upv1.JobObject) (running []k8upv1.JobObject, failed []k8upv1.JobObject, successful []k8upv1.JobObject) {
-	running = make([]k8upv1.JobObject, 0, len(jobs))
-	successful = make([]k8upv1.JobObject, 0, len(jobs))
-	failed = make([]k8upv1.JobObject, 0, len(jobs))
-	for _, job := range jobs {
-		if job.GetStatus().HasSucceeded() {
-			successful = append(successful, job)
-			continue
-		}
-		if job.GetStatus().HasFailed() {
-			failed = append(failed, job)
-			continue
-		}
-		running = append(running, job)
-	}
-	return
-}

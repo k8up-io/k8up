@@ -3,12 +3,13 @@ kind: PreBackupPod
 metadata:
   name: mysqldump
 spec:
-  backupCommand: mysqldump -u$USER -p$PW -h $DB_HOST --all-databases
+  backupCommand: echo "BACKUP!"
   pod:
     spec:
       initContainers:
       - name: init
         image: mariadb
+        imagePullPolicy: IfNotPresent
         command:
         - sleep
         - '20s'
@@ -24,5 +25,5 @@ spec:
           command:
             - sleep
             - infinity
-          imagePullPolicy: Always
+          imagePullPolicy: IfNotPresent
           name: mysqldump

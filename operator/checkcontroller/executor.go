@@ -40,7 +40,7 @@ func (*CheckExecutor) Exclusive() bool {
 // Execute creates the actual batch.job on the k8s api.
 func (c *CheckExecutor) Execute(ctx context.Context) error {
 	batchJob := &batchv1.Job{}
-	batchJob.Name = c.check.GetJobName()
+	batchJob.Name = k8upv1.CheckType.String() + "-" + c.check.Name
 	batchJob.Namespace = c.check.Namespace
 
 	_, err := controllerruntime.CreateOrUpdate(ctx, c.Client, batchJob, func() error {

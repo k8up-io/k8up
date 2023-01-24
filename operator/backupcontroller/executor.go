@@ -105,7 +105,7 @@ func (b *BackupExecutor) startBackup(ctx context.Context) error {
 	}
 
 	batchJob := &batchv1.Job{}
-	batchJob.Name = b.backup.GetJobName()
+	batchJob.Name = k8upv1.BackupType.String() + "-" + b.backup.Name
 	batchJob.Namespace = b.backup.Namespace
 
 	_, err = controllerruntime.CreateOrUpdate(ctx, b.Generic.Config.Client, batchJob, func() error {

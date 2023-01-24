@@ -3,12 +3,10 @@ package backupcontroller
 import (
 	"testing"
 
-	"github.com/go-logr/zapr"
 	v1 "github.com/k8up-io/k8up/v2/api/v1"
 	"github.com/k8up-io/k8up/v2/operator/cfg"
 	"github.com/k8up-io/k8up/v2/operator/job"
 	"github.com/stretchr/testify/assert"
-	"go.uber.org/zap/zaptest"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -70,7 +68,6 @@ func TestBackupExecutor_setupEnvVars(t *testing.T) {
 				cfg.Config = &cfg.Configuration{}
 			}
 			exec := NewBackupExecutor(job.Config{
-				Log: zapr.NewLogger(zaptest.NewLogger(t)),
 				Obj: backup,
 			})
 			exec.backup = backup

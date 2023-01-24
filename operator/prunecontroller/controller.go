@@ -35,7 +35,7 @@ func (r *PruneReconciler) Provision(ctx context.Context, prune *k8upv1.Prune) (c
 	if prune.Spec.Backend != nil {
 		repository = prune.Spec.Backend.String()
 	}
-	config := job.NewConfig(ctx, r.Kube, log, prune, repository)
+	config := job.NewConfig(r.Kube, prune, repository)
 	executor := NewPruneExecutor(config)
 
 	if prune.Status.HasFinished() {

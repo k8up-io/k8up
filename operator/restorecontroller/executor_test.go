@@ -4,7 +4,6 @@ import (
 	"context"
 	"testing"
 
-	"github.com/go-logr/logr"
 	k8upv1 "github.com/k8up-io/k8up/v2/api/v1"
 	"github.com/k8up-io/k8up/v2/operator/job"
 	"github.com/stretchr/testify/assert"
@@ -24,7 +23,7 @@ type VolumeMountExpectation struct {
 }
 
 func newConfig() *job.Config {
-	cfg := job.NewConfig(context.TODO(), nil, logr.Discard(), &k8upv1.Restore{}, "")
+	cfg := job.NewConfig(nil, &k8upv1.Restore{}, "")
 	return &cfg
 }
 
@@ -96,14 +95,12 @@ func newFilteredFolderRestoreResource() *k8upv1.Restore {
 
 func TestRestore_setupEnvVars(t *testing.T) {
 	tests := map[string]struct {
-		GivenJobConfig        *job.Config
 		GivenResource         *k8upv1.Restore
 		ExpectedEnvVars       map[string]string
 		ExpectedSecretKeyRefs map[string]string
 	}{
 		"givenS3RestoreResource_whenSetupEnvVars_expectCertainEnvVars": {
-			GivenJobConfig: newConfig(),
-			GivenResource:  newS3RestoreResource(),
+			GivenResource: newS3RestoreResource(),
 			ExpectedEnvVars: map[string]string{
 				"HOSTNAME":           "",
 				"RESTIC_PASSWORD":    "",
@@ -119,8 +116,7 @@ func TestRestore_setupEnvVars(t *testing.T) {
 			},
 		},
 		"givenFolderRestoreResource_whenSetupEnvVars_expectCertainEnvVars": {
-			GivenJobConfig: newConfig(),
-			GivenResource:  newFolderRestoreResource(),
+			GivenResource: newFolderRestoreResource(),
 			ExpectedEnvVars: map[string]string{
 				"AWS_ACCESS_KEY_ID":     "",
 				"AWS_SECRET_ACCESS_KEY": "",
@@ -136,7 +132,7 @@ func TestRestore_setupEnvVars(t *testing.T) {
 
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			e := NewRestoreExecutor(*tt.GivenJobConfig)
+			e := NewRestoreExecutor(*newConfig())
 			envVars := e.setupEnvVars(context.TODO(), tt.GivenResource)
 
 			actualEnvVars, actualSecretKeyRefs := extractVarsAndSecretRefs(envVars)
@@ -162,20 +158,17 @@ func extractVarsAndSecretRefs(envVars []corev1.EnvVar) (map[string]string, map[s
 
 func TestRestore_volumeConfig(t *testing.T) {
 	tests := map[string]struct {
-		GivenJobConfig      *job.Config
 		GivenResource       *k8upv1.Restore
 		ExpectedPVC         PVCExpectation
 		ExpectedVolumeMount VolumeMountExpectation
 	}{
 		"givenS3RestoreResource_whenVolumeConfig_expectNoPVCAndNoMount": {
-			GivenJobConfig:      newConfig(),
 			GivenResource:       newS3RestoreResource(),
 			ExpectedPVC:         PVCExpectation{Expected: false},
 			ExpectedVolumeMount: VolumeMountExpectation{Expected: false},
 		},
 		"givenFolderRestoreResource_whenVolumeConfig_expectPVCAndMount": {
-			GivenJobConfig: newConfig(),
-			GivenResource:  newFolderRestoreResource(),
+			GivenResource: newFolderRestoreResource(),
 			ExpectedPVC: PVCExpectation{
 				Expected:  true,
 				ClaimName: "test",
@@ -191,7 +184,7 @@ func TestRestore_volumeConfig(t *testing.T) {
 
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			e := NewRestoreExecutor(*tt.GivenJobConfig)
+			e := NewRestoreExecutor(*newConfig())
 			volumes, mounts := e.volumeConfig(tt.GivenResource)
 
 			assertVolumes(t, tt.ExpectedPVC, volumes)
@@ -228,23 +221,19 @@ func assertVolumes(t *testing.T, ex PVCExpectation, volumes []corev1.Volume) {
 
 func TestRestore_args(t *testing.T) {
 	tests := map[string]struct {
-		GivenJobConfig *job.Config
-		GivenResource  *k8upv1.Restore
-		ExpectedArgs   []string
+		GivenResource *k8upv1.Restore
+		ExpectedArgs  []string
 	}{
 		"givenS3RestoreResource_whenArgs_expectS3RestoreType": {
-			GivenJobConfig: newConfig(),
-			GivenResource:  newS3RestoreResource(),
-			ExpectedArgs:   []string{"-restore", "-restoreType", "s3"},
+			GivenResource: newS3RestoreResource(),
+			ExpectedArgs:  []string{"-restore", "-restoreType", "s3"},
 		},
 		"givenFolderRestoreResource_whenArgs_expectFolderRestoreType": {
-			GivenJobConfig: newConfig(),
-			GivenResource:  newFolderRestoreResource(),
-			ExpectedArgs:   []string{"-restore", "-restoreType", "folder"},
+			GivenResource: newFolderRestoreResource(),
+			ExpectedArgs:  []string{"-restore", "-restoreType", "folder"},
 		},
 		"givenFolderRestoreResourceWithAdditionalArguments_whenBuildRestoreObject_expectJobResource": {
-			GivenJobConfig: newConfig(),
-			GivenResource:  newFilteredFolderRestoreResource(),
+			GivenResource: newFilteredFolderRestoreResource(),
 			ExpectedArgs: []string{
 				"-restore",
 				"--tag", "testtag",
@@ -258,7 +247,7 @@ func TestRestore_args(t *testing.T) {
 
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			e := NewRestoreExecutor(*tt.GivenJobConfig)
+			e := NewRestoreExecutor(*newConfig())
 			args, err := e.args(tt.GivenResource)
 
 			require.NoError(t, err)

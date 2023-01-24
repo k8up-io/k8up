@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strconv"
 
 	"github.com/k8up-io/k8up/v2/operator/executor"
 	batchv1 "k8s.io/api/batch/v1"
@@ -61,14 +60,14 @@ func (r *RestoreExecutor) cleanupOldRestores(ctx context.Context, restore *k8upv
 
 func (r *RestoreExecutor) createRestoreObject(ctx context.Context, restore *k8upv1.Restore) (*batchv1.Job, error) {
 	batchJob := &batchv1.Job{}
-	batchJob.Name = restore.GetJobName()
+	batchJob.Name = k8upv1.RestoreType.String() + "-" + r.Obj.GetName()
 	batchJob.Namespace = restore.Namespace
 	_, err := controllerutil.CreateOrUpdate(ctx, r.Client, batchJob, func() error {
 		mutateErr := job.MutateBatchJob(batchJob, restore, r.Config)
 		if mutateErr != nil {
 			return mutateErr
 		}
-		batchJob.Labels[job.K8upExclusive] = strconv.FormatBool(r.Exclusive())
+		batchJob.Labels[job.K8upExclusive] = "true"
 		batchJob.Spec.Template.Spec.Containers[0].Env = r.setupEnvVars(ctx, restore)
 		restore.Spec.AppendEnvFromToContainer(&batchJob.Spec.Template.Spec.Containers[0])
 

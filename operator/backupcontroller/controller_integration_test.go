@@ -79,6 +79,15 @@ func (ts *BackupTestSuite) Test_GivenPreBackupDeployment_WhenDeploymentStartsUp_
 	ts.assertConditionWaitingForPreBackup(ts.BackupResource)
 }
 
+func (ts *BackupTestSuite) Test_GivenPreBackupDeployment_WhenDeploymentIsReady_ThenExpectPreBackupConditionReady() {
+	deployment := ts.newPreBackupDeployment()
+	ts.EnsureResources(ts.BackupResource, ts.newPreBackupPod(), deployment)
+	ts.afterPreBackupDeploymentStarted()
+
+	result := ts.whenReconciling(ts.BackupResource)
+	ts.Assert().GreaterOrEqual(result.RequeueAfter, 30*time.Second)
+	ts.assertPreBackupPodConditionReady(ts.BackupResource)
+}
 func (ts *BackupTestSuite) Test_GivenFailedPreBackupDeployment_WhenCreatingNewBackup_ThenExpectPreBackupToBeRemoved() {
 	failedDeployment := ts.newPreBackupDeployment()
 	ts.EnsureResources(failedDeployment, ts.newPreBackupPod(), ts.BackupResource)
@@ -91,24 +100,18 @@ func (ts *BackupTestSuite) Test_GivenFailedPreBackupDeployment_WhenCreatingNewBa
 }
 
 func (ts *BackupTestSuite) Test_GivenFinishedPreBackupDeployment_WhenReconciling_ThenExpectPreBackupToBeRemoved() {
-	// The backup reconciliation loop must run in order to start a backup,
-	// so that the callback is registered which eventually cleans up the PreBackupPods.
-	ts.EnsureResources(ts.newPreBackupPod(), ts.BackupResource)
+	preBackupDeployment := ts.newPreBackupDeployment()
+	ts.EnsureResources(ts.newPreBackupPod(), ts.BackupResource, preBackupDeployment)
+	ts.markBackupAsFinished(ts.BackupResource)
+	ts.UpdateStatus(ts.BackupResource)
 	_ = ts.whenReconciling(ts.BackupResource)
-	ts.assertPrebackupDeploymentExists()
-
-	ts.afterPreBackupDeploymentStarted()
-	_ = ts.whenReconciling(ts.BackupResource)
-	ts.expectABackupJob()
 
 	result := &k8upv1.Backup{}
 	ts.FetchResource(types.NamespacedName{Name: ts.BackupResource.Name, Namespace: ts.BackupResource.Namespace}, result)
-	ts.markBackupAsFinished(result)
-	ts.UpdateStatus(result)
 
 	_ = ts.whenReconciling(result)
 
-	ts.Assert().False(ts.IsResourceExisting(ts.Ctx, ts.newPreBackupDeployment()))
+	ts.Assert().False(ts.IsResourceExisting(ts.Ctx, preBackupDeployment))
 }
 
 func (ts *BackupTestSuite) Test_GivenPreBackupPods_WhenRestartingK8up_ThenExpectToContinueWhereItLeftOff() {
@@ -132,6 +135,17 @@ func (ts *BackupTestSuite) Test_GivenFinishedBackup_WhenReconciling_ThenIgnore()
 
 	result := ts.whenReconciling(ts.BackupResource)
 	ts.Assert().Equal(float64(0), result.RequeueAfter.Seconds())
+}
+
+func (ts *BackupTestSuite) Test_GivenFailedPreBackup_WhenReconciling_ThenIgnore() {
+	ts.EnsureResources(ts.BackupResource, ts.newPreBackupPod())
+	ts.SetCondition(ts.BackupResource, &ts.BackupResource.Status.Conditions,
+		k8upv1.ConditionPreBackupPodReady, metav1.ConditionFalse, k8upv1.ReasonFailed)
+
+	result := ts.whenReconciling(ts.BackupResource)
+	ts.Assert().Equal(0.0, result.RequeueAfter.Seconds())
+	ts.Assert().False(result.Requeue)
+	ts.assertPreBackupPodConditionFailed(ts.BackupResource) // should stay failed
 }
 
 func (ts *BackupTestSuite) Test_GivenFailedBackup_WhenReconciling_ThenIgnore() {

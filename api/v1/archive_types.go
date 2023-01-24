@@ -5,7 +5,6 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 )
 
 // ArchiveSpec defines the desired state of Archive.
@@ -39,29 +38,6 @@ type ArchiveList struct {
 
 func init() {
 	SchemeBuilder.Register(&Archive{}, &ArchiveList{})
-}
-
-func (a ArchiveSpec) CreateObject(name, namespace string) runtime.Object {
-	return &Archive{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: namespace,
-		},
-		Spec: a,
-	}
-}
-
-func (a *Archive) GetRuntimeObject() runtime.Object {
-	return a
-}
-
-func (a *Archive) GetMetaObject() metav1.Object {
-	return a
-}
-
-// GetJobName returns the name of the underlying batch/v1 job.
-func (a *Archive) GetJobName() string {
-	return a.GetType().String() + "-" + a.Name
 }
 
 func (*Archive) GetType() JobType {
@@ -133,11 +109,6 @@ func (in *ArchiveSchedule) GetRunnableSpec() *RunnableSpec {
 // GetSchedule returns the schedule definition
 func (in *ArchiveSchedule) GetSchedule() ScheduleDefinition {
 	return in.Schedule
-}
-
-// GetObjectCreator returns the ObjectCreator instance
-func (in *ArchiveSchedule) GetObjectCreator() ObjectCreator {
-	return in
 }
 
 var (

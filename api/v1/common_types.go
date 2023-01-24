@@ -2,7 +2,6 @@ package v1
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 )
 
@@ -23,16 +22,10 @@ type (
 		GetDeepCopy() ScheduleSpecInterface
 		GetRunnableSpec() *RunnableSpec
 		GetSchedule() ScheduleDefinition
-		GetObjectCreator() ObjectCreator
 	}
 
 	// +k8s:deepcopy-gen=false
 
-	// ObjectCreator defines an interface that each schedulable Job must implement.
-	// The simplest implementation is that the concrete object just returns itself.
-	ObjectCreator interface {
-		CreateObject(name, namespace string) runtime.Object
-	}
 )
 
 // The job types that k8up deals with

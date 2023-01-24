@@ -135,6 +135,16 @@ func (in *Status) SetSucceeded(message string) {
 	})
 }
 
+// SetCondition sets a generic condition, overwriting existing one by type if present.
+func (in *Status) SetCondition(typ ConditionType, reason ConditionReason, status metav1.ConditionStatus, message string) {
+	meta.SetStatusCondition(&in.Conditions, metav1.Condition{
+		Type:    typ.String(),
+		Status:  status,
+		Reason:  reason.String(),
+		Message: message,
+	})
+}
+
 func isPreBackupFailed(condition metav1.Condition) bool {
 	return !matchAnyReason(condition,
 		ReasonSucceeded,

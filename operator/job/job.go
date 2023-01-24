@@ -3,11 +3,9 @@
 package job
 
 import (
-	"context"
 	"crypto/sha256"
 	"fmt"
 
-	"github.com/go-logr/logr"
 	k8upv1 "github.com/k8up-io/k8up/v2/api/v1"
 	"github.com/k8up-io/k8up/v2/operator/cfg"
 	batchv1 "k8s.io/api/batch/v1"
@@ -29,18 +27,14 @@ const (
 // that is necessary to handle the job.
 type Config struct {
 	Client     client.Client
-	Log        logr.Logger
-	CTX        context.Context
 	Obj        k8upv1.JobObject
 	Repository string
 }
 
 // NewConfig returns a new configuration.
-func NewConfig(ctx context.Context, client client.Client, log logr.Logger, obj k8upv1.JobObject, repository string) Config {
+func NewConfig(client client.Client, obj k8upv1.JobObject, repository string) Config {
 	return Config{
 		Client:     client,
-		Log:        log,
-		CTX:        ctx,
 		Obj:        obj,
 		Repository: repository,
 	}

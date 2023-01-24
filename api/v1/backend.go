@@ -30,8 +30,8 @@ type (
 
 	// BackendInterface represents a Backend for internal use.
 	BackendInterface interface {
+		fmt.Stringer
 		EnvVars(vars map[string]*corev1.EnvVarSource) map[string]*corev1.EnvVarSource
-		String() string
 	}
 )
 

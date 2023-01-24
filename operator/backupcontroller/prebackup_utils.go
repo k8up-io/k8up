@@ -7,6 +7,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/utils/pointer"
@@ -132,4 +133,12 @@ func getProgressingCondition(deployment *appsv1.Deployment) *appsv1.DeploymentCo
 		}
 	}
 	return nil
+}
+
+func isPrebackupFailed(backup *k8upv1.Backup) bool {
+	prebackupCond := meta.FindStatusCondition(backup.Status.Conditions, k8upv1.ConditionPreBackupPodReady.String())
+	if prebackupCond == nil {
+		return false
+	}
+	return prebackupCond.Reason == k8upv1.ReasonFailed.String() || prebackupCond.Reason == k8upv1.ReasonRetrievalFailed.String()
 }

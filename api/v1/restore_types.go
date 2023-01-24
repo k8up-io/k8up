@@ -5,7 +5,6 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 )
 
 // RestoreSpec can either contain an S3 restore point or a local one. For the local
@@ -33,16 +32,6 @@ type RestoreSpec struct {
 	Tags []string `json:"tags,omitempty"`
 }
 
-func (r *RestoreSpec) CreateObject(name, namespace string) runtime.Object {
-	return &Restore{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: namespace,
-		},
-		Spec: *r,
-	}
-}
-
 // RestoreMethod contains how and where the restore should happen
 // all the settings are mutual exclusive.
 type RestoreMethod struct {
@@ -67,19 +56,6 @@ type Restore struct {
 
 	Spec   RestoreSpec `json:"spec,omitempty"`
 	Status Status      `json:"status,omitempty"`
-}
-
-func (r *Restore) GetRuntimeObject() runtime.Object {
-	return r
-}
-
-func (r *Restore) GetMetaObject() metav1.Object {
-	return r
-}
-
-// GetJobName returns the name of the underlying batch/v1 job.
-func (r *Restore) GetJobName() string {
-	return r.GetType().String() + "-" + r.Name
 }
 
 func (r *Restore) GetType() JobType {
@@ -151,11 +127,6 @@ func (in *RestoreSchedule) GetRunnableSpec() *RunnableSpec {
 // GetSchedule returns the schedule definition
 func (in *RestoreSchedule) GetSchedule() ScheduleDefinition {
 	return in.Schedule
-}
-
-// GetObjectCreator returns the ObjectCreator instance
-func (in *RestoreSchedule) GetObjectCreator() ObjectCreator {
-	return in
 }
 
 // +kubebuilder:object:root=true
