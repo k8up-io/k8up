@@ -3,7 +3,7 @@ kind: PreBackupPod
 metadata:
   name: mysqldump
 spec:
-  backupCommand: echo "BACKUP!"
+  backupCommand: mysqldump -u$USER -p$PW -h $DB_HOST --all-databases
   pod:
     spec:
       initContainers:
