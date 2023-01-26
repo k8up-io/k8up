@@ -60,7 +60,7 @@ func (r *RestoreExecutor) cleanupOldRestores(ctx context.Context, restore *k8upv
 
 func (r *RestoreExecutor) createRestoreObject(ctx context.Context, restore *k8upv1.Restore) (*batchv1.Job, error) {
 	batchJob := &batchv1.Job{}
-	batchJob.Name = k8upv1.RestoreType.String() + "-" + r.Obj.GetName()
+	batchJob.Name = r.jobName()
 	batchJob.Namespace = restore.Namespace
 	_, err := controllerutil.CreateOrUpdate(ctx, r.Client, batchJob, func() error {
 		mutateErr := job.MutateBatchJob(batchJob, restore, r.Config)
@@ -81,6 +81,10 @@ func (r *RestoreExecutor) createRestoreObject(ctx context.Context, restore *k8up
 	})
 
 	return batchJob, err
+}
+
+func (r *RestoreExecutor) jobName() string {
+	return k8upv1.RestoreType.String() + "-" + r.Obj.GetName()
 }
 
 func (r *RestoreExecutor) args(restore *k8upv1.Restore) ([]string, error) {

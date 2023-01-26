@@ -32,9 +32,8 @@ func NewPruneExecutor(config job.Config) *PruneExecutor {
 
 // Execute creates the actual batch.job on the k8s api.
 func (p *PruneExecutor) Execute(ctx context.Context) error {
-
 	batchJob := &batchv1.Job{}
-	batchJob.Name = k8upv1.PruneType.String() + "-" + p.prune.Name
+	batchJob.Name = p.jobName()
 	batchJob.Namespace = p.prune.Namespace
 
 	_, err := controllerutil.CreateOrUpdate(ctx, p.Client, batchJob, func() error {
@@ -56,6 +55,10 @@ func (p *PruneExecutor) Execute(ctx context.Context) error {
 
 	p.SetStarted(ctx, "the job '%v/%v' was created", batchJob.Namespace, batchJob.Name)
 	return nil
+}
+
+func (p *PruneExecutor) jobName() string {
+	return k8upv1.PruneType.String() + "-" + p.prune.Name
 }
 
 // Exclusive should return true for jobs that can't run while other jobs run.

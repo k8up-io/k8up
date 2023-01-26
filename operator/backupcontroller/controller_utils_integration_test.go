@@ -238,3 +238,14 @@ func (ts *BackupTestSuite) assertJobHasTagArguments(job *batchv1.Job) {
 	jobArguments := job.Spec.Template.Spec.Containers[0].Args
 	ts.Assert().Contains(jobArguments, backupTag, "backup tag in job args")
 }
+
+func (ts *BackupTestSuite) newJob(owner client.Object) *batchv1.Job {
+	jb := &batchv1.Job{}
+	jb.Name = k8upv1.BackupType.String() + "-" + ts.BackupResource.Name
+	jb.Namespace = ts.NS
+	jb.Labels = labels.Set{k8upv1.LabelK8upType: k8upv1.BackupType.String()}
+	jb.Spec.Template.Spec.Containers = []corev1.Container{{Name: "container", Image: "image"}}
+	jb.Spec.Template.Spec.RestartPolicy = corev1.RestartPolicyOnFailure
+	ts.Assert().NoError(controllerruntime.SetControllerReference(owner, jb, ts.Scheme), "set controller ref")
+	return jb
+}

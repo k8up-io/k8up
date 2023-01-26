@@ -10,7 +10,6 @@ import (
 	"github.com/k8up-io/k8up/v2/operator/backupcontroller"
 	"github.com/k8up-io/k8up/v2/operator/cfg"
 	"github.com/k8up-io/k8up/v2/operator/checkcontroller"
-	"github.com/k8up-io/k8up/v2/operator/jobcontroller"
 	"github.com/k8up-io/k8up/v2/operator/prunecontroller"
 	"github.com/k8up-io/k8up/v2/operator/restorecontroller"
 	"github.com/k8up-io/k8up/v2/operator/schedulecontroller"
@@ -117,7 +116,6 @@ func operatorMain(c *cli.Context) error {
 		"Archive":  archivecontroller.SetupWithManager,
 		"Check":    checkcontroller.SetupWithManager,
 		"Prune":    prunecontroller.SetupWithManager,
-		"Job":      jobcontroller.SetupWithManager,
 	} {
 		if setupErr := setupFn(mgr); setupErr != nil {
 			operatorLog.Error(setupErr, "unable to initialize operator mode", "step", "controller", "controller", name)
