@@ -8,6 +8,7 @@ import (
 	"github.com/k8up-io/k8up/v2/operator/cfg"
 	"github.com/k8up-io/k8up/v2/operator/job"
 	"github.com/k8up-io/k8up/v2/operator/locker"
+	"k8s.io/apimachinery/pkg/types"
 	controllerruntime "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -25,22 +26,31 @@ func (r *RestoreReconciler) NewObjectList() *k8upv1.RestoreList {
 	return &k8upv1.RestoreList{}
 }
 
-func (r *RestoreReconciler) Provision(ctx context.Context, restore *k8upv1.Restore) (controllerruntime.Result, error) {
+func (r *RestoreReconciler) Provision(ctx context.Context, obj *k8upv1.Restore) (controllerruntime.Result, error) {
 	log := controllerruntime.LoggerFrom(ctx)
 
-	if restore.Status.HasStarted() {
+	repository := cfg.Config.GetGlobalRepository()
+	if obj.Spec.Backend != nil {
+		repository = obj.Spec.Backend.String()
+	}
+	config := job.NewConfig(r.Kube, obj, repository)
+	executor := NewRestoreExecutor(config)
+
+	jobKey := types.NamespacedName{
+		Namespace: obj.GetNamespace(),
+		Name:      executor.jobName(),
+	}
+	if err := job.ReconcileJobStatus(ctx, jobKey, r.Kube, obj); err != nil {
+		return controllerruntime.Result{}, err
+	}
+
+	if obj.Status.HasStarted() {
+		log.V(1).Info("restore just started, waiting")
 		return controllerruntime.Result{}, nil
 	}
 
-	repository := cfg.Config.GetGlobalRepository()
-	if restore.Spec.Backend != nil {
-		repository = restore.Spec.Backend.String()
-	}
-	config := job.NewConfig(r.Kube, restore, repository)
-	executor := NewRestoreExecutor(config)
-
-	if restore.Status.HasFinished() {
-		executor.cleanupOldRestores(ctx, restore)
+	if obj.Status.HasFinished() {
+		executor.cleanupOldRestores(ctx, obj)
 		return controllerruntime.Result{}, nil
 	}
 

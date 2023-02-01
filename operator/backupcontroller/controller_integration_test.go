@@ -10,6 +10,9 @@ import (
 	k8upv1 "github.com/k8up-io/k8up/v2/api/v1"
 	"github.com/k8up-io/k8up/v2/envtest"
 	"github.com/stretchr/testify/suite"
+	batchv1 "k8s.io/api/batch/v1"
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 )
@@ -42,6 +45,56 @@ func (ts *BackupTestSuite) Test_GivenBackup_ExpectBackupJob() {
 	ts.Assert().GreaterOrEqual(result.RequeueAfter, 30*time.Second)
 
 	ts.expectABackupJob()
+}
+
+func (ts *BackupTestSuite) Test_GivenBackup_AndJob_KeepBackupProgressing() {
+	backupJob := ts.newJob(ts.BackupResource)
+	ts.EnsureResources(ts.BackupResource, backupJob)
+	ts.BackupResource.Status.Started = true
+	backupJob.Status.Active = 1
+	ts.UpdateStatus(ts.BackupResource, backupJob)
+
+	ts.whenReconciling(ts.BackupResource)
+
+	result := &k8upv1.Backup{}
+	err := ts.Client.Get(ts.Ctx, k8upv1.MapToNamespacedName(ts.BackupResource), result)
+	ts.Require().NoError(err)
+	ts.assertCondition(result.Status.Conditions, k8upv1.ConditionProgressing, k8upv1.ReasonStarted, metav1.ConditionTrue)
+	ts.assertCondition(result.Status.Conditions, k8upv1.ConditionReady, k8upv1.ReasonReady, metav1.ConditionTrue)
+	ts.Assert().Len(result.Status.Conditions, 2, "amount of conditions")
+}
+
+func (ts *BackupTestSuite) Test_GivenBackup_AndCompletedJob_ThenCompleteBackup() {
+	backupJob := ts.newJob(ts.BackupResource)
+	ts.EnsureResources(ts.BackupResource, backupJob)
+	ts.BackupResource.Status.Started = true
+	backupJob.Status.Conditions = []batchv1.JobCondition{{Type: batchv1.JobComplete, Status: corev1.ConditionTrue}}
+	ts.UpdateStatus(ts.BackupResource, backupJob)
+
+	ts.whenReconciling(ts.BackupResource)
+
+	result := &k8upv1.Backup{}
+	ts.FetchResource(types.NamespacedName{Namespace: ts.BackupResource.Namespace, Name: ts.BackupResource.Name}, result)
+
+	ts.assertCondition(result.Status.Conditions, k8upv1.ConditionCompleted, k8upv1.ReasonSucceeded, metav1.ConditionTrue)
+	ts.assertCondition(result.Status.Conditions, k8upv1.ConditionProgressing, k8upv1.ReasonFinished, metav1.ConditionFalse)
+	ts.Assert().Len(result.Status.Conditions, 4, "amount of conditions")
+}
+
+func (ts *BackupTestSuite) Test_GivenBackup_AndFailedJob_ThenCompleteBackup() {
+	backupJob := ts.newJob(ts.BackupResource)
+	ts.EnsureResources(ts.BackupResource, backupJob)
+	ts.BackupResource.Status.Started = true
+	backupJob.Status.Conditions = []batchv1.JobCondition{{Type: batchv1.JobFailed, Status: corev1.ConditionTrue}}
+	ts.UpdateStatus(ts.BackupResource, backupJob)
+
+	ts.whenReconciling(ts.BackupResource)
+
+	result := &k8upv1.Backup{}
+	ts.FetchResource(types.NamespacedName{Namespace: ts.BackupResource.Namespace, Name: ts.BackupResource.Name}, result)
+	ts.assertCondition(result.Status.Conditions, k8upv1.ConditionCompleted, k8upv1.ReasonFailed, metav1.ConditionTrue)
+	ts.assertCondition(result.Status.Conditions, k8upv1.ConditionProgressing, k8upv1.ReasonFinished, metav1.ConditionFalse)
+	ts.Assert().Len(result.Status.Conditions, 4, "amount of conditions")
 }
 
 func (ts *BackupTestSuite) Test_GivenBackupWithSecurityContext_ExpectBackupJobWithSecurityContext() {
@@ -165,4 +218,11 @@ func (ts *BackupTestSuite) Test_GivenBackupWithTags_WhenCreatingBackupjob_ThenHa
 	ts.whenReconciling(ts.BackupResource)
 	backupJob := ts.expectABackupJob()
 	ts.assertJobHasTagArguments(backupJob)
+}
+
+func (ts *BackupTestSuite) assertCondition(conditions []metav1.Condition, condType k8upv1.ConditionType, reason k8upv1.ConditionReason, status metav1.ConditionStatus) {
+	cond := meta.FindStatusCondition(conditions, condType.String())
+	ts.Require().NotNil(cond, "condition of type %s missing", condType)
+	ts.Assert().Equal(reason.String(), cond.Reason, "condition %s doesn't contain reason %s", condType, reason)
+	ts.Assert().Equal(status, cond.Status, "condition %s isn't %s", condType, status)
 }

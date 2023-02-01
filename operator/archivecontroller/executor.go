@@ -39,7 +39,7 @@ func (a *ArchiveExecutor) Execute(ctx context.Context) error {
 	archive := a.Obj.(*k8upv1.Archive)
 
 	batchJob := &batchv1.Job{}
-	batchJob.Name = k8upv1.ArchiveType.String() + "-" + a.Obj.GetName()
+	batchJob.Name = a.jobName()
 	batchJob.Namespace = archive.Namespace
 
 	_, err := controllerutil.CreateOrUpdate(ctx, a.Client, batchJob, func() error {
@@ -61,6 +61,10 @@ func (a *ArchiveExecutor) Execute(ctx context.Context) error {
 
 	a.SetStarted(ctx, "the job '%v/%v' was created", batchJob.Namespace, batchJob.Name)
 	return nil
+}
+
+func (a *ArchiveExecutor) jobName() string {
+	return k8upv1.ArchiveType.String() + "-" + a.Obj.GetName()
 }
 
 func (a *ArchiveExecutor) setupArgs(archive *k8upv1.Archive) []string {

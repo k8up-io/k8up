@@ -8,6 +8,7 @@ import (
 	"github.com/k8up-io/k8up/v2/operator/cfg"
 	"github.com/k8up-io/k8up/v2/operator/job"
 	"github.com/k8up-io/k8up/v2/operator/locker"
+	"k8s.io/apimachinery/pkg/types"
 	controllerruntime "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -25,25 +26,34 @@ func (r *ArchiveReconciler) NewObjectList() *k8upv1.ArchiveList {
 	return &k8upv1.ArchiveList{}
 }
 
-func (r *ArchiveReconciler) Provision(ctx context.Context, archive *k8upv1.Archive) (controllerruntime.Result, error) {
+func (r *ArchiveReconciler) Provision(ctx context.Context, obj *k8upv1.Archive) (controllerruntime.Result, error) {
 	log := controllerruntime.LoggerFrom(ctx)
 
-	if archive.Status.HasStarted() {
+	repository := cfg.Config.GetGlobalRepository()
+	if obj.Spec.Backend != nil {
+		repository = obj.Spec.Backend.String()
+	}
+	if obj.Spec.RestoreSpec == nil {
+		obj.Spec.RestoreSpec = &k8upv1.RestoreSpec{}
+	}
+	config := job.NewConfig(r.Kube, obj, repository)
+	executor := NewArchiveExecutor(config)
+
+	jobKey := types.NamespacedName{
+		Namespace: obj.GetNamespace(),
+		Name:      executor.jobName(),
+	}
+	if err := job.ReconcileJobStatus(ctx, jobKey, r.Kube, obj); err != nil {
+		return controllerruntime.Result{}, err
+	}
+
+	if obj.Status.HasStarted() {
+		log.V(1).Info("archive just started, waiting")
 		return controllerruntime.Result{}, nil
 	}
 
-	repository := cfg.Config.GetGlobalRepository()
-	if archive.Spec.Backend != nil {
-		repository = archive.Spec.Backend.String()
-	}
-	if archive.Spec.RestoreSpec == nil {
-		archive.Spec.RestoreSpec = &k8upv1.RestoreSpec{}
-	}
-	config := job.NewConfig(r.Kube, archive, repository)
-	executor := NewArchiveExecutor(config)
-
-	if archive.Status.HasFinished() {
-		executor.cleanupOldArchives(ctx, archive)
+	if obj.Status.HasFinished() {
+		executor.cleanupOldArchives(ctx, obj)
 		return controllerruntime.Result{}, nil
 	}
 

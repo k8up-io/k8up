@@ -8,6 +8,7 @@ import (
 	"github.com/k8up-io/k8up/v2/operator/cfg"
 	"github.com/k8up-io/k8up/v2/operator/job"
 	"github.com/k8up-io/k8up/v2/operator/locker"
+	"k8s.io/apimachinery/pkg/types"
 	controllerruntime "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -25,24 +26,33 @@ func (r *CheckReconciler) NewObjectList() *k8upv1.CheckList {
 	return &k8upv1.CheckList{}
 }
 
-func (r *CheckReconciler) Provision(ctx context.Context, check *k8upv1.Check) (controllerruntime.Result, error) {
+func (r *CheckReconciler) Provision(ctx context.Context, obj *k8upv1.Check) (controllerruntime.Result, error) {
 	log := controllerruntime.LoggerFrom(ctx)
 
-	if check.Status.HasStarted() {
-		return controllerruntime.Result{}, nil
-	}
-
 	repository := cfg.Config.GetGlobalRepository()
-	if check.Spec.Backend != nil {
-		repository = check.Spec.Backend.String()
+	if obj.Spec.Backend != nil {
+		repository = obj.Spec.Backend.String()
 	}
 
-	config := job.NewConfig(r.Kube, check, repository)
+	config := job.NewConfig(r.Kube, obj, repository)
 
 	executor := NewCheckExecutor(config)
 
-	if check.Status.HasFinished() {
-		executor.cleanupOldChecks(ctx, check)
+	jobKey := types.NamespacedName{
+		Namespace: obj.GetNamespace(),
+		Name:      executor.jobName(),
+	}
+	if err := job.ReconcileJobStatus(ctx, jobKey, r.Kube, obj); err != nil {
+		return controllerruntime.Result{}, err
+	}
+
+	if obj.Status.HasStarted() {
+		log.V(1).Info("check just started, waiting")
+		return controllerruntime.Result{}, nil
+	}
+
+	if obj.Status.HasFinished() {
+		executor.cleanupOldChecks(ctx, obj)
 		return controllerruntime.Result{}, nil
 	}
 

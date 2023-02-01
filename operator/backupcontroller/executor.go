@@ -105,7 +105,7 @@ func (b *BackupExecutor) startBackup(ctx context.Context) error {
 	}
 
 	batchJob := &batchv1.Job{}
-	batchJob.Name = k8upv1.BackupType.String() + "-" + b.backup.Name
+	batchJob.Name = b.jobName()
 	batchJob.Namespace = b.backup.Namespace
 
 	_, err = controllerruntime.CreateOrUpdate(ctx, b.Generic.Config.Client, batchJob, func() error {
@@ -132,4 +132,8 @@ func (b *BackupExecutor) startBackup(ctx context.Context) error {
 
 func (b *BackupExecutor) cleanupOldBackups(ctx context.Context) {
 	b.Generic.CleanupOldResources(ctx, &k8upv1.BackupList{}, b.backup.Namespace, b.backup)
+}
+
+func (b *BackupExecutor) jobName() string {
+	return k8upv1.BackupType.String() + "-" + b.backup.Name
 }

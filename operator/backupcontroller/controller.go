@@ -9,6 +9,7 @@ import (
 	"github.com/k8up-io/k8up/v2/operator/job"
 	"github.com/k8up-io/k8up/v2/operator/locker"
 	"k8s.io/apimachinery/pkg/api/meta"
+	"k8s.io/apimachinery/pkg/types"
 	controllerruntime "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -30,10 +31,6 @@ func (r *BackupReconciler) NewObjectList() *k8upv1.BackupList {
 func (r *BackupReconciler) Provision(ctx context.Context, obj *k8upv1.Backup) (reconcile.Result, error) {
 	log := controllerruntime.LoggerFrom(ctx)
 
-	if obj.Status.HasStarted() {
-		return controllerruntime.Result{RequeueAfter: 30 * time.Second}, nil // nothing to do, wait until finished
-	}
-
 	repository := cfg.Config.GetGlobalRepository()
 	if obj.Spec.Backend != nil {
 		repository = obj.Spec.Backend.String()
@@ -41,6 +38,18 @@ func (r *BackupReconciler) Provision(ctx context.Context, obj *k8upv1.Backup) (r
 	config := job.NewConfig(r.Kube, obj, repository)
 	executor := NewBackupExecutor(config)
 
+	jobKey := types.NamespacedName{
+		Namespace: obj.GetNamespace(),
+		Name:      executor.jobName(),
+	}
+	if err := job.ReconcileJobStatus(ctx, jobKey, r.Kube, obj); err != nil {
+		return controllerruntime.Result{}, err
+	}
+
+	if obj.Status.HasStarted() {
+		log.V(1).Info("backup just started, waiting")
+		return controllerruntime.Result{RequeueAfter: 30 * time.Second}, nil
+	}
 	if obj.Status.HasFinished() || isPrebackupFailed(obj) {
 		cleanupCond := meta.FindStatusCondition(obj.Status.Conditions, k8upv1.ConditionScrubbed.String())
 		if cleanupCond == nil || cleanupCond.Reason != k8upv1.ReasonSucceeded.String() {
@@ -48,7 +57,7 @@ func (r *BackupReconciler) Provision(ctx context.Context, obj *k8upv1.Backup) (r
 		}
 
 		prebackupCond := meta.FindStatusCondition(obj.Status.Conditions, k8upv1.ConditionPreBackupPodReady.String())
-		if prebackupCond.Reason == k8upv1.ReasonFinished.String() || prebackupCond.Reason == k8upv1.ReasonFailed.String() || prebackupCond.Reason == k8upv1.ReasonNoPreBackupPodsFound.String() {
+		if prebackupCond != nil && (prebackupCond.Reason == k8upv1.ReasonFinished.String() || prebackupCond.Reason == k8upv1.ReasonFailed.String() || prebackupCond.Reason == k8upv1.ReasonNoPreBackupPodsFound.String()) {
 			// only ignore future reconciles if we have stopped all prebackup deployments in an earlier reconciliation.
 			return controllerruntime.Result{}, nil
 		}
