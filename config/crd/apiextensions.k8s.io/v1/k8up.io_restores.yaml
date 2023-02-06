@@ -320,6 +320,8 @@ spec:
                         type: string
                       endpoint:
                         type: string
+                      region:
+                        type: string
                       secretAccessKeySecretRef:
                         description: SecretKeySelector selects a key of a Secret.
                         properties:
@@ -592,6 +594,8 @@ spec:
                       bucket:
                         type: string
                       endpoint:
+                        type: string
+                      region:
                         type: string
                       secretAccessKeySecretRef:
                         description: SecretKeySelector selects a key of a Secret.

@@ -13,6 +13,7 @@ spec:
     s3:
       endpoint: http://minio.minio.svc.cluster.local:9000
       bucket: backup
+      region:
       accessKeyIDSecretRef:
         name: backup-credentials
         key: username

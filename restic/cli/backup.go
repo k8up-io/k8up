@@ -58,6 +58,10 @@ func (r *Restic) folderBackup(folder string, backuplogger logr.Logger, tags Arra
 		"--host": {cfg.Config.Hostname},
 		"--json": {},
 	})
+	// only append s3.region is option was set in config
+	if cfg.Config.Region != "" {
+		flags = Combine(flags, Flags{"-o s3.region": {cfg.Config.Region}})
+	}
 
 	opts := CommandOptions{
 		Path:   r.resticPath,

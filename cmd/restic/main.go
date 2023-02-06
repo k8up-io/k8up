@@ -26,6 +26,7 @@ const (
 	restoreS3EndpointArg        = "restoreS3Endpoint"
 	restoreS3AccessKeyIDArg     = "restoreS3AccessKey"
 	restoreS3SecretAccessKeyArg = "restoreS3SecretKey"
+	restoreS3Region             = "restoreS3Region"
 )
 
 var (
@@ -60,6 +61,7 @@ var (
 			&cli.StringFlag{Destination: &cfg.Config.RestoreS3AccessKey, Name: restoreS3AccessKeyIDArg, EnvVars: []string{"RESTORE_ACCESSKEYID"}, Usage: "S3 access key used to connect to the S3 endpoint when restoring"},
 			&cli.StringFlag{Destination: &cfg.Config.RestoreS3SecretKey, Name: restoreS3SecretAccessKeyArg, EnvVars: []string{"RESTORE_SECRETACCESSKEY"}, Usage: "S3 secret key used to connect to the S3 endpoint when restoring"},
 			&cli.StringFlag{Destination: &cfg.Config.RestoreS3Endpoint, Name: restoreS3EndpointArg, EnvVars: []string{"RESTORE_S3ENDPOINT"}, Usage: "S3 endpoint to connect to when restoring, e.g. 'https://minio.svc:9000/backup"},
+			&cli.StringFlag{Destination: &cfg.Config.Region, Name: restoreS3Region, EnvVars: []string{"RESTORE_REGION"}, Usage: "S3 Region to use when restoring, e.g. 'us-east-1'"},
 			&cli.BoolFlag{Destination: &cfg.Config.VerifyRestore, Name: "verifyRestore", Usage: "If the restore should get verified, only for PVCs restore"},
 			&cli.BoolFlag{Destination: &cfg.Config.RestoreTrimPath, Name: "trimRestorePath", EnvVars: []string{"TRIM_RESTOREPATH"}, Value: true, DefaultText: "enabled", Usage: "If set, strips the value of --restoreDir from the lefts side of the remote restore path value"},
 
@@ -195,6 +197,7 @@ func doRestore(resticCLI *resticCli.Restic) error {
 				Endpoint:  cfg.Config.RestoreS3Endpoint,
 				AccessKey: cfg.Config.RestoreS3AccessKey,
 				SecretKey: cfg.Config.RestoreS3SecretKey,
+				Region:    cfg.Config.Region,
 			},
 		}, cfg.Config.Tags); err != nil {
 			return fmt.Errorf("restore job failed: %w", err)
