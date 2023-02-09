@@ -26,6 +26,11 @@ $(KIND_KUBECONFIG): $(KIND)
 	@kubectl version
 	@kubectl cluster-info
 	@kubectl config use-context kind-$(KIND_CLUSTER)
+	# Applies local-path-config.yaml to kind cluster and forces restart of provisioner - can be simplified once https://github.com/kubernetes-sigs/kind/pull/3090 is merged.
+	# This is necessary due to the multi node cluster. Classic k8s hostPath provisioner doesn't permit multi node and sharedFileSystemPath support is only in local-path-provisioner v0.0.23.
+	@kubectl apply -n local-path-storage -f https://raw.githubusercontent.com/rancher/local-path-provisioner/v0.0.23/deploy/local-path-storage.yaml
+	@kubectl get cm -n local-path-storage local-path-config -o yaml|yq e '.data."config.json"="{\"nodePathMap\":[],\"sharedFileSystemPath\": \"/tmp/e2e/local-path-provisioner\"}"'|kubectl apply -f -
+	@kubectl delete po -n local-path-storage --all
 
 $(KIND): export GOBIN = $(go_bin)
 $(KIND): | $(go_bin)

@@ -32,15 +32,6 @@ rules:
       - update
       - watch
   - apiGroups:
-      - batch
-    resources:
-      - jobs/finalizers
-      - jobs/status
-    verbs:
-      - get
-      - patch
-      - update
-  - apiGroups:
       - coordination.k8s.io
     resources:
       - leases
@@ -60,6 +51,14 @@ rules:
       - ""
     resources:
       - persistentvolumeclaims
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - ""
+    resources:
+      - persistentvolumes
     verbs:
       - get
       - list

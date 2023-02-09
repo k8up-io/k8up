@@ -74,12 +74,17 @@ const (
 
 	// LabelK8upType is the label key that identifies the job type
 	LabelK8upType = "k8up.io/type"
+	// LabelK8upOwnedBy is a label used to indicated which resource owns this resource to make it easy to fetch owned resources.
+	LabelK8upOwnedBy = "k8up.io/owned-by"
 	// Deprecated: LegacyLabelK8upType is the former label key that identified the job type
 	LegacyLabelK8upType = "k8up.syn.tools/type"
 	// LabelManagedBy identifies the tool being used to manage the operation of a resource
 	LabelManagedBy = "app.kubernetes.io/managed-by"
 	// LabelRepositoryHash is the label key that identifies the Restic repository
 	LabelRepositoryHash = "k8up.io/repository-hash"
+
+	// AnnotationK8upHostname is an annotation one can set on RWO PVCs to try to back up them on the specified node.
+	AnnotationK8upHostname = "k8up.io/hostname"
 )
 
 // String casts the value to string.

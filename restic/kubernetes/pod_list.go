@@ -18,6 +18,7 @@ type PodLister struct {
 	k8scli                  *kube.Clientset
 	err                     error
 	namespace               string
+	targetPods              map[string]struct{}
 	log                     logr.Logger
 	ctx                     context.Context
 }
@@ -32,23 +33,30 @@ type BackupPod struct {
 }
 
 // NewPodLister returns a PodLister configured to find the defined annotations.
-func NewPodLister(ctx context.Context, backupCommandAnnotation, fileExtensionAnnotation, namespace string, log logr.Logger) *PodLister {
+func NewPodLister(ctx context.Context, backupCommandAnnotation, fileExtensionAnnotation, namespace string, targetPods []string, log logr.Logger) *PodLister {
 	k8cli, err := newk8sClient()
 	if err != nil {
 		err = fmt.Errorf("can't create podLister: %v", err)
 	}
+
+	tp := make(map[string]struct{})
+	for _, name := range targetPods {
+		tp[name] = struct{}{}
+	}
+
 	return &PodLister{
 		backupCommandAnnotation: backupCommandAnnotation,
 		fileExtensionAnnotation: fileExtensionAnnotation,
 		k8scli:                  k8cli,
 		err:                     err,
 		namespace:               namespace,
+		targetPods:              tp,
 		log:                     log.WithName("k8sClient"),
 		ctx:                     ctx,
 	}
 }
 
-// ListPods resturns a list of pods which have backup commands in their annotations.
+// ListPods finds a list of pods which have backup commands in their annotations.
 func (p *PodLister) ListPods() ([]BackupPod, error) {
 	p.log.Info("listing all pods", "annotation", p.backupCommandAnnotation, "namespace", p.namespace)
 
@@ -67,6 +75,14 @@ func (p *PodLister) ListPods() ([]BackupPod, error) {
 		if pod.Status.Phase != corev1.PodRunning {
 			continue
 		}
+
+		// if TARGET_PODS is set, skip pods which should not be targetd.
+		_, ok := p.targetPods[pod.GetName()]
+		if len(p.targetPods) > 0 && !ok {
+			p.log.V(1).Info("pod not in target pod list, skipping", "pod", pod.GetName())
+			continue
+		}
+
 		annotations := pod.GetAnnotations()
 
 		if command, ok := annotations[p.backupCommandAnnotation]; ok {

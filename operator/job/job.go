@@ -49,6 +49,7 @@ func MutateBatchJob(batchJob *batchv1.Job, jobObj k8upv1.JobObject, config Confi
 	batchJob.Labels = labels.Merge(batchJob.Labels, labels.Set{
 		K8uplabel:                  "true",
 		k8upv1.LabelK8upType:       jobObj.GetType().String(),
+		k8upv1.LabelK8upOwnedBy:    jobObj.GetType().String() + "_" + jobObj.GetName(),
 		k8upv1.LabelRepositoryHash: Sha256Hash(config.Repository),
 	})
 
@@ -86,9 +87,7 @@ func ReconcileJobStatus(ctx context.Context, key types.NamespacedName, client cl
 		return nil
 	}
 
-	if err := UpdateStatus(ctx, batchJob, obj); err != nil {
-		return fmt.Errorf("unable to update status in object: %w", err)
-	}
+	UpdateStatus(ctx, batchJob, obj)
 
 	log.V(1).Info("updating status")
 	if err := client.Status().Update(ctx, obj); err != nil {
@@ -98,40 +97,59 @@ func ReconcileJobStatus(ctx context.Context, key types.NamespacedName, client cl
 }
 
 // UpdateStatus retrieves status of batchJob and sets status of obj accordingly.
-func UpdateStatus(ctx context.Context, batchJob *batchv1.Job, obj k8upv1.JobObject) error {
-	log := controllerruntime.LoggerFrom(ctx)
-
+func UpdateStatus(ctx context.Context, batchJob *batchv1.Job, obj k8upv1.JobObject) {
 	// update status conditions based on Job status
 	objStatus := obj.GetStatus()
 	message := fmt.Sprintf("job '%s' has %d active, %d succeeded and %d failed pods",
 		batchJob.Name, batchJob.Status.Active, batchJob.Status.Succeeded, batchJob.Status.Failed)
 
-	successCond := FindStatusCondition(batchJob.Status.Conditions, batchv1.JobComplete)
-	if successCond != nil && successCond.Status == corev1.ConditionTrue {
-		if !objStatus.HasSucceeded() {
-			// only increase success counter if new condition
-			monitoring.IncSuccessCounters(batchJob.Namespace, obj.GetType())
-			log.Info("Job succeeded")
-		}
-		objStatus.SetSucceeded(message)
-		objStatus.SetFinished(fmt.Sprintf("job '%s' completed successfully", batchJob.Name))
+	if HasSucceeded(batchJob.Status.Conditions) {
+		SetSucceeded(ctx, batchJob.Name, batchJob.Namespace, obj.GetType(), &objStatus, message)
 	}
-	failedCond := FindStatusCondition(batchJob.Status.Conditions, batchv1.JobFailed)
-	if failedCond != nil && failedCond.Status == corev1.ConditionTrue {
-		if !objStatus.HasFailed() {
-			// only increase fail counter if new condition
-			monitoring.IncFailureCounters(batchJob.Namespace, obj.GetType())
-			log.Info("Job failed")
-		}
-		objStatus.SetFailed(message)
-		objStatus.SetFinished(fmt.Sprintf("job '%s' has failed", batchJob.Name))
+	if HasFailed(batchJob.Status.Conditions) {
+		SetFailed(ctx, batchJob.Name, batchJob.Namespace, obj.GetType(), &objStatus, message)
 	}
-	if successCond == nil && failedCond == nil {
+	if HasStarted(batchJob.Status.Conditions) {
 		objStatus.SetStarted(message)
 	}
 	obj.SetStatus(objStatus)
+}
 
-	return nil
+func HasSucceeded(conditions []batchv1.JobCondition) bool {
+	successCond := FindStatusCondition(conditions, batchv1.JobComplete)
+	return successCond != nil && successCond.Status == corev1.ConditionTrue
+}
+func HasFailed(conditions []batchv1.JobCondition) bool {
+	failedCond := FindStatusCondition(conditions, batchv1.JobFailed)
+	return failedCond != nil && failedCond.Status == corev1.ConditionTrue
+}
+func HasStarted(conditions []batchv1.JobCondition) bool {
+	successCond := FindStatusCondition(conditions, batchv1.JobComplete)
+	failedCond := FindStatusCondition(conditions, batchv1.JobFailed)
+	return successCond == nil && failedCond == nil
+}
+
+func SetSucceeded(ctx context.Context, name, ns string, typ k8upv1.JobType, objStatus *k8upv1.Status, message string) {
+	log := controllerruntime.LoggerFrom(ctx)
+
+	if !objStatus.HasSucceeded() {
+		// only increase success counter if new condition
+		monitoring.IncSuccessCounters(ns, typ)
+		log.Info("Job succeeded")
+	}
+	objStatus.SetSucceeded(message)
+	objStatus.SetFinished(fmt.Sprintf("job '%s' completed successfully", name))
+}
+func SetFailed(ctx context.Context, name, ns string, typ k8upv1.JobType, objStatus *k8upv1.Status, message string) {
+	log := controllerruntime.LoggerFrom(ctx)
+
+	if !objStatus.HasFailed() {
+		// only increase fail counter if new condition
+		monitoring.IncFailureCounters(ns, typ)
+		log.Info("Job failed")
+	}
+	objStatus.SetFailed(message)
+	objStatus.SetFinished(fmt.Sprintf("job '%s' has failed", name))
 }
 
 // FindStatusCondition finds the condition with the given type in the batchv1.JobCondition slice.

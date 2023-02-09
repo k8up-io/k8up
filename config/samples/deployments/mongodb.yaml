@@ -1,12 +1,10 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  annotations:
-    k8up.io/backupcommand: mongodump --archive -uroot -pexample
   labels:
     app: mongodb
   name: mongodb
-  namespace: myproject
+  namespace: default
 spec:
   replicas: 1
   revisionHistoryLimit: 2
@@ -22,6 +20,8 @@ spec:
     metadata:
       labels:
         app: mongodb
+      annotations:
+        k8up.io/backupcommand: mongodump --archive -uroot -pexample
     spec:
       containers:
         - env:
@@ -50,11 +50,20 @@ spec:
         - name: mongodb
           persistentVolumeClaim:
             claimName: mongodb
+      tolerations:
+        - effect: NoSchedule
+          key: node-role.kubernetes.io/master
+        - effect: NoSchedule
+          key: node-role.kubernetes.io/control-plane
+      nodeSelector:
+        kubernetes.io/os: linux
+        node-role.kubernetes.io/control-plane: ""
 ---
 kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
   name: mongodb
+  namespace: default
 spec:
   accessModes:
     - ReadWriteOnce

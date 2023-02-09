@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/go-logr/logr"
 	"github.com/urfave/cli/v2"
@@ -81,6 +82,9 @@ var (
 			&cli.StringFlag{Destination: &cfg.Config.PruneKeepWithinMonthly, Name: "keepWithinMonthly", EnvVars: []string{"KEEP_WITHIN_MONTHLY"}, Usage: "While pruning, keep monthly snapshots within the given duration, e.g. '2y5m7d3h'"},
 			&cli.StringFlag{Destination: &cfg.Config.PruneKeepWithinYearly, Name: "keepWithinYearly", EnvVars: []string{"KEEP_WITHIN_YEARLY"}, Usage: "While pruning, keep yearly snapshots within the given duration, e.g. '2y5m7d3h'"},
 			&cli.StringFlag{Destination: &cfg.Config.PruneKeepWithin, Name: "keepWithin", EnvVars: []string{"KEEP_WITHIN"}, Usage: "While pruning, keep tagged snapshots within the given duration, e.g. '2y5m7d3h'"},
+
+			&cli.StringSliceFlag{Name: "targetPods", EnvVars: []string{"TARGET_PODS"}, Usage: "Filter list of pods by TARGET_PODS names"},
+			&cli.DurationFlag{Destination: &cfg.Config.SleepDuration, Name: "sleepDuration", EnvVars: []string{"SLEEP_DURATION"}, Usage: "Sleep for specified amount until init starts"},
 		},
 	}
 )
@@ -90,6 +94,8 @@ func resticMain(c *cli.Context) error {
 	resticLog.Info("initializing")
 
 	cfg.Config.Tags = c.StringSlice("tag")
+	cfg.Config.TargetPods = c.StringSlice("targetPods")
+
 	err := cfg.Config.Validate()
 	if err != nil {
 		return err
@@ -122,6 +128,10 @@ func run(ctx context.Context, resticCLI *resticCli.Restic, mainLogger logr.Logge
 }
 
 func resticInitialization(resticCLI *resticCli.Restic, mainLogger logr.Logger) error {
+	if cfg.Config.SleepDuration > 0 {
+		mainLogger.Info("sleeping until init", "duration", cfg.Config.SleepDuration)
+		time.Sleep(cfg.Config.SleepDuration)
+	}
 	if err := resticCLI.Init(); err != nil {
 		return fmt.Errorf("failed to initialise the restic repository: %w", err)
 	}
@@ -235,7 +245,7 @@ func backupAnnotatedPods(ctx context.Context, resticCLI *resticCli.Restic, mainL
 		return nil
 	}
 
-	podLister := kubernetes.NewPodLister(ctx, cfg.Config.BackupCommandAnnotation, cfg.Config.BackupFileExtensionAnnotation, cfg.Config.Hostname, mainLogger)
+	podLister := kubernetes.NewPodLister(ctx, cfg.Config.BackupCommandAnnotation, cfg.Config.BackupFileExtensionAnnotation, cfg.Config.Hostname, cfg.Config.TargetPods, mainLogger)
 	podList, err := podLister.ListPods()
 	if err != nil {
 		mainLogger.Error(err, "could not list pods", "namespace", cfg.Config.Hostname)
