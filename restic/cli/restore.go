@@ -18,6 +18,7 @@ import (
 
 	"github.com/k8up-io/k8up/v2/common"
 	"github.com/k8up-io/k8up/v2/restic/cfg"
+	"github.com/k8up-io/k8up/v2/restic/dto"
 	"github.com/k8up-io/k8up/v2/restic/logging"
 	"github.com/k8up-io/k8up/v2/restic/s3"
 )
@@ -110,8 +111,8 @@ func (r *Restic) Restore(snapshotID string, options RestoreOptions, tags ArrayOp
 	return err
 }
 
-func (r *Restic) getLatestSnapshot(snapshotID string, log logr.Logger) (Snapshot, error) {
-	snapshot := Snapshot{}
+func (r *Restic) getLatestSnapshot(snapshotID string, log logr.Logger) (dto.Snapshot, error) {
+	snapshot := dto.Snapshot{}
 
 	if len(r.snapshots) == 0 {
 		err := fmt.Errorf("no snapshots available")
@@ -138,7 +139,7 @@ func (r *Restic) getLatestSnapshot(snapshotID string, log logr.Logger) (Snapshot
 	return snapshot, err
 }
 
-func (r *Restic) folderRestore(restoreDir string, snapshot Snapshot, restoreFilter string, verify bool, log logr.Logger) error {
+func (r *Restic) folderRestore(restoreDir string, snapshot dto.Snapshot, restoreFilter string, verify bool, log logr.Logger) error {
 	var linkedDir string
 	if cfg.Config.RestoreTrimPath {
 		restoreRoot, err := r.linkRestorePaths(snapshot, restoreDir)
@@ -193,7 +194,7 @@ func (r *Restic) folderRestore(restoreDir string, snapshot Snapshot, restoreFilt
 // returns that temp path as the string used for the actual restore.This way the
 // root of the backed up PVC will be the root of the restored PVC thus creating
 // a carbon copy of the original and ready to be used again.
-func (r *Restic) linkRestorePaths(snapshot Snapshot, restoreDir string) (string, error) {
+func (r *Restic) linkRestorePaths(snapshot dto.Snapshot, restoreDir string) (string, error) {
 	// restic snapshots only every contain exactly one path
 	snapshotPath := snapshot.Paths[0]
 	splitted := strings.Split(snapshotPath, "/")
@@ -224,7 +225,7 @@ func (r *Restic) parsePath(paths []string) string {
 	return path.Base(paths[len(paths)-1])
 }
 
-func (r *Restic) s3Restore(log logr.Logger, snapshot Snapshot, stats *RestoreStats) error {
+func (r *Restic) s3Restore(log logr.Logger, snapshot dto.Snapshot, stats *RestoreStats) error {
 	log.Info("S3 chosen as restore destination")
 	cleanupCtx, cleanup := context.WithCancel(r.ctx)
 	defer cleanup()
@@ -299,7 +300,7 @@ func (r *Restic) tgzWriter(uploadWritePipe *io.PipeWriter, tarHeader *tar.Header
 	return tgzWriter, nil
 }
 
-func (r *Restic) doRestore(log logr.Logger, latestSnap Snapshot, snapRoot string, finalWriter io.WriteCloser) {
+func (r *Restic) doRestore(log logr.Logger, latestSnap dto.Snapshot, snapRoot string, finalWriter io.WriteCloser) {
 	opts := CommandOptions{
 		Path:   r.resticPath,
 		Args:   r.globalFlags.ApplyToCommand("dump", latestSnap.ID, snapRoot),
@@ -334,7 +335,7 @@ func (r *Restic) s3Connect(ctx context.Context, fileName string) (chan error, *i
 
 // getSnapshotRoot will return the correct root to trigger the restore. If the
 // snapshot was done as a stdin backup it will also return a tar header.
-func (r *Restic) getSnapshotRoot(snapshot Snapshot, log logr.Logger, stats *RestoreStats) (string, *tar.Header) {
+func (r *Restic) getSnapshotRoot(snapshot dto.Snapshot, log logr.Logger, stats *RestoreStats) (string, *tar.Header) {
 	buf := bytes.Buffer{}
 
 	opts := CommandOptions{

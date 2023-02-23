@@ -7,6 +7,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 
 	"github.com/k8up-io/k8up/v2/restic/cfg"
+	"github.com/k8up-io/k8up/v2/restic/dto"
 	"github.com/k8up-io/k8up/v2/restic/logging"
 )
 
@@ -37,10 +38,10 @@ type RawMetrics struct {
 }
 
 type BackupStats struct {
-	Name          string      `json:"name,omitempty"`
-	BucketName    string      `json:"bucket_name,omitempty"`
-	BackupMetrics *RawMetrics `json:"backup_metrics,omitempty"`
-	Snapshots     []Snapshot  `json:"snapshots,omitempty"`
+	Name          string         `json:"name,omitempty"`
+	BucketName    string         `json:"bucket_name,omitempty"`
+	BackupMetrics *RawMetrics    `json:"backup_metrics,omitempty"`
+	Snapshots     []dto.Snapshot `json:"snapshots,omitempty"`
 }
 
 type PromMetrics struct {
