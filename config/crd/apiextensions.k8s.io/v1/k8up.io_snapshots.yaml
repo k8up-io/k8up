@@ -45,6 +45,8 @@ spec:
                 items:
                   type: string
                 type: array
+              repository:
+                type: string
             type: object
           status:
             description: SnapshotStatus defines the observed state of Snapshot

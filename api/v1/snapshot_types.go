@@ -7,9 +7,10 @@ import (
 // SnapshotSpec contains all information needed about a restic snapshot so it
 // can be restored.
 type SnapshotSpec struct {
-	ID    *string      `json:"id,omitempty"`
-	Date  *metav1.Time `json:"date,omitempty"`
-	Paths *[]string    `json:"paths,omitempty"`
+	ID         *string      `json:"id,omitempty"`
+	Date       *metav1.Time `json:"date,omitempty"`
+	Paths      *[]string    `json:"paths,omitempty"`
+	Repository *string      `json:"repository,omitempty"`
 }
 
 // SnapshotStatus defines the observed state of Snapshot
