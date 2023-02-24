@@ -63,7 +63,15 @@ func (b *BackupExecutor) createServiceAccountAndBinding(ctx context.Context) err
 			{
 				APIGroups: []string{"k8up.io"},
 				Resources: []string{"snapshots"},
-				Verbs:     []string{"*"},
+				Verbs: []string{
+					"create",
+					"delete",
+					"get",
+					"list",
+					"patch",
+					"update",
+					"watch",
+				},
 			},
 			{
 				APIGroups: []string{"k8up.io"},

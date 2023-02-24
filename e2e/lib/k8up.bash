@@ -52,16 +52,8 @@ clear_pv_data() {
 	mkdir -p ./debug/data/pvc-subject
 }
 
-join_by() {
-  local d=${1-} f=${2-}
-  if shift 2; then
-    printf %s "$f" "${@/#/$d}"
-  fi
-}
-
 restic() {
 	kubectl run "restic-$(timestamp)" \
-		--rm \
 		--attach \
 		--restart Never \
 		--namespace "${DETIK_CLIENT_NAMESPACE-"k8up-system"}" \
@@ -69,11 +61,14 @@ restic() {
 		--env "AWS_ACCESS_KEY_ID=myaccesskey" \
 		--env "AWS_SECRET_ACCESS_KEY=mysecretkey" \
 		--env "RESTIC_PASSWORD=myreposecret" \
-		--env "RESTIC_REPOSITORY=s3:http://minio.minio.svc.cluster.local:9000/backup" \
 		--pod-running-timeout 10s \
 		--quiet \
 		--command -- \
-		sh -c "restic --no-cache $(join_by ' ' "${@}") --json && sleep 10"
+		restic \
+		--no-cache \
+		--repo "s3:http://minio.minio.svc.cluster.local:9000/backup" \
+		"${@}" \
+		--json
 }
 
 replace_in_file() {

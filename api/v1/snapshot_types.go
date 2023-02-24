@@ -4,6 +4,9 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+// +kubebuilder:rbac:groups=k8up.io,resources=snapshots,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=k8up.io,resources=snapshots/status;snapshots/finalizers,verbs=get;update;patch
+
 // SnapshotSpec contains all information needed about a restic snapshot so it
 // can be restored.
 type SnapshotSpec struct {
