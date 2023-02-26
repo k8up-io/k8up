@@ -13,6 +13,7 @@ import (
 	"github.com/k8up-io/k8up/v2/operator/job"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
 	controllerruntime "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -60,7 +61,8 @@ func (b *BackupExecutor) listAndFilterPVCs(ctx context.Context, annotation strin
 
 	pods := &corev1.PodList{}
 	pvcPodMap := make(map[string]corev1.Pod)
-	if err := b.Config.Client.List(ctx, pods, client.InNamespace(b.backup.Namespace)); err != nil {
+	labelselector, _ := labels.Parse("!" + job.K8uplabel)
+	if err := b.Config.Client.List(ctx, pods, client.InNamespace(b.backup.Namespace), client.MatchingLabelsSelector{Selector: labelselector}); err != nil {
 		return nil, fmt.Errorf("list pods: %w", err)
 	}
 	for _, pod := range pods.Items {
