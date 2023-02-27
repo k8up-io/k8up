@@ -37,6 +37,7 @@
 * xref:explanations/system-requirements.adoc[System Requirements]
 * xref:explanations/what-has-changed-in-v1.adoc[Changes in K8up v1.0]
 * xref:explanations/what-has-changed-in-v2.adoc[Changes in K8up v2.0]
+* xref:explanations/rwo.adoc[]
 
 .About
 * xref:about/roadmap.adoc[Roadmap]
