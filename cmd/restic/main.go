@@ -46,6 +46,8 @@ var (
 
 			&cli.StringFlag{Destination: &cfg.Config.BackupCommandAnnotation, Name: "backupCommandAnnotation", EnvVars: []string{"BACKUPCOMMAND_ANNOTATION"}, Usage: "Defines the command to invoke when doing a backup via STDOUT."},
 			&cli.StringFlag{Destination: &cfg.Config.BackupFileExtensionAnnotation, Name: "fileExtensionAnnotation", EnvVars: []string{"FILEEXTENSION_ANNOTATION"}, Usage: "Defines the file extension to use for STDOUT backups."},
+			&cli.StringFlag{Destination: &cfg.Config.BackupContainerAnnotation, Name: "backucontainerannotation", EnvVars: []string{"BACKUP_CONTAINERANNOTATION"}, Value: "k8up.io/backupcommand-container", Usage: "set the annotation name that identify the backup container inside Pod"},
+
 			&cli.StringFlag{Destination: &cfg.Config.PromURL, Name: "promURL", EnvVars: []string{"PROM_URL"}, Usage: "Sets the URL of a prometheus push gateway to report metrics."},
 			&cli.StringFlag{Destination: &cfg.Config.WebhookURL, Name: "webhookURL", Aliases: []string{"statsURL"}, EnvVars: []string{"STATS_URL"}, Usage: "Sets the URL of a server which will retrieve a webhook after the action completes."},
 
@@ -245,7 +247,7 @@ func backupAnnotatedPods(ctx context.Context, resticCLI *resticCli.Restic, mainL
 		return nil
 	}
 
-	podLister := kubernetes.NewPodLister(ctx, cfg.Config.BackupCommandAnnotation, cfg.Config.BackupFileExtensionAnnotation, cfg.Config.Hostname, cfg.Config.TargetPods, mainLogger)
+	podLister := kubernetes.NewPodLister(ctx, cfg.Config.BackupCommandAnnotation, cfg.Config.BackupFileExtensionAnnotation, cfg.Config.BackupContainerAnnotation, cfg.Config.Hostname, cfg.Config.TargetPods, mainLogger)
 	podList, err := podLister.ListPods()
 	if err != nil {
 		mainLogger.Error(err, "could not list pods", "namespace", cfg.Config.Hostname)

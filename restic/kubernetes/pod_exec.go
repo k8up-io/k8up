@@ -23,9 +23,7 @@ type ExecData struct {
 // PodExec sends the command to the specified pod
 // and returns a bytes buffer with the stdout
 func PodExec(pod BackupPod, log logr.Logger) (*ExecData, error) {
-
 	execLogger := log.WithName("k8sExec")
-
 	config, _ := getClientConfig()
 	k8sclient, err := kubernetes.NewForConfig(config)
 	if err != nil {
@@ -44,7 +42,6 @@ func PodExec(pod BackupPod, log logr.Logger) (*ExecData, error) {
 
 	command := qsplit.ToStrings([]byte(pod.Command))
 	execLogger.Info("executing command", "command", strings.Join(command, ", "), "namespace", pod.Namespace, "pod", pod.PodName)
-
 	parameterCodec := runtime.NewParameterCodec(scheme)
 	req.VersionedParams(&apiv1.PodExecOptions{
 		Command:   command,

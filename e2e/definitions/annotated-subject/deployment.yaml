@@ -16,8 +16,15 @@ spec:
       annotations:
         k8up.io/backupcommand: '/tmp/test.sh'
         k8up.io/file-extension: '.txt'
+        k8up.io/backupcommand-container: subject-container
     spec:
       containers:
+      - image: busybox
+        name: dummy-container-blocking-first-position
+        command:
+        - "/bin/sh"
+        - "-c"
+        - "sleep infinity"
       - name: subject-container
         image: quay.io/prometheus/busybox:latest
         imagePullPolicy: IfNotPresent

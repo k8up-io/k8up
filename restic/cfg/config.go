@@ -30,6 +30,7 @@ type Configuration struct {
 
 	BackupCommandAnnotation       string
 	BackupFileExtensionAnnotation string
+	BackupContainerAnnotation     string
 	BackupDir                     string
 
 	PromURL    string
