@@ -47,7 +47,7 @@ DEBUG_DETIK="true"
 
 	[ "${output}" = "${expected_content}" ]
 
-	run get_latest_snap
+	run get_latest_snap_by_path /k8up-e2e-subject-subject-container.txt
 
 	run restic dump --path /k8up-e2e-subject-subject-container.txt "${output}" k8up-e2e-subject-subject-container.txt
 
