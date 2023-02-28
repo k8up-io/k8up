@@ -18,7 +18,7 @@ asciidoctor_kindle_opts ?= --attribute ebook-format=kf8
 vale_cmd ?= $(docker_cmd) run $(docker_opts) --volume "$${PWD}"/src/modules/ROOT/pages:/pages vshn/vale:2.6.1 --minAlertLevel=error /pages
 hunspell_cmd ?= $(docker_cmd) run $(docker_opts) --volume "$${PWD}":/spell vshn/hunspell:1.7.0 -d en,vshn -l -H _public/**/**/*.html
 htmltest_cmd ?= $(docker_cmd) run $(docker_opts) --volume "$${PWD}"/_public:/test wjdp/htmltest:v0.12.0
-preview_cmd ?= $(docker_cmd) run --rm --publish 35729:35729 --publish 2020:2020 --volume "${PWD}":/preview/antora vshn/antora-preview:3.0.1.1 --antora=docs --style=k8up
+preview_cmd ?= $(docker_cmd) run --rm --publish 35729:35729 --publish 2020:2020 --volume "${PWD}":/preview/antora vshn/antora-preview:3.1.2.2 --antora=docs --style=k8up
 
 docs_usage_dir ?= docs/modules/ROOT/examples/usage
 

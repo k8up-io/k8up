@@ -1,0 +1,13 @@
+= How RWO Backups are implemented
+
+K8s does not prevent mounting a RWO PVC to multiple pods, if they are scheduled on the same host.
+K8up uses this fact to provide the ability to back up RWO PVCs.
+
+For a given backup in a namespace K8up will list all the PVCs.
+The PVCs are then grouped depending on their type:
+
+* all RWX PVCs are grouped together
+* RWO PVCs are grouped by k8s node where they are currently mounted
+
+K8up will then deploy backup jobs according to the grouping, a single job for all RWX PVCs and a job for each K8s node.
+The jobs themselves work as before, they loop over the mounted PVCs and do a file backup via restic.

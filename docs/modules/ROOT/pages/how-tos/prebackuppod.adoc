@@ -2,7 +2,6 @@
 
 Although K8up supports xref:how-tos/application-aware-backups.adoc[executing backup commands] in already running pods, there might be a need to start a specific Pod for the backup.
 Like, what if the backup command you'd like to run isn't available in the running pod?
-Or maybe you want to backup something that's running on a RWO PVC?
 Or perhaps you want to backup something that's outside the Kubernetes cluster, like a managed cloud database?
 
 That's the perfect use case for using PreBackup pods!
@@ -10,7 +9,6 @@ They're Pod definitions that live in your namespaces.
 Once the Operator triggers a backup for that specific namespace, then it will loop through all these Pod definitions, execute them and clean them up after the backup finished.
 They allow much more flexibility, as they support everything a normal Pod template does.
 For instance, you are able to set Pod affinity, so that the PreBackup Pods are started on a specific node.
-That will allow you to get access to data that's RWO and then trigger backups for them via a backup command.
 
 [source,yaml]
 ----
