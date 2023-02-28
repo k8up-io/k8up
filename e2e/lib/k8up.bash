@@ -366,3 +366,17 @@ expect_file_in_container() {
 		echo '↩'
 	done
 }
+
+get_latest_snap() {
+	ns=${NAMESPACE=${DETIK_CLIENT_NAMESPACE}}
+
+	kubectl -n "${ns}" get snapshots -ojson | jq -r '.items | sort_by(.spec.date) | reverse | .[0].spec.id '
+}
+
+get_latest_snap_by_path() {
+	require_args 1 ${#}
+
+	ns=${NAMESPACE=${DETIK_CLIENT_NAMESPACE}}
+
+	kubectl -n "${ns}" get snapshots -ojson | jq --arg path "$1" -r '[.items | sort_by(.spec.date) | reverse | .[] | select(.spec.paths[0]==$path)] | .[0].spec.id'
+}
