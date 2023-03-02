@@ -157,6 +157,8 @@ given_a_rwo_pvc_subject_in_controlplane_node() {
 }
 
 given_s3_storage() {
+	# Speed this step up
+	(helm -n "${MINIO_NAMESPACE}" list | grep minio > /dev/null) && return
 	helm repo add minio https://helm.min.io/ --force-update
 	helm repo update
 	helm upgrade --install minio \
@@ -169,8 +171,16 @@ given_s3_storage() {
 }
 
 given_a_clean_s3_storage() {
-	helm uninstall -n "${MINIO_NAMESPACE}" minio || true
+	# uninstalling an then installing the helmchart unfortunatelly hangs ong GH actions
 	given_s3_storage
+	kubectl -n "${MINIO_NAMESPACE}" scale deployment minio  --replicas 0
+
+	kubectl -n "${MINIO_NAMESPACE}" delete pvc minio
+	yq e '.metadata.namespace='\"${MINIO_NAMESPACE}\"'' definitions/minio/pvc.yaml | kubectl apply -f -
+
+	kubectl -n "${MINIO_NAMESPACE}" scale deployment minio  --replicas 1
+
+	echo "✅  S3 Storage cleaned"
 }
 
 given_a_running_operator() {
