@@ -168,6 +168,11 @@ given_s3_storage() {
 	echo "✅  S3 Storage is ready"
 }
 
+given_a_clean_s3_storage() {
+	helm uninstall -n "${MINIO_NAMESPACE}" minio || true
+	given_s3_storage
+}
+
 given_a_running_operator() {
 	values_src="definitions/operator/values.yaml"
 	values_tgt="debug/definitions/operator/values.yaml"
@@ -379,4 +384,14 @@ get_latest_snap_by_path() {
 	ns=${NAMESPACE=${DETIK_CLIENT_NAMESPACE}}
 
 	kubectl -n "${ns}" get snapshots -ojson | jq --arg path "$1" -r '[.items | sort_by(.spec.date) | reverse | .[] | select(.spec.paths[0]==$path)] | .[0].spec.id'
+}
+
+verify_snapshot_count() {
+	require_args 2 ${#}
+
+	ns=${2}
+
+	echo "looking for ${1} snapshots"
+
+	[ "$(kubectl -n "${ns}" get snapshots -ojson | jq -r '.items | length')" = "${1}" ]
 }
