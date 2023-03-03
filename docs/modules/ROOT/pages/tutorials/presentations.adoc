@@ -5,5 +5,5 @@ The slides below were presented at the https://www.meetup.com/cloud-native-compu
 Click on them and use the arrow keys to navigate from left to right.
 
 ++++
-<iframe src="/k8up/_attachments/slides-embedded.html" width="640" height="480"></iframe>
+<iframe src="/k8up/_attachments/slides.pdf" width="100%" height="480"></iframe>
 ++++
