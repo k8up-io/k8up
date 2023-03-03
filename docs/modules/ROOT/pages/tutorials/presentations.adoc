@@ -1,8 +1,6 @@
 = K8up Presentations
 
-== 2019-06-05 Cloud Native Computing Meetup Switzerland
-
-The slides below were presented at the https://www.meetup.com/Cloud-Native-Computing-Switzerland/events/261545051/[KubeCon & CloudNativeCon 2019 Recap Meetup] at VSHN, on Wednesday, June 5, 2019.
+The slides below were presented at the https://www.meetup.com/cloud-native-computing-switzerland/events/285960277/[Cloud Native Computing Meetup], on Thursday February 23rd, 2023.
 
 Click on them and use the arrow keys to navigate from left to right.
 
