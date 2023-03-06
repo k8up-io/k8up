@@ -251,6 +251,27 @@ rules:
       - patch
       - update
   - apiGroups:
+      - k8up.io
+    resources:
+      - snapshots
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - k8up.io
+    resources:
+      - snapshots/finalizers
+      - snapshots/status
+    verbs:
+      - get
+      - patch
+      - update
+  - apiGroups:
       - rbac.authorization.k8s.io
     resources:
       - rolebindings

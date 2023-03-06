@@ -23,7 +23,7 @@ func (r *Restic) Backup(backupDir string, tags ArrayOpts) error {
 
 	if _, err := os.Stat(backupDir); os.IsNotExist(err) {
 		backuplogger.Info("backupdir does not exist, skipping. Sending snapshot list", "dirname", backupDir)
-		r.sendPostWebhook()
+		r.sendSnapshotList()
 		return nil
 	}
 
@@ -43,7 +43,7 @@ func (r *Restic) Backup(backupDir string, tags ArrayOpts) error {
 	}
 
 	backuplogger.Info("backup finished, sending snapshot list")
-	r.sendPostWebhook()
+	r.sendSnapshotList()
 
 	return nil
 }
@@ -96,7 +96,8 @@ func (r *Restic) sendBackupStats(summary logging.BackupSummary, errorCount int, 
 	}
 }
 
-func (r *Restic) sendPostWebhook() {
+// sendSnapshotList sends the current list of snapshots to a webhook and the k8s cluster
+func (r *Restic) sendSnapshotList() {
 	err := r.Snapshots(nil)
 	if err != nil {
 		r.logger.Error(err, "cannot fetch current snapshot list for webhook")
@@ -110,6 +111,11 @@ func (r *Restic) sendPostWebhook() {
 	err = r.statsHandler.SendWebhook(stats)
 	if err != nil {
 		r.logger.Error(err, "webhook send failed")
+	}
+
+	err = kubernetes.SyncSnapshotList(r.ctx, r.snapshots, cfg.Config.Hostname, cfg.Config.ResticRepository)
+	if err != nil {
+		r.logger.Error(err, "cannot sync snapshots to the cluster")
 	}
 }
 

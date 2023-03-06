@@ -900,6 +900,7 @@ SnapshotSpec contains all information needed about a restic snapshot so it can b
 | *`id`* __string__ | 
 | *`date`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#time-v1-meta[$$Time$$]__ | 
 | *`paths`* __string__ | 
+| *`repository`* __string__ | 
 |===
 
 

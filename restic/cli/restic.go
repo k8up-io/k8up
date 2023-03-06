@@ -8,6 +8,7 @@ import (
 	"github.com/go-logr/logr"
 
 	"github.com/k8up-io/k8up/v2/restic/cfg"
+	"github.com/k8up-io/k8up/v2/restic/dto"
 )
 
 type ArrayOpts []string
@@ -32,7 +33,7 @@ func (a *ArrayOpts) Set(value string) error {
 type Restic struct {
 	resticPath string
 	logger     logr.Logger
-	snapshots  []Snapshot
+	snapshots  []dto.Snapshot
 	ctx        context.Context
 	bucket     string
 

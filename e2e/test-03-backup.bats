@@ -37,7 +37,9 @@ DEBUG_DETIK="true"
 	echo -n "Number of Snapshots >= 1? "
 	jq -e 'length >= 1' <<< "${output}"          # Ensure that there was actually a backup created
 
-	run restic dump latest "/data/subject-pvc/${expected_filename}"
+	run get_latest_snap
+
+	run restic dump "${output}" "/data/subject-pvc/${expected_filename}"
 
 	echo "---BEGIN actual ${expected_filename}---"
 	echo "${output}"

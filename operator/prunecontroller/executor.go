@@ -43,6 +43,7 @@ func (p *PruneExecutor) Execute(ctx context.Context) error {
 		}
 
 		batchJob.Spec.Template.Spec.Containers[0].Env = p.setupEnvVars(ctx, p.prune)
+		batchJob.Spec.Template.Spec.ServiceAccountName = cfg.Config.ServiceAccount
 		p.prune.Spec.AppendEnvFromToContainer(&batchJob.Spec.Template.Spec.Containers[0])
 		batchJob.Spec.Template.Spec.Containers[0].Args = append([]string{"-prune"}, executor.BuildTagArgs(p.prune.Spec.Retention.Tags)...)
 		batchJob.Labels[job.K8upExclusive] = "true"

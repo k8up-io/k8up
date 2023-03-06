@@ -54,7 +54,6 @@ clear_pv_data() {
 
 restic() {
 	kubectl run "restic-$(timestamp)" \
-		--rm \
 		--attach \
 		--restart Never \
 		--namespace "${DETIK_CLIENT_NAMESPACE-"k8up-system"}" \
@@ -158,6 +157,8 @@ given_a_rwo_pvc_subject_in_controlplane_node() {
 }
 
 given_s3_storage() {
+	# Speed this step up
+	(helm -n "${MINIO_NAMESPACE}" list | grep minio > /dev/null) && return
 	helm repo add minio https://helm.min.io/ --force-update
 	helm repo update
 	helm upgrade --install minio \
@@ -167,6 +168,19 @@ given_s3_storage() {
 		minio/minio
 
 	echo "✅  S3 Storage is ready"
+}
+
+given_a_clean_s3_storage() {
+	# uninstalling an then installing the helmchart unfortunatelly hangs ong GH actions
+	given_s3_storage
+	kubectl -n "${MINIO_NAMESPACE}" scale deployment minio  --replicas 0
+
+	kubectl -n "${MINIO_NAMESPACE}" delete pvc minio
+	yq e '.metadata.namespace='\"${MINIO_NAMESPACE}\"'' definitions/minio/pvc.yaml | kubectl apply -f -
+
+	kubectl -n "${MINIO_NAMESPACE}" scale deployment minio  --replicas 1
+
+	echo "✅  S3 Storage cleaned"
 }
 
 given_a_running_operator() {
@@ -366,4 +380,28 @@ expect_file_in_container() {
 			-- sh -c "${cmd}"
 		echo '↩'
 	done
+}
+
+get_latest_snap() {
+	ns=${NAMESPACE=${DETIK_CLIENT_NAMESPACE}}
+
+	kubectl -n "${ns}" get snapshots -ojson | jq -r '.items | sort_by(.spec.date) | reverse | .[0].spec.id '
+}
+
+get_latest_snap_by_path() {
+	require_args 1 ${#}
+
+	ns=${NAMESPACE=${DETIK_CLIENT_NAMESPACE}}
+
+	kubectl -n "${ns}" get snapshots -ojson | jq --arg path "$1" -r '[.items | sort_by(.spec.date) | reverse | .[] | select(.spec.paths[0]==$path)] | .[0].spec.id'
+}
+
+verify_snapshot_count() {
+	require_args 2 ${#}
+
+	ns=${2}
+
+	echo "looking for ${1} snapshots"
+
+	[ "$(kubectl -n "${ns}" get snapshots -ojson | jq -r '.items | length')" = "${1}" ]
 }

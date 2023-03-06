@@ -2,6 +2,53 @@
 
 It's possible to tell the Operator to perform restores either to a PVC or an S3 bucket.
 
+== Get a List of Available Snapshots
+
+To get a list of available snapshots per namespace you can use:
+
+[source,bash]
+----
+kubectl get snapshots
+NAME       AGE
+162e7a85   31m
+a1dc5eff   31m
+----
+
+To determine which PVC the snapshots they belong to, you can check the path field:
+
+[source,bash]
+----
+kubectl get snapshots 162e7a85 -oyaml
+apiVersion: k8up.io/v1
+kind: Snapshot
+metadata:
+  name: 162e7a85
+  namespace: default
+spec:
+  date: "2023-03-03T07:34:42Z"
+  id: 162e7a85acbc14de93dad31a3699331cb32187ff0d7bd2227b7c4362a1d13a42
+  paths:
+  - /data/subject-pvc
+  repository: s3:http://minio.minio.svc.cluster.local:9000/backup
+----
+
+The paths are in the format of `/data/$PVCNAME`.
+You can use the ID to reference a specific snapshot in a restore job.
+
+[source,yaml]
+----
+apiVersion: k8up.io/v1
+kind: Restore
+metadata:
+  name: restore-test
+spec:
+  snapshot: 162e7a85acbc14de93dad31a3699331cb32187ff0d7bd2227b7c4362a1d13a42
+  backend:
+    ...
+----
+
+See below for complete examples.
+
 == Restore from S3 to S3 bucket
 
 For this you can create a restore object:

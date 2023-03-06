@@ -42,7 +42,9 @@ DEBUG_DETIK="true"
 	echo -n "Number of Snapshots >= 1? "
 	jq -e 'length >= 1' <<< "${output}"          # Ensure that there was actually a backup created
 
-	run restic dump latest --path /data/pvc-rwo-subject-pvc-worker "/data/pvc-rwo-subject-pvc-worker/${expected_filename}-worker"
+	run get_latest_snap_by_path /data/pvc-rwo-subject-pvc-worker
+
+	run restic dump "${output}" --path /data/pvc-rwo-subject-pvc-worker "/data/pvc-rwo-subject-pvc-worker/${expected_filename}-worker"
 
 	echo "---BEGIN actual ${expected_filename}-worker---"
 	echo "${output}"
@@ -50,7 +52,9 @@ DEBUG_DETIK="true"
 
 	[ "${output}" = "${expected_content}-worker" ]
 
-	run restic dump latest --path /data/pvc-rwo-subject-pvc-controlplane "/data/pvc-rwo-subject-pvc-controlplane/${expected_filename}-controlplane"
+	run get_latest_snap_by_path /data/pvc-rwo-subject-pvc-controlplane
+
+	run restic dump "${output}" --path /data/pvc-rwo-subject-pvc-controlplane "/data/pvc-rwo-subject-pvc-controlplane/${expected_filename}-controlplane"
 
 	echo "---BEGIN actual ${expected_filename}-controlplane---"
 	echo "${output}"

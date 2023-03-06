@@ -65,7 +65,7 @@ func (r *Restic) Prune(tags ArrayOpts) error {
 	cmd.Run()
 
 	if cmd.FatalError == nil {
-		r.sendPostWebhook()
+		r.sendSnapshotList()
 	}
 
 	return cmd.FatalError

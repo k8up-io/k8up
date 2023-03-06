@@ -3,11 +3,16 @@ package kubernetes
 import (
 	"fmt"
 
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	k8upv1 "github.com/k8up-io/k8up/v2/api/v1"
 	"github.com/k8up-io/k8up/v2/restic/cfg"
+	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
+	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 )
 
 func getClientConfig() (*rest.Config, error) {
@@ -35,4 +40,21 @@ func newk8sClient() (*kubernetes.Clientset, error) {
 	}
 
 	return k8sclient, nil
+}
+
+func newTypedClient() (client.Client, error) {
+	scheme := runtime.NewScheme()
+	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
+	utilruntime.Must(k8upv1.AddToScheme(scheme))
+
+	config, err := getClientConfig()
+	if err != nil {
+		return nil, err
+	}
+
+	opts := client.Options{
+		Scheme: scheme,
+	}
+
+	return client.New(config, opts)
 }

@@ -3,24 +3,10 @@ package cli
 import (
 	"bytes"
 	"encoding/json"
-	"time"
 
+	"github.com/k8up-io/k8up/v2/restic/dto"
 	"github.com/k8up-io/k8up/v2/restic/logging"
 )
-
-// Snapshot models a restic a single snapshot from the
-// snapshots --json subcommand.
-type Snapshot struct {
-	ID       string    `json:"id"`
-	Time     time.Time `json:"time"`
-	Tree     string    `json:"tree"`
-	Paths    []string  `json:"paths"`
-	Hostname string    `json:"hostname"`
-	Username string    `json:"username"`
-	UID      int       `json:"uid"`
-	Gid      int       `json:"gid"`
-	Tags     []string  `json:"tags"`
-}
 
 // Snapshots lists all the snapshots from the repository and saves them in the
 // restic instance for further use.
@@ -54,7 +40,7 @@ func (r *Restic) listSnapshots(tags ArrayOpts, last bool) error {
 	cmd := NewCommand(r.ctx, snaplogger, opts)
 	cmd.Run()
 
-	snaps := []Snapshot{}
+	snaps := []dto.Snapshot{}
 
 	jdecoder := json.NewDecoder(buf)
 
