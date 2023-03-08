@@ -199,6 +199,20 @@ func (b *BackupExecutor) startBackup(ctx context.Context) error {
 		backupJobs[item.node] = j
 	}
 
+	preBackupPods, err := b.fetchPreBackupPodTemplates(ctx)
+
+	if err != nil {
+		return err
+	}
+
+	if len(preBackupPods.Items) != 0 {
+		backupJobs["prebackup"] = jobItem{
+			job:        b.createJob("prebackup", "", nil),
+			targetPods: make([]string, 0),
+			volumes:    make([]corev1.Volume, 0),
+		}
+	}
+
 	index := 0
 	for _, batchJob := range backupJobs {
 		_, err = controllerruntime.CreateOrUpdate(ctx, b.Generic.Config.Client, batchJob.job, func() error {
