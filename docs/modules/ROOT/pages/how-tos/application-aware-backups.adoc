@@ -98,7 +98,7 @@ $ ./mongorestore -u root -p <root-pw> mongodb://localhost:27017 --archive=mydata
 ----
 ====
 
-== Pick specific container
+== Pick a specific container
 
 Using `k8up.io/backupcommand-container` annotation You can specify in which container inside pod backup command should be executed. 
 
