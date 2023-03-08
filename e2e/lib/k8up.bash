@@ -129,7 +129,7 @@ given_an_annotated_subject() {
 	export BACKUP_FILE_CONTENT=${2}
 
 	kubectl apply -f definitions/pv/pvc.yaml
-	yq e '.spec.template.spec.containers[0].securityContext.runAsUser='$(id -u)' | .spec.template.spec.containers[0].env[0].value=strenv(BACKUP_FILE_CONTENT) | .spec.template.spec.containers[0].env[1].value=strenv(BACKUP_FILE_NAME)' definitions/annotated-subject/deployment.yaml | kubectl apply -f -
+	yq e '.spec.template.spec.containers[1].securityContext.runAsUser='$(id -u)' | .spec.template.spec.containers[1].env[0].value=strenv(BACKUP_FILE_CONTENT) | .spec.template.spec.containers[1].env[1].value=strenv(BACKUP_FILE_NAME)' definitions/annotated-subject/deployment.yaml | kubectl apply -f -
 
 	echo "✅  The annotated subject is ready"
 }

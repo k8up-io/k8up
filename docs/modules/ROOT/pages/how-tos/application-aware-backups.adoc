@@ -97,3 +97,28 @@ $ ./mongorestore -u root -p <root-pw> mongodb://localhost:27017 --archive=mydata
 2022-02-14T18:07:21.711+0100	79020 document(s) restored successfully. 0 document(s) failed to restore.
 ----
 ====
+
+== Pick a specific container
+
+Using `k8up.io/backupcommand-container` annotation You can specify the container name inside the pod where the command will get executed. 
+
+[source,yaml]
+----
+<SNIP>
+template:
+  metadata:
+    labels:
+      app: my-db
+    annotations:
+      k8up.io/backupcommand: sh -c 'PGDATABASE="$POSTGRES_DB" PGUSER="$POSTGRES_USER" PGPASSWORD="$POSTGRES_PASSWORD" pg_dump --clean'
+      k8up.io/file-extension: .sql
+      k8up.io/backupcommand-container: postgres
+
+  spec:
+    containers:
+      - name: pgbouncer
+      - name: postgres
+      - name: prometheus-exporter
+        ...
+<SNIP>
+----

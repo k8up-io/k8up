@@ -13,14 +13,15 @@ import (
 
 // PodLister holds the state for listing the pods.
 type PodLister struct {
-	backupCommandAnnotation string
-	fileExtensionAnnotation string
-	k8scli                  *kube.Clientset
-	err                     error
-	namespace               string
-	targetPods              map[string]struct{}
-	log                     logr.Logger
-	ctx                     context.Context
+	backupCommandAnnotation   string
+	backupContainerAnnotation string
+	fileExtensionAnnotation   string
+	k8scli                    *kube.Clientset
+	err                       error
+	namespace                 string
+	targetPods                map[string]struct{}
+	log                       logr.Logger
+	ctx                       context.Context
 }
 
 // BackupPod contains all information nessecary to execute the backupcommands.
@@ -33,7 +34,7 @@ type BackupPod struct {
 }
 
 // NewPodLister returns a PodLister configured to find the defined annotations.
-func NewPodLister(ctx context.Context, backupCommandAnnotation, fileExtensionAnnotation, namespace string, targetPods []string, log logr.Logger) *PodLister {
+func NewPodLister(ctx context.Context, backupCommandAnnotation, fileExtensionAnnotation, backupContainerAnnotation, namespace string, targetPods []string, log logr.Logger) *PodLister {
 	k8cli, err := newk8sClient()
 	if err != nil {
 		err = fmt.Errorf("can't create podLister: %v", err)
@@ -45,14 +46,15 @@ func NewPodLister(ctx context.Context, backupCommandAnnotation, fileExtensionAnn
 	}
 
 	return &PodLister{
-		backupCommandAnnotation: backupCommandAnnotation,
-		fileExtensionAnnotation: fileExtensionAnnotation,
-		k8scli:                  k8cli,
-		err:                     err,
-		namespace:               namespace,
-		targetPods:              tp,
-		log:                     log.WithName("k8sClient"),
-		ctx:                     ctx,
+		backupCommandAnnotation:   backupCommandAnnotation,
+		backupContainerAnnotation: backupContainerAnnotation,
+		fileExtensionAnnotation:   fileExtensionAnnotation,
+		k8scli:                    k8cli,
+		err:                       err,
+		namespace:                 namespace,
+		targetPods:                tp,
+		log:                       log.WithName("k8sClient"),
+		ctx:                       ctx,
 	}
 }
 
@@ -72,6 +74,13 @@ func (p *PodLister) ListPods() ([]BackupPod, error) {
 	foundPods := make([]BackupPod, 0)
 	sameOwner := make(map[string]bool)
 	for _, pod := range pods.Items {
+		var execInContainer = pod.Spec.Containers[0].Name
+		annotations := pod.GetAnnotations()
+
+		if execInContainerName, ok := annotations[p.backupContainerAnnotation]; ok {
+			execInContainer = execInContainerName
+		}
+
 		if pod.Status.Phase != corev1.PodRunning {
 			continue
 		}
@@ -82,8 +91,6 @@ func (p *PodLister) ListPods() ([]BackupPod, error) {
 			p.log.V(1).Info("pod not in target pod list, skipping", "pod", pod.GetName())
 			continue
 		}
-
-		annotations := pod.GetAnnotations()
 
 		if command, ok := annotations[p.backupCommandAnnotation]; ok {
 
@@ -98,7 +105,7 @@ func (p *PodLister) ListPods() ([]BackupPod, error) {
 				foundPods = append(foundPods, BackupPod{
 					Command:       command,
 					PodName:       pod.Name,
-					ContainerName: pod.Spec.Containers[0].Name,
+					ContainerName: execInContainer,
 					Namespace:     p.namespace,
 					FileExtension: fileExtension,
 				})

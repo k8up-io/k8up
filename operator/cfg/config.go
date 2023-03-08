@@ -42,6 +42,7 @@ var (
 type Configuration struct {
 	MountPath                        string
 	BackupAnnotation                 string
+	BackupContainerAnnotation        string
 	BackupCommandAnnotation          string
 	FileExtensionAnnotation          string
 	ServiceAccount                   string

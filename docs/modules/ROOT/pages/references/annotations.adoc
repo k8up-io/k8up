@@ -30,4 +30,10 @@ See xref:references/operator-config-reference.adoc[Operator Configuration refere
 |A string which is valid file-extension on the source system, e.g. `.sql`.
 |`Pod`
 |`BACKUP_FILEEXTENSIONANNOTATION`
+
+|`k8up.io/backupcommand-container`
+|Specify in which container inside pod backup should be done
+|A string which is valid pod name.
+|`Pod`
+|`BACKUP_CONTAINERANNOTATION`
 |===

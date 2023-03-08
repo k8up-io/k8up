@@ -18,6 +18,7 @@ OPTIONS:
    --tag value [ --tag value ]                List of tags to consider for given operation
    --backupCommandAnnotation value            Defines the command to invoke when doing a backup via STDOUT. [$BACKUPCOMMAND_ANNOTATION]
    --fileExtensionAnnotation value            Defines the file extension to use for STDOUT backups. [$FILEEXTENSION_ANNOTATION]
+   --backucontainerannotation value           set the annotation name that specify the backup container inside the Pod (default: "k8up.io/backupcommand-container") [$BACKUP_CONTAINERANNOTATION]
    --promURL value                            Sets the URL of a prometheus push gateway to report metrics. [$PROM_URL]
    --webhookURL value, --statsURL value       Sets the URL of a server which will retrieve a webhook after the action completes. [$STATS_URL]
    --backupDir value                          Set from which directory the backup should be performed. (default: "/data") [$BACKUP_DIR]
