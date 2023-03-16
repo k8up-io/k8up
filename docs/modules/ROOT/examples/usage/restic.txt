@@ -4,9 +4,6 @@ NAME:
 USAGE:
    k8up restic [command options] [arguments...]
 
-CATEGORY:
-   backup
-
 DESCRIPTION:
    Start k8up in restic mode
 

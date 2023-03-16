@@ -22,6 +22,9 @@ type SnapshotStatus struct {
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
+// +kubebuilder:printcolumn:name="Date taken",type="string",JSONPath=`.spec.date`,description="Date when snapshot was taken"
+// +kubebuilder:printcolumn:name="Paths",type="string",JSONPath=`.spec.paths[*]`,description="Snapshot's paths"
+// +kubebuilder:printcolumn:name="Repository",type="string",JSONPath=`.spec.repository`,description="Repository Url"
 
 // Snapshot is the Schema for the snapshots API
 type Snapshot struct {

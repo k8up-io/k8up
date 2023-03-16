@@ -15,7 +15,20 @@ spec:
     singular: snapshot
   scope: Namespaced
   versions:
-  - name: v1
+  - additionalPrinterColumns:
+    - description: Date when snapshot was taken
+      jsonPath: .spec.date
+      name: Date taken
+      type: string
+    - description: Snapshot's paths
+      jsonPath: .spec.paths[*]
+      name: Paths
+      type: string
+    - description: Repository Url
+      jsonPath: .spec.repository
+      name: Repository
+      type: string
+    name: v1
     schema:
       openAPIV3Schema:
         description: Snapshot is the Schema for the snapshots API
