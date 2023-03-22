@@ -33,6 +33,8 @@ type Configuration struct {
 	BackupContainerAnnotation     string
 	BackupDir                     string
 
+	SkipPreBackup bool
+
 	PromURL    string
 	WebhookURL string
 

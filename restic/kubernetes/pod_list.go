@@ -20,6 +20,7 @@ type PodLister struct {
 	err                       error
 	namespace                 string
 	targetPods                map[string]struct{}
+	skipPreBackup             bool
 	log                       logr.Logger
 	ctx                       context.Context
 }
@@ -34,7 +35,7 @@ type BackupPod struct {
 }
 
 // NewPodLister returns a PodLister configured to find the defined annotations.
-func NewPodLister(ctx context.Context, backupCommandAnnotation, fileExtensionAnnotation, backupContainerAnnotation, namespace string, targetPods []string, log logr.Logger) *PodLister {
+func NewPodLister(ctx context.Context, backupCommandAnnotation, fileExtensionAnnotation, backupContainerAnnotation, namespace string, targetPods []string, skipPreBackup bool, log logr.Logger) *PodLister {
 	k8cli, err := newk8sClient()
 	if err != nil {
 		err = fmt.Errorf("can't create podLister: %v", err)
@@ -53,6 +54,7 @@ func NewPodLister(ctx context.Context, backupCommandAnnotation, fileExtensionAnn
 		err:                       err,
 		namespace:                 namespace,
 		targetPods:                tp,
+		skipPreBackup:             skipPreBackup,
 		log:                       log.WithName("k8sClient"),
 		ctx:                       ctx,
 	}
@@ -89,6 +91,9 @@ func (p *PodLister) ListPods() ([]BackupPod, error) {
 		_, ok := p.targetPods[pod.GetName()]
 		if len(p.targetPods) > 0 && !ok {
 			p.log.V(1).Info("pod not in target pod list, skipping", "pod", pod.GetName())
+			continue
+		}
+		if p.skipPreBackup {
 			continue
 		}
 

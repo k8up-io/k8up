@@ -177,17 +177,19 @@ func (b *BackupExecutor) startBackup(ctx context.Context) error {
 	}
 
 	type jobItem struct {
-		job        *batchv1.Job
-		targetPods []string
-		volumes    []corev1.Volume
+		job           *batchv1.Job
+		targetPods    []string
+		volumes       []corev1.Volume
+		skipPreBackup bool
 	}
 	backupJobs := map[string]jobItem{}
 	for index, item := range backupItems {
 		if _, ok := backupJobs[item.node]; !ok {
 			backupJobs[item.node] = jobItem{
-				job:        b.createJob(strconv.Itoa(index), item.node, item.tolerations),
-				targetPods: make([]string, 0),
-				volumes:    make([]corev1.Volume, 0),
+				job:           b.createJob(strconv.Itoa(index), item.node, item.tolerations),
+				targetPods:    make([]string, 0),
+				volumes:       make([]corev1.Volume, 0),
+				skipPreBackup: true,
 			}
 		}
 
@@ -207,9 +209,10 @@ func (b *BackupExecutor) startBackup(ctx context.Context) error {
 
 	if len(preBackupPods.Items) != 0 {
 		backupJobs["prebackup"] = jobItem{
-			job:        b.createJob("prebackup", "", nil),
-			targetPods: make([]string, 0),
-			volumes:    make([]corev1.Volume, 0),
+			job:           b.createJob("prebackup", "", nil),
+			targetPods:    make([]string, 0),
+			volumes:       make([]corev1.Volume, 0),
+			skipPreBackup: false,
 		}
 	}
 
@@ -230,6 +233,12 @@ func (b *BackupExecutor) startBackup(ctx context.Context) error {
 				batchJob.job.Spec.Template.Spec.Containers[0].Env = append(batchJob.job.Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{
 					Name:  "TARGET_PODS",
 					Value: strings.Join(batchJob.targetPods, ","),
+				})
+			}
+			if batchJob.skipPreBackup {
+				batchJob.job.Spec.Template.Spec.Containers[0].Env = append(batchJob.job.Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{
+					Name:  "SKIP_PREBACKUP",
+					Value: "true",
 				})
 			}
 			// each job sleeps for index seconds to avoid concurrent restic repository creation. Not the prettiest way but it works and a repository
