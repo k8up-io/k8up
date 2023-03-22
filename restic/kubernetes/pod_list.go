@@ -68,6 +68,10 @@ func (p *PodLister) ListPods() ([]BackupPod, error) {
 		return nil, p.err
 	}
 
+	if p.skipPreBackup {
+		return nil, nil
+	}
+
 	pods, err := p.k8scli.CoreV1().Pods(p.namespace).List(p.ctx, metav1.ListOptions{})
 	if err != nil {
 		return nil, fmt.Errorf("can't list pods: %v", err)
@@ -91,9 +95,6 @@ func (p *PodLister) ListPods() ([]BackupPod, error) {
 		_, ok := p.targetPods[pod.GetName()]
 		if len(p.targetPods) > 0 && !ok {
 			p.log.V(1).Info("pod not in target pod list, skipping", "pod", pod.GetName())
-			continue
-		}
-		if p.skipPreBackup {
 			continue
 		}
 

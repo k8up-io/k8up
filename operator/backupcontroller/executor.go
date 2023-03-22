@@ -201,19 +201,15 @@ func (b *BackupExecutor) startBackup(ctx context.Context) error {
 		backupJobs[item.node] = j
 	}
 
-	preBackupPods, err := b.fetchPreBackupPodTemplates(ctx)
-
 	if err != nil {
 		return err
 	}
 
-	if len(preBackupPods.Items) != 0 {
-		backupJobs["prebackup"] = jobItem{
-			job:           b.createJob("prebackup", "", nil),
-			targetPods:    make([]string, 0),
-			volumes:       make([]corev1.Volume, 0),
-			skipPreBackup: false,
-		}
+	backupJobs["prebackup"] = jobItem{
+		job:           b.createJob("prebackup", "", nil),
+		targetPods:    make([]string, 0),
+		volumes:       make([]corev1.Volume, 0),
+		skipPreBackup: false,
 	}
 
 	index := 0
