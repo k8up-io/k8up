@@ -5,10 +5,9 @@ import (
 	"fmt"
 
 	"github.com/go-logr/logr"
-	kube "k8s.io/client-go/kubernetes"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // PodLister holds the state for listing the pods.
@@ -16,7 +15,7 @@ type PodLister struct {
 	backupCommandAnnotation   string
 	backupContainerAnnotation string
 	fileExtensionAnnotation   string
-	k8scli                    *kube.Clientset
+	k8scli                    client.Client
 	err                       error
 	namespace                 string
 	targetPods                map[string]struct{}
@@ -35,12 +34,7 @@ type BackupPod struct {
 }
 
 // NewPodLister returns a PodLister configured to find the defined annotations.
-func NewPodLister(ctx context.Context, backupCommandAnnotation, fileExtensionAnnotation, backupContainerAnnotation, namespace string, targetPods []string, skipPreBackup bool, log logr.Logger) *PodLister {
-	k8cli, err := newk8sClient()
-	if err != nil {
-		err = fmt.Errorf("can't create podLister: %v", err)
-	}
-
+func NewPodLister(ctx context.Context, k8cli client.Client, backupCommandAnnotation, fileExtensionAnnotation, backupContainerAnnotation, namespace string, targetPods []string, skipPreBackup bool, log logr.Logger) *PodLister {
 	tp := make(map[string]struct{})
 	for _, name := range targetPods {
 		tp[name] = struct{}{}
@@ -51,7 +45,6 @@ func NewPodLister(ctx context.Context, backupCommandAnnotation, fileExtensionAnn
 		backupContainerAnnotation: backupContainerAnnotation,
 		fileExtensionAnnotation:   fileExtensionAnnotation,
 		k8scli:                    k8cli,
-		err:                       err,
 		namespace:                 namespace,
 		targetPods:                tp,
 		skipPreBackup:             skipPreBackup,
@@ -72,7 +65,8 @@ func (p *PodLister) ListPods() ([]BackupPod, error) {
 		return nil, nil
 	}
 
-	pods, err := p.k8scli.CoreV1().Pods(p.namespace).List(p.ctx, metav1.ListOptions{})
+	pods := &corev1.PodList{}
+	err := p.k8scli.List(p.ctx, pods, &client.ListOptions{Namespace: p.namespace})
 	if err != nil {
 		return nil, fmt.Errorf("can't list pods: %v", err)
 	}

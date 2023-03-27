@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -29,20 +28,7 @@ func getClientConfig() (*rest.Config, error) {
 	return config, nil
 }
 
-func newk8sClient() (*kubernetes.Clientset, error) {
-	config, err := getClientConfig()
-	if err != nil {
-		return nil, fmt.Errorf("can't load k8s config: %v", err)
-	}
-	k8sclient, err := kubernetes.NewForConfig(config)
-	if err != nil {
-		return nil, fmt.Errorf("can't create k8s client: %v", err)
-	}
-
-	return k8sclient, nil
-}
-
-func newTypedClient() (client.Client, error) {
+func NewTypedClient() (client.Client, error) {
 	scheme := runtime.NewScheme()
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 	utilruntime.Must(k8upv1.AddToScheme(scheme))
