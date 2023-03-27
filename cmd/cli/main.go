@@ -28,9 +28,10 @@ var (
 				Flags: []cli.Flag{
 					&cli.StringFlag{
 						Destination: &restore.Cfg.Snapshot,
-						Required:    true,
+						Required:    false,
 						Name:        "snapshot",
-						Usage:       "Required ; ID of the snapshot `kubectl get snapshots`, set, via cli or via env: ",
+						Value:       "latest",
+						Usage:       "Optional ; ID of the snapshot `kubectl get snapshots`, if left empty 'latest' will be used, set itvia cli or via env: ",
 						EnvVars: []string{
 							"SNAPSHOT",
 						},
@@ -250,28 +251,30 @@ func RunRestore(ctx *cli.Context) error {
 		logger.Error(err, "Failed to query Kubernetes api for snapshots, is it correct cluster and namespace? Is k8up installed correctly?")
 		return err
 	}
+	if restore.Cfg.Snapshot != "latest" {
 
-	snpList := &v1.SnapshotList{}
+		snpList := &v1.SnapshotList{}
 
-	err = json.Unmarshal(crd, &snpList)
-	if err != nil {
-		logger.Error(err, "Failed to unmarshal Snapshots")
-		return err
-	}
-	// kubectl get snapshots returns 8 character values, while snapshots itself are much longer
-	// so it's simple enough to check prefix
-	for _, snap := range snpList.Items {
-		if strings.HasPrefix((*snap.Spec.ID), restore.Cfg.Snapshot) {
-			snapshot = (*snap.Spec.ID)
-			break
+		err = json.Unmarshal(crd, &snpList)
+		if err != nil {
+			logger.Error(err, "Failed to unmarshal Snapshots")
+			return err
 		}
+		// kubectl get snapshots returns 8 character values, while snapshots itself are much longer
+		// so it's simple enough to check prefix
+		for _, snap := range snpList.Items {
+			if strings.HasPrefix((*snap.Spec.ID), restore.Cfg.Snapshot) {
+				snapshot = (*snap.Spec.ID)
+				break
+			}
+		}
+		// nothing to do if there are no snapshots
+		if len(snapshot) == 0 {
+			logger.Error(err, "Snapshot ID wasn't found")
+			return err
+		}
+		logger.V(1).Info("Found correct snapshot", "SNAPSHOT", snapshot)
 	}
-	// nothing to do if there are no snapshots
-	if len(snapshot) == 0 {
-		logger.Error(err, "Snapshot ID wasn't found")
-		return err
-	}
-	logger.V(1).Info("Found correct snapshot", "SNAPSHOT", snapshot)
 
 	s3 = v1.RestoreMethod{
 		S3: &v1.S3Spec{
