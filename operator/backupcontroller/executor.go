@@ -215,7 +215,7 @@ func (b *BackupExecutor) startBackup(ctx context.Context) error {
 	}
 
 	log := controllerruntime.LoggerFrom(ctx)
-	podLister := kubernetes.NewPodLister(ctx, cfg.Config.BackupCommandAnnotation, "", b.backup.Namespace, nil, false, log)
+	podLister := kubernetes.NewPodLister(ctx, cfg.Config.BackupCommandAnnotation, "", "", b.backup.Namespace, nil, false, log)
 	backupPods, err := podLister.ListPods()
 	if err != nil {
 		log.Error(err, "could not list pods", "namespace", b.backup.Namespace)
