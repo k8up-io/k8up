@@ -26,14 +26,6 @@ type BackupExecutor struct {
 	backup *k8upv1.Backup
 }
 
-// BackupPod contains all information nessecary to execute the backupcommands.
-type BackupPod struct {
-	Command       string
-	PodName       string
-	ContainerName string
-	Namespace     string
-}
-
 // NewBackupExecutor returns a new BackupExecutor.
 func NewBackupExecutor(config job.Config) *BackupExecutor {
 	return &BackupExecutor{Generic: executor.Generic{Config: config}, backup: config.Obj.(*k8upv1.Backup)}
