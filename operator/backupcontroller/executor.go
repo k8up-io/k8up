@@ -11,6 +11,7 @@ import (
 	"github.com/k8up-io/k8up/v2/operator/cfg"
 	"github.com/k8up-io/k8up/v2/operator/executor"
 	"github.com/k8up-io/k8up/v2/operator/job"
+	"github.com/k8up-io/k8up/v2/restic/kubernetes"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -151,35 +152,6 @@ func (b *BackupExecutor) listAndFilterPVCs(ctx context.Context, annotation strin
 	return backupItems, nil
 }
 
-// listBackupPods lists all Pods in the given namespace and filters them for K8up specific usage.
-// Specifically, all pods that have the given annotation will be listed.
-func (b *BackupExecutor) listBackupPods(ctx context.Context, annotation string) ([]BackupPod, error) {
-	log := controllerruntime.LoggerFrom(ctx)
-
-	pods := &corev1.PodList{}
-	if err := b.Config.Client.List(ctx, pods, client.InNamespace(b.backup.Namespace)); err != nil {
-		return nil, fmt.Errorf("list pods: %w", err)
-	}
-
-	foundPods := make([]BackupPod, 0)
-
-	log.Info("Listing all Pods with backup annotation", "annotation", annotation)
-
-	for _, pod := range pods.Items {
-		annotations := pod.GetAnnotations()
-		if command, ok := annotations[annotation]; ok {
-			foundPods = append(foundPods, BackupPod{
-				Command:       command,
-				PodName:       pod.Name,
-				ContainerName: pod.Spec.Containers[0].Name,
-				Namespace:     b.backup.Namespace,
-			})
-		}
-	}
-	return foundPods, nil
-
-}
-
 // findNode tries to find a PVs NodeAffinity for a specific hostname. If found will return that.
 // If not it will try to return the value of the k8up.io/hostname annotation on the PVC. If this is not set, will return
 // empty string.
@@ -242,11 +214,14 @@ func (b *BackupExecutor) startBackup(ctx context.Context) error {
 		return err
 	}
 
-	backupPods, err := b.listBackupPods(ctx, cfg.Config.BackupCommandAnnotation)
+	log := controllerruntime.LoggerFrom(ctx)
+	podLister := kubernetes.NewPodLister(ctx, cfg.Config.BackupCommandAnnotation, "", b.backup.Namespace, nil, false, log)
+	backupPods, err := podLister.ListPods()
 	if err != nil {
-		b.Generic.SetConditionFalseWithMessage(ctx, k8upv1.ConditionReady, k8upv1.ReasonRetrievalFailed, err.Error())
-		return err
+		log.Error(err, "could not list pods", "namespace", b.backup.Namespace)
+		return fmt.Errorf("could not list pods: %w", err)
 	}
+
 	if len(backupPods) > 0 {
 		backupJobs["prebackup"] = jobItem{
 			job:           b.createJob("prebackup", "", nil),
