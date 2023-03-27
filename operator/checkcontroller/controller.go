@@ -48,7 +48,7 @@ func (r *CheckReconciler) Provision(ctx context.Context, obj *k8upv1.Check) (con
 
 	if obj.Status.HasStarted() {
 		log.V(1).Info("check just started, waiting")
-		return controllerruntime.Result{}, nil
+		return controllerruntime.Result{RequeueAfter: 5 * time.Second}, nil
 	}
 
 	if obj.Status.HasFinished() {

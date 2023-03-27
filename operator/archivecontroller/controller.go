@@ -49,7 +49,7 @@ func (r *ArchiveReconciler) Provision(ctx context.Context, obj *k8upv1.Archive) 
 
 	if obj.Status.HasStarted() {
 		log.V(1).Info("archive just started, waiting")
-		return controllerruntime.Result{}, nil
+		return controllerruntime.Result{RequeueAfter: 5 * time.Second}, nil
 	}
 
 	if obj.Status.HasFinished() {
