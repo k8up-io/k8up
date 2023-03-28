@@ -331,3 +331,10 @@ Example usages:
                             --restoreMethod
                             --secretRef
 ----
+
+As a result of this CLI will be created k8up object restore.k8up.io, which will create a job and job will create a pod to do actual restore. If You won't specify namespace all of those objects will be created in `default` one. You can easily access them using, for example:
+```
+kubectl get restores.k8up.io
+kubectl get jobs
+kubectl logs -f jobs/resotre-job-123
+```
