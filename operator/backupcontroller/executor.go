@@ -11,6 +11,7 @@ import (
 	"github.com/k8up-io/k8up/v2/operator/cfg"
 	"github.com/k8up-io/k8up/v2/operator/executor"
 	"github.com/k8up-io/k8up/v2/operator/job"
+	"github.com/k8up-io/k8up/v2/restic/kubernetes"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -177,17 +178,19 @@ func (b *BackupExecutor) startBackup(ctx context.Context) error {
 	}
 
 	type jobItem struct {
-		job        *batchv1.Job
-		targetPods []string
-		volumes    []corev1.Volume
+		job           *batchv1.Job
+		targetPods    []string
+		volumes       []corev1.Volume
+		skipPreBackup bool
 	}
 	backupJobs := map[string]jobItem{}
 	for index, item := range backupItems {
 		if _, ok := backupJobs[item.node]; !ok {
 			backupJobs[item.node] = jobItem{
-				job:        b.createJob(strconv.Itoa(index), item.node, item.tolerations),
-				targetPods: make([]string, 0),
-				volumes:    make([]corev1.Volume, 0),
+				job:           b.createJob(strconv.Itoa(index), item.node, item.tolerations),
+				targetPods:    make([]string, 0),
+				volumes:       make([]corev1.Volume, 0),
+				skipPreBackup: true,
 			}
 		}
 
@@ -197,6 +200,27 @@ func (b *BackupExecutor) startBackup(ctx context.Context) error {
 		}
 		j.volumes = append(j.volumes, item.volume)
 		backupJobs[item.node] = j
+	}
+
+	if err != nil {
+		return err
+	}
+
+	log := controllerruntime.LoggerFrom(ctx)
+	podLister := kubernetes.NewPodLister(ctx, b.Client, cfg.Config.BackupCommandAnnotation, "", "", b.backup.Namespace, nil, false, log)
+	backupPods, err := podLister.ListPods()
+	if err != nil {
+		log.Error(err, "could not list pods", "namespace", b.backup.Namespace)
+		return fmt.Errorf("could not list pods: %w", err)
+	}
+
+	if len(backupPods) > 0 {
+		backupJobs["prebackup"] = jobItem{
+			job:           b.createJob("prebackup", "", nil),
+			targetPods:    make([]string, 0),
+			volumes:       make([]corev1.Volume, 0),
+			skipPreBackup: false,
+		}
 	}
 
 	index := 0
@@ -216,6 +240,12 @@ func (b *BackupExecutor) startBackup(ctx context.Context) error {
 				batchJob.job.Spec.Template.Spec.Containers[0].Env = append(batchJob.job.Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{
 					Name:  "TARGET_PODS",
 					Value: strings.Join(batchJob.targetPods, ","),
+				})
+			}
+			if batchJob.skipPreBackup {
+				batchJob.job.Spec.Template.Spec.Containers[0].Env = append(batchJob.job.Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{
+					Name:  "SKIP_PREBACKUP",
+					Value: "true",
 				})
 			}
 			// each job sleeps for index seconds to avoid concurrent restic repository creation. Not the prettiest way but it works and a repository

@@ -16,7 +16,7 @@ func SyncSnapshotList(ctx context.Context, list []dto.Snapshot, namespace, repos
 	newList := filterAndConvert(list, namespace, repository)
 	oldList := &k8upv1.SnapshotList{}
 
-	kube, err := newTypedClient()
+	kube, err := NewTypedClient()
 	if err != nil {
 		return err
 	}
