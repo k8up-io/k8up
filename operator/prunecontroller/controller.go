@@ -46,7 +46,7 @@ func (r *PruneReconciler) Provision(ctx context.Context, obj *k8upv1.Prune) (con
 
 	if obj.Status.HasStarted() {
 		log.V(1).Info("prune just started, waiting")
-		return controllerruntime.Result{}, nil
+		return controllerruntime.Result{RequeueAfter: 5 * time.Second}, nil
 	}
 	if obj.Status.HasFinished() {
 		executor.cleanupOldPrunes(ctx, obj)
