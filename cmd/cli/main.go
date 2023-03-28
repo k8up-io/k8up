@@ -31,7 +31,7 @@ var (
 						Required:    false,
 						Name:        "snapshot",
 						Value:       "latest",
-						Usage:       "Optional ; ID of the snapshot `kubectl get snapshots`, if left empty 'latest' will be used, set itvia cli or via env: ",
+						Usage:       "Optional ; ID of the snapshot `kubectl get snapshots`, if left empty 'latest' will be used, set it via cli or via env: ",
 						EnvVars: []string{
 							"SNAPSHOT",
 						},
