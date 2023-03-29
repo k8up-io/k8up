@@ -286,7 +286,7 @@ Example usages:
   --s3endpoint http://minio:9000                 \
   --s3bucket backups                             \
   --s3secretRef minio-credentials                \
-  --snapshot f0dd5684                            \
+  --snapshot 5c3fc641                            \
   --claimName wordpress-pvc                      \
   --runAsUser 0
 
@@ -300,7 +300,7 @@ Example usages:
   --s3endpoint http://minio:9000                 \
   --s3bucket backups                             \
   --s3secretRef minio-credentials                \
-  --snapshot f0dd5684                            \
+  --snapshot 5c3fc641                            \
   --claimName wordpress-pvc                      \
   --runAsUser 0                                  \
   --restoreToS3Bucket backup2                    \
@@ -338,3 +338,4 @@ kubectl get restores.k8up.io
 kubectl get jobs
 kubectl logs -f jobs/resotre-job-123
 ```
+

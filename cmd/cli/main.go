@@ -140,7 +140,7 @@ var (
 						Destination: &restore.Cfg.RunAsUser,
 						Required:    false,
 						Name:        "runAsUser",
-						Value:       0,
+						Value:       -1,
 						Usage:       "Optional ; Set user UID, via cli or via env: ",
 						EnvVars: []string{
 							"RUNASUSER",
@@ -315,9 +315,6 @@ func RunRestore(ctx *cli.Context) error {
 		Spec: v1.RestoreSpec{
 			//Snapshot: snapshot,
 			RunnableSpec: v1.RunnableSpec{
-				PodSecurityContext: &corev1.PodSecurityContext{
-					RunAsUser: &restore.Cfg.RunAsUser,
-				},
 				Backend: &v1.Backend{
 					RepoPasswordSecretRef: &corev1.SecretKeySelector{
 						Key: restore.Cfg.SecretRefKey,
@@ -345,6 +342,12 @@ func RunRestore(ctx *cli.Context) error {
 			},
 		},
 	}
+	if restore.Cfg.RunAsUser != -1 {
+		restoreObject.Spec.PodSecurityContext = &corev1.PodSecurityContext{
+			RunAsUser: &restore.Cfg.RunAsUser,
+		}
+	}
+
 	if restore.Cfg.RestoreMethod == "s3" {
 		restoreObject.Spec.RestoreMethod = &s3
 	} else {
