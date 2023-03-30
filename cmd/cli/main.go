@@ -140,7 +140,6 @@ var (
 						Destination: &restore.Cfg.RunAsUser,
 						Required:    false,
 						Name:        "runAsUser",
-						Value:       -1,
 						Usage:       "Optional ; Set user UID, via cli or via env: ",
 						EnvVars: []string{
 							"RUNASUSER",
@@ -342,7 +341,7 @@ func RunRestore(ctx *cli.Context) error {
 			},
 		},
 	}
-	if restore.Cfg.RunAsUser != -1 {
+	if ctx.IsSet("runAsUser") {
 		restoreObject.Spec.PodSecurityContext = &corev1.PodSecurityContext{
 			RunAsUser: &restore.Cfg.RunAsUser,
 		}
@@ -375,4 +374,11 @@ func RunRestore(ctx *cli.Context) error {
 	logger.Info(fmt.Sprintf("Backup created successfully, You can find it running:\tkubectl -n %s get restores.k8up.io %s", restore.Cfg.Namespace, restoreName))
 	logger.Info(fmt.Sprintf("To access logs please run:\tkubectl -n %s logs jobs/restore-%s", restore.Cfg.Namespace, restoreName))
 	return nil
+}
+
+func CheckIfFlagWasSet(flagName string) {
+	for _, val := range Command.Flags {
+		fmt.Println(val.Names(), val.IsSet())
+	}
+	log.Fatal("done")
 }
