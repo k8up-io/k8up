@@ -34,7 +34,6 @@ var (
 	Command = &cli.Command{
 		Name:        "restic",
 		Description: "Start k8up in restic mode",
-		Category:    "backup",
 		Action:      resticMain,
 		Flags: []cli.Flag{
 			&cli.BoolFlag{Destination: &cfg.Config.DoCheck, Name: "check", Usage: "Set, if the container should do a check"},

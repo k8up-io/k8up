@@ -230,3 +230,112 @@ dr-xr-xr-x  1 simonbeck  staff    0 Jun  8 09:21 tags
 ----
 
 Here you can browse all backups by host, ids, snapshots or tags.
+
+=== Restore via CLI
+
+K8up supports restoring via CLI. It's a fast and simple way to create restore.k8up.io/v2 CRD. 
+
+[source,bash]
+----
+ohmybash ~ k8up restore --help
+
+NAME:
+   k8up restore
+
+USAGE:
+   k8up cli restore [command options] [arguments...]
+
+CATEGORY:
+   cli
+
+DESCRIPTION:
+   CLI commands that can be executed everywhere
+
+OPTIONS:
+   --snapshot kubectl get snapshots      Required ; ID of the snapshot kubectl get snapshots, set, via cli or via env: [$SNAPSHOT]
+   --secretRef value                     Required ; Set secret name from which You want to take S3 credentials, via cli or via env: [$SECRET_REF]
+   --s3endpoint value                    Required ; Set s3endpoint from which backup will be taken, via cli or via env: [$S3ENDPOINT]
+   --s3bucket value                      Required ; Set s3bucket from which backup will be taken, via cli or via env: [$S3BUCKET]
+   --s3secretRef value                   Required ; Set secret name, where S3 username & password are stored from which backup will be taken, via cli or via env: [$S3SECRETREF]
+   --restoreMethod value                 Required ; Set restore method [ pvc|s3 ], via cli or via env:  (default: pvc) [$RESTOREMETHOD]
+   --claimName value                     Required ; Set claimName field, via cli or via env: [$CLAIMNAME]
+   --S3SecretRefUsernameKey value        Optional ; Set S3SecretRefUsernameKey, key inside secret, under which S3 username is stored, via cli or via env:  (default: username) [$S3SECRETREFUSERNAMEKEY]
+   --S3SecretRefPasswordKey value        Optional ; Set S3SecretRefPasswordKey, key inside secret, under which Restic repo password is stored, via cli or via env:  (default: password) [$S3SECRETREFPASSWORDKEY]
+   --restoreName value                   Optional ; Set restoreName - metadata.Name field, if empty, k8up will generate name, via cli or via env: [$RESTORENAME]
+   --runAsUser value                     Optional ; Set user UID, via cli or via env:  (default: 0) [$RUNASUSER]
+   --restoreToS3Endpoint value           Optional ; Set restore endpoint, only when using s3 restore method, via cli or via env: [$RESTORETOS3ENDPOINT]
+   --restoreToS3Bucket value             Optional ; Set restore bucket, only when using s3 restore method, via cli or via env: [$RESTORETOS3BUCKET]
+   --restoreToS3Secret value             Optional ; Set restore Secret, only when using s3 restore method, expecting secret name containing key value pair with 'username' and 'password' keys, via cli or via env: [$RESTORETOS3SECRET]
+   --RestoreToS3SecretUsernameKey value  Optional ; Set RestoreToS3SecretUsernameKey, key inside secret, under which S3 username is stored, via cli or via env:  (default: username) [$RESTORETOS3SECRETUSERNAMEKEY]
+   --RestoreToS3SecretPasswordKey value  Optional ; Set RestoreToS3SecretPasswordKey, key inside secret, under which Restic repo password is stored, via cli or via env:  (default: password) [$RESTORETOS3SECRETPASSWORDKEY]
+   --namespace value                     Optional ; Set namespace in which You want to execute restore, via cli or via env:  (default: default) [$NAMESPACE]
+   --kubeconfig value                    Optional ; Set kubeconfig to connect to cluster, via cli or via env: (default: ~/.kube/config) [$KUBECONFIG]
+   --help, -h                            show help (default: false)
+----
+
+Example usages:
+
+[source,bash]
+----
+# restore using PVC
+ k8up cli restore                                \
+  --restoreMethod pvc                            \
+  --kubeconfig .e2e-test/kind-kubeconfig-v1.24.4 \
+  --secretRef backup-repo                        \
+  --namespace default                            \
+  --s3endpoint http://minio:9000                 \
+  --s3bucket backups                             \
+  --s3secretRef minio-credentials                \
+  --snapshot 5c3fc641                            \
+  --claimName wordpress-pvc                      \
+  --runAsUser 0
+
+
+# restore using S3 => S3
+ k8up cli restore                                \
+  --restoreMethod s3                             \
+  --kubeconfig .e2e-test/kind-kubeconfig-v1.24.4 \
+  --secretRef backup-repo                        \
+  --namespace default                            \
+  --s3endpoint http://minio:9000                 \
+  --s3bucket backups                             \
+  --s3secretRef minio-credentials                \
+  --snapshot 5c3fc641                            \
+  --claimName wordpress-pvc                      \
+  --runAsUser 0                                  \
+  --restoreToS3Bucket backup2                    \
+  --restoreToS3Secret minio-credentials          \
+  --restoreToS3Endpoint http://minio:9000
+----
+
+[source]
+----
+# PVC restore
+  (where the backup is)             
+  S3 storage  ------------> k8up --------------> PVC restore
+  --s3endpoint              --runAsUser          --claimName
+  --s3bucket                --kubeconfig                      
+  --s3secretRef             --snapshot
+                            --namespace
+                            --restoreMethod
+                            --secretRef
+                          
+# s3 to s3 restore
+
+  (where the backup is)                             (different s3 where we want to copy our backup)
+  S3 storage  ------------> k8up --------------> s3 storage
+  --s3endpoint              --runAsUser          --restoreToS3Bucket
+  --s3bucket                --kubeconfig         --restoreToS3Secret
+  --s3secretRef             --snapshot           --restoreToS3Endpoint
+                            --namespace
+                            --restoreMethod
+                            --secretRef
+----
+
+As a result of this CLI will be created k8up object restore.k8up.io, which will create a job and job will create a pod to do actual restore. If You won't specify namespace all of those objects will be created in `default` one. You can easily access them using, for example:
+```
+kubectl get restores.k8up.io
+kubectl get jobs
+kubectl logs -f jobs/resotre-job-123
+```
+

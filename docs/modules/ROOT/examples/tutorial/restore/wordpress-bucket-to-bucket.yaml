@@ -1,10 +1,21 @@
 apiVersion: k8up.io/v1
-kind: Backup
+kind: Restore
 metadata:
-  name: backup-test
+  name: restore-wordpress
 spec:
-  failedJobsHistoryLimit: 2
-  successfulJobsHistoryLimit: 2
+  snapshot: f0dd5684
+  podSecurityContext:
+    runAsUser: 0
+  restoreMethod:
+    s3:
+      endpoint: http://minio:9000
+      bucket: backup2
+      accessKeyIDSecretRef:
+        name: minio-credentials
+        key: username
+      secretAccessKeySecretRef:
+        name: minio-credentials
+        key: password
   backend:
     repoPasswordSecretRef:
       name: backup-repo

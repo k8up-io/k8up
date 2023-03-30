@@ -9,9 +9,9 @@ VERSION:
 
 COMMANDS:
    operator  
+   restic    
+   cli       
    help, h   Shows a list of commands or help for one command
-   backup:
-     restic  
 
 GLOBAL OPTIONS:
    --debug, --verbose, -d  sets the log level to debug (default: false) [$K8UP_DEBUG]

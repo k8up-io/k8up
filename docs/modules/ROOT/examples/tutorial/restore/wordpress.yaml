@@ -3,7 +3,9 @@ kind: Restore
 metadata:
   name: restore-wordpress
 spec:
-  snapshot: SNAPSHOT_ID
+  snapshot: f0dd5684
+  podSecurityContext:
+    runAsUser: 0
   restoreMethod:
     folder:
       claimName: wordpress-pvc
