@@ -375,10 +375,3 @@ func RunRestore(ctx *cli.Context) error {
 	logger.Info(fmt.Sprintf("To access logs please run:\tkubectl -n %s logs jobs/restore-%s", restore.Cfg.Namespace, restoreName))
 	return nil
 }
-
-func CheckIfFlagWasSet(flagName string) {
-	for _, val := range Command.Flags {
-		fmt.Println(val.Names(), val.IsSet())
-	}
-	log.Fatal("done")
-}
