@@ -4,7 +4,7 @@ import (
 	k8upv1 "github.com/k8up-io/k8up/v2/api/v1"
 	"github.com/k8up-io/k8up/v2/operator/reconciler"
 	batchv1 "k8s.io/api/batch/v1"
-	"sigs.k8s.io/controller-runtime"
+	controllerruntime "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 )
 
@@ -19,7 +19,7 @@ import (
 // +kubebuilder:rbac:groups=core,resources=serviceaccounts,verbs=get;list;watch;create;delete
 // +kubebuilder:rbac:groups=core,resources=persistentvolumeclaims,verbs=get;list;watch
 // +kubebuilder:rbac:groups=core,resources=persistentvolumes,verbs=get;list;watch
-// +kubebuilder:rbac:groups=rbac.authorization.k8s.io,resources=roles;rolebindings,verbs=get;list;watch;create;delete
+// +kubebuilder:rbac:groups=rbac.authorization.k8s.io,resources=roles;rolebindings,verbs=get;list;watch;create;delete;update
 
 // SetupWithManager configures the reconciler.
 func SetupWithManager(mgr controllerruntime.Manager) error {
