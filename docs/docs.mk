@@ -6,19 +6,19 @@ out_dir := ./_public
 docker_cmd  ?= docker
 docker_opts ?= --rm --tty --user "$$(id -u)"
 
-antora_cmd  ?= $(docker_cmd) run $(docker_opts) --volume "$${PWD}":/antora vshn/antora:2.3.3
+antora_cmd  ?= $(docker_cmd) run $(docker_opts) --volume "$${PWD}":/antora ghcr.io/vshn/antora:3.1.2.2
 antora_opts ?= --cache-dir=.cache/antora
 
 asciidoctor_cmd  ?= $(docker_cmd) run $(docker_opts) --volume "$${PWD}":/documents/ asciidoctor/docker-asciidoctor asciidoctor
-asciidoctor_pdf_cmd  ?= $(docker_cmd) run $(docker_opts) --volume "$${PWD}":/documents/ vshn/asciidoctor-pdf:1.8.1 --attribute toclevels=1
-asciidoctor_epub3_cmd  ?= $(docker_cmd) run $(docker_opts) --volume "$${PWD}":/documents/ vshn/asciidoctor-epub3:1.8.1 --attribute toclevels=1
+asciidoctor_pdf_cmd  ?= $(docker_cmd) run $(docker_opts) --volume "$${PWD}":/documents/ ghcr.io/vshn/asciidoctor-pdf:1.39.1 --attribute toclevels=1
+asciidoctor_epub3_cmd  ?= $(docker_cmd) run $(docker_opts) --volume "$${PWD}":/documents/ ghcr.io/vshn/asciidoctor-epub3:1.39.1 --attribute toclevels=1
 asciidoctor_opts ?= --destination-dir=$(out_dir)
 asciidoctor_kindle_opts ?= --attribute ebook-format=kf8
 
-vale_cmd ?= $(docker_cmd) run $(docker_opts) --volume "$${PWD}"/src/modules/ROOT/pages:/pages vshn/vale:2.6.1 --minAlertLevel=error /pages
-hunspell_cmd ?= $(docker_cmd) run $(docker_opts) --volume "$${PWD}":/spell vshn/hunspell:1.7.0 -d en,vshn -l -H _public/**/**/*.html
+vale_cmd ?= $(docker_cmd) run $(docker_opts) --volume "$${PWD}"/src/modules/ROOT/pages:/pages ghcr.io/vshn/vale:2.15.5 --minAlertLevel=error /pages
+hunspell_cmd ?= $(docker_cmd) run $(docker_opts) --volume "$${PWD}":/spell ghcr.io/vshn/hunspell:1.7.0.2 -d en,vshn -l -H _public/**/**/*.html
 htmltest_cmd ?= $(docker_cmd) run $(docker_opts) --volume "$${PWD}"/_public:/test wjdp/htmltest:v0.12.0
-preview_cmd ?= $(docker_cmd) run --rm --publish 35729:35729 --publish 2020:2020 --volume "${PWD}":/preview/antora vshn/antora-preview:3.1.2.2 --antora=docs --style=k8up
+preview_cmd ?= $(docker_cmd) run --rm --publish 35729:35729 --publish 2020:2020 --volume "${PWD}":/preview/antora ghcr.io/vshn/antora-preview:3.1.2.3 --antora=docs --style=k8up
 
 docs_usage_dir ?= docs/modules/ROOT/examples/usage
 
