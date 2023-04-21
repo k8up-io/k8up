@@ -22,4 +22,4 @@ This list is sorted in the order that organizations were added to it.
 
 | Organization | Contact | Description of Use |
 | ------------ | ------- | ------------------ |
-| tbd | tbd | tbd |
+| [VSHN](https://www.vshn.ch) | [@tobru](https://github.com/tobru/) | K8up was born at VSHN because at that time there was no other mature enough backup operator around. Today, K8up is integral part of the service offering and protects precious data every day. |
