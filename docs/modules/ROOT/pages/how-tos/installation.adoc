@@ -2,17 +2,23 @@
 
 == Helm
 
-The most convenient way to install K8up is using https://helm.sh/[helm].
+The most convenient way to install K8up on your Kubernetes cluster is by using https://helm.sh/[helm].
 
 Please refer to the separate installation instructions in the https://github.com/k8up-io/k8up/tree/master/charts/k8up[Helm chart].
 
+== Command-Line Tool (CLI)
+
+The command-line tool can be downloaded from the https://github.com/k8up-io/k8up/releases["Releases" page on GitHub], and installed in your `$PATH`.
+
+After installation, run the `k8up --version` command to make sure it is properly installed.
+
 == Samples
 
-Some K8up examples are located at `config/samples/` in the K8up repository:
+You can find some examples of use of K8up in the `config/samples/` folder of the K8up repository:
 
 [source,bash]
 ----
 kubectl apply -k config/samples/
 ----
 
-Please be aware that these manifests are intended for dev and as examples.
+Please be aware that these manifests are intended for testing, development, and as examples.
