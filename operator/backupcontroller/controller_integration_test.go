@@ -15,6 +15,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -341,6 +342,35 @@ func (ts *BackupTestSuite) Test_GivenBackupAndMountedRWOPVCOnTwoNodes_ExpectBack
 	job2 := jobs.Items[1]
 	ts.assertJobSpecs(&job1, nodeNamePod1, []corev1.Volume{volumePvc1}, tolerationsPod1, []string{pod1.Name})
 	ts.assertJobSpecs(&job2, nodeNamePod2, []corev1.Volume{volumePvc2}, tolerationsPod2, []string{pod2.Name})
+}
+
+func (ts *BackupTestSuite) Test_GivenBackupAndMountedRWOPVCOnOneNodeWithFinishedBackupPod_ExpectTargetNodeExcludesBackup() {
+	pvc1 := ts.newPvc("test-pvc1", corev1.ReadWriteOnce)
+	nodeName := "worker"
+	tolerations := make([]corev1.Toleration, 0)
+	volumePvc1 := corev1.Volume{
+		Name: "test-pvc1",
+		VolumeSource: corev1.VolumeSource{
+			PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{
+				ClaimName: pvc1.Name,
+			},
+		},
+	}
+	pod1 := ts.newPod("test-pod1", nodeName, tolerations, []corev1.Volume{volumePvc1})
+	pod2 := ts.newPod("test-pod2", nodeName, tolerations, []corev1.Volume{volumePvc1})
+	pod2.Labels = labels.Set{
+		"k8upjob": "true",
+	}
+	ts.EnsureResources(ts.BackupResource, pvc1, pod1, pod2)
+
+	pvc1.Status.Phase = corev1.ClaimBound
+	ts.UpdateStatus(pvc1)
+
+	result := ts.whenReconciling(ts.BackupResource)
+	ts.Assert().GreaterOrEqual(result.RequeueAfter, 30*time.Second)
+
+	job := ts.expectABackupJob()
+	ts.assertJobSpecs(job, nodeName, []corev1.Volume{volumePvc1}, tolerations, []string{pod1.Name})
 }
 
 func (ts *BackupTestSuite) Test_GivenBackupAndUnmountedRWOPVCOnTwoNodes_ExpectBackupOnTwoNodes() {
