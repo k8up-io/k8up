@@ -11,7 +11,9 @@ builds:
   - amd64
   - arm64
   goos:
+  - darwin
   - linux
+  - windows
 
 checksum:
   name_template: 'checksums.txt'
