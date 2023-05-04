@@ -20,6 +20,8 @@ directly in GitHub.
 
 This list is sorted in the order that organizations were added to it.
 
-| Organization | Contact | Description of Use |
-| ------------ | ------- | ------------------ |
-| [VSHN](https://www.vshn.ch) | [@tobru](https://github.com/tobru/) | K8up was born at VSHN because at that time there was no other mature enough backup operator around. Today, K8up is integral part of the service offering and protects precious data every day. |
+|              Organization              |                      Contact                      |                                                                                       Description of Use                                                                                       |
+| -------------------------------------- | ------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [VSHN](https://www.vshn.ch)            | [@tobru](https://github.com/tobru/)               | K8up was born at VSHN because at that time there was no other mature enough backup operator around. Today, K8up is integral part of the service offering and protects precious data every day. |
+| [amazee.io](https://www.amazee.io)     | [@dasrecht](https://github.com/dasrecht/)         | We use K8up as an integral part of our Disaster Recovery procedures.                                                                                                                           |
+| [Lagoon](https://github.com/uselagoon) | [@tobybellwood](https://github.com/tobybellwood/) | We've adopted K8up within [Lagoon](https://github.com/uselagoon). This keeps the data of all Lagoon customers safe and restorable.                                                             |
