@@ -194,6 +194,8 @@ given_a_running_operator() {
 	replace_in_file ${values_tgt} E2E_REPO "${IMG_REPO}"
 	replace_in_file ${values_tgt} E2E_TAG "${IMG_TAG}"
 
+	helm uninstall -n k8up-system k8up || true
+
 	helm upgrade --install k8up ../charts/k8up \
 		--create-namespace \
 		--namespace k8up-system \
