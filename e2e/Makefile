@@ -25,6 +25,7 @@ kind-load-image: kind-setup docker-build ## Load the e2e container image onto e2
 
 .PHONY: e2e-setup
 e2e-setup: export KUBECONFIG = $(KIND_KUBECONFIG)
+e2e-setup: chart-prepare
 e2e-setup: e2e/node_modules kind-setup | $(e2etest_dir) ## Run the e2e setup
 
 .PHONY: clean

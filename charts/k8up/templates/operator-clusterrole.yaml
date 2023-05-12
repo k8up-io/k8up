@@ -68,13 +68,9 @@ rules:
     resources:
       - pods
     verbs:
-      - '*'
-  - apiGroups:
-      - ""
-    resources:
-      - pods/exec
-    verbs:
-      - '*'
+      - get
+      - list
+      - watch
   - apiGroups:
       - ""
     resources:
@@ -273,9 +269,16 @@ rules:
       - update
   - apiGroups:
       - rbac.authorization.k8s.io
+    resourceNames:
+      - k8up-executor
+    resources:
+      - clusterroles
+    verbs:
+      - bind
+  - apiGroups:
+      - rbac.authorization.k8s.io
     resources:
       - rolebindings
-      - roles
     verbs:
       - create
       - delete

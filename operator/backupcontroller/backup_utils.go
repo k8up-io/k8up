@@ -50,38 +50,6 @@ func (b *BackupExecutor) createServiceAccountAndBinding(ctx context.Context) err
 		return err
 	}
 
-	role := &rbacv1.Role{}
-	role.Name = cfg.Config.PodExecRoleName
-	role.Namespace = b.backup.Namespace
-	_, err = controllerruntime.CreateOrUpdate(ctx, b.Config.Client, role, func() error {
-		role.Rules = []rbacv1.PolicyRule{
-			{
-				APIGroups: []string{""},
-				Resources: []string{"pods", "pods/exec"},
-				Verbs:     []string{"*"},
-			},
-			{
-				APIGroups: []string{"k8up.io"},
-				Resources: []string{"snapshots"},
-				Verbs: []string{
-					"create",
-					"delete",
-					"get",
-					"list",
-					"patch",
-					"update",
-					"watch",
-				},
-			},
-			{
-				APIGroups: []string{"k8up.io"},
-				Resources: []string{"snapshots/finalizers", "snapshots/status"},
-				Verbs:     []string{"get", "patch", "update"},
-			},
-		}
-		return nil
-	})
-
 	if err != nil {
 		return err
 	}
@@ -97,8 +65,8 @@ func (b *BackupExecutor) createServiceAccountAndBinding(ctx context.Context) err
 			},
 		}
 		roleBinding.RoleRef = rbacv1.RoleRef{
-			Kind:     "Role",
-			Name:     role.Name,
+			Kind:     "ClusterRole",
+			Name:     "k8up-executor",
 			APIGroup: "rbac.authorization.k8s.io",
 		}
 		return nil
