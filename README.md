@@ -48,6 +48,8 @@ To run the end-to-end test (e.g. `make e2e-test`), you additionally need:
 These are the most common make targets: `build`, `test`, `docker-build`, `run`, `kind-run`.
 Run `make help` to get an overview over the relevant targets and their intentions.
 
+You can find the project roadmap at [k8up.io](https://k8up.io/k8up/about/roadmap.html).
+
 ### Code Structure
 
 K8s consists of two main modules:
@@ -132,6 +134,10 @@ make clean
 
 There are a number of example configurations in [`config/samples`](config/samples).
 Apply them using `kubectl apply -f config/samples/somesample.yaml`
+
+### Code of Conduct
+
+Our code of conduct can be read at [k8up.io](https://k8up.io/k8up/about/code_of_conduct.html).
 
 [build]: https://github.com/k8up-io/k8up/actions?query=workflow%3ATest
 [releases]: https://github.com/k8up-io/k8up/releases
