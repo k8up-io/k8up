@@ -52,6 +52,8 @@ You can find the project roadmap at [k8up.io](https://k8up.io/k8up/about/roadmap
 
 We use [Snyk](https://snyk.io/test/github/k8up-io/k8up) to test the code regularly for vulnerabilities and other security issues.
 
+If you find any security issue, please follow our [Vulnerability Reporting](https://k8up.io/k8up/about/vulnerability_reporting.html) process.
+
 ### Code Structure
 
 K8s consists of two main modules:
