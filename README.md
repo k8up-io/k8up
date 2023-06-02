@@ -5,6 +5,7 @@
 [![License](https://img.shields.io/github/license/k8up-io/k8up)][license]
 [![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/5388/badge)](https://bestpractices.coreinfrastructure.org/projects/5388)
 [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/k8up-io/k8up/badge)](https://api.securityscorecards.dev/projects/github.com/k8up-io/k8up)
+[![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/k8up)](https://artifacthub.io/packages/helm/k8up/k8up)
 
 ![K8up logo](docs/modules/ROOT/assets/images/k8up-logo.svg "K8up")
 
