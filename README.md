@@ -50,6 +50,8 @@ Run `make help` to get an overview over the relevant targets and their intention
 
 You can find the project roadmap at [k8up.io](https://k8up.io/k8up/about/roadmap.html).
 
+We use [Snyk](https://snyk.io/test/github/k8up-io/k8up) to test the code regularly for vulnerabilities and other security issues.
+
 ### Code Structure
 
 K8s consists of two main modules:
