@@ -100,6 +100,13 @@ func (a *ArchiveExecutor) setupEnvVars(ctx context.Context, archive *k8upv1.Arch
 		}
 	}
 
+	if archive.Spec.Backend != nil {
+		for key, value := range archive.Spec.Backend.GetCredentialEnv() {
+			vars.SetEnvVarSource(key, value)
+		}
+		vars.SetString(cfg.ResticRepositoryEnvName, archive.Spec.Backend.String())
+	}
+
 	err := vars.Merge(executor.DefaultEnv(a.Obj.GetNamespace()))
 	if err != nil {
 		log.Error(err, "error while merging the environment variables", "name", a.Obj.GetName(), "namespace", a.Obj.GetNamespace())
