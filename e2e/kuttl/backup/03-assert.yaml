@@ -1,0 +1,43 @@
+apiVersion: kuttl.dev/v1beta1
+kind: TestAssert
+commands:
+- timeout: 60
+  script: |
+    set -e
+    export SNAPSHOTS=$(kubectl run "restic-snapshots" \
+      --attach \
+      --rm \
+      --restart Never \
+      --namespace "${NAMESPACE}" \
+      --image "${E2E_IMAGE}" \
+      --env "AWS_ACCESS_KEY_ID=myaccesskey" \
+      --env "AWS_SECRET_ACCESS_KEY=mysecretkey" \
+      --env "RESTIC_PASSWORD=myreposecret" \
+      --pod-running-timeout 10s \
+      --quiet \
+      --command -- \
+      restic \
+      --no-cache \
+      --repo "s3:http://minio.minio.svc.cluster.local:9000/backup" \
+      "snapshots" \
+      --json )
+    echo $SNAPSHOTS | jq -e ". | map(select(.hostname == \"${NAMESPACE}\")) | length >= 1"
+    export SID=$(kubectl -n "${NAMESPACE}" get snapshots -ojson | jq -r '.items | sort_by(.spec.date) | reverse | .[0].spec.id ')
+    export OUT=$(kubectl run "restic-dump" \
+      --attach \
+      --rm \
+      --restart Never \
+      --namespace "${NAMESPACE}" \
+      --image "${E2E_IMAGE}" \
+      --env "AWS_ACCESS_KEY_ID=myaccesskey" \
+      --env "AWS_SECRET_ACCESS_KEY=mysecretkey" \
+      --env "RESTIC_PASSWORD=myreposecret" \
+      --pod-running-timeout 10s \
+      --quiet \
+      --command -- \
+      restic \
+      --no-cache \
+      --repo "s3:http://minio.minio.svc.cluster.local:9000/backup" \
+      "dump" "$SID" "/data/subject-pvc/BACKUP_FILE_NAME"  \
+      --json )
+    bash -c '[ "$OUT" == "BACKUP_FILE_CONTENT" ]'

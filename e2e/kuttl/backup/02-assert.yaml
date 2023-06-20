@@ -1,0 +1,6 @@
+apiVersion: kuttl.dev/v1beta1
+kind: TestAssert
+commands:
+- timeout: 60
+  script: |
+    kubectl wait --for=condition=completed backup/k8up-backup --timeout 30s --namespace $NAMESPACE

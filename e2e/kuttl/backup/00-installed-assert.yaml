@@ -1,0 +1,7 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: k8up
+  namespace: k8up-system
+status:
+  readyReplicas: 1

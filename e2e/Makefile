@@ -16,8 +16,9 @@ e2e-test: export E2E_IMAGE = $(K8UP_E2E_IMG)
 e2e-test: export IMG_REGISTRY = $(E2E_REGISTRY)
 e2e-test: export IMG_TAG = $(E2E_TAG)
 e2e-test: export IMG_REPO = $(E2E_REPO)
-e2e-test: e2e-setup install kind-load-image ## Run the E2E tests
-	@cd ./e2e && $(bats) $(bats_args) $(BATS_FILES)
+e2e-test: e2e-setup ## Run the E2E tests
+	#@cd ./e2e && $(bats) $(bats_args) $(BATS_FILES)
+	kubectl kuttl test -v 15 --timeout 90 ./e2e/kuttl
 
 .PHONY: kind-load-image
 kind-load-image: kind-setup docker-build ## Load the e2e container image onto e2e cluster
@@ -25,8 +26,14 @@ kind-load-image: kind-setup docker-build ## Load the e2e container image onto e2
 
 .PHONY: e2e-setup
 e2e-setup: export KUBECONFIG = $(KIND_KUBECONFIG)
-e2e-setup: chart-prepare
+e2e-setup: export E2E_IMAGE = $(K8UP_E2E_IMG)
+e2e-setup: export IMG_REGISTRY = $(E2E_REGISTRY)
+e2e-setup: export IMG_TAG = $(E2E_TAG)
+e2e-setup: export IMG_REPO = $(E2E_REPO)
+e2e-setup: chart-prepare install kind-load-image 
 e2e-setup: e2e/node_modules kind-setup | $(e2etest_dir) ## Run the e2e setup
+	bash -c "cd e2e && . ./lib/k8up.bash && given_a_running_operator"
+	bash -c "cd e2e && . ./lib/k8up.bash && given_s3_storage"
 
 .PHONY: clean
 e2e-clean: kind-clean ## Remove all e2e-related resources (incl. all e2e Docker images)

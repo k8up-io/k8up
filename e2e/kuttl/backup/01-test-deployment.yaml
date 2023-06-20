@@ -1,0 +1,53 @@
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: subject-pvc
+spec:
+  accessModes:
+  - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: standard
+  volumeMode: Filesystem
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: subject-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: subject
+  template:
+    metadata:
+      labels:
+        app: subject
+    spec:
+      containers:
+      - name: subject-container
+        image: quay.io/prometheus/busybox:latest
+        imagePullPolicy: IfNotPresent
+        args:
+        - sh
+        - -c
+        - |
+          printf "$BACKUP_FILE_CONTENT" | tee "/data/$BACKUP_FILE_NAME" && \
+          echo && \
+          ls -la /data && \
+          echo "test file /data/$BACKUP_FILE_NAME written, sleeping now" && \
+          sleep infinity
+        volumeMounts:
+        - name: volume
+          mountPath: /data
+        env:
+        - name: BACKUP_FILE_CONTENT
+          value: "BACKUP_FILE_CONTENT"
+        - name: BACKUP_FILE_NAME
+          value: "BACKUP_FILE_NAME"
+      volumes:
+      - name: volume
+        persistentVolumeClaim:
+          claimName: subject-pvc
