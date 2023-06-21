@@ -18,7 +18,8 @@ e2e-test: export IMG_TAG = $(E2E_TAG)
 e2e-test: export IMG_REPO = $(E2E_REPO)
 e2e-test: e2e-setup ## Run the E2E tests
 	#@cd ./e2e && $(bats) $(bats_args) $(BATS_FILES)
-	kubectl kuttl test -v 15 --timeout 90 ./e2e/kuttl
+	#kubectl kuttl test -v 15 --timeout 90 ./e2e/kuttl
+	go test -count=1 ./e2e/gotest
 
 .PHONY: kind-load-image
 kind-load-image: kind-setup docker-build ## Load the e2e container image onto e2e cluster
