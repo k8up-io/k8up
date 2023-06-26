@@ -97,7 +97,7 @@ vet: ## Run go vet against code
 	go vet ./...
 
 .PHONY: lint
-lint: generate fmt vet golangci-lint docs-generate ## Invokes all linting targets
+lint: fmt vet golangci-lint ## Invokes all linting targets
 	@echo 'Check for uncommitted changes ...'
 	git diff --exit-code
 
