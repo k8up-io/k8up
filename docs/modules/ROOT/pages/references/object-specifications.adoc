@@ -484,6 +484,6 @@ include::example$references/effective-schedule.yaml[]
 
 === Settings
 
-* `spec.generatedSchedule`: schedule definition that was translated, e.g. from `@hourly-random` to `4 * * * *`.
+* `spec.generatedSchedule`: schedule definition that was translated, for example from `@hourly-random` to `4 * * * *`.
 * `spec.jobType`: The K8up job type this resource is applicable to.
 * `spec.scheduleRefs`: A list of `Schedules` for which the generated schedule applies to.
