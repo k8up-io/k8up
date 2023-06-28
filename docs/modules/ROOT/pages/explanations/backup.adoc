@@ -46,7 +46,7 @@ It also works with a variety of database systems and likewise programs that stor
 The drawback is that it transfers data via `stdout`, which is less efficient.
 The reason is that Kubernetes has to relay that data from the executed command to K8up.
 Another drawback is that your `Pod` must provide the tools to execute the command.
-If it does not already contain that command – if it's a distro-less container for example – then the next method might be for you.
+If it does not already contain that command, for example if it's a distro-less container, then the next method might be for you.
 
 Read xref:how-tos/application-aware-backups.adoc[] to learn more about to use this backup method.
 
@@ -63,7 +63,7 @@ You can provide a special image which contains all the commands you need.
 You can access your `Secrets`.
 You can connect to services inside or outside the cluster, like a managed database.
 
-The drawback – in contrast to the pure _backup command_ – is that this `Pod` runs in its own context and can't access services which are internal to another _Pod_.
+The drawback, in contrast to the pure _backup command_, is that this `Pod` runs in its own context and can't access services which are internal to another _Pod_.
 You may also need to keep the `PreBackupPod` in sync with your main `Deployment` or with an external dependency.
 When you update your database in your main `Deployment` for example, you may need to update your `PreBackupPod` as well.
 
