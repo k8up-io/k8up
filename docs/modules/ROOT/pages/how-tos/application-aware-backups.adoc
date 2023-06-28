@@ -18,7 +18,7 @@ template:
 ----
 
 With this annotation the Operator will trigger that command inside the the container and capture the stdout to a backup.
-The command is only executed on one Pod, if there are multiple Pods with the same owner reference (e.g. Deployments, Statefulsets etc).
+The command is only executed on one Pod, if there are multiple Pods with the same owner reference (for example Deployments, Statefulsets etc).
 
 Tested with:
 

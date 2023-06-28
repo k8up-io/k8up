@@ -14,11 +14,11 @@ Just in order to run the integration tests you will need to do some extra config
 .. Put `integration` into _Custom tags_
 . Now try to run a specific integration test.
 
-You can use all the usual shortcuts to quickly run a test (e.g. kbd:[Ctrl+Shift+D] to debug a specific test method).
+You can use all the usual shortcuts to quickly run a test (for example kbd:[Ctrl+Shift+D] to debug a specific test method).
 If it doesn't work, check the following:
 
 . Check that the _Custom tags_ field in _Preferences_ → _Go_ → _Build Tags & Vendoring_ contains to term `integration`.
-. Make sure the _Working directory_ of your test's _Run Configuration_ points to the directory where your test lies, e.g. `/home/your_user/projects/k8up/controllers`.
+. Make sure the _Working directory_ of your test's _Run Configuration_ points to the directory where your test lies, for example `/home/your_user/projects/k8up/controllers`.
 . Try to tick _Use all custom build tags_ checkbox in your test's _Run Configuration_.
 
 [IMPORTANT]
