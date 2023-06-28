@@ -19,7 +19,7 @@ See xref:references/operator-config-reference.adoc[Operator Configuration refere
 
 |`k8up.io/backupcommand`
 |If defined, this command is invoked in the context of this `Pod` on the beginning of a backup.
-|A string that represents a command (and its arguments) to execute, e.g. `mysqldump -uroot -psecure --all-databases`.
+|A string that represents a command (and its arguments) to execute, for example `mysqldump -uroot -psecure --all-databases`.
  See xref:how-tos/application-aware-backups.adoc[Application Aware Backups] for more information and an example.
 |`Pod`
 |`BACKUP_BACKUPCOMMANDANNOTATION`
@@ -27,7 +27,7 @@ See xref:references/operator-config-reference.adoc[Operator Configuration refere
 |`k8up.io/file-extension`
 |The output of the `k8up.syn.tool/backupcommand` annotation is written to a file in order for it to be backed up.
  This annotation defines the file extension of that string.
-|A string which is valid file-extension on the source system, e.g. `.sql`.
+|A string which is valid file-extension on the source system, for example `.sql`.
 |`Pod`
 |`BACKUP_FILEEXTENSIONANNOTATION`
 

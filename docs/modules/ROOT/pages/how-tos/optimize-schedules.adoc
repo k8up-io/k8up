@@ -6,7 +6,7 @@ When you start having hundreds of backup, check, prune or archive schedules it c
 However, manually trying to balance the schedules to different times is no solution either.
 
 Enter smart schedules.
-In addition to the standard Cron syntax (e.g. `* */12 * * *`) K8up features stable randomization of schedules.
+In addition to the standard Cron syntax (for example `* */12 * * *`) K8up features stable randomization of schedules.
 Enter a special `-random`-suffixed schedule to your spec in order to let K8up generate a schedule for you.
 
 A schedule of `@weekly-random` generates an effective schedule like `52 4 * * 4`.

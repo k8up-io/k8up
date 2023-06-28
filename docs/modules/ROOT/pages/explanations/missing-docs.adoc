@@ -3,7 +3,7 @@
 For the following keywords documentation is missing and will be added over time.
 This should give you an idea what is included, but currently not documented.
 
-* Describe prune and check jobs and their implications (e.g. locking)
+* Describe prune and check jobs and their implications (for example locking)
 * Webhooks with backup information
 * Prometheus Metrics of Operator
 * Prometheus Pushgateway metrics of `k8up restic`

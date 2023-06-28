@@ -1,14 +1,18 @@
-name: E2E
+name: Docs Lint
 
 on:
   pull_request:
+    paths:
+      - 'docs/**'
+  push:
     branches:
     - master
-    paths-ignore:
+    paths:
       - 'docs/**'
 
+
 jobs:
-  e2e-test:
+  check:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
@@ -27,13 +31,5 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-go-
 
-    - name: Run e2e tests
-      run: make crd e2e-test -e KIND_KUBECTL_ARGS=--validate=false -e bats_args="--report-formatter junit"
-
-    - name: Publish Test Report
-      uses: mikepenz/action-junit-report@v3
-      if: success() || failure()
-      with:
-        report_paths: '**/e2e/report.xml'
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        check_name: e2e-report
+    - name: Run linters
+      run: make docs-check

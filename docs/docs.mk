@@ -1,99 +1,51 @@
-clean_targets += docs-clean
+# Determine whether to use podman
+#
+# podman currently fails when executing in GitHub actions on Ubuntu LTS 20.04,
+# so we never use podman if GITHUB_ACTIONS==true.
+use_podman := $(shell command -v podman 2>&1 >/dev/null; p="$$?"; \
+		if [ "$${GITHUB_ACTIONS}" != "true" ]; then echo "$$p"; else echo 1; fi)
 
-pages   := $(shell find . -type f -name '*.adoc')
-out_dir := ./_public
+ifeq ($(use_podman),0)
+	engine_cmd  ?= podman
+	engine_opts ?= --rm --userns=keep-id
+else
+	engine_cmd  ?= docker
+	engine_opts ?= --rm --user "$$(id -u)"
+endif
 
-docker_cmd  ?= docker
-docker_opts ?= --rm --tty --user "$$(id -u)"
+use_go := $(shell command -v go 2>&1 >/dev/null; echo "$$?")
 
-antora_cmd  ?= $(docker_cmd) run $(docker_opts) --volume "$${PWD}":/antora ghcr.io/vshn/antora:3.1.2.2
-antora_opts ?= --cache-dir=.cache/antora
+ifeq ($(use_go),0)
+	go_cmd ?= go
+else
+	go_cmd ?= $(engine_cmd) run $(engine_opts) -e GOCACHE=/k8up/.cache -w /k8up --volume "$${PWD}:/k8up" golang:1.20 go
+endif
 
-asciidoctor_cmd  ?= $(docker_cmd) run $(docker_opts) --volume "$${PWD}":/documents/ asciidoctor/docker-asciidoctor asciidoctor
-asciidoctor_pdf_cmd  ?= $(docker_cmd) run $(docker_opts) --volume "$${PWD}":/documents/ ghcr.io/vshn/asciidoctor-pdf:1.39.1 --attribute toclevels=1
-asciidoctor_epub3_cmd  ?= $(docker_cmd) run $(docker_opts) --volume "$${PWD}":/documents/ ghcr.io/vshn/asciidoctor-epub3:1.39.1 --attribute toclevels=1
-asciidoctor_opts ?= --destination-dir=$(out_dir)
-asciidoctor_kindle_opts ?= --attribute ebook-format=kf8
-
-vale_cmd ?= $(docker_cmd) run $(docker_opts) --volume "$${PWD}"/docs/modules/ROOT/pages:/pages --workdir /pages ghcr.io/vshn/vale:2.15.5 --minAlertLevel=error .
-hunspell_cmd ?= $(docker_cmd) run $(docker_opts) --volume "$${PWD}":/spell ghcr.io/vshn/hunspell:1.7.0.2 -d en,vshn -l -H _public/**/**/*.html
-htmltest_cmd ?= $(docker_cmd) run $(docker_opts) --volume "$${PWD}"/_public:/test wjdp/htmltest:v0.12.0
-preview_cmd ?= $(docker_cmd) run --rm --publish 35729:35729 --publish 2020:2020 --volume "${PWD}":/preview/antora ghcr.io/vshn/antora-preview:3.1.2.3 --antora=docs --style=k8up
-
-docs_usage_dir ?= docs/modules/ROOT/examples/usage
-
-## CRD API doc generator
-
-crd_ref_docs_bin ?= $(go_bin)/crd-ref-docs
-
-$(crd_ref_docs_bin): export GOBIN = $(go_bin)
-$(crd_ref_docs_bin): | $(go_bin)
-	go install github.com/elastic/crd-ref-docs@latest
-
-##
-
-.PHONY: docs-all
-docs-all: docs-update-usage docs-html docs-pdf ## Generate HTML and PDF docs
-
-.PHONY: docs-documents
-docs-documents: docs-update-usage docs-pdf docs-manpage docs-kindle docs-epub ## Generate downloadable docs
-
-.PHONY: docs-update-usage
-docs-update-usage: ## Generates dumps from `k8up --help`, which are then included as part of the docs
-	go run $(K8UP_MAIN_GO) --help > "$(docs_usage_dir)/k8up.txt"
-	go run $(K8UP_MAIN_GO) restic --help > "$(docs_usage_dir)/restic.txt"
-	go run $(K8UP_MAIN_GO) operator --help > "$(docs_usage_dir)/operator.txt"
-
-.PHONY: docs-generate-api
-docs-generate-api: $(crd_ref_docs_bin) ## Generates API reference documentation
-	$(crd_ref_docs_bin) --source-path=api/v1 --config=docs/api-gen-config.yaml --renderer=asciidoctor --templates-dir=docs/api-templates --output-path=$(CRD_DOCS_REF_PATH)
-
-.PHONY: docs-generate
-docs-generate: docs-update-usage docs-generate-api
-
-# This will clean the Antora Artifacts, not the npm artifacts
-.PHONY: docs-clean
-docs-clean: ## Cleans Antora artifacts
-	rm -rf $(out_dir) '?' .cache $(crd_ref_docs_bin)
+orphans_cmd ?= $(engine_cmd) run $(engine_opts) --volume "$${PWD}:/antora" ghcr.io/vshn/antora-nav-orphans-checker:1.1 -antoraPath /antora/docs
+vale_cmd ?= $(engine_cmd) run $(engine_opts) --volume "$${PWD}"/docs/modules/ROOT/pages:/pages --workdir /pages ghcr.io/vshn/vale:2.15.5 --minAlertLevel=error .
+preview_cmd ?= $(engine_cmd) run --rm --publish 35729:35729 --publish 2020:2020 --volume "${PWD}":/preview/antora ghcr.io/vshn/antora-preview:3.1.2.3 --antora=docs --style=k8up
 
 .PHONY: docs-check
 docs-check: ## Runs vale against the docs to check style
+	$(orphans_cmd)
 	$(vale_cmd)
-
-.PHONY: docs-syntax
-docs-syntax: docs-html ## Runs hunspell against the docs
-	$(hunspell_cmd)
-
-.PHONY: docs-htmltest
-docs-htmltest: docs-html docs-pdf docs-epub docs-kindle docs-manpage ## Runs htmltest against the docs
-	$(htmltest_cmd)
 
 .PHONY: docs-preview
 docs-preview: ## Start documentation preview at http://localhost:2020 with Live Reload
 	$(preview_cmd)
 
-.PHONY: docs-html-open
-docs-html-open: docs-html ## Start documentation preview at http://localhost:2020 with Live Reload and open in browser
-	$(shell xdg-open _public/index.html)
+.PHONY: docs-generate
+docs-generate: docs-update-usage docs-generate-api
 
-.PHONY: docs-html docs-pdf docs-manpage docs-epub docs-kindle
-docs-html:    $(out_dir)/index.html ## Generate HTML version of documentation with Antora, output at ./_public/
-docs-pdf:     $(out_dir)/k8up.pdf ## Generate PDF version of documentation with Antora, output at ./_public/
-docs-manpage: $(out_dir)/k8up.1 ## Generate Manpage version of documentation with Antora, output at ./_public/
-docs-epub:    $(out_dir)/k8up.epub ## Generate epub version of documentation with Antora, output at ./_public/
-docs-kindle:  $(out_dir)/k8up-kf8.epub ## Generate Kindle version of documentation with Antora, output at ./_public/
+docs_usage_dir ?= docs/modules/ROOT/examples/usage
+.PHONY: docs-update-usage
+docs-update-usage: ## Generates dumps from `k8up --help`, which are then included as part of the docs
+	$(go_cmd) run $(K8UP_MAIN_GO) --help > "$(docs_usage_dir)/k8up.txt"
+	$(go_cmd) run $(K8UP_MAIN_GO) restic --help > "$(docs_usage_dir)/restic.txt"
+	$(go_cmd) run $(K8UP_MAIN_GO) operator --help > "$(docs_usage_dir)/operator.txt"
 
-$(out_dir)/index.html: playbook.yml $(pages)
-	$(antora_cmd) $(antora_opts) $<
+## CRD API doc generator
+.PHONY: docs-generate-api
+docs-generate-api:  ## Generates API reference documentation
+	$(go_cmd) run github.com/elastic/crd-ref-docs@latest --source-path=api/v1 --config=docs/api-gen-config.yaml --renderer=asciidoctor --templates-dir=docs/api-templates --output-path=$(CRD_DOCS_REF_PATH)
 
-$(out_dir)/%.1: docs/%.adoc $(pages)
-	$(asciidoctor_cmd) --backend=manpage --attribute doctype=manpage $(asciidoctor_opts) $<
-
-$(out_dir)/%.pdf: docs/%.adoc $(pages)
-	$(asciidoctor_pdf_cmd) $(asciidoctor_opts) $<
-
-$(out_dir)/%.epub: docs/%.adoc $(pages)
-	$(asciidoctor_epub3_cmd) $(asciidoctor_opts) $<
-
-$(out_dir)/%-kf8.epub: docs/%.adoc $(pages)
-	$(asciidoctor_epub3_cmd) $(asciidoctor_kindle_opts) $(asciidoctor_opts) $<

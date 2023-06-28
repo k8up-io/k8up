@@ -85,7 +85,7 @@ IMPORTANT: On some laptops, running Minikube on battery power severely undermine
 
 After finishing all these steps, check that everything is running.
 Simply launch `k9s` and leave it running in its own terminal window.
-Or – of course – you can use the usual `kubectl get pods` to check how your components are doing.
+Or you can use the usual `kubectl get pods` to check how your components are doing.
 
 The https://asciinema.org/[asciinema] movie below shows all of these steps in real time.
 
