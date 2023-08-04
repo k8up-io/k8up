@@ -1,6 +1,6 @@
 # k8up
 
-![Version: 4.3.0](https://img.shields.io/badge/Version-4.3.0-informational?style=flat-square)
+![Version: 4.4.0](https://img.shields.io/badge/Version-4.4.0-informational?style=flat-square)
 
 Kubernetes and OpenShift Backup Operator based on restic
 
@@ -13,7 +13,7 @@ helm repo add k8up-io https://k8up-io.github.io/k8up
 helm install k8up k8up-io/k8up
 ```
 ```bash
-kubectl apply -f https://github.com/k8up-io/k8up/releases/download/k8up-4.3.0/k8up-crd.yaml
+kubectl apply -f https://github.com/k8up-io/k8up/releases/download/k8up-4.4.0/k8up-crd.yaml
 ```
 
 <!---
@@ -80,6 +80,7 @@ Document your changes in values.yaml and let `make docs:helm` generate this sect
 | resources.requests.cpu | string | `"20m"` | CPU request of K8up operator. See [supported units][resource-units]. |
 | resources.requests.memory | string | `"128Mi"` | Memory request of K8up operator. See [supported units][resource-units]. |
 | securityContext | object | `{}` | Container security context |
+| serviceAccount.annotations | object | `{}` | Annotations to add to the service account. |
 | serviceAccount.create | bool | `true` | Specifies whether a service account should be created |
 | serviceAccount.name | string | `""` | The name of the service account to use. If not set and create is true, a name is generated using the fullname template |
 | tolerations | list | `[]` |  |
