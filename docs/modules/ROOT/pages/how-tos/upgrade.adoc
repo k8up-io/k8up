@@ -7,12 +7,12 @@ WARNING: Never remove the CRDs, as you might lose the respective resources!
 
 TIP: See also xref:explanations/what-has-changed-in-v2.adoc[].
 
-Because of the move of K8up to it's own GitHub organization, and a cleanup of several namings, there are visible changes from a user's perspective in K8up 2.x, which require (manual) intervention for a successful upgrade.
+Because of the move of K8up to its own GitHub organization, and a cleanup of several namings, there are visible changes from a user's perspective in K8up 2.x, which require (manual) intervention for a successful upgrade.
 These changes require you to update your configuration of K8up.
 
 === Move to our own GitHub organization
 
-We have moved K8up into it's own https://github.com/k8up-io[GitHub organization].
+We have moved K8up into its own https://github.com/k8up-io[GitHub organization].
 As a result, we also updated some names.
 
 - In the CRD definition, what was `backup.appuio.ch` is now `k8up.io`.
