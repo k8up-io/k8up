@@ -140,7 +140,7 @@ image::tutorial/wordpress-install.png[]
 [[step_3]]
 === Backing up the blog
 
-In this step we're going to create a backup of our blog and it's database.
+In this step we're going to create a backup of our blog and its database.
 Everything related to this is defined in `backup.yml`.
 Once applied to our Minikube cluster,
 k8up will instantly take a backup of the database
