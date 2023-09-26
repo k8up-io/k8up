@@ -1,6 +1,6 @@
 # k8up
 
-![Version: 4.4.1](https://img.shields.io/badge/Version-4.4.1-informational?style=flat-square)
+![Version: 4.4.2](https://img.shields.io/badge/Version-4.4.2-informational?style=flat-square)
 
 Kubernetes and OpenShift Backup Operator based on restic
 
@@ -13,7 +13,7 @@ helm repo add k8up-io https://k8up-io.github.io/k8up
 helm install k8up k8up-io/k8up
 ```
 ```bash
-kubectl apply -f https://github.com/k8up-io/k8up/releases/download/k8up-4.4.1/k8up-crd.yaml
+kubectl apply -f https://github.com/k8up-io/k8up/releases/download/k8up-4.4.2/k8up-crd.yaml
 ```
 
 <!---
@@ -41,6 +41,10 @@ Document your changes in values.yaml and let `make docs:helm` generate this sect
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | affinity | object | `{}` |  |
+| cleanup.pullPolicy | string | `"IfNotPresent"` | Cleanup-job image pull policy |
+| cleanup.registry | string | `"docker.io"` | Cleanup-job image registry |
+| cleanup.repository | string | `"bitnami/kubectl"` | Cleanup-job image repository |
+| cleanup.tag | string | `"latest"` | Cleanup-job image tag (version) |
 | image.pullPolicy | string | `"IfNotPresent"` | Operator image pull policy |
 | image.registry | string | `"ghcr.io"` | Operator image registry |
 | image.repository | string | `"k8up-io/k8up"` | Operator image repository |

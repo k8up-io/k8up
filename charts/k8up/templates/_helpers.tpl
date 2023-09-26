@@ -80,3 +80,12 @@ Backup Image
 {{ if .k8up.backupImage.repository }}{{ .k8up.backupImage.repository }}{{ else }}{{ .image.registry}}/{{ .image.repository }}{{ end }}:{{ if .k8up.backupImage.tag }}{{ .k8up.backupImage.tag }}{{ else }}{{ .image.tag }}{{ end }}
 {{- end -}}
 {{- end -}}
+
+{{/*
+Cleanup Image
+*/}}
+{{- define "cleanupImage" -}}
+{{- with .Values -}}
+{{ if .cleanup.registry }}{{ .cleanup.registry }}/{{ end }}{{ .cleanup.repository }}:{{ .cleanup.tag }}
+{{- end -}}
+{{- end -}}

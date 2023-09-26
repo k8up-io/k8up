@@ -83,7 +83,8 @@ spec:
       serviceAccountName: cleanup-service-account
       containers:
       - name: "{{ .Release.Name }}-cleanup"
-        image: "bitnami/kubectl:latest"
+        image: "{{ include "cleanupImage" . }}"
+        imagePullPolicy: {{ .Values.cleanup.pullPolicy }}
         command:
           - sh
           - -c
