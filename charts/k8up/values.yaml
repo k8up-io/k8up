@@ -132,3 +132,14 @@ resources:
     cpu: 20m
     # -- Memory request of K8up operator. See [supported units][resource-units].
     memory: 128Mi
+
+cleanup:
+  # -- Cleanup-job image pull policy
+  pullPolicy: IfNotPresent
+  # -- Cleanup-job image registry
+  registry: docker.io
+  # -- Cleanup-job image repository
+  repository: bitnami/kubectl
+  # -- Cleanup-job image tag (version)
+  tag: latest
+
