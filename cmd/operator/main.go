@@ -47,7 +47,7 @@ var (
 			&cli.IntFlag{Destination: &cfg.Config.GlobalConcurrentPruneJobsLimit, Name: "global-concurrent-prune-jobs-limit", EnvVars: []string{"BACKUP_GLOBAL_CONCURRENT_PRUNE_JOBS_LIMIT"}, DefaultText: "unlimited", Usage: "set the limit of concurrent prune jobs"},
 			&cli.IntFlag{Destination: &cfg.Config.GlobalConcurrentRestoreJobsLimit, Name: "global-concurrent-restore-jobs-limit", EnvVars: []string{"BACKUP_GLOBAL_CONCURRENT_RESTORE_JOBS_LIMIT"}, DefaultText: "unlimited", Usage: "set the limit of concurrent restore jobs"},
 
-			&cli.StringFlag{Destination: &cfg.Config.GlobalRestoreS3AccessKey, Name: "globalrestores3accesskeyid", EnvVars: []string{"BACKUP_GLOBALRESTORES3ACCESKEYID"}, Usage: "set the global restore S3 accessKeyID for restores"},
+			&cli.StringFlag{Destination: &cfg.Config.GlobalRestoreS3AccessKey, Name: "globalrestores3accesskeyid", EnvVars: []string{"BACKUP_GLOBALRESTORES3ACCESKEYID", "BACKUP_GLOBALRESTORES3ACCESSKEYID"}, Usage: "set the global restore S3 accessKeyID for restores"},
 			&cli.StringFlag{Destination: &cfg.Config.GlobalRestoreS3Bucket, Name: "globalrestores3bucket", EnvVars: []string{"BACKUP_GLOBALRESTORES3BUCKET"}, Usage: "set the global restore S3 bucket for restores"},
 			&cli.StringFlag{Destination: &cfg.Config.GlobalRestoreS3Endpoint, Name: "globalrestores3endpoint", EnvVars: []string{"BACKUP_GLOBALRESTORES3ENDPOINT"}, Usage: "set the global restore S3 endpoint for the restores (needs the scheme 'http' or 'https')"},
 			&cli.StringFlag{Destination: &cfg.Config.GlobalRestoreS3SecretAccessKey, Name: "globalrestores3secretaccesskey", EnvVars: []string{"BACKUP_GLOBALRESTORES3SECRETACCESSKEY"}, Usage: "set the global restore S3 SecretAccessKey for restores"},
