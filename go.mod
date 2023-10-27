@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	github.com/firepear/qsplit/v2 v2.5.0
-	github.com/go-logr/logr v1.2.3
+	github.com/go-logr/logr v1.3.0
 	github.com/go-logr/zapr v1.2.3
 	github.com/imdario/mergo v0.3.16
 	github.com/minio/minio-go/v7 v7.0.61
