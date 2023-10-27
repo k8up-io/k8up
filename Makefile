@@ -10,7 +10,7 @@ MAKEFLAGS += --no-builtin-variables
 
 .PHONY: help
 help: ## Show this help
-	@grep -E -h '\s##\s' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
+	@grep -E -h '^[^#].+\s##\s' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
 
 # extensible array of targets. Modules can add target to this variable for the all-in-one target.
 clean_targets := build-clean
