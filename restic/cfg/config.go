@@ -44,6 +44,8 @@ type Configuration struct {
 	ResticBin        string
 	ResticRepository string
 	ResticOptions    string
+	ResticFlags      string
+	ResticIgnoreFile string
 
 	RestoreDir         string
 	RestoreS3Endpoint  string

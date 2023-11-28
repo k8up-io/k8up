@@ -87,9 +87,14 @@ func DefaultEnv(namespace string) EnvVarConverter {
 	defaults.SetString(cfg.AwsAccessKeyIDEnvName, cfg.Config.GlobalAccessKey)
 	defaults.SetString(cfg.AwsSecretAccessKeyEnvName, cfg.Config.GlobalSecretAccessKey)
 	defaults.SetString("HOSTNAME", namespace)
+	defaults.SetString(cfg.ResticIgnoreFileName, cfg.Config.ResticIgnoreFile)
 
 	if cfg.Config.ResticOptions != "" {
 		defaults.SetString(cfg.ResticOptionsEnvName, cfg.Config.ResticOptions)
+	}
+
+	if cfg.Config.ResticFlags != "" {
+		defaults.SetString(cfg.ResticFlagsEnvName, cfg.Config.ResticFlags)
 	}
 
 	return defaults

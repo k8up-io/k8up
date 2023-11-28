@@ -69,6 +69,8 @@ var (
 			&cli.StringFlag{Destination: &cfg.Config.ResticBin, Name: "resticBin", EnvVars: []string{"RESTIC_BINARY"}, Usage: "The path to the restic binary.", Value: "/usr/local/bin/restic"},
 			&cli.StringFlag{Destination: &cfg.Config.ResticRepository, Name: "resticRepository", EnvVars: []string{"RESTIC_REPOSITORY"}, Usage: "The restic repository to perform the action with", Required: true},
 			&cli.StringFlag{Destination: &cfg.Config.ResticOptions, Name: "resticOptions", EnvVars: []string{"RESTIC_OPTIONS"}, Usage: "Additional options to pass to restic in the format 'key=value,key2=value2'"},
+			&cli.StringFlag{Destination: &cfg.Config.ResticFlags, Name: "resticFlags", EnvVars: []string{"RESTIC_FLAGS"}, Usage: "Additional flags to pass to restic in the format '--flag1=value;--flag2=value2"},
+			&cli.StringFlag{Destination: &cfg.Config.ResticIgnoreFile, Name: "resticIgnoreFile", EnvVars: []string{"RESTIC_IGNORE_FILE"}, Usage: "Filename of an ignore file that will be included with --exclude-file. Needs to be present in the root dir of the pv"},
 
 			&cli.IntFlag{Destination: &cfg.Config.PruneKeepLast, Name: "keepLatest", EnvVars: []string{"KEEP_LAST", "KEEP_LATEST"}, Usage: "While pruning, keep at the latest snapshot"},
 			&cli.IntFlag{Destination: &cfg.Config.PruneKeepHourly, Name: "keepHourly", EnvVars: []string{"KEEP_HOURLY"}, Usage: "While pruning, keep hourly snapshots"},

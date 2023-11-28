@@ -32,6 +32,8 @@ OPTIONS:
    --resticBin value                          The path to the restic binary. (default: "/usr/local/bin/restic") [$RESTIC_BINARY]
    --resticRepository value                   The restic repository to perform the action with [$RESTIC_REPOSITORY]
    --resticOptions value                      Additional options to pass to restic in the format 'key=value,key2=value2' [$RESTIC_OPTIONS]
+   --resticFlags value                        Additional flags to pass to restic in the format '--flag1=value;--flag2=value2 [$RESTIC_FLAGS]
+   --resticIgnoreFile value                   Filename of an ignore file that will be included with --exclude-file. Needs to be present in the root dir of the pv [$RESTIC_IGNORE_FILE]
    --keepLatest value                         While pruning, keep at the latest snapshot (default: 0) [$KEEP_LAST, $KEEP_LATEST]
    --keepHourly value                         While pruning, keep hourly snapshots (default: 0) [$KEEP_HOURLY]
    --keepDaily value                          While pruning, keep daily snapshots (default: 0) [$KEEP_DAILY]

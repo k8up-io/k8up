@@ -15,6 +15,8 @@ const (
 	ResticRepositoryEnvName = "RESTIC_REPOSITORY"
 	ResticPasswordEnvName   = "RESTIC_PASSWORD"
 	ResticOptionsEnvName    = "RESTIC_OPTIONS"
+	ResticFlagsEnvName      = "RESTIC_FLAGS"
+	ResticIgnoreFileName    = "RESTIC_IGNORE_FILE"
 
 	AwsAccessKeyIDEnvName     = "AWS_ACCESS_KEY_ID"
 	AwsSecretAccessKeyEnvName = "AWS_SECRET_ACCESS_KEY"
@@ -84,6 +86,14 @@ type Configuration struct {
 	// Allows to pass options to restic, see https://restic.readthedocs.io/en/stable/manual_rest.html?highlight=--option#usage-help
 	// Format: `key=value,key2=value2`
 	ResticOptions string
+
+	// Allows to pass flags to restic, see https://restic.readthedocs.io/en/stable/manual_rest.html?highlight=--option#usage-help
+	// Format: `--flag1=value1;--flag2=value2`
+	ResticFlags string
+
+	// Name of an ignore file to be used by restic with the `--exclude-file` flag. The file must be present in the root folder
+	// of the backed up pv.
+	ResticIgnoreFile string
 }
 
 func (c Configuration) GetGlobalDefaultResources() (res corev1.ResourceRequirements) {

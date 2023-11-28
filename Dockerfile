@@ -28,7 +28,6 @@ ENV RESTIC_BINARY=/usr/local/bin/restic
 COPY --from=restic /usr/local/bin/restic $RESTIC_BINARY
 COPY k8up /usr/local/bin/
 
-RUN chmod a+x /usr/local/bin/k8up
 RUN $RESTIC_BINARY version
 
 USER 65532

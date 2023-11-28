@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 	"path"
+	"strings"
 	"time"
 
 	"github.com/go-logr/logr"
@@ -58,6 +59,29 @@ func (r *Restic) folderBackup(folder string, backuplogger logr.Logger, tags Arra
 		"--host": {cfg.Config.Hostname},
 		"--json": {},
 	})
+
+	// Get additional flags from the environment.
+	flagPairs := strings.Split(cfg.Config.ResticFlags, ";")
+	for _, pair := range flagPairs {
+		if pair == "" {
+			continue
+		}
+
+		parts := strings.SplitN(pair, "=", 2)
+		if len(parts) != 2 {
+			continue
+		}
+
+		key := parts[0]
+		values := strings.Split(parts[1], ",")
+		backuplogger.Info("using the following restic flags", "key", key, "values", values)
+		flags.AddFlag(key, values...)
+	}
+
+	backuplogger.Info("using " + cfg.Config.ResticIgnoreFile + " as ignore file")
+	if cfg.Config.ResticIgnoreFile != "" {
+		flags.AddFlag("--exclude-file", folder+"/"+cfg.Config.ResticIgnoreFile)
+	}
 
 	opts := CommandOptions{
 		Path:   r.resticPath,
