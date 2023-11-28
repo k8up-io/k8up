@@ -79,7 +79,7 @@ func (c *Command) setResticProgressFPSIfNotDefined(givenEnv []string) []string {
 		}
 	}
 
-	const frequency = 1.0 / 60.0
+	const frequency = 10 / 60.0
 	c.cmdLogger.Info("Defining RESTIC_PROGRESS_FPS", "frequency", frequency)
 	return append(givenEnv, fmt.Sprintf("RESTIC_PROGRESS_FPS=%f", frequency))
 }
