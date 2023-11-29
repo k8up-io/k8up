@@ -242,12 +242,27 @@ func (r *Restic) isRestoreSingleFile(log logr.Logger, snapshot dto.Snapshot) (bo
 
 	stdOutLines := strings.Split(capturedStdOut, "\n")
 
+	if len(stdOutLines) == 0 {
+		err := fmt.Errorf("no list exist for snapshot %v", snapshot.ID)
+		log.Error(err, "the snapshot list is empty")
+		return false, err
+	}
+
+	err := json.Unmarshal([]byte(stdOutLines[0]), &dto.Snapshot{})
+	if err != nil {
+		return false, err
+	}
+
 	count := 0
-	for _, fileJSON := range stdOutLines {
-		node := &fileNode{}
-		err := json.Unmarshal([]byte(fileJSON), node)
-		if err != nil {
+	for i := 1; i < len(stdOutLines); i++ {
+		if len(stdOutLines[i]) == 0 {
 			continue
+		}
+
+		node := &fileNode{}
+		err := json.Unmarshal([]byte(stdOutLines[i]), node)
+		if err != nil {
+			return false, err
 		}
 		if node.Type == "file" {
 			count++
