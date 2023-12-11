@@ -97,7 +97,12 @@ func (p *PodLister) ListPods() ([]BackupPod, error) {
 			fileExtension := annotations[p.fileExtensionAnnotation]
 
 			owner := pod.OwnerReferences
-			firstOwnerID := string(owner[0].UID)
+			var firstOwnerID string
+			if len(owner) > 0 {
+				firstOwnerID = string(owner[0].UID)
+			} else {
+				firstOwnerID = string(pod.ObjectMeta.UID)
+			}
 
 			if _, ok := sameOwner[firstOwnerID]; !ok {
 				sameOwner[firstOwnerID] = true
