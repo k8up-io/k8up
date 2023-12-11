@@ -1,6 +1,9 @@
-accessKey: myaccesskey
-secretKey: mysecretkey
+users:
+  - accessKey: myaccesskey
+    secretKey: mysecretkey
+    policy: consoleAdmin
 replicas: 1
+mode: standalone
 resources:
   requests:
     memory: 250M
