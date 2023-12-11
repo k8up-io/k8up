@@ -134,6 +134,17 @@ given_an_annotated_subject() {
 	echo "✅  The annotated subject is ready"
 }
 
+given_an_annotated_subject_pod() {
+  require_args 2 ${#}
+
+  export BACKUP_FILE_NAME=${1}
+  export BACKUP_FILE_CONTENT=${2}
+
+  yq e '.spec.containers[1].securityContext.runAsUser='$(id -u)' | .spec.containers[1].env[0].value=strenv(BACKUP_FILE_CONTENT) | .spec.containers[1].env[1].value=strenv(BACKUP_FILE_NAME)' definitions/annotated-subject/pod.yaml | kubectl apply -f -
+
+  echo "✅  The annotated subject pod is ready"
+}
+
 given_a_rwo_pvc_subject_in_worker_node() {
 	require_args 2 ${#}
 
@@ -159,7 +170,7 @@ given_a_rwo_pvc_subject_in_controlplane_node() {
 given_s3_storage() {
 	# Speed this step up
 	(helm -n "${MINIO_NAMESPACE}" list | grep minio > /dev/null) && return
-	helm repo add minio https://helm.min.io/ --force-update
+	helm repo add minio https://charts.min.io/ --force-update
 	helm repo update
 	helm upgrade --install minio \
 		--values definitions/minio/helm.yaml \
