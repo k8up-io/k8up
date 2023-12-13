@@ -204,6 +204,7 @@ func (in *GCSSpec) String() string {
 
 type AzureSpec struct {
 	Container            string                    `json:"container,omitempty"`
+	Path                 string                    `json:"path,omitempty"`
 	AccountNameSecretRef *corev1.SecretKeySelector `json:"accountNameSecretRef,omitempty"`
 	AccountKeySecretRef  *corev1.SecretKeySelector `json:"accountKeySecretRef,omitempty"`
 }
@@ -215,9 +216,14 @@ func (in *AzureSpec) EnvVars(vars map[string]*corev1.EnvVarSource) map[string]*c
 	return vars
 }
 
-// String returns "azure:container:/"
+// String returns "azure:container:path"
+// If Path is empty, the default value "/" will be used as path
 func (in *AzureSpec) String() string {
-	return fmt.Sprintf("azure:%s:/", in.Container)
+	path := "/"
+	if in.Path != "" {
+		path = in.Path
+	}
+	return fmt.Sprintf("azure:%s:%s", in.Container, path)
 }
 
 type SwiftSpec struct {

@@ -93,6 +93,8 @@ spec:
                             x-kubernetes-map-type: atomic
                           container:
                             type: string
+                          path:
+                            type: string
                         type: object
                       b2:
                         properties:
@@ -693,6 +695,8 @@ spec:
                         x-kubernetes-map-type: atomic
                       container:
                         type: string
+                      path:
+                        type: string
                     type: object
                   b2:
                     properties:
@@ -997,6 +1001,8 @@ spec:
                             type: object
                             x-kubernetes-map-type: atomic
                           container:
+                            type: string
+                          path:
                             type: string
                         type: object
                       b2:
@@ -1548,6 +1554,8 @@ spec:
                             type: object
                             x-kubernetes-map-type: atomic
                           container:
+                            type: string
+                          path:
                             type: string
                         type: object
                       b2:
@@ -2262,6 +2270,8 @@ spec:
                             x-kubernetes-map-type: atomic
                           container:
                             type: string
+                          path:
+                            type: string
                         type: object
                       b2:
                         properties:
@@ -2858,6 +2868,8 @@ spec:
                             type: object
                             x-kubernetes-map-type: atomic
                           container:
+                            type: string
+                          path:
                             type: string
                         type: object
                       b2:

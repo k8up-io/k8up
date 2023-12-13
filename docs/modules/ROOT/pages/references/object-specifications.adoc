@@ -388,6 +388,7 @@ Settings:
 Settings:
 
 * `container`: name of the container that should be used
+* `path`: path inside the container, will default to "/" if omitted
 * `accountNameSecretRef`: Kubernetes secret reference containing the account name
 * `accountKeySecretRef`: Kubernetes secret reference containing the account key
 
