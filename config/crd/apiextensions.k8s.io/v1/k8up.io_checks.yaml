@@ -101,6 +101,8 @@ spec:
                         x-kubernetes-map-type: atomic
                       container:
                         type: string
+                      path:
+                        type: string
                     type: object
                   b2:
                     properties:
