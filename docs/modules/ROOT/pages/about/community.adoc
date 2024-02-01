@@ -7,6 +7,11 @@ https://app.slack.com/client/T08PSQ7BQ/C06GP0D5FEF[Chat]:: We use the https://sl
 https://github.com/k8up-io/k8up[GitHub]:: The source code and issue tracking is available on _GitHub_ under https://github.com/k8up-io/k8up[k8up-io/k8up].
 
 [discrete]
+== Maintainer
+
+Current maintainers are documented in the https://github.com/k8up-io/k8up/blob/master/OWNERS.md[OWNERS.md] file.
+
+[discrete]
 == Project sponsor
 
 The project is sponsored by https://vshn.ch/[VSHN AG].
