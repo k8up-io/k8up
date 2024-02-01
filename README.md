@@ -16,6 +16,8 @@ K8up is a Kubernetes backup operator based on [Restic](https://restic.readthedoc
 Just create a `schedule` and a `credentials` object in the namespace you’d like to backup.
 It’s that easy. K8up takes care of the rest. It also provides a Prometheus endpoint for monitoring.
 
+K8up is production ready. It is used in production deployments since 2019.
+
 ## Documentation
 
 The documentation is written in AsciiDoc and published with Antora to [k8up.io](https://k8up.io/).
