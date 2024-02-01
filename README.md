@@ -141,7 +141,15 @@ make clean
 There are a number of example configurations in [`config/samples`](config/samples).
 Apply them using `kubectl apply -f config/samples/somesample.yaml`
 
-### Code of Conduct
+# Community
+
+Read more about our community [in the documentation](https://k8up.io/k8up/about/community.html).
+
+## Chat with us
+
+The K8up project is present in the [CNCF Slack Workspace](https://slack.cncf.io/) in the [#k8up channel](https://app.slack.com/client/T08PSQ7BQ/C06GP0D5FEF).
+
+## Code of Conduct
 
 Our code of conduct can be read at [k8up.io](https://k8up.io/k8up/about/code_of_conduct.html).
 

@@ -3,7 +3,7 @@
 Connect with the K8up community:
 
 https://github.com/k8up-io/k8up/discussions[Discussions]:: The project has GitHub discussions enabled where we discuss everything around K8up. Feel free to hop in there.
-https://community.appuio.ch/[Chat]:: We use the _APPUiO Community Chat_ (registration open) and are reachable in the https://community.appuio.ch/channel/k8up[#k8up] channel.
+https://app.slack.com/client/T08PSQ7BQ/C06GP0D5FEF[Chat]:: We use the https://slack.cncf.io/[CNCF Slack Workspace] and are reachable in the #k8up channel.
 https://github.com/k8up-io/k8up[GitHub]:: The source code and issue tracking is available on _GitHub_ under https://github.com/k8up-io/k8up[k8up-io/k8up].
 
 [discrete]
