@@ -151,6 +151,10 @@ Read more about our community [in the documentation](https://k8up.io/k8up/about/
 
 The K8up project is present in the [CNCF Slack Workspace](https://slack.cncf.io/) in the [#k8up channel](https://app.slack.com/client/T08PSQ7BQ/C06GP0D5FEF).
 
+## Monthly community meeting
+
+We host a monthly community meeting. For more information, head over to [the community documentation](https://k8up.io/k8up/about/community.html).
+
 ## Code of Conduct
 
 Our code of conduct can be read at [k8up.io](https://k8up.io/k8up/about/code_of_conduct.html).
