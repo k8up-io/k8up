@@ -25,6 +25,7 @@ const (
 	leaderElectionID = "d2ab61da.syn.tools"
 	argCommandRestic = "command-restic"
 	argResticOptions = "restic-options"
+	listImageSecrets = "ImageSecretPulls"
 )
 
 var (
@@ -64,6 +65,7 @@ var (
 			&cli.StringFlag{Destination: &cfg.Config.GlobalMemoryResourceLimit, Name: "global-memory-limit", EnvVars: []string{"BACKUP_GLOBAL_MEMORY_LIMIT"}, Usage: "set the memory limit for scheduled jobs"},
 
 			&cli.StringFlag{Destination: &cfg.Config.BackupImage, Name: "image", EnvVars: []string{"BACKUP_IMAGE"}, Value: "ghcr.io/k8up-io/k8up:latest", Usage: "URL of the restic image"},
+			&cli.StringSliceFlag{Name: listImageSecrets, EnvVars: []string{"IMAGE_SECRETS"}, Usage: "Secrets for access to  $BACKUP_IMAGE"},
 			&cli.StringSliceFlag{Name: argCommandRestic, EnvVars: []string{"BACKUP_COMMAND_RESTIC"}, Value: cli.NewStringSlice("/usr/local/bin/k8up", "restic"), Usage: "The command that is executed for restic backups."},
 			&cli.StringSliceFlag{Name: argResticOptions, EnvVars: []string{"BACKUP_RESTIC_OPTIONS"}, Usage: "Pass custom restic options in the form 'key=value,key2=value2'. See https://restic.readthedocs.io/en/stable/manual_rest.html?highlight=--option#usage-help"},
 			&cli.StringFlag{Destination: &cfg.Config.MountPath, Name: "datapath", Aliases: []string{"mountpath"}, EnvVars: []string{"BACKUP_DATAPATH"}, Value: "/data", Usage: "to which path the PVCs should get mounted in the backup container"},
@@ -91,6 +93,7 @@ func operatorMain(c *cli.Context) error {
 
 	cfg.Config.BackupCommandRestic = c.StringSlice(argCommandRestic)
 	cfg.Config.ResticOptions = strings.Join(c.StringSlice(argResticOptions), ",")
+	cfg.Config.ImageSecrets = c.StringSlice(listImageSecrets)
 
 	err := validateQuantityFlags(c)
 	if err != nil {

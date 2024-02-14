@@ -60,6 +60,14 @@ func MutateBatchJob(batchJob *batchv1.Job, jobObj k8upv1.JobObject, config Confi
 	batchJob.Spec.Template.Spec.RestartPolicy = corev1.RestartPolicyOnFailure
 	batchJob.Spec.Template.Spec.SecurityContext = jobObj.GetPodSecurityContext()
 
+	if len(cfg.Config.ImageSecrets) != 0 {
+		var imPulSecs []corev1.LocalObjectReference
+		for _, secret := range cfg.Config.ImageSecrets {
+			imPulSecs = append(imPulSecs, corev1.LocalObjectReference{Name: secret})
+		}
+		batchJob.Spec.Template.Spec.ImagePullSecrets = imPulSecs
+	}
+
 	containers := batchJob.Spec.Template.Spec.Containers
 	if len(containers) == 0 {
 		containers = make([]corev1.Container, 1)
