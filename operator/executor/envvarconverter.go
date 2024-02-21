@@ -87,6 +87,7 @@ func DefaultEnv(namespace string) EnvVarConverter {
 	defaults.SetString(cfg.AwsAccessKeyIDEnvName, cfg.Config.GlobalAccessKey)
 	defaults.SetString(cfg.AwsSecretAccessKeyEnvName, cfg.Config.GlobalSecretAccessKey)
 	defaults.SetString("HOSTNAME", namespace)
+	defaults.SetStringOrDefault("SET_INSECURE_TLS_FLAG", cfg.Config.Insecure, "false")
 
 	if cfg.Config.ResticOptions != "" {
 		defaults.SetString(cfg.ResticOptionsEnvName, cfg.Config.ResticOptions)

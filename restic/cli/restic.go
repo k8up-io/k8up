@@ -46,6 +46,9 @@ type Restic struct {
 func New(ctx context.Context, logger logr.Logger, statsHandler StatsHandler) *Restic {
 	globalFlags := Flags{}
 
+	if cfg.Config.Insecure {
+		globalFlags.AddFlag("--insecure-tls")
+	}
 	options := strings.Split(cfg.Config.ResticOptions, ",")
 	if len(options) > 0 {
 		logger.Info("using the following restic options", "options", options)
