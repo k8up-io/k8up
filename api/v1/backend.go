@@ -3,6 +3,7 @@ package v1
 import (
 	"fmt"
 	"reflect"
+	"strings"
 
 	corev1 "k8s.io/api/core/v1"
 
@@ -275,5 +276,6 @@ func (in *RestServerSpec) EnvVars(vars map[string]*corev1.EnvVarSource) map[stri
 
 // String returns "rest:URL"
 func (in *RestServerSpec) String() string {
-	return fmt.Sprintf("rest:%s", in.URL)
+	protocol, url, _ := strings.Cut(in.URL, "://")
+	return fmt.Sprintf("rest:%s://%s:%s@%s", protocol, "$(USER)", "$(PASSWORD)", url)
 }
