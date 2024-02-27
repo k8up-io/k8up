@@ -50,7 +50,10 @@ func (e *EnvVarConverter) setEntry(key string, value envVarEntry) {
 // are set the string will have precedence.
 func (e *EnvVarConverter) Convert() []corev1.EnvVar {
 	vars := make([]corev1.EnvVar, 0)
+	var repositoryVar corev1.EnvVar
+	var repositoryVarSet bool
 	for key, value := range e.Vars {
+
 		envVar := corev1.EnvVar{
 			Name: key,
 		}
@@ -59,7 +62,17 @@ func (e *EnvVarConverter) Convert() []corev1.EnvVar {
 		} else if value.stringEnv != nil {
 			envVar.Value = *value.stringEnv
 		}
-		vars = append(vars, envVar)
+		if key == cfg.ResticRepositoryEnvName {
+			// set repository env var at the end so the rest backend url
+			// can use previous set rest server credentials
+			repositoryVar = envVar
+			repositoryVarSet = true
+		} else {
+			vars = append(vars, envVar)
+		}
+	}
+	if repositoryVarSet {
+		vars = append(vars, repositoryVar)
 	}
 	return vars
 }
