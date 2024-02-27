@@ -118,7 +118,7 @@ var tests = map[string]struct {
 			cfg.RestPasswordEnvName: {SecretKeyRef: newSecretRef("password")},
 			cfg.RestUserEnvName:     {SecretKeyRef: newSecretRef("user")},
 		},
-		expectedRepositoryString: "rest:https://server",
+		expectedRepositoryString: "rest:https://$(USER):$(PASSWORD)@server",
 	},
 }
 
