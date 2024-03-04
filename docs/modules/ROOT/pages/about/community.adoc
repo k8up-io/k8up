@@ -19,7 +19,7 @@ Zoom link::
 https://vshn.zoom.us/j/82326347868?pwd=0ImBHdwZH98raNP78fFlVI9zci7w6w.1[Zoom^]
 
 The agenda::
-We collect inputs for the agenda beforehand in the community Slack channel.
+We collect inputs for the agenda in a https://docs.google.com/document/d/1O687amnDyQIXReeeKkylzxWgq1BZ7tZdIQN0-x3ca5g/edit?usp=sharing[Google Docs^] document.
 +
 The general agenda is:
 
