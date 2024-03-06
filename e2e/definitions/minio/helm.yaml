@@ -1,7 +1,3 @@
-users:
-  - accessKey: myaccesskey
-    secretKey: mysecretkey
-    policy: consoleAdmin
 replicas: 1
 mode: standalone
 resources:
@@ -13,3 +9,6 @@ buckets:
   - name: backup
     policy: none
     purge: false
+mode: standalone
+rootUser: minioadmin
+rootPassword: minioadmin
