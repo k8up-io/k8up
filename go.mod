@@ -2,8 +2,6 @@ module github.com/k8up-io/k8up/v2
 
 go 1.21
 
-toolchain go1.22.1
-
 require (
 	github.com/firepear/qsplit/v2 v2.5.0
 	github.com/go-logr/logr v1.4.1
