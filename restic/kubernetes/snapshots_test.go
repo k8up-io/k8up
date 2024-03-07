@@ -6,7 +6,7 @@ import (
 
 	k8upv1 "github.com/k8up-io/k8up/v2/api/v1"
 	"github.com/stretchr/testify/assert"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 )
 
 func Test_diff(t *testing.T) {
@@ -29,7 +29,7 @@ func Test_diff(t *testing.T) {
 					Items: []k8upv1.Snapshot{
 						{
 							Spec: k8upv1.SnapshotSpec{
-								ID: pointer.String("2"),
+								ID: ptr.To("2"),
 							},
 						},
 					},
@@ -48,7 +48,7 @@ func Test_diff(t *testing.T) {
 					Items: []k8upv1.Snapshot{
 						{
 							Spec: k8upv1.SnapshotSpec{
-								ID: pointer.String("1"),
+								ID: ptr.To("1"),
 							},
 						},
 					},
@@ -57,7 +57,7 @@ func Test_diff(t *testing.T) {
 					Items: []k8upv1.Snapshot{
 						{
 							Spec: k8upv1.SnapshotSpec{
-								ID: pointer.String("1"),
+								ID: ptr.To("1"),
 							},
 						},
 					},
@@ -73,17 +73,17 @@ func Test_diff(t *testing.T) {
 					Items: []k8upv1.Snapshot{
 						{
 							Spec: k8upv1.SnapshotSpec{
-								ID: pointer.String("1"),
+								ID: ptr.To("1"),
 							},
 						},
 						{
 							Spec: k8upv1.SnapshotSpec{
-								ID: pointer.String("2"),
+								ID: ptr.To("2"),
 							},
 						},
 						{
 							Spec: k8upv1.SnapshotSpec{
-								ID: pointer.String("3"),
+								ID: ptr.To("3"),
 							},
 						},
 					},
@@ -92,7 +92,7 @@ func Test_diff(t *testing.T) {
 					Items: []k8upv1.Snapshot{
 						{
 							Spec: k8upv1.SnapshotSpec{
-								ID: pointer.String("1"),
+								ID: ptr.To("1"),
 							},
 						},
 					},
@@ -111,7 +111,7 @@ func Test_diff(t *testing.T) {
 					Items: []k8upv1.Snapshot{
 						{
 							Spec: k8upv1.SnapshotSpec{
-								ID: pointer.String("2"),
+								ID: ptr.To("2"),
 							},
 						},
 					},
@@ -152,12 +152,12 @@ func Test_filterByRepo(t *testing.T) {
 				Items: []k8upv1.Snapshot{
 					{
 						Spec: k8upv1.SnapshotSpec{
-							Repository: pointer.String("myrepo"),
+							Repository: ptr.To("myrepo"),
 						},
 					},
 					{
 						Spec: k8upv1.SnapshotSpec{
-							Repository: pointer.String("myrepo"),
+							Repository: ptr.To("myrepo"),
 						},
 					},
 				},
@@ -168,12 +168,12 @@ func Test_filterByRepo(t *testing.T) {
 					Items: []k8upv1.Snapshot{
 						{
 							Spec: k8upv1.SnapshotSpec{
-								Repository: pointer.String("myrepo"),
+								Repository: ptr.To("myrepo"),
 							},
 						},
 						{
 							Spec: k8upv1.SnapshotSpec{
-								Repository: pointer.String("myrepo"),
+								Repository: ptr.To("myrepo"),
 							},
 						},
 					},
@@ -186,7 +186,7 @@ func Test_filterByRepo(t *testing.T) {
 				Items: []k8upv1.Snapshot{
 					{
 						Spec: k8upv1.SnapshotSpec{
-							Repository: pointer.String("myrepo"),
+							Repository: ptr.To("myrepo"),
 						},
 					},
 				},
@@ -197,12 +197,12 @@ func Test_filterByRepo(t *testing.T) {
 					Items: []k8upv1.Snapshot{
 						{
 							Spec: k8upv1.SnapshotSpec{
-								Repository: pointer.String("yourrepo"),
+								Repository: ptr.To("yourrepo"),
 							},
 						},
 						{
 							Spec: k8upv1.SnapshotSpec{
-								Repository: pointer.String("myrepo"),
+								Repository: ptr.To("myrepo"),
 							},
 						},
 					},
