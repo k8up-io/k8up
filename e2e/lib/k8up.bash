@@ -61,7 +61,7 @@ restic() {
 		--env "AWS_ACCESS_KEY_ID=minioadmin" \
 		--env "AWS_SECRET_ACCESS_KEY=minioadmin" \
 		--env "RESTIC_PASSWORD=myreposecret" \
-		--pod-running-timeout 10s \
+		--pod-running-timeout 60s \
 		--quiet \
 		--command -- \
 		restic \
