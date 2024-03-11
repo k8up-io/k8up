@@ -54,7 +54,7 @@ run-restic: run  ## Run the restic module. Use ARGS to pass arguments to the com
 .PHONY: install
 install: export KUBECONFIG = $(KIND_KUBECONFIG)
 install: generate kind-setup ## Install CRDs into a cluster
-	kubectl apply $(KIND_KUBECTL_ARGS) -f $(CRD_ROOT_DIR)/v1
+	kubectl apply $(KIND_KUBECTL_ARGS) -f $(CRD_ROOT_DIR)/v1 --server-side
 
 .PHONY: uninstall
 uninstall: export KUBECONFIG = $(KIND_KUBECONFIG)

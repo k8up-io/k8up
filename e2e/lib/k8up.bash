@@ -58,10 +58,10 @@ restic() {
 		--restart Never \
 		--namespace "${DETIK_CLIENT_NAMESPACE-"k8up-system"}" \
 		--image "${E2E_IMAGE}" \
-		--env "AWS_ACCESS_KEY_ID=myaccesskey" \
-		--env "AWS_SECRET_ACCESS_KEY=mysecretkey" \
+		--env "AWS_ACCESS_KEY_ID=minioadmin" \
+		--env "AWS_SECRET_ACCESS_KEY=minioadmin" \
 		--env "RESTIC_PASSWORD=myreposecret" \
-		--pod-running-timeout 10s \
+		--pod-running-timeout 60s \
 		--quiet \
 		--command -- \
 		restic \
