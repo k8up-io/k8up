@@ -17,8 +17,18 @@ spec:
         app: wordpress
         tier: frontend
     spec:
+      securityContext:
+        runAsUser: 10002
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
       containers:
-      - image: wordpress:5.4-apache
+      - image: docker.io/wordpress:5.4-apache
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
         name: wordpress
         env:
         - name: WORDPRESS_DB_HOST
