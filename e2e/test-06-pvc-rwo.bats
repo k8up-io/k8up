@@ -50,6 +50,7 @@ DEBUG_DETIK="true"
 	echo "${output}"
 	echo "---END---"
 
+	echo "${output} = ${expected_content}-worker"
 	[ "${output}" = "${expected_content}-worker" ]
 
 	run get_latest_snap_by_path /data/pvc-rwo-subject-pvc-controlplane
@@ -60,5 +61,6 @@ DEBUG_DETIK="true"
 	echo "${output}"
 	echo "---END---"
 
+	echo "${output} = ${expected_content}-controlplane"
 	[ "${output}" = "${expected_content}-controlplane" ]
 }
