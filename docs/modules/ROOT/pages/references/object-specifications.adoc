@@ -428,7 +428,7 @@ Settings:
 
 * `url`: URL of the Rest server instance (include scheme like `https://` on your own)
 * `userSecretRef`: Kubernetes secret reference containing the basic auth user
-* `passwordSecretReg`: Kubernetes secret reference containing the basic auth password
+* `passwordSecretRef`: Kubernetes secret reference containing the basic auth password
 
 == PreBackupPod
 
