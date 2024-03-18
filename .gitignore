@@ -42,3 +42,6 @@ e2e/debug
 # Charts
 .cr-release-packages/
 .cr-index/
+
+# Vagrant
+.vagrant/
