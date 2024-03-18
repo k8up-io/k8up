@@ -248,7 +248,7 @@ func TestRestore_args(t *testing.T) {
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
 			e := NewRestoreExecutor(*newConfig())
-			args, err := e.args(tt.GivenResource)
+			args, err := e.setupArgs(tt.GivenResource)
 
 			require.NoError(t, err)
 			assert.Equal(t, tt.ExpectedArgs, args)
