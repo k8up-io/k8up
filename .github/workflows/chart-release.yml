@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Download cr
-        uses: giantswarm/install-binary-action@v1.0.0
+        uses: giantswarm/install-binary-action@v1.1.0
         with:
           binary: cr
           version: "1.4.0"

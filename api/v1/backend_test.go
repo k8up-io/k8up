@@ -28,6 +28,21 @@ var tests = map[string]struct {
 		},
 		expectedRepositoryString: "azure:container:/",
 	},
+	"GivenAzureBackendAndPath_ThenExpectAzureContainerWithCustomPath": {
+		givenBackend: &Backend{
+			Azure: &AzureSpec{
+				Container:            "container",
+				Path:                 "foo",
+				AccountNameSecretRef: newSecretRef("name"),
+				AccountKeySecretRef:  newSecretRef("key"),
+			},
+		},
+		expectedVars: map[string]*corev1.EnvVarSource{
+			cfg.AzureAccountEnvName:    {SecretKeyRef: newSecretRef("name")},
+			cfg.AzureAccountKeyEnvName: {SecretKeyRef: newSecretRef("key")},
+		},
+		expectedRepositoryString: "azure:container:foo",
+	},
 	"GivenB2Backend_ThenExpectB2BucketAndPath": {
 		givenBackend: &Backend{
 			B2: &B2Spec{
@@ -103,7 +118,7 @@ var tests = map[string]struct {
 			cfg.RestPasswordEnvName: {SecretKeyRef: newSecretRef("password")},
 			cfg.RestUserEnvName:     {SecretKeyRef: newSecretRef("user")},
 		},
-		expectedRepositoryString: "rest:https://server",
+		expectedRepositoryString: "rest:https://$(USER):$(PASSWORD)@server",
 	},
 }
 

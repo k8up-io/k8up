@@ -1,6 +1,7 @@
 package kubernetes
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"strings"
@@ -60,7 +61,7 @@ func PodExec(pod BackupPod, log logr.Logger) (*ExecData, error) {
 	var stdoutReader, stdoutWriter = io.Pipe()
 	done := make(chan bool, 1)
 	go func() {
-		err = exec.Stream(remotecommand.StreamOptions{
+		err = exec.StreamWithContext(context.Background(), remotecommand.StreamOptions{
 			Stdin:  nil,
 			Stdout: stdoutWriter,
 			Stderr: logging.NewErrorWriter(log.WithName(pod.PodName)),

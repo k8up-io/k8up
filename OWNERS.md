@@ -13,7 +13,13 @@ This will be built up when time comes.
 
 ## Maintainers
 
-We document the list of maintainers in the [GitHub team "Maintainer"](https://github.com/orgs/k8up-io/teams/maintainer/members).
+* Tobias Brunner <tobias.brunner@vshn.ch> ([tobru](https://github.com/tobru))
+* Simon Beck <simon.beck@vshn.ch> ([Kidswiss](https://github.com/Kidswiss))
+* Nicolas Bigler <nicolas.bigler@vshn.ch> ([TheBigLee](https://github.com/TheBigLee))
+* Łukasz Widera <lukasz.widera@vshn.ch> ([wejdross](https://github.com/wejdross))
+* Gabriel Saratura <gabriel.saratura@vshn.ch> ([zugao](https://github.com/zugao))
+
+We also document the list of maintainers in the [GitHub team "Maintainer"](https://github.com/orgs/k8up-io/teams/maintainer/members).
 
 ## Reviewers
 

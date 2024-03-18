@@ -1,0 +1,27 @@
+apiVersion: k8up.io/v1
+kind: Restore
+metadata:
+  name: k8up-restore-backupcommand
+  namespace: k8up-e2e-subject
+spec:
+  snapshot: $SNAPSHOT_ID
+  failedJobsHistoryLimit: 1
+  successfulJobsHistoryLimit: 1
+  restoreMethod:
+    folder:
+      claimName: subject-pvc
+  backend:
+    repoPasswordSecretRef:
+      name: backup-repo
+      key: password
+    s3:
+      endpoint: http://minio.minio.svc.cluster.local:9000
+      bucket: backup
+      accessKeyIDSecretRef:
+        name: backup-credentials
+        key: username
+      secretAccessKeySecretRef:
+        name: backup-credentials
+        key: password
+  podSecurityContext:
+    runAsUser: $ID

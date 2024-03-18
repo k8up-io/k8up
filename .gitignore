@@ -21,6 +21,7 @@ coverage/
 .cache
 _public/
 _archive/
+tmp/
 
 .github/release-notes.md
 

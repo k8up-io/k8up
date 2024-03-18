@@ -1,0 +1,35 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: subject-pod
+  namespace: k8up-e2e-subject
+  annotations:
+    k8up.io/backupcommand: '/tmp/test.sh'
+    k8up.io/file-extension: '.txt'
+    k8up.io/backupcommand-container: subject-container
+spec:
+  containers:
+    - image: busybox
+      name: dummy-container-blocking-first-position
+      command:
+        - "/bin/sh"
+        - "-c"
+        - "sleep infinity"
+    - name: subject-container
+      image: quay.io/prometheus/busybox:latest
+      imagePullPolicy: IfNotPresent
+      args:
+        - sh
+        - -c
+        - |
+          printf '#!/bin/sh\nsleep 30s\necho %s\n' "$BACKUP_FILE_CONTENT" | tee /tmp/test.sh && chmod a+x /tmp/test.sh && \
+          echo && \
+          echo "sleeping now" && \
+          sleep infinity
+      securityContext:
+        runAsUser: $ID
+      env:
+        - name: BACKUP_FILE_CONTENT
+          value: ""
+        - name: BACKUP_FILE_NAME
+          value: ""
