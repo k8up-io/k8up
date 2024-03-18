@@ -55,5 +55,6 @@ DEBUG_DETIK="true"
 	echo "${output}"
 	echo "---END---"
 
+	echo "${output} = ${expected_content}"
 	[ "${output}" = "${expected_content}" ]
 }
