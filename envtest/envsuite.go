@@ -235,5 +235,6 @@ func defaultConfiguration() *cfg.Configuration {
 		MetricsBindAddress:               ":8080",
 		PodFilter:                        "backupPod=true",
 		EnableLeaderElection:             true,
+		PodVarDir:                        "/k8up",
 	}
 }

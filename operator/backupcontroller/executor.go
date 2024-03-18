@@ -260,12 +260,17 @@ func (b *BackupExecutor) startBackup(ctx context.Context) error {
 			}
 			b.backup.Spec.AppendEnvFromToContainer(&batchJob.job.Spec.Template.Spec.Containers[0])
 			batchJob.job.Spec.Template.Spec.ServiceAccountName = cfg.Config.ServiceAccount
-			batchJob.job.Spec.Template.Spec.Containers[0].Args = executor.BuildTagArgs(b.backup.Spec.Tags)
-			batchJob.job.Spec.Template.Spec.Volumes = batchJob.volumes
-			batchJob.job.Spec.Template.Spec.Containers[0].VolumeMounts = b.newVolumeMounts(batchJob.job.Spec.Template.Spec.Volumes)
+			batchJob.job.Spec.Template.Spec.Volumes = append(batchJob.volumes, b.attachMoreVolumes()...)
+			batchJob.job.Spec.Template.Spec.Containers[0].VolumeMounts = append(
+				b.newVolumeMounts(batchJob.volumes),
+				b.attachMoreVolumeMounts()...,
+			)
+
+			args, argsErr := b.setupArgs()
+			batchJob.job.Spec.Template.Spec.Containers[0].Args = args
 
 			index++
-			return nil
+			return argsErr
 		})
 		if err != nil {
 			return fmt.Errorf("unable to createOrUpdate(%q): %w", batchJob.job.Name, err)

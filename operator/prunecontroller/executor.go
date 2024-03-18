@@ -2,6 +2,7 @@ package prunecontroller
 
 import (
 	"context"
+	"github.com/k8up-io/k8up/v2/operator/utils"
 	"strconv"
 	"strings"
 
@@ -15,6 +16,8 @@ import (
 	"github.com/k8up-io/k8up/v2/operator/cfg"
 	"github.com/k8up-io/k8up/v2/operator/job"
 )
+
+const _dataDirName = "k8up-dir"
 
 // PruneExecutor will execute the batch.job for Prunes.
 type PruneExecutor struct {
@@ -45,9 +48,14 @@ func (p *PruneExecutor) Execute(ctx context.Context) error {
 		batchJob.Spec.Template.Spec.Containers[0].Env = p.setupEnvVars(ctx, p.prune)
 		batchJob.Spec.Template.Spec.ServiceAccountName = cfg.Config.ServiceAccount
 		p.prune.Spec.AppendEnvFromToContainer(&batchJob.Spec.Template.Spec.Containers[0])
-		batchJob.Spec.Template.Spec.Containers[0].Args = append([]string{"-prune"}, executor.BuildTagArgs(p.prune.Spec.Retention.Tags)...)
+		batchJob.Spec.Template.Spec.Containers[0].VolumeMounts = p.attachMoreVolumeMounts()
+		batchJob.Spec.Template.Spec.Volumes = p.attachMoreVolumes()
 		batchJob.Labels[job.K8upExclusive] = "true"
-		return nil
+
+		args, argsErr := p.setupArgs()
+		batchJob.Spec.Template.Spec.Containers[0].Args = args
+
+		return argsErr
 	})
 	if err != nil {
 		p.SetConditionFalseWithMessage(ctx, k8upv1.ConditionReady, k8upv1.ReasonCreationFailed, "could not create job: %v", err)
@@ -60,6 +68,17 @@ func (p *PruneExecutor) Execute(ctx context.Context) error {
 
 func (p *PruneExecutor) jobName() string {
 	return k8upv1.PruneType.String() + "-" + p.prune.Name
+}
+
+func (p *PruneExecutor) setupArgs() ([]string, error) {
+	args := p.appendOptionsArgs()
+
+	args = append(args, "-prune")
+	if len(p.prune.Spec.Retention.Tags) > 0 {
+		args = append(args, executor.BuildTagArgs(p.prune.Spec.Retention.Tags)...)
+	}
+
+	return args, nil
 }
 
 // Exclusive should return true for jobs that can't run while other jobs run.
@@ -122,4 +141,80 @@ func (p *PruneExecutor) setupEnvVars(ctx context.Context, prune *k8upv1.Prune) [
 	}
 
 	return vars.Convert()
+}
+
+func (p *PruneExecutor) appendOptionsArgs() []string {
+	var args []string
+
+	args = append(args, []string{"--varDir", cfg.Config.PodVarDir}...)
+
+	if p.prune.Spec.Backend.Options != nil {
+		if p.prune.Spec.Backend.Options.CACert != "" {
+			args = append(args, []string{"--caCert", p.prune.Spec.Backend.Options.CACert}...)
+		}
+		if p.prune.Spec.Backend.Options.ClientCert != "" && p.prune.Spec.Backend.Options.ClientKey != "" {
+			args = append(
+				args,
+				[]string{
+					"--clientCert",
+					p.prune.Spec.Backend.Options.ClientCert,
+					"--clientKey",
+					p.prune.Spec.Backend.Options.ClientKey,
+				}...,
+			)
+		}
+	}
+
+	return args
+}
+
+func (p *PruneExecutor) attachMoreVolumes() []corev1.Volume {
+	ku8pVolume := corev1.Volume{
+		Name:         _dataDirName,
+		VolumeSource: corev1.VolumeSource{EmptyDir: &corev1.EmptyDirVolumeSource{}},
+	}
+
+	if utils.ZeroLen(p.prune.Spec.Volumes) {
+		return []corev1.Volume{ku8pVolume}
+	}
+
+	moreVolumes := make([]corev1.Volume, 0, len(*p.prune.Spec.Volumes)+1)
+	moreVolumes = append(moreVolumes, ku8pVolume)
+	for _, v := range *p.prune.Spec.Volumes {
+		vol := v
+
+		var volumeSource corev1.VolumeSource
+		if vol.PersistentVolumeClaim != nil {
+			volumeSource.PersistentVolumeClaim = vol.PersistentVolumeClaim
+		} else if vol.Secret != nil {
+			volumeSource.Secret = vol.Secret
+		} else if vol.ConfigMap != nil {
+			volumeSource.ConfigMap = vol.ConfigMap
+		} else {
+			continue
+		}
+
+		moreVolumes = append(moreVolumes, corev1.Volume{
+			Name:         vol.Name,
+			VolumeSource: volumeSource,
+		})
+	}
+
+	return moreVolumes
+}
+
+func (p *PruneExecutor) attachMoreVolumeMounts() []corev1.VolumeMount {
+	var volumeMount []corev1.VolumeMount
+
+	if p.prune.Spec.Backend.S3 != nil && !utils.ZeroLen(p.prune.Spec.Backend.S3.VolumeMounts) {
+		volumeMount = *p.prune.Spec.Backend.S3.VolumeMounts
+	}
+	if p.prune.Spec.Backend.Rest != nil && !utils.ZeroLen(p.prune.Spec.Backend.Rest.VolumeMounts) {
+		volumeMount = *p.prune.Spec.Backend.Rest.VolumeMounts
+	}
+
+	ku8pVolumeMount := corev1.VolumeMount{Name: _dataDirName, MountPath: cfg.Config.PodVarDir}
+	volumeMount = append(volumeMount, ku8pVolumeMount)
+
+	return volumeMount
 }
