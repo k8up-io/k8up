@@ -25,6 +25,8 @@ type (
 		Swift   *SwiftSpec             `json:"swift,omitempty"`
 		B2      *B2Spec                `json:"b2,omitempty"`
 		Rest    *RestServerSpec        `json:"rest,omitempty"`
+
+		Options *BackendOpts `json:"options,omitempty"`
 	}
 
 	// +k8s:deepcopy-gen=false
@@ -116,6 +118,7 @@ type S3Spec struct {
 	Bucket                   string                    `json:"bucket,omitempty"`
 	AccessKeyIDSecretRef     *corev1.SecretKeySelector `json:"accessKeyIDSecretRef,omitempty"`
 	SecretAccessKeySecretRef *corev1.SecretKeySelector `json:"secretAccessKeySecretRef,omitempty"`
+	VolumeMounts             *[]corev1.VolumeMount     `json:"volumeMounts,omitempty"`
 }
 
 // EnvVars returns the env vars for this backend.
@@ -265,6 +268,7 @@ type RestServerSpec struct {
 	URL               string                    `json:"url,omitempty"`
 	UserSecretRef     *corev1.SecretKeySelector `json:"userSecretRef,omitempty"`
 	PasswordSecretReg *corev1.SecretKeySelector `json:"passwordSecretReg,omitempty"`
+	VolumeMounts      *[]corev1.VolumeMount     `json:"volumeMounts,omitempty"`
 }
 
 // EnvVars returns the env vars for this backend.
@@ -278,4 +282,10 @@ func (in *RestServerSpec) EnvVars(vars map[string]*corev1.EnvVarSource) map[stri
 func (in *RestServerSpec) String() string {
 	protocol, url, _ := strings.Cut(in.URL, "://")
 	return fmt.Sprintf("rest:%s://%s:%s@%s", protocol, "$(USER)", "$(PASSWORD)", url)
+}
+
+type BackendOpts struct {
+	CACert     string `json:"caCert,omitempty"`
+	ClientCert string `json:"clientCert,omitempty"`
+	ClientKey  string `json:"clientKey,omitempty"`
 }
