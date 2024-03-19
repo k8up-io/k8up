@@ -98,7 +98,12 @@ func (b *BackupExecutor) listAndFilterPVCs(ctx context.Context, annotation strin
 		}
 
 		if !hasBackupAnnotation {
-			log.Info("PVC doesn't have annotation, adding to list", "pvc", pvc.GetName())
+			if cfg.Config.SkipWithoutAnnotation {
+				log.Info("PVC doesn't have annotation and BACKUP_SKIP_WITHOUT_ANNOTATION is true, skipping PVC", "pvc", pvc.GetName())
+				continue
+			} else {
+				log.Info("PVC doesn't have annotation, adding to list", "pvc", pvc.GetName())
+			}
 		} else if shouldBackup, _ := strconv.ParseBool(backupAnnotation); !shouldBackup {
 			log.Info("PVC skipped due to annotation", "pvc", pvc.GetName(), "annotation", backupAnnotation)
 			continue

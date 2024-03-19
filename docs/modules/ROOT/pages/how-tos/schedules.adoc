@@ -13,4 +13,4 @@ The file above will instruct the Operator to do backups every 5 minute, prune th
 
 Feel free to adjust the frequencies to your liking. To help you with the crontab syntax, we recommend to check out https://crontab.guru[crontab.guru].
 
-TIP: You can always check the state and configuration of your backup by using `kubectl describe schedule`. By default, all PVCs are backed up automatically. Adding the annotation `k8up.io/backup=false` to a PVC object will excluded it from all following backup.
+TIP: You can always check the state and configuration of your backup by using `kubectl describe schedule`. By default, all PVCs are backed up automatically. Adding the annotation `k8up.io/backup=false` to a PVC object will exclude it from all following backups. Alternatively, you can set the environment variable `BACKUP_SKIP_WITHOUT_ANNOTATION=true` if you want K8up to ignore objects without the annotation.
