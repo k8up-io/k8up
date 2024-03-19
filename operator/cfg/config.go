@@ -77,6 +77,7 @@ type Configuration struct {
 	PodFilter                        string
 	PromURL                          string
 	RestartPolicy                    string
+	SkipWithoutAnnotation            bool
 
 	// Enabling this will ensure there is only one active controller manager.
 	EnableLeaderElection bool

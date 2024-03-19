@@ -82,6 +82,7 @@ var (
 			&cli.StringFlag{Destination: &cfg.Config.PodExecRoleName, Name: "podexecrolename", EnvVars: []string{"BACKUP_PODEXECROLENAME"}, Value: "pod-executor", Usage: "set the role name that should be used for pod command execution"},
 
 			&cli.BoolFlag{Destination: &cfg.Config.EnableLeaderElection, Name: "enable-leader-election", EnvVars: []string{"BACKUP_ENABLE_LEADER_ELECTION"}, Value: true, DefaultText: "enabled", Usage: "enable leader election within the operator Pod"},
+			&cli.BoolFlag{Destination: &cfg.Config.SkipWithoutAnnotation, Name: "skip-pvcs-without-annotation", EnvVars: []string{"BACKUP_SKIP_WITHOUT_ANNOTATION"}, Value: false, DefaultText: "disabled", Usage: "skip selecting PVCs that don't have the BACKUP_ANNOTATION"},
 			&cli.StringFlag{Destination: &cfg.Config.BackupCheckSchedule, Name: "checkschedule", EnvVars: []string{"BACKUP_CHECKSCHEDULE"}, Value: "0 0 * * 0", Usage: "the default check schedule"},
 			&cli.StringFlag{Destination: &cfg.Config.OperatorNamespace, Name: "operator-namespace", EnvVars: []string{"BACKUP_OPERATOR_NAMESPACE"}, Required: true, Usage: "set the namespace in which the K8up operator itself runs"},
 		},

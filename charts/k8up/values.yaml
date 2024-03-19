@@ -54,6 +54,9 @@ k8up:
   # -- Specifies whether leader election should be enabled.
   enableLeaderElection: true
 
+  # -- Specifies whether K8up should ignore PVCs without the backup annotation (by default, `k8up.io/backup`)
+  skipWithoutAnnotation: false
+
   # -- Specifies the namespace in which K8up's `EffectiveSchedules` are stored.
   # Defaults to release namespace if left empty.
   operatorNamespace: ""
