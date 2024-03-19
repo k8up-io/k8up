@@ -10,7 +10,7 @@ image:
   # -- Operator image repository
   repository: k8up-io/k8up
   # -- Operator image tag (version)
-  tag: v2.7.2
+  tag: v2.8.0
 
 imagePullSecrets: []
 serviceAccount:
@@ -142,4 +142,3 @@ cleanup:
   repository: bitnami/kubectl
   # -- Cleanup-job image tag (version)
   tag: latest
-
