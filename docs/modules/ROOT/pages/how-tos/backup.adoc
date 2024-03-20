@@ -10,3 +10,5 @@ include::example$tutorial/backup.yaml[]
 Save the YAML above in a file named `backup.yaml` and use the `kubectl apply -f backup.yaml` command to deploy this configuration to your cluster.
 
 TIP: To have backups run automatically at a regular interval look at xref:how-tos/schedules.adoc[schedules].
+
+TIP: By default, all PVCs are backed up automatically. Adding the annotation `k8up.io/backup=false` to a PVC object will exclude it from all following backups. Alternatively, you can set the environment variable `BACKUP_SKIP_WITHOUT_ANNOTATION=true` if you want K8up to ignore objects without the annotation.
