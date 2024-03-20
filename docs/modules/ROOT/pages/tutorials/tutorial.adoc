@@ -1,4 +1,4 @@
-:k8up_version: v2.2.0
+:k8up_version: v2.7.2
 
 = Backing up Kubernetes Clusters with K8up
 
