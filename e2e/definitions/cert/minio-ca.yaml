@@ -1,0 +1,30 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: minio-root-ca
+  namespace: minio-e2e
+spec:
+  isCA: true
+  commonName: minio-root-ca
+  subject:
+    organizations:
+      - Minio
+  secretName: minio-root-ca
+  duration: 17520h0m0s
+  renewBefore: 2190h0m0s
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+  issuerRef:
+    name: selfsigned-issuer
+    kind: Issuer
+    group: cert-manager.io
+---
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: minio-intermediate-ca
+  namespace: minio-e2e
+spec:
+  ca:
+    secretName: minio-root-ca

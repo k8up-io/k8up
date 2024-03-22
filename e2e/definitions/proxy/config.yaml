@@ -1,0 +1,89 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-conf
+  namespace: minio-e2e
+data:
+  nginx.conf: |
+    user  nginx;
+    worker_processes  1;
+    error_log  /var/log/nginx/error.log warn;
+    pid        /var/run/nginx.pid;
+    events {
+        worker_connections  1024;
+    }
+    http {
+      include       /etc/nginx/mime.types;
+      default_type  application/octet-stream;
+      log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
+                          '$status $body_bytes_sent "$http_referer" '
+                          '"$http_user_agent" "$http_x_forwarded_for"';
+      access_log  /var/log/nginx/access.log  main;
+      sendfile        on;
+      keepalive_timeout  65;
+    
+      server {
+        server_name minio-tls minio-tls.minio-e2e minio-tls.minio-e2e.svc.cluster.local;
+        listen 443 ssl;
+        ssl_certificate /mnt/tls/tls.crt;
+        ssl_certificate_key /mnt/tls/tls.key;
+        ssl_client_certificate /mnt/tls/ca.crt;
+
+        # Allow special characters in headers
+        ignore_invalid_headers off;
+        # Allow any size file to be uploaded.
+        # Set to a value such as 1000m; to restrict file size to a specific value
+        client_max_body_size 0;
+        # Disable buffering
+        proxy_buffering off;
+        proxy_request_buffering off;
+    
+        location / {
+          proxy_set_header Host $http_host;
+          proxy_set_header X-Real-IP $remote_addr;
+          proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+          proxy_set_header X-Forwarded-Proto $scheme;
+    
+          proxy_connect_timeout 300;
+          # Default is HTTP/1, keepalive is only enabled in HTTP/1.1
+          proxy_http_version 1.1;
+          proxy_set_header Connection "";
+          chunked_transfer_encoding off;
+    
+          proxy_pass http://minio.minio-e2e.svc.cluster.local:9000;
+        }
+      }
+
+      server {
+        server_name minio-mtls minio-mtls.minio-e2e minio-mtls.minio-e2e.svc.cluster.local;
+        listen 443 ssl;
+        ssl_certificate /mnt/mtls/tls.crt;
+        ssl_certificate_key /mnt/mtls/tls.key;
+        ssl_client_certificate /mnt/mtls/ca.crt;
+        ssl_verify_client on;
+
+        # Allow special characters in headers
+        ignore_invalid_headers off;
+        # Allow any size file to be uploaded.
+        # Set to a value such as 1000m; to restrict file size to a specific value
+        client_max_body_size 0;
+        # Disable buffering
+        proxy_buffering off;
+        proxy_request_buffering off;
+    
+        location / {
+          proxy_set_header Host $http_host;
+          proxy_set_header X-Real-IP $remote_addr;
+          proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+          proxy_set_header X-Forwarded-Proto $scheme;
+    
+          proxy_connect_timeout 300;
+          # Default is HTTP/1, keepalive is only enabled in HTTP/1.1
+          proxy_http_version 1.1;
+          proxy_set_header Connection "";
+          chunked_transfer_encoding off;
+    
+          proxy_pass http://minio.minio-e2e.svc.cluster.local:9000;
+        }
+      }
+    }
