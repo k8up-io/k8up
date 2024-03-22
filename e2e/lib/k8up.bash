@@ -79,8 +79,8 @@ restic() {
 
 mc() {
 	sleep 3
-	kubectl run "minio-mc-$(timestamp)" \
-		--attach \
+	podname="minio-mc-$(timestamp)"
+	kubectl run "$podname" \
 		--restart Never \
 		--namespace "${DETIK_CLIENT_NAMESPACE-"k8up-system"}" \
 		--image "minio/mc" \
@@ -91,6 +91,8 @@ mc() {
 		--command -- \
 		mc \
 		"${@}"
+	kubectl wait --for jsonpath='{.status.phase}'=Succeeded pod "$podname" -n "${DETIK_CLIENT_NAMESPACE-"k8up-system"}" --timeout=2m > /dev/null
+	kubectl -n "${DETIK_CLIENT_NAMESPACE-"k8up-system"}" logs "$podname"
 }
 
 replace_in_file() {
