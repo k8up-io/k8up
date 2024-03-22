@@ -1,6 +1,6 @@
 #!/bin/bash
 
-export MINIO_NAMESPACE=${MINIO_NAMESPACE-minio}
+export MINIO_NAMESPACE=${MINIO_NAMESPACE:-minio-e2e}
 
 directory=$(dirname "${BASH_SOURCE[0]}")
 source "$directory/detik.bash"
@@ -56,8 +56,9 @@ clear_pv_data() {
 # It's very unreliable unfortunately. So running the pod, waiting and getting the
 # log output is a lot less prone for race conditions.
 restic() {
-	podname="restic-$(timestamp)"
-	kubectl run "$podname" \
+	sleep 3
+	kubectl run "restic-$(timestamp)" \
+		--attach \
 		--restart Never \
 		--namespace "${DETIK_CLIENT_NAMESPACE-"k8up-system"}" \
 		--image "${E2E_IMAGE}" \
@@ -69,11 +70,27 @@ restic() {
 		--command -- \
 		restic \
 		--no-cache \
-		--repo "s3:http://minio.minio.svc.cluster.local:9000/backup" \
+		--repo "s3:http://minio.${MINIO_NAMESPACE}.svc.cluster.local:9000/backup" \
 		"${@}" \
 		--json > /dev/null
 	kubectl wait --for jsonpath='{.status.phase}'=Succeeded pod "$podname" -n "${DETIK_CLIENT_NAMESPACE-"k8up-system"}" --timeout=2m > /dev/null
 	kubectl -n "${DETIK_CLIENT_NAMESPACE-"k8up-system"}" logs "$podname"
+}
+
+mc() {
+	sleep 3
+	kubectl run "minio-mc-$(timestamp)" \
+		--attach \
+		--restart Never \
+		--namespace "${DETIK_CLIENT_NAMESPACE-"k8up-system"}" \
+		--image "minio/mc" \
+		--image-pull-policy "IfNotPresent" \
+		--env "MC_HOST_minio=http://minioadmin:minioadmin@minio.minio-e2e.svc.cluster.local:9000" \
+		--pod-running-timeout 60s \
+		--quiet \
+		--command -- \
+		mc \
+		"${@}"
 }
 
 replace_in_file() {
@@ -100,7 +117,6 @@ prepare() {
 	mkdir -p "${target_dir}"
 	cp -r "definitions" "debug/definitions"
 
-
 	replace_in_file "${target_file}" E2E_IMAGE "'${E2E_IMAGE}'"
 	replace_in_file "${target_file}" ID "$(id -u)"
 	replace_in_file "${target_file}" BACKUP_FILE_NAME "${BACKUP_FILE_NAME}"
@@ -115,6 +131,15 @@ given_a_clean_ns() {
 	echo "✅  The namespace '${DETIK_CLIENT_NAMESPACE}' is ready."
 }
 
+given_a_clean_archive() {
+	require_args 1 ${#}
+
+	bucket=${1}
+
+	run mc mb "minio/${bucket}" --ignore-existing
+	run mc rm --recursive --force "minio/${bucket}"
+}
+
 given_a_subject() {
 	require_args 2 ${#}
 
@@ -125,6 +150,12 @@ given_a_subject() {
 	yq e '.spec.template.spec.containers[0].securityContext.runAsUser='$(id -u)' | .spec.template.spec.containers[0].env[0].value=strenv(BACKUP_FILE_CONTENT) | .spec.template.spec.containers[0].env[1].value=strenv(BACKUP_FILE_NAME)' definitions/subject/deployment.yaml | kubectl apply -f -
 
 	echo "✅  The subject is ready"
+}
+
+given_a_subject_dl() {
+	yq e '.spec.template.spec.initContainers[0].image="'${E2E_IMAGE}'" | .spec.template.spec.initContainers[0].securityContext.runAsUser='$(id -u)' | .spec.template.spec.initContainers[1].securityContext.runAsUser='$(id -u)' | .spec.template.spec.containers[0].securityContext.runAsUser='$(id -u)'' definitions/subject-dl/deployment.yaml | kubectl apply -f -
+
+	echo "✅  The subject download is ready"
 }
 
 given_an_annotated_subject() {
@@ -140,14 +171,14 @@ given_an_annotated_subject() {
 }
 
 given_an_annotated_subject_pod() {
-  require_args 2 ${#}
+	require_args 2 ${#}
 
-  export BACKUP_FILE_NAME=${1}
-  export BACKUP_FILE_CONTENT=${2}
+	export BACKUP_FILE_NAME=${1}
+	export BACKUP_FILE_CONTENT=${2}
 
-  yq e '.spec.containers[1].securityContext.runAsUser='$(id -u)' | .spec.containers[1].env[0].value=strenv(BACKUP_FILE_CONTENT) | .spec.containers[1].env[1].value=strenv(BACKUP_FILE_NAME)' definitions/annotated-subject/pod.yaml | kubectl apply -f -
+	yq e '.spec.containers[1].securityContext.runAsUser='$(id -u)' | .spec.containers[1].env[0].value=strenv(BACKUP_FILE_CONTENT) | .spec.containers[1].env[1].value=strenv(BACKUP_FILE_NAME)' definitions/annotated-subject/pod.yaml | kubectl apply -f -
 
-  echo "✅  The annotated subject pod is ready"
+	echo "✅  The annotated subject pod is ready"
 }
 
 given_a_rwo_pvc_subject_in_worker_node() {
@@ -174,7 +205,7 @@ given_a_rwo_pvc_subject_in_controlplane_node() {
 
 given_s3_storage() {
 	# Speed this step up
-	(helm -n "${MINIO_NAMESPACE}" list | grep minio > /dev/null) && return
+	(helm -n "${MINIO_NAMESPACE}" list | grep minio >/dev/null) && return
 	helm repo add minio https://charts.min.io/ --force-update
 	helm repo update
 	helm upgrade --install minio \
@@ -186,15 +217,37 @@ given_s3_storage() {
 	echo "✅  S3 Storage is ready"
 }
 
+give_self_signed_issuer() {
+	ns=${NAMESPACE=${DETIK_CLIENT_NAMESPACE}}
+
+	kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.10.0/cert-manager.yaml
+
+	kubectl wait -n cert-manager --for=condition=Available deployment/cert-manager-webhook --timeout=120s
+	yq $(yq --help | grep -q eval && echo e) '.metadata.namespace='\"${MINIO_NAMESPACE}\"'' definitions/cert/issure.yaml | kubectl apply -f -
+	yq $(yq --help | grep -q eval && echo e) '.metadata.namespace='\"${MINIO_NAMESPACE}\"'' definitions/cert/minio-ca.yaml | kubectl apply -f -
+	yq $(yq --help | grep -q eval && echo e) '.metadata.namespace='\"${MINIO_NAMESPACE}\"'' definitions/cert/minio-tls.yaml | kubectl apply -f -
+	yq $(yq --help | grep -q eval && echo e) '.metadata.namespace='\"${MINIO_NAMESPACE}\"'' definitions/cert/minio-mtls.yaml | kubectl apply -f -
+
+	yq $(yq --help | grep -q eval && echo e) '.metadata.namespace='\"${MINIO_NAMESPACE}\"'' definitions/proxy/config.yaml | kubectl apply -f -
+	yq $(yq --help | grep -q eval && echo e) '.metadata.namespace='\"${MINIO_NAMESPACE}\"'' definitions/proxy/deployment.yaml | kubectl apply -f -
+	yq $(yq --help | grep -q eval && echo e) '.metadata.namespace='\"${MINIO_NAMESPACE}\"'' definitions/proxy/service.yaml | kubectl apply -f -
+
+	kubectl wait -n "${MINIO_NAMESPACE}" --for=condition=Ready certificates/minio-server-tls --timeout=60s
+	kubectl get secret -n "${MINIO_NAMESPACE}" minio-server-tls -o yaml | yq $(yq --help | grep -q eval && echo e) '.metadata.namespace='\"${DETIK_CLIENT_NAMESPACE}\"' | .metadata.name="minio-ca-tls" | del(.metadata.uid) | del(.metadata.resourceVersion) | del(.metadata.annotations) | del(.data."tls.crt") | del(.data."tls.key") | del(.type)' | kubectl apply -f -
+
+	kubectl wait -n "${MINIO_NAMESPACE}" --for=condition=Ready certificates/minio-client-mtls --timeout=60s
+	kubectl get secret -n "${MINIO_NAMESPACE}" minio-client-mtls -o yaml | yq $(yq --help | grep -q eval && echo e) '.metadata.namespace='\"${DETIK_CLIENT_NAMESPACE}\"' | del(.metadata.uid) | del(.metadata.resourceVersion) | del(.metadata.annotations)' | kubectl apply -f -
+}
+
 given_a_clean_s3_storage() {
 	# uninstalling an then installing the helmchart unfortunatelly hangs ong GH actions
 	given_s3_storage
-	kubectl -n "${MINIO_NAMESPACE}" scale deployment minio  --replicas 0
+	kubectl -n "${MINIO_NAMESPACE}" scale deployment minio --replicas 0
 
 	kubectl -n "${MINIO_NAMESPACE}" delete pvc minio
 	yq e '.metadata.namespace='\"${MINIO_NAMESPACE}\"'' definitions/minio/pvc.yaml | kubectl apply -f -
 
-	kubectl -n "${MINIO_NAMESPACE}" scale deployment minio  --replicas 1
+	kubectl -n "${MINIO_NAMESPACE}" scale deployment minio --replicas 1
 
 	echo "✅  S3 Storage cleaned"
 }
@@ -235,7 +288,14 @@ given_an_existing_backup() {
 	wait_until backup/k8up-backup completed
 	verify "'.status.conditions[?(@.type==\"Completed\")].reason' is 'Succeeded' for Backup named 'k8up-backup'"
 
-	run restic dump latest "/data/subject-pvc/${backup_file_name}"
+	for i in {1..3}; do
+		run restic dump latest "/data/subject-pvc/${backup_file_name}"
+		if [ ! -z "${output}" ]; then
+			break
+		fi
+		sleep 3
+	done
+
 	# shellcheck disable=SC2154
 	[ "${backup_file_content}" = "${output}" ]
 
@@ -367,11 +427,44 @@ wait_until() {
 	ns=${NAMESPACE=${DETIK_CLIENT_NAMESPACE}}
 
 	echo "Waiting for '${object}' in namespace '${ns}' to become '${condition}' ..."
-	kubectl -n "${ns}" wait --timeout 2m --for "condition=${condition}" "${object}"
+	kubectl -n "${ns}" wait --timeout 5m --for "condition=${condition}" "${object}"
 }
 
 expect_file_in_container() {
 	require_args 4 ${#}
+
+	local pod container expected_file expected_content
+	pod=${1}
+	container=${2}
+	expected_file=${3}
+	expected_content=${4}
+
+	commands=(
+		"ls -la \"$(dirname "${expected_file}")\""
+		"test -f \"${expected_file}\""
+		"cat \"${expected_file}\""
+		"test \"${expected_content}\" \"=\" \"\$(cat \"${expected_file}\")\" "
+	)
+
+	echo "Testing if file '${expected_file}' contains '${expected_content}' in container '${container}' of pod '${pod}':"
+
+	for cmd in "${commands[@]}"; do
+		echo "> by running the command \`sh -c '${cmd}'\`."
+		kubectl exec \
+			"${pod}" \
+			--container "${container}" \
+			--stdin \
+			--namespace "${DETIK_CLIENT_NAMESPACE}" \
+			-- sh -c "${cmd}"
+		echo '↩'
+	done
+}
+
+expect_dl_file_in_container() {
+	require_args 4 ${#}
+
+	given_a_subject_dl
+	wait_until deployment/subject-dl-deployment available
 
 	local pod container expected_file expected_content
 	pod=${1}
