@@ -26,7 +26,8 @@ type (
 		B2      *B2Spec                `json:"b2,omitempty"`
 		Rest    *RestServerSpec        `json:"rest,omitempty"`
 
-		Options *BackendOpts `json:"options,omitempty"`
+		Options      *BackendOpts          `json:"options,omitempty"`
+		VolumeMounts *[]corev1.VolumeMount `json:"volumeMounts,omitempty"`
 	}
 
 	// +k8s:deepcopy-gen=false
@@ -91,7 +92,11 @@ func IsNil(v interface{}) bool {
 	return v == nil || (reflect.ValueOf(v).Kind() == reflect.Ptr && reflect.ValueOf(v).IsNil())
 }
 
-func addEnvVarFromSecret(vars map[string]*corev1.EnvVarSource, key string, ref *corev1.SecretKeySelector) {
+func addEnvVarFromSecret(
+	vars map[string]*corev1.EnvVarSource,
+	key string,
+	ref *corev1.SecretKeySelector,
+) {
 	if ref != nil {
 		vars[key] = &corev1.EnvVarSource{
 			SecretKeyRef: ref,
@@ -118,7 +123,6 @@ type S3Spec struct {
 	Bucket                   string                    `json:"bucket,omitempty"`
 	AccessKeyIDSecretRef     *corev1.SecretKeySelector `json:"accessKeyIDSecretRef,omitempty"`
 	SecretAccessKeySecretRef *corev1.SecretKeySelector `json:"secretAccessKeySecretRef,omitempty"`
-	VolumeMounts             *[]corev1.VolumeMount     `json:"volumeMounts,omitempty"`
 }
 
 // EnvVars returns the env vars for this backend.
@@ -268,7 +272,6 @@ type RestServerSpec struct {
 	URL               string                    `json:"url,omitempty"`
 	UserSecretRef     *corev1.SecretKeySelector `json:"userSecretRef,omitempty"`
 	PasswordSecretReg *corev1.SecretKeySelector `json:"passwordSecretReg,omitempty"`
-	VolumeMounts      *[]corev1.VolumeMount     `json:"volumeMounts,omitempty"`
 }
 
 // EnvVars returns the env vars for this backend.

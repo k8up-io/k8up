@@ -35,9 +35,10 @@ type RestoreSpec struct {
 // RestoreMethod contains how and where the restore should happen
 // all the settings are mutual exclusive.
 type RestoreMethod struct {
-	S3      *S3Spec        `json:"s3,omitempty"`
-	Folder  *FolderRestore `json:"folder,omitempty"`
-	Options *RestoreOpts   `json:"options,omitempty"`
+	S3           *S3Spec               `json:"s3,omitempty"`
+	Folder       *FolderRestore        `json:"folder,omitempty"`
+	Options      *RestoreOpts          `json:"options,omitempty"`
+	VolumeMounts *[]corev1.VolumeMount `json:"volumeMounts,omitempty"`
 }
 
 type FolderRestore struct {
