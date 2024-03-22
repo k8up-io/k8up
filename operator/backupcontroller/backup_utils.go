@@ -3,13 +3,15 @@ package backupcontroller
 import (
 	"context"
 	"fmt"
-	"github.com/k8up-io/k8up/v2/operator/executor"
-	"github.com/k8up-io/k8up/v2/operator/utils"
+	"path"
+
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
-	"path"
 	controllerruntime "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	"github.com/k8up-io/k8up/v2/operator/executor"
+	"github.com/k8up-io/k8up/v2/operator/utils"
 
 	"github.com/k8up-io/k8up/v2/operator/cfg"
 )
@@ -32,7 +34,10 @@ func (b *BackupExecutor) newVolumeMounts(claims []corev1.Volume) []corev1.Volume
 	return mounts
 }
 
-func containsAccessMode(s []corev1.PersistentVolumeAccessMode, e corev1.PersistentVolumeAccessMode) bool {
+func containsAccessMode(
+	s []corev1.PersistentVolumeAccessMode,
+	e corev1.PersistentVolumeAccessMode,
+) bool {
 	for _, a := range s {
 		if a == e {
 			return true
@@ -45,9 +50,11 @@ func (b *BackupExecutor) createServiceAccountAndBinding(ctx context.Context) err
 	sa := &corev1.ServiceAccount{}
 	sa.Name = cfg.Config.ServiceAccount
 	sa.Namespace = b.backup.Namespace
-	_, err := controllerruntime.CreateOrUpdate(ctx, b.Config.Client, sa, func() error {
-		return nil
-	})
+	_, err := controllerruntime.CreateOrUpdate(
+		ctx, b.Config.Client, sa, func() error {
+			return nil
+		},
+	)
 	if err != nil {
 		return err
 	}
@@ -58,30 +65,32 @@ func (b *BackupExecutor) createServiceAccountAndBinding(ctx context.Context) err
 	roleBinding := &rbacv1.RoleBinding{}
 	roleBinding.Name = cfg.Config.PodExecRoleName + "-namespaced"
 	roleBinding.Namespace = b.backup.Namespace
-	_, err = controllerruntime.CreateOrUpdate(ctx, b.Config.Client, roleBinding, func() error {
-		roleBinding.Subjects = []rbacv1.Subject{
-			{
-				Kind:      "ServiceAccount",
-				Namespace: b.backup.Namespace,
-				Name:      sa.Name,
-			},
-		}
-		roleBinding.RoleRef = rbacv1.RoleRef{
-			Kind:     "ClusterRole",
-			Name:     "k8up-executor",
-			APIGroup: "rbac.authorization.k8s.io",
-		}
-		return nil
-	})
+	_, err = controllerruntime.CreateOrUpdate(
+		ctx, b.Config.Client, roleBinding, func() error {
+			roleBinding.Subjects = []rbacv1.Subject{
+				{
+					Kind:      "ServiceAccount",
+					Namespace: b.backup.Namespace,
+					Name:      sa.Name,
+				},
+			}
+			roleBinding.RoleRef = rbacv1.RoleRef{
+				Kind:     "ClusterRole",
+				Name:     "k8up-executor",
+				APIGroup: "rbac.authorization.k8s.io",
+			}
+			return nil
+		},
+	)
 	return err
 }
 
 func (b *BackupExecutor) setupArgs() ([]string, error) {
-	args := b.appendOptionsArgs()
-
+	args := []string{"--varDir", cfg.Config.PodVarDir}
 	if len(b.backup.Spec.Tags) > 0 {
 		args = append(args, executor.BuildTagArgs(b.backup.Spec.Tags)...)
 	}
+	args = append(args, b.appendOptionsArgs()...)
 
 	return args, nil
 }
@@ -136,10 +145,12 @@ func (b *BackupExecutor) attachMoreVolumes() []corev1.Volume {
 			continue
 		}
 
-		moreVolumes = append(moreVolumes, corev1.Volume{
-			Name:         vol.Name,
-			VolumeSource: volumeSource,
-		})
+		moreVolumes = append(
+			moreVolumes, corev1.Volume{
+				Name:         vol.Name,
+				VolumeSource: volumeSource,
+			},
+		)
 	}
 
 	return moreVolumes
@@ -148,11 +159,8 @@ func (b *BackupExecutor) attachMoreVolumes() []corev1.Volume {
 func (b *BackupExecutor) attachMoreVolumeMounts() []corev1.VolumeMount {
 	var volumeMount []corev1.VolumeMount
 
-	if b.backup.Spec.Backend.S3 != nil && !utils.ZeroLen(b.backup.Spec.Backend.S3.VolumeMounts) {
-		volumeMount = *b.backup.Spec.Backend.S3.VolumeMounts
-	}
-	if b.backup.Spec.Backend.Rest != nil && !utils.ZeroLen(b.backup.Spec.Backend.Rest.VolumeMounts) {
-		volumeMount = *b.backup.Spec.Backend.Rest.VolumeMounts
+	if b.backup.Spec.Backend != nil && !utils.ZeroLen(b.backup.Spec.Backend.VolumeMounts) {
+		volumeMount = *b.backup.Spec.Backend.VolumeMounts
 	}
 
 	ku8pVolumeMount := corev1.VolumeMount{Name: _dataDirName, MountPath: cfg.Config.PodVarDir}
@@ -164,22 +172,20 @@ func (b *BackupExecutor) attachMoreVolumeMounts() []corev1.VolumeMount {
 func (b *BackupExecutor) appendOptionsArgs() []string {
 	var args []string
 
-	args = append(args, []string{"--varDir", cfg.Config.PodVarDir}...)
-
-	if b.backup.Spec.Backend.Options == nil {
+	if !(b.backup.Spec.Backend != nil && b.backup.Spec.Backend.Options != nil) {
 		return args
 	}
 
 	if b.backup.Spec.Backend.Options.CACert != "" {
-		args = append(args, []string{"--caCert", b.backup.Spec.Backend.Options.CACert}...)
+		args = append(args, []string{"-caCert", b.backup.Spec.Backend.Options.CACert}...)
 	}
 	if b.backup.Spec.Backend.Options.ClientCert != "" && b.backup.Spec.Backend.Options.ClientKey != "" {
 		args = append(
 			args,
 			[]string{
-				"--clientCert",
+				"-clientCert",
 				b.backup.Spec.Backend.Options.ClientCert,
-				"--clientKey",
+				"-clientKey",
 				b.backup.Spec.Backend.Options.ClientKey,
 			}...,
 		)
