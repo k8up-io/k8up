@@ -12,7 +12,7 @@ See xref:references/operator-config-reference.adoc[Operator Configuration refere
 |Annotation |Description |Accepted Values |Applicable Resources |xref:references/operator-config-reference.adoc[Configuration Option]
 
 |`k8up.io/backup`
-|If defined, this influences whether this pod shall be backed up (`true`) or not (`false`)
+|If defined, this influences whether this Pod/PVC shall be backed up (`true`) or not (`false`). If omitted, K8up will default to `true`, unless `$BACKUP_SKIP_WITHOUT_ANNOTATION` is set to `true`.
 |Either `'true'` or `'false'`
 |`Pod`, `PersistentVolumeClaim`
 |`BACKUP_ANNOTATION`

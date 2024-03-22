@@ -29,6 +29,8 @@ Tested with:
 
 But it should work with any command that has the ability to output the backup to stdout.
 
+TIP: By default, all PVCs are backed up automatically. If you are using Application-Aware Backups and want to skip backing up any related PVCs, adding the annotation `k8up.io/backup=false` to a PVC object will exclude it from all following backups. Alternatively, you can set the environment variable `BACKUP_SKIP_WITHOUT_ANNOTATION=true` if you want K8up to ignore objects without the annotation.
+
 == PostgreSQL
 
 Note that the PostgreSQL image used requires the utility `pg_dump`.

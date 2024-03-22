@@ -52,10 +52,13 @@ clear_pv_data() {
 	mkdir -p ./debug/data/pvc-subject
 }
 
+# We're not using `kubectl run --attach` here, to get the output of the pod.
+# It's very unreliable unfortunately. So running the pod, waiting and getting the
+# log output is a lot less prone for race conditions.
 restic() {
 	sleep 3
-	kubectl run "restic-$(timestamp)" \
-		--attach \
+	podname="restic-$(timestamp)"
+	kubectl run "$podname" \
 		--restart Never \
 		--namespace "${DETIK_CLIENT_NAMESPACE-"k8up-system"}" \
 		--image "${E2E_IMAGE}" \
@@ -69,7 +72,9 @@ restic() {
 		--no-cache \
 		--repo "s3:http://minio.${MINIO_NAMESPACE}.svc.cluster.local:9000/backup" \
 		"${@}" \
-		--json
+		--json > /dev/null
+	kubectl wait --for jsonpath='{.status.phase}'=Succeeded pod "$podname" -n "${DETIK_CLIENT_NAMESPACE-"k8up-system"}" --timeout=2m > /dev/null
+	kubectl -n "${DETIK_CLIENT_NAMESPACE-"k8up-system"}" logs "$podname"
 }
 
 mc() {
