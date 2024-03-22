@@ -45,3 +45,8 @@ e2e/debug
 
 # Vagrant
 .vagrant/
+
+# Container volumes mount
+.config/
+.kube/
+.npm/
