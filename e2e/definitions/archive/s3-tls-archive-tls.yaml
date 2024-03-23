@@ -1,0 +1,46 @@
+apiVersion: k8up.io/v1
+kind: Archive
+metadata:
+  name: k8up-s3-tls-archive-tls
+  namespace: k8up-e2e-subject
+spec:
+  failedJobsHistoryLimit: 1
+  successfulJobsHistoryLimit: 1
+  restoreMethod:
+    options:
+      caCert: /mnt/ca/ca.crt
+    s3:
+      endpoint: https://minio-tls.minio-e2e.svc.cluster.local
+      bucket: archive
+      accessKeyIDSecretRef:
+        name: backup-credentials
+        key: username
+      secretAccessKeySecretRef:
+        name: backup-credentials
+        key: password
+  backend:
+    repoPasswordSecretRef:
+      name: backup-repo
+      key: password
+    options:
+      caCert: /mnt/ca/ca.crt
+    s3:
+      endpoint: https://minio-tls.minio-e2e.svc.cluster.local
+      bucket: backup
+      accessKeyIDSecretRef:
+        name: backup-credentials
+        key: username
+      secretAccessKeySecretRef:
+        name: backup-credentials
+        key: password
+    volumeMounts:
+      - name: minio-ca-tls
+        mountPath: /mnt/ca/
+  podSecurityContext:
+    fsGroup: $ID
+    runAsUser: $ID
+  volumes:
+    - name: minio-ca-tls
+      secret:
+        secretName: minio-ca-tls
+        defaultMode: 420

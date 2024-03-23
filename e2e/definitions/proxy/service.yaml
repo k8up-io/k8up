@@ -1,0 +1,35 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: minio-tls
+  namespace: minio-e2e
+spec:
+  selector:
+    app: nginx
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+      name: nginx-tls-80
+    - protocol: TCP
+      port: 443
+      targetPort: 443
+      name: nginx-tls-443
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: minio-mtls
+  namespace: minio-e2e
+spec:
+  selector:
+    app: nginx
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+      name: nginx-mtls-80
+    - protocol: TCP
+      port: 443
+      targetPort: 443
+      name: nginx-mtls-443

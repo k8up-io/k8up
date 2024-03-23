@@ -1,0 +1,18 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: minio-server-tls
+  namespace: minio-e2e
+spec:
+  isCA: false
+  secretName: minio-server-tls
+  dnsNames:
+    - minio-tls.minio-e2e.svc.cluster.local
+    - minio-tls.minio-e2e
+    - minio-tls
+  issuerRef:
+    name: minio-intermediate-ca
+  duration: 8760h
+  renewBefore: 2190h
+  usages:
+    - server auth

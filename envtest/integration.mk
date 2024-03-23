@@ -6,7 +6,7 @@ clean_targets += .envtest-clean
 # Prepare binary
 $(setup_envtest_bin): export GOBIN = $(go_bin)
 $(setup_envtest_bin): | $(go_bin)
-	go install sigs.k8s.io/controller-runtime/tools/setup-envtest@latest
+	$(GO_EXEC) install sigs.k8s.io/controller-runtime/tools/setup-envtest@latest
 
 .PHONY: integration-test
 # operator module {
@@ -30,7 +30,7 @@ integration-test: $(setup_envtest_bin) generate restic-integration-test-setup .e
 	$(setup_envtest_bin) $(ENVTEST_ADDITIONAL_FLAGS) use '$(ENVTEST_K8S_VERSION)!'
 	@chmod -R +w $(go_bin)/k8s
 	export KUBEBUILDER_ASSETS="$$($(setup_envtest_bin) $(ENVTEST_ADDITIONAL_FLAGS) use -i -p path '$(ENVTEST_K8S_VERSION)!')" && \
-	go test -tags=integration -coverprofile cover.out -covermode atomic ./...
+	$(GO_EXEC) test -tags=integration -coverprofile cover.out -covermode atomic ./...
 
 $(envtest_crd_dir):
 	@mkdir -p $@

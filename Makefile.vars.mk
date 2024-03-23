@@ -1,5 +1,6 @@
 IMG_TAG ?= latest
 
+GO_EXEC ?= go
 K8UP_MAIN_GO ?= cmd/k8up/main.go
 K8UP_GOOS ?= linux
 K8UP_GOARCH ?= amd64

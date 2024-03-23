@@ -1,0 +1,36 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: minio-server-mtls
+  namespace: minio-e2e
+spec:
+  isCA: false
+  secretName: minio-server-mtls
+  dnsNames:
+    - minio-mtls.minio-e2e.svc.cluster.local
+    - minio-mtls.minio-e2e
+    - minio-mtls
+  issuerRef:
+    name: minio-intermediate-ca
+  duration: 8760h
+  renewBefore: 2190h
+  usages:
+    - server auth
+    - client auth
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: minio-client-mtls
+  namespace: minio-e2e
+spec:
+  secretName: minio-client-mtls
+  isCA: false
+  duration: 2160h
+  renewBefore: 720m
+  usages:
+    - server auth
+    - client auth
+  commonName: "minio-mtls"
+  issuerRef:
+    name: minio-intermediate-ca

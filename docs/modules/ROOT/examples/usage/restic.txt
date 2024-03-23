@@ -27,6 +27,9 @@ OPTIONS:
    --restoreS3AccessKey value                 S3 access key used to connect to the S3 endpoint when restoring [$RESTORE_ACCESSKEYID]
    --restoreS3SecretKey value                 S3 secret key used to connect to the S3 endpoint when restoring [$RESTORE_SECRETACCESSKEY]
    --restoreS3Endpoint value                  S3 endpoint to connect to when restoring, e.g. 'https://minio.svc:9000/backup [$RESTORE_S3ENDPOINT]
+   --restoreCaCert value                      The certificate authority file path using for restore [$RESTORE_CA_CERT_FILE]
+   --restoreClientCert value                  The client certificate file path using for restore [$RESTORE_CLIENT_CERT_FILE]
+   --restoreClientKey value                   The client private key file path using for restore [$RESTORE_CLIENT_KEY_FILE]
    --verifyRestore                            If the restore should get verified, only for PVCs restore (default: false)
    --trimRestorePath                          If set, strips the value of --restoreDir from the lefts side of the remote restore path value (default: enabled) [$TRIM_RESTOREPATH]
    --resticBin value                          The path to the restic binary. (default: "/usr/local/bin/restic") [$RESTIC_BINARY]
@@ -47,4 +50,8 @@ OPTIONS:
    --keepWithin value                         While pruning, keep tagged snapshots within the given duration, e.g. '2y5m7d3h' [$KEEP_WITHIN]
    --targetPods value [ --targetPods value ]  Filter list of pods by TARGET_PODS names [$TARGET_PODS]
    --sleepDuration value                      Sleep for specified amount until init starts (default: 0s) [$SLEEP_DURATION]
+   --varDir value                             The var directory is stored k8up metadata files and temporary files (default: /k8up)
+   --caCert value                             The certificate authority file path [$CA_CERT_FILE]
+   --clientCert value                         The client certificate file path [$CLIENT_CERT_FILE]
+   --clientKey value                          The client private key file path [$CLIENT_KEY_FILE]
    --help, -h                                 show help (default: false)

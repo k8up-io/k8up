@@ -27,11 +27,11 @@ include Makefile.restic-integration.mk envtest/integration.mk
 # E2E tests
 -include e2e/Makefile
 
-go_build ?= go build -o $(BIN_FILENAME) $(K8UP_MAIN_GO)
+go_build ?= $(GO_EXEC) build -o $(BIN_FILENAME) $(K8UP_MAIN_GO)
 
 .PHONY: test
 test: ## Run tests
-	go test ./... -coverprofile cover.out
+	$(GO_EXEC) test ./... -coverprofile cover.out
 
 .PHONY: build
 build: generate fmt vet $(BIN_FILENAME) docs-update-usage ## Build manager binary
@@ -41,7 +41,7 @@ run: export BACKUP_ENABLE_LEADER_ELECTION = $(ENABLE_LEADER_ELECTION)
 run: export K8UP_DEBUG = true
 run: export BACKUP_OPERATOR_NAMESPACE = default
 run: fmt vet ## Run against the configured Kubernetes cluster in ~/.kube/config. Use ARGS to pass arguments to the command, e.g. `make run ARGS="--help"`
-	go run $(K8UP_MAIN_GO) $(ARGS) $(CMD) $(CMD_ARGS)
+	$(GO_EXEC) run $(K8UP_MAIN_GO) $(ARGS) $(CMD) $(CMD_ARGS)
 
 .PHONY: run-operator
 run-operator: CMD := operator
@@ -80,9 +80,9 @@ deploy: kind-load-image install ## Deploy controller in the configured Kubernete
 .PHONY: generate
 generate: ## Generate manifests e.g. CRD, RBAC etc.
 	# Generate code
-	go run sigs.k8s.io/controller-tools/cmd/controller-gen object:headerFile=".github/boilerplate.go.txt" paths="./..."
+	$(GO_EXEC) run sigs.k8s.io/controller-tools/cmd/controller-gen object:headerFile=".github/boilerplate.go.txt" paths="./..."
 	# Generate CRDs
-	go run sigs.k8s.io/controller-tools/cmd/controller-gen rbac:roleName=manager-role webhook paths="./..." output:crd:artifacts:config=$(CRD_ROOT_DIR)/v1 crd:crdVersions=v1
+	$(GO_EXEC) run sigs.k8s.io/controller-tools/cmd/controller-gen rbac:roleName=manager-role webhook paths="./..." output:crd:artifacts:config=$(CRD_ROOT_DIR)/v1 crd:crdVersions=v1
 
 .PHONY: crd
 crd: generate ## Generate CRD to file
@@ -90,11 +90,11 @@ crd: generate ## Generate CRD to file
 
 .PHONY: fmt
 fmt: ## Run go fmt against code
-	go fmt ./...
+	$(GO_EXEC) fmt ./...
 
 .PHONY: vet
 vet: ## Run go vet against code
-	go vet ./...
+	$(GO_EXEC) vet ./...
 
 .PHONY: lint
 lint: fmt vet golangci-lint ## Invokes all linting targets

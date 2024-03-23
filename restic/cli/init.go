@@ -9,9 +9,14 @@ import (
 	"github.com/k8up-io/k8up/v2/restic/logging"
 )
 
-// Init initialises a repository, checks if the repositor exists and will
-// initialise it if not. It's save to call this every time.
+// Init initialises a repository, checks if the repository exists and will
+// initialise it if not. It's safe to call this every time.
 func (r *Restic) Init() error {
+	if r.clientCert != (clientCert{}) {
+		if err := generatePemFile(r.clientCert.cert, r.clientCert.key, r.clientCert.pem); err != nil {
+			return err
+		}
+	}
 
 	initLogger := r.logger.WithName("RepoInit")
 	resticLogger := initLogger.WithName("restic")

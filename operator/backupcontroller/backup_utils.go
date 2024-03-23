@@ -5,14 +5,18 @@ import (
 	"fmt"
 	"path"
 
-	"github.com/k8up-io/k8up/v2/operator/executor"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	controllerruntime "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	"github.com/k8up-io/k8up/v2/operator/executor"
+	"github.com/k8up-io/k8up/v2/operator/utils"
+
 	"github.com/k8up-io/k8up/v2/operator/cfg"
 )
+
+const _dataDirName = "k8up-dir"
 
 func (b *BackupExecutor) fetchPVCs(ctx context.Context, list client.ObjectList) error {
 	return b.Config.Client.List(ctx, list, client.InNamespace(b.backup.Namespace))
@@ -30,7 +34,10 @@ func (b *BackupExecutor) newVolumeMounts(claims []corev1.Volume) []corev1.Volume
 	return mounts
 }
 
-func containsAccessMode(s []corev1.PersistentVolumeAccessMode, e corev1.PersistentVolumeAccessMode) bool {
+func containsAccessMode(
+	s []corev1.PersistentVolumeAccessMode,
+	e corev1.PersistentVolumeAccessMode,
+) bool {
 	for _, a := range s {
 		if a == e {
 			return true
@@ -43,9 +50,11 @@ func (b *BackupExecutor) createServiceAccountAndBinding(ctx context.Context) err
 	sa := &corev1.ServiceAccount{}
 	sa.Name = cfg.Config.ServiceAccount
 	sa.Namespace = b.backup.Namespace
-	_, err := controllerruntime.CreateOrUpdate(ctx, b.Config.Client, sa, func() error {
-		return nil
-	})
+	_, err := controllerruntime.CreateOrUpdate(
+		ctx, b.Config.Client, sa, func() error {
+			return nil
+		},
+	)
 	if err != nil {
 		return err
 	}
@@ -56,22 +65,34 @@ func (b *BackupExecutor) createServiceAccountAndBinding(ctx context.Context) err
 	roleBinding := &rbacv1.RoleBinding{}
 	roleBinding.Name = cfg.Config.PodExecRoleName + "-namespaced"
 	roleBinding.Namespace = b.backup.Namespace
-	_, err = controllerruntime.CreateOrUpdate(ctx, b.Config.Client, roleBinding, func() error {
-		roleBinding.Subjects = []rbacv1.Subject{
-			{
-				Kind:      "ServiceAccount",
-				Namespace: b.backup.Namespace,
-				Name:      sa.Name,
-			},
-		}
-		roleBinding.RoleRef = rbacv1.RoleRef{
-			Kind:     "ClusterRole",
-			Name:     "k8up-executor",
-			APIGroup: "rbac.authorization.k8s.io",
-		}
-		return nil
-	})
+	_, err = controllerruntime.CreateOrUpdate(
+		ctx, b.Config.Client, roleBinding, func() error {
+			roleBinding.Subjects = []rbacv1.Subject{
+				{
+					Kind:      "ServiceAccount",
+					Namespace: b.backup.Namespace,
+					Name:      sa.Name,
+				},
+			}
+			roleBinding.RoleRef = rbacv1.RoleRef{
+				Kind:     "ClusterRole",
+				Name:     "k8up-executor",
+				APIGroup: "rbac.authorization.k8s.io",
+			}
+			return nil
+		},
+	)
 	return err
+}
+
+func (b *BackupExecutor) setupArgs() ([]string, error) {
+	args := []string{"--varDir", cfg.Config.PodVarDir}
+	if len(b.backup.Spec.Tags) > 0 {
+		args = append(args, executor.BuildTagArgs(b.backup.Spec.Tags)...)
+	}
+	args = append(args, b.appendOptionsArgs()...)
+
+	return args, nil
 }
 
 func (b *BackupExecutor) setupEnvVars() ([]corev1.EnvVar, error) {
@@ -96,4 +117,79 @@ func (b *BackupExecutor) setupEnvVars() ([]corev1.EnvVar, error) {
 		return nil, fmt.Errorf("cannot merge environment variables: %w", err)
 	}
 	return vars.Convert(), nil
+}
+
+func (b *BackupExecutor) attachMoreVolumes() []corev1.Volume {
+	ku8pVolume := corev1.Volume{
+		Name:         _dataDirName,
+		VolumeSource: corev1.VolumeSource{EmptyDir: &corev1.EmptyDirVolumeSource{}},
+	}
+
+	if utils.ZeroLen(b.backup.Spec.Volumes) {
+		return []corev1.Volume{ku8pVolume}
+	}
+
+	moreVolumes := make([]corev1.Volume, 0, len(*b.backup.Spec.Volumes)+1)
+	moreVolumes = append(moreVolumes, ku8pVolume)
+	for _, v := range *b.backup.Spec.Volumes {
+		vol := v
+
+		var volumeSource corev1.VolumeSource
+		if vol.PersistentVolumeClaim != nil {
+			volumeSource.PersistentVolumeClaim = vol.PersistentVolumeClaim
+		} else if vol.Secret != nil {
+			volumeSource.Secret = vol.Secret
+		} else if vol.ConfigMap != nil {
+			volumeSource.ConfigMap = vol.ConfigMap
+		} else {
+			continue
+		}
+
+		moreVolumes = append(
+			moreVolumes, corev1.Volume{
+				Name:         vol.Name,
+				VolumeSource: volumeSource,
+			},
+		)
+	}
+
+	return moreVolumes
+}
+
+func (b *BackupExecutor) attachMoreVolumeMounts() []corev1.VolumeMount {
+	var volumeMount []corev1.VolumeMount
+
+	if b.backup.Spec.Backend != nil && !utils.ZeroLen(b.backup.Spec.Backend.VolumeMounts) {
+		volumeMount = *b.backup.Spec.Backend.VolumeMounts
+	}
+
+	ku8pVolumeMount := corev1.VolumeMount{Name: _dataDirName, MountPath: cfg.Config.PodVarDir}
+	volumeMount = append(volumeMount, ku8pVolumeMount)
+
+	return volumeMount
+}
+
+func (b *BackupExecutor) appendOptionsArgs() []string {
+	var args []string
+
+	if !(b.backup.Spec.Backend != nil && b.backup.Spec.Backend.Options != nil) {
+		return args
+	}
+
+	if b.backup.Spec.Backend.Options.CACert != "" {
+		args = append(args, []string{"-caCert", b.backup.Spec.Backend.Options.CACert}...)
+	}
+	if b.backup.Spec.Backend.Options.ClientCert != "" && b.backup.Spec.Backend.Options.ClientKey != "" {
+		args = append(
+			args,
+			[]string{
+				"-clientCert",
+				b.backup.Spec.Backend.Options.ClientCert,
+				"-clientKey",
+				b.backup.Spec.Backend.Options.ClientKey,
+			}...,
+		)
+	}
+
+	return args
 }

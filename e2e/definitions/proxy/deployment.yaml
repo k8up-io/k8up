@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+  namespace: minio-e2e
+  labels:
+    app: nginx
+spec:
+  selector:
+    matchLabels:
+      app: nginx
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:1.24.0
+          ports:
+            - containerPort: 80
+            - containerPort: 443
+          volumeMounts:
+            - name: nginx-config
+              mountPath: /etc/nginx/nginx.conf
+              subPath: nginx.conf
+            - name: minio-tls
+              mountPath: /mnt/tls/
+            - name: minio-mtls
+              mountPath: /mnt/mtls/
+      volumes:
+        - name: nginx-config
+          configMap:
+            name: nginx-conf
+        - name: minio-tls
+          secret:
+            secretName: minio-server-tls
+            defaultMode: 420
+        - name: minio-mtls
+          secret:
+            secretName: minio-server-mtls
+            defaultMode: 420

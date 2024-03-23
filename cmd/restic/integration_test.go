@@ -59,9 +59,11 @@ func newTestErrorChannel() chan error {
 
 func (w *webhookserver) runWebServer(t *testing.T) {
 	mux := http.NewServeMux()
-	mux.HandleFunc("/", func(wr http.ResponseWriter, r *http.Request) {
-		w.jsonData, _ = io.ReadAll(r.Body)
-	})
+	mux.HandleFunc(
+		"/", func(wr http.ResponseWriter, r *http.Request) {
+			w.jsonData, _ = io.ReadAll(r.Body)
+		},
+	)
 
 	srv := &testServer{
 		Server: http.Server{
@@ -110,9 +112,11 @@ func initTest(t *testing.T) *testEnvironment {
 
 	cleanupDirs(t)
 	createTestFiles(t)
-	t.Cleanup(func() {
-		cleanupDirs(t)
-	})
+	t.Cleanup(
+		func() {
+			cleanupDirs(t)
+		},
+	)
 
 	webhook := startWebhookWebserver(t, ctx)
 	s3client := connectToS3Server(t, ctx)
@@ -131,7 +135,7 @@ func initTest(t *testing.T) *testEnvironment {
 
 func connectToS3Server(t *testing.T, ctx context.Context) *s3.Client {
 	repo := getS3Repo()
-	s3client := s3.New(repo, os.Getenv("AWS_ACCESS_KEY_ID"), os.Getenv("AWS_SECRET_ACCESS_KEY"))
+	s3client := s3.New(repo, os.Getenv("AWS_ACCESS_KEY_ID"), os.Getenv("AWS_SECRET_ACCESS_KEY"), s3.Cert{})
 
 	err := s3client.Connect(ctx)
 	require.NoErrorf(t, err, "Unable to connect to S3 repo '%s'", repo)
@@ -140,10 +144,12 @@ func connectToS3Server(t *testing.T, ctx context.Context) *s3.Client {
 	_ = s3client.DeleteBucket(ctx)
 	t.Logf("Ensured that the bucket '%s' does not exist", repo)
 
-	t.Cleanup(func() {
-		_ = s3client.DeleteBucket(ctx)
-		t.Logf("Removing the bucket '%s'", repo)
-	})
+	t.Cleanup(
+		func() {
+			_ = s3client.DeleteBucket(ctx)
+			t.Logf("Removing the bucket '%s'", repo)
+		},
+	)
 	return s3client
 }
 
@@ -151,15 +157,17 @@ func startWebhookWebserver(t *testing.T, ctx context.Context) *webhookserver {
 	webhook := &webhookserver{}
 	webhook.runWebServer(t)
 	t.Logf("Started webserver on '%s'", webhook.srv.Addr)
-	t.Cleanup(func() {
-		if webhook.srv == nil {
-			t.Log("Webserver not running.")
-			return
-		}
+	t.Cleanup(
+		func() {
+			if webhook.srv == nil {
+				t.Log("Webserver not running.")
+				return
+			}
 
-		t.Logf("Stopping the webserver on '%s'", webhook.srv.Addr)
-		webhook.srv.Shutdown(ctx)
-	})
+			t.Logf("Stopping the webserver on '%s'", webhook.srv.Addr)
+			webhook.srv.Shutdown(ctx)
+		},
+	)
 	return webhook
 }
 
@@ -211,7 +219,7 @@ func testBackup(t *testing.T) *testEnvironment {
 }
 
 func testCheckS3Restore(t *testing.T, ctx context.Context) {
-	s3c := s3.New(os.Getenv("RESTORE_S3ENDPOINT"), os.Getenv("RESTORE_ACCESSKEYID"), os.Getenv("RESTORE_SECRETACCESSKEY"))
+	s3c := s3.New(os.Getenv("RESTORE_S3ENDPOINT"), os.Getenv("RESTORE_ACCESSKEYID"), os.Getenv("RESTORE_SECRETACCESSKEY"), s3.Cert{})
 	err := s3c.Connect(ctx)
 	require.NoError(t, err)
 	files, err := s3c.ListObjects(ctx)
