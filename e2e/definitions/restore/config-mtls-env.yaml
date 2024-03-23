@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: k8up-s3-mtls-restore-mtls-env
+  namespace: k8up-e2e-subject
+data:
+  CA_CERT_FILE: /mnt/tls/ca.crt
+  CLIENT_CERT_FILE: /mnt/tls/tls.crt
+  CLIENT_KEY_FILE: /mnt/tls/tls.key
+  RESTORE_CA_CERT_FILE: /mnt/tls/ca.crt
+  RESTORE_CLIENT_CERT_FILE: /mnt/tls/tls.crt
+  RESTORE_CLIENT_KEY_FILE: /mnt/tls/tls.key
