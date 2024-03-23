@@ -10,3 +10,673 @@ include::example$archive.yaml[]
 ----
 
 Save the YAML above in a file named `archive.yaml` and use the `kubectl apply -f archive.yaml` command to deploy this configuration to your cluster.
+
+== Self-signed issuer and Mutual TLS
+
+If you are using self-signed issuer or using mutual tls for authenticate client, you be able to using volume for mounting cert files into backup object.
+
+=== Self-signed issuer
+
+- Using with `options` feature in backend
+
+[source,yaml]
+----
+apiVersion: k8up.io/v1
+kind: Archive
+metadata:
+  name: archive-test
+spec:
+  failedJobsHistoryLimit: 2
+  successfulJobsHistoryLimit: 2
+  backend:
+    s3: {}
+
+    options:
+      caCert: /mnt/ca/ca.crt
+    volumeMounts:
+      - name: ca-tls
+        mountPath: /mnt/ca/
+
+  restoreMethod:
+    s3: {}
+
+  podSecurityContext:
+    fsGroup: 1000
+    runAsUser: 1000
+  volumes:
+    - name: ca-tls
+      secret:
+        secretName: ca-tls
+        defaultMode: 420
+----
+
+- Using with `env` in backend
+
+[source,yaml]
+----
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: archive-cert
+data:
+  CA_CERT_FILE: /mnt/ca/ca.crt
+---
+apiVersion: k8up.io/v1
+kind: Archive
+metadata:
+  name: archive-test
+spec:
+  failedJobsHistoryLimit: 2
+  successfulJobsHistoryLimit: 2
+  backend:
+    s3: {}
+
+    envFrom:
+      - configMapRef:
+          name: archive-cert
+    volumeMounts:
+      - name: ca-tls
+        mountPath: /mnt/ca/
+
+  restoreMethod:
+    s3: {}
+
+  podSecurityContext:
+    fsGroup: 1000
+    runAsUser: 1000
+  volumes:
+    - name: ca-tls
+      secret:
+        secretName: ca-tls
+        defaultMode: 420
+----
+
+- Using with `options` feature in restore
+
+[source,yaml]
+----
+apiVersion: k8up.io/v1
+kind: Archive
+metadata:
+  name: archive-test
+spec:
+  failedJobsHistoryLimit: 2
+  successfulJobsHistoryLimit: 2
+  backend:
+    s3: {}
+
+  restoreMethod:
+    s3: {}
+
+    options:
+      caCert: /mnt/ca/ca.crt
+    volumeMounts:
+      - name: ca-tls
+        mountPath: /mnt/ca/
+
+  podSecurityContext:
+    fsGroup: 1000
+    runAsUser: 1000
+  volumes:
+    - name: ca-tls
+      secret:
+        secretName: ca-tls
+        defaultMode: 420
+----
+
+- Using with `env` in restore
+
+[source,yaml]
+----
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: archive-cert
+data:
+  RESTORE_CA_CERT_FILE: /mnt/ca/ca.crt
+---
+apiVersion: k8up.io/v1
+kind: Archive
+metadata:
+  name: archive-test
+spec:
+  failedJobsHistoryLimit: 2
+  successfulJobsHistoryLimit: 2
+  backend:
+    s3: {}
+
+  restoreMethod:
+    s3: {}
+
+    envFrom:
+      - configMapRef:
+          name: archive-cert
+    volumeMounts:
+      - name: ca-tls
+        mountPath: /mnt/ca/
+
+  podSecurityContext:
+    fsGroup: 1000
+    runAsUser: 1000
+  volumes:
+    - name: ca-tls
+      secret:
+        secretName: ca-tls
+        defaultMode: 420
+----
+
+- Using same cert with `options` feature in backend and restore
+
+[source,yaml]
+----
+apiVersion: k8up.io/v1
+kind: Archive
+metadata:
+  name: archive-test
+spec:
+  failedJobsHistoryLimit: 2
+  successfulJobsHistoryLimit: 2
+  backend:
+    s3: {}
+
+    options:
+      caCert: /mnt/ca/ca.crt
+    volumeMounts:
+      - name: ca-tls
+        mountPath: /mnt/ca/
+
+  restoreMethod:
+    s3: {}
+
+    options:
+      caCert: /mnt/ca/ca.crt
+
+  podSecurityContext:
+    fsGroup: 1000
+    runAsUser: 1000
+  volumes:
+    - name: ca-tls
+      secret:
+        secretName: ca-tls
+        defaultMode: 420
+----
+
+- Using same cert with `env` in backend and restore
+
+[source,yaml]
+----
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: archive-cert
+data:
+  CA_CERT_FILE: /mnt/ca/ca.crt
+  RESTORE_CA_CERT_FILE: /mnt/ca/ca.crt
+---
+apiVersion: k8up.io/v1
+kind: Archive
+metadata:
+  name: archive-test
+spec:
+  failedJobsHistoryLimit: 2
+  successfulJobsHistoryLimit: 2
+  backend:
+    s3: {}
+
+    envFrom:
+      - configMapRef:
+          name: archive-cert
+    volumeMounts:
+      - name: ca-tls
+        mountPath: /mnt/ca/
+
+  restoreMethod:
+    s3: {}
+
+  podSecurityContext:
+    fsGroup: 1000
+    runAsUser: 1000
+  volumes:
+    - name: ca-tls
+      secret:
+        secretName: ca-tls
+        defaultMode: 420
+----
+
+- Using different cert with `options` feature in backend and restore
+
+[source,yaml]
+----
+apiVersion: k8up.io/v1
+kind: Archive
+metadata:
+  name: archive-test
+spec:
+  failedJobsHistoryLimit: 2
+  successfulJobsHistoryLimit: 2
+  backend:
+    s3: {}
+
+    options:
+      caCert: /mnt/ca/ca.crt
+    volumeMounts:
+      - name: ca-tls
+        mountPath: /mnt/ca/
+
+  restoreMethod:
+    s3: {}
+
+    options:
+      caCert: /mnt/custom-ca/ca.crt
+    volumeMounts:
+      - name: custom-ca-tls
+        mountPath: /mnt/custom-ca/
+
+  podSecurityContext:
+    fsGroup: 1000
+    runAsUser: 1000
+  volumes:
+    - name: ca-tls
+      secret:
+        secretName: ca-tls
+        defaultMode: 420
+    - name: custom-ca-tls
+      secret:
+        secretName: custom-ca-tls
+        defaultMode: 420
+----
+
+- Using different cert with `env` in backend and restore
+
+[source,yaml]
+----
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: archive-cert
+data:
+  CA_CERT_FILE: /mnt/ca/ca.crt
+  RESTORE_CA_CERT_FILE: /mnt/custom-ca/ca.crt
+---
+apiVersion: k8up.io/v1
+kind: Archive
+metadata:
+  name: archive-test
+spec:
+  failedJobsHistoryLimit: 2
+  successfulJobsHistoryLimit: 2
+  backend:
+    s3: {}
+
+    envFrom:
+      - configMapRef:
+          name: archive-cert
+    volumeMounts:
+      - name: ca-tls
+        mountPath: /mnt/ca/
+
+  restoreMethod:
+    s3: {}
+
+    volumeMounts:
+      - name: custom-ca-tls
+        mountPath: /mnt/custom-ca/
+
+  podSecurityContext:
+    fsGroup: 1000
+    runAsUser: 1000
+  volumes:
+    - name: ca-tls
+      secret:
+        secretName: ca-tls
+        defaultMode: 420
+    - name: custom-ca-tls
+      secret:
+        secretName: custom-ca-tls
+        defaultMode: 420
+----
+
+=== Self-signed issuer with mTLS
+
+- Using with `options` feature in backend
+
+[source,yaml]
+----
+apiVersion: k8up.io/v1
+kind: Archive
+metadata:
+  name: archive-test
+spec:
+  failedJobsHistoryLimit: 2
+  successfulJobsHistoryLimit: 2
+  backend:
+    s3: {}
+
+    options:
+      caCert: /mnt/ca/ca.crt
+      clientCert: /mnt/tls/tls.crt
+      clientKey: /mnt/tls/tls.key
+    volumeMounts:
+      - name: client-tls
+        mountPath: /mnt/tls/
+
+  restoreMethod:
+    s3: {}
+
+  podSecurityContext:
+    fsGroup: 1000
+    runAsUser: 1000
+  volumes:
+    - name: client-tls
+      secret:
+        secretName: client-tls
+        defaultMode: 420
+----
+
+- Using with `env` in backend
+
+[source,yaml]
+----
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: archive-cert
+data:
+  CA_CERT_FILE: /mnt/tls/ca.crt
+  CLIENT_CERT_FILE: /mnt/tls/tls.crt
+  CLIENT_KEY_FILE: /mnt/tls/tls.key
+---
+apiVersion: k8up.io/v1
+kind: Archive
+metadata:
+  name: archive-test
+spec:
+  failedJobsHistoryLimit: 2
+  successfulJobsHistoryLimit: 2
+  backend:
+    s3: {}
+
+    envFrom:
+      - configMapRef:
+          name: archive-cert
+    volumeMounts:
+      - name: client-tls
+        mountPath: /mnt/tls/
+
+  restoreMethod:
+    s3: {}
+
+  podSecurityContext:
+    fsGroup: 1000
+    runAsUser: 1000
+  volumes:
+    - name: client-tls
+      secret:
+        secretName: client-tls
+        defaultMode: 420
+----
+
+- Using with `options` feature in restore
+
+[source,yaml]
+----
+apiVersion: k8up.io/v1
+kind: Archive
+metadata:
+  name: archive-test
+spec:
+  failedJobsHistoryLimit: 2
+  successfulJobsHistoryLimit: 2
+  backend:
+    s3: {}
+
+  restoreMethod:
+    s3: {}
+
+    options:
+      caCert: /mnt/tls/ca.crt
+      clientCert: /mnt/tls/tls.crt
+      clientKey: /mnt/tls/tls.key
+    volumeMounts:
+      - name: client-tls
+        mountPath: /mnt/tls/
+
+  podSecurityContext:
+    fsGroup: 1000
+    runAsUser: 1000
+  volumes:
+    - name: client-tls
+      secret:
+        secretName: client-tls
+        defaultMode: 420
+----
+
+- Using with `env` in restore
+
+[source,yaml]
+----
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: archive-cert
+data:
+  RESTORE_CA_CERT_FILE: /mnt/tls/ca.crt
+  RESTORE_CLIENT_CERT_FILE: /mnt/tls/tls.crt
+  RESTORE_CLIENT_KEY_FILE: /mnt/tls/tls.key
+---
+apiVersion: k8up.io/v1
+kind: Archive
+metadata:
+  name: archive-test
+spec:
+  failedJobsHistoryLimit: 2
+  successfulJobsHistoryLimit: 2
+  backend:
+    s3: {}
+
+  restoreMethod:
+    s3: {}
+
+    envFrom:
+      - configMapRef:
+          name: archive-cert
+    volumeMounts:
+      - name: client-tls
+        mountPath: /mnt/tls/
+
+  podSecurityContext:
+    fsGroup: 1000
+    runAsUser: 1000
+  volumes:
+    - name: client-tls
+      secret:
+        secretName: client-tls
+        defaultMode: 420
+----
+
+- Using same cert with `options` feature in backend and restore
+
+[source,yaml]
+----
+apiVersion: k8up.io/v1
+kind: Archive
+metadata:
+  name: archive-test
+spec:
+  failedJobsHistoryLimit: 2
+  successfulJobsHistoryLimit: 2
+  backend:
+    s3: {}
+
+    options:
+      caCert: /mnt/tls/ca.crt
+      clientCert: /mnt/tls/tls.crt
+      clientKey: /mnt/tls/tls.key
+    volumeMounts:
+      - name: client-tls
+        mountPath: /mnt/tls/
+
+  restoreMethod:
+    s3: {}
+
+    options:
+      caCert: /mnt/tls/ca.crt
+      clientCert: /mnt/tls/tls.crt
+      clientKey: /mnt/tls/tls.key
+
+  podSecurityContext:
+    fsGroup: 1000
+    runAsUser: 1000
+  volumes:
+    - name: client-tls
+      secret:
+        secretName: client-tls
+        defaultMode: 420
+----
+
+- Using same cert with `env` in backend and restore
+
+[source,yaml]
+----
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: archive-cert
+data:
+  CA_CERT_FILE: /mnt/tls/ca.crt
+  CLIENT_CERT_FILE: /mnt/tls/tls.crt
+  CLIENT_KEY_FILE: /mnt/tls/tls.key
+  RESTORE_CA_CERT_FILE: /mnt/tls/ca.crt
+  RESTORE_CLIENT_CERT_FILE: /mnt/tls/tls.crt
+  RESTORE_CLIENT_KEY_FILE: /mnt/tls/tls.key
+---
+apiVersion: k8up.io/v1
+kind: Archive
+metadata:
+  name: archive-test
+spec:
+  failedJobsHistoryLimit: 2
+  successfulJobsHistoryLimit: 2
+  backend:
+    s3: {}
+
+    envFrom:
+      - configMapRef:
+          name: archive-cert
+    volumeMounts:
+      - name: client-tls
+        mountPath: /mnt/tls/
+
+  restoreMethod:
+    s3: {}
+
+  podSecurityContext:
+    fsGroup: 1000
+    runAsUser: 1000
+  volumes:
+    - name: client-tls
+      secret:
+        secretName: client-tls
+        defaultMode: 420
+----
+
+- Using different cert with `options` feature in backend and restore
+
+[source,yaml]
+----
+apiVersion: k8up.io/v1
+kind: Archive
+metadata:
+  name: archive-test
+spec:
+  failedJobsHistoryLimit: 2
+  successfulJobsHistoryLimit: 2
+  backend:
+    s3: {}
+
+    options:
+      caCert: /mnt/tls/ca.crt
+      clientCert: /mnt/tls/tls.crt
+      clientKey: /mnt/tls/tls.key
+    volumeMounts:
+      - name: client-tls
+        mountPath: /mnt/tls/
+
+  restoreMethod:
+    s3: {}
+
+    options:
+      caCert: /mnt/custom-tls/ca.crt
+      clientCert: /mnt/custom-tls/tls.crt
+      clientKey: /mnt/custom-tls/tls.key
+    volumeMounts:
+      - name: custom-client-tls
+        mountPath: /mnt/custom-tls/
+
+  podSecurityContext:
+    fsGroup: 1000
+    runAsUser: 1000
+  volumes:
+    - name: client-tls
+      secret:
+        secretName: client-tls
+        defaultMode: 420
+    - name: custom-client-tls
+      secret:
+        secretName: custom-client-tls
+        defaultMode: 420
+----
+
+- Using different cert with `env` in backend and restore
+
+[source,yaml]
+----
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: archive-cert
+data:
+  CA_CERT_FILE: /mnt/tls/ca.crt
+  CLIENT_CERT_FILE: /mnt/tls/tls.crt
+  CLIENT_KEY_FILE: /mnt/tls/tls.key
+  RESTORE_CA_CERT_FILE: /mnt/custom-tls/ca.crt
+  RESTORE_CLIENT_CERT_FILE: /mnt/custom-tls/tls.crt
+  RESTORE_CLIENT_KEY_FILE: /mnt/custom-tls/tls.key
+---
+apiVersion: k8up.io/v1
+kind: Archive
+metadata:
+  name: archive-test
+spec:
+  failedJobsHistoryLimit: 2
+  successfulJobsHistoryLimit: 2
+  backend:
+    s3: {}
+
+    envFrom:
+      - configMapRef:
+          name: archive-cert
+    volumeMounts:
+      - name: client-tls
+        mountPath: /mnt/ca/
+
+  restoreMethod:
+    s3: {}
+
+    volumeMounts:
+      - name: client-custom-tls
+        mountPath: /mnt/custom-tls/
+
+  podSecurityContext:
+    fsGroup: 1000
+    runAsUser: 1000
+  volumes:
+    - name: client-tls
+      secret:
+        secretName: client-tls
+        defaultMode: 420
+    - name: client-custom-tls
+      secret:
+        secretName: client-custom-tls
+        defaultMode: 420
+----
