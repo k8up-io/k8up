@@ -20,12 +20,14 @@ import (
 )
 
 const (
-	backupDirEnvKey      = "BACKUP_DIR"
-	restoreDirEnvKey     = "RESTORE_DIR"
-	caCertFileEnvKey     = "CA_CERT_FILE"
-	clientCertFileEnvKey = "CLIENT_CERT_FILE"
-	clientKeyFileEnvKey  = "CLIENT_KEY_FILE"
-	workDirEnvKey        = "WORK_DIR"
+	backupDirEnvKey             = "BACKUP_DIR"
+	restoreDirEnvKey            = "RESTORE_DIR"
+	caCertFileEnvKey            = "CA_CERT_FILE"
+	clientCertFileEnvKey        = "CLIENT_CERT_FILE"
+	clientKeyFileEnvKey         = "CLIENT_KEY_FILE"
+	restoreCaCertFileEnvKey     = "RESTORE_CA_CERT_FILE"
+	restoreClientCertFileEnvKey = "RESTORE_CLIENT_CERT_FILE"
+	restoreClientKeyFileEnvKey  = "RESTORE_CLIENT_KEY_FILE"
 
 	restoreTypeArg              = "restoreType"
 	restoreS3EndpointArg        = "restoreS3Endpoint"
@@ -67,9 +69,9 @@ var (
 			&cli.StringFlag{Destination: &cfg.Config.RestoreS3AccessKey, Name: restoreS3AccessKeyIDArg, EnvVars: []string{"RESTORE_ACCESSKEYID"}, Usage: "S3 access key used to connect to the S3 endpoint when restoring"},
 			&cli.StringFlag{Destination: &cfg.Config.RestoreS3SecretKey, Name: restoreS3SecretAccessKeyArg, EnvVars: []string{"RESTORE_SECRETACCESSKEY"}, Usage: "S3 secret key used to connect to the S3 endpoint when restoring"},
 			&cli.StringFlag{Destination: &cfg.Config.RestoreS3Endpoint, Name: restoreS3EndpointArg, EnvVars: []string{"RESTORE_S3ENDPOINT"}, Usage: "S3 endpoint to connect to when restoring, e.g. 'https://minio.svc:9000/backup"},
-			&cli.PathFlag{Destination: &cfg.Config.RestoreCACert, Name: "restoreCaCert", Usage: "The certificate authority file path using for restore (If isn't filled, using caCert)"},
-			&cli.PathFlag{Destination: &cfg.Config.RestoreClientCert, Name: "restoreClientCert", Usage: "The client certificate file path using for restore (If isn't filled, using clientCert)"},
-			&cli.PathFlag{Destination: &cfg.Config.RestoreClientKey, Name: "restoreClientKey", Usage: "The client private key file path using for restore (If isn't filled, using clientKey)"},
+			&cli.PathFlag{Destination: &cfg.Config.RestoreCACert, Name: "restoreCaCert", EnvVars: []string{restoreCaCertFileEnvKey}, Usage: "The certificate authority file path using for restore"},
+			&cli.PathFlag{Destination: &cfg.Config.RestoreClientCert, Name: "restoreClientCert", EnvVars: []string{restoreClientCertFileEnvKey}, Usage: "The client certificate file path using for restore"},
+			&cli.PathFlag{Destination: &cfg.Config.RestoreClientKey, Name: "restoreClientKey", EnvVars: []string{restoreClientKeyFileEnvKey}, Usage: "The client private key file path using for restore"},
 			&cli.BoolFlag{Destination: &cfg.Config.VerifyRestore, Name: "verifyRestore", Usage: "If the restore should get verified, only for PVCs restore"},
 			&cli.BoolFlag{Destination: &cfg.Config.RestoreTrimPath, Name: "trimRestorePath", EnvVars: []string{"TRIM_RESTOREPATH"}, Value: true, DefaultText: "enabled", Usage: "If set, strips the value of --restoreDir from the lefts side of the remote restore path value"},
 
