@@ -4,11 +4,12 @@ import (
 	"context"
 	"testing"
 
-	k8upv1 "github.com/k8up-io/k8up/v2/api/v1"
-	"github.com/k8up-io/k8up/v2/operator/job"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
+
+	k8upv1 "github.com/k8up-io/k8up/v2/api/v1"
+	"github.com/k8up-io/k8up/v2/operator/job"
 )
 
 type PVCExpectation struct {
@@ -131,15 +132,17 @@ func TestRestore_setupEnvVars(t *testing.T) {
 	}
 
 	for name, tt := range tests {
-		t.Run(name, func(t *testing.T) {
-			e := NewRestoreExecutor(*newConfig())
-			envVars := e.setupEnvVars(context.TODO(), tt.GivenResource)
+		t.Run(
+			name, func(t *testing.T) {
+				e := NewRestoreExecutor(*newConfig())
+				envVars := e.setupEnvVars(context.TODO(), tt.GivenResource)
 
-			actualEnvVars, actualSecretKeyRefs := extractVarsAndSecretRefs(envVars)
+				actualEnvVars, actualSecretKeyRefs := extractVarsAndSecretRefs(envVars)
 
-			assert.Equal(t, actualEnvVars, tt.ExpectedEnvVars)
-			assert.Equal(t, actualSecretKeyRefs, tt.ExpectedSecretKeyRefs)
-		})
+				assert.Equal(t, actualEnvVars, tt.ExpectedEnvVars)
+				assert.Equal(t, actualSecretKeyRefs, tt.ExpectedSecretKeyRefs)
+			},
+		)
 	}
 }
 
@@ -183,13 +186,15 @@ func TestRestore_volumeConfig(t *testing.T) {
 	}
 
 	for name, tt := range tests {
-		t.Run(name, func(t *testing.T) {
-			e := NewRestoreExecutor(*newConfig())
-			volumes, mounts := e.volumeConfig(tt.GivenResource)
+		t.Run(
+			name, func(t *testing.T) {
+				e := NewRestoreExecutor(*newConfig())
+				volumes, mounts := e.volumeConfig(tt.GivenResource)
 
-			assertVolumes(t, tt.ExpectedPVC, volumes)
-			assertVolumeMounts(t, tt.ExpectedVolumeMount, mounts)
-		})
+				assertVolumes(t, tt.ExpectedPVC, volumes)
+				assertVolumeMounts(t, tt.ExpectedVolumeMount, mounts)
+			},
+		)
 	}
 }
 
@@ -226,15 +231,16 @@ func TestRestore_args(t *testing.T) {
 	}{
 		"givenS3RestoreResource_whenArgs_expectS3RestoreType": {
 			GivenResource: newS3RestoreResource(),
-			ExpectedArgs:  []string{"-restore", "-restoreType", "s3"},
+			ExpectedArgs:  []string{"-varDir", "/k8up", "-restore", "-restoreType", "s3"},
 		},
 		"givenFolderRestoreResource_whenArgs_expectFolderRestoreType": {
 			GivenResource: newFolderRestoreResource(),
-			ExpectedArgs:  []string{"-restore", "-restoreType", "folder"},
+			ExpectedArgs:  []string{"-varDir", "/k8up", "-restore", "-restoreType", "folder"},
 		},
 		"givenFolderRestoreResourceWithAdditionalArguments_whenBuildRestoreObject_expectJobResource": {
 			GivenResource: newFilteredFolderRestoreResource(),
 			ExpectedArgs: []string{
+				"-varDir", "/k8up",
 				"-restore",
 				"--tag", "testtag",
 				"--tag", "another",
@@ -246,12 +252,14 @@ func TestRestore_args(t *testing.T) {
 	}
 
 	for name, tt := range tests {
-		t.Run(name, func(t *testing.T) {
-			e := NewRestoreExecutor(*newConfig())
-			args, err := e.setupArgs(tt.GivenResource)
+		t.Run(
+			name, func(t *testing.T) {
+				e := NewRestoreExecutor(*newConfig())
+				args, err := e.setupArgs(tt.GivenResource)
 
-			require.NoError(t, err)
-			assert.Equal(t, tt.ExpectedArgs, args)
-		})
+				require.NoError(t, err)
+				assert.Equal(t, tt.ExpectedArgs, args)
+			},
+		)
 	}
 }
