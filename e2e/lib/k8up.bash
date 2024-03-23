@@ -222,7 +222,7 @@ given_s3_storage() {
 give_self_signed_issuer() {
 	ns=${NAMESPACE=${DETIK_CLIENT_NAMESPACE}}
 
-	kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.10.0/cert-manager.yaml
+	kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.14.4/cert-manager.yaml
 
 	kubectl wait -n cert-manager --for=condition=Available deployment/cert-manager-webhook --timeout=120s
 	yq $(yq --help | grep -q eval && echo e) '.metadata.namespace='\"${MINIO_NAMESPACE}\"'' definitions/cert/issure.yaml | kubectl apply -f -
