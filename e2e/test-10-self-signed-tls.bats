@@ -89,6 +89,45 @@ DEBUG_DETIK="true"
 	[ "${output}" = "${expected_content}" ]
 }
 
+@test "Given a PVC, When creating a Backup (mTLS with env) of an app, Then expect Restic repository - using self-signed issuer" {
+	expected_content="expected content for mtls: $(timestamp)"
+	expected_filename="expected_filename.txt"
+
+	given_a_running_operator
+	given_a_clean_ns
+	given_s3_storage
+	give_self_signed_issuer
+	given_a_subject "${expected_filename}" "${expected_content}"
+
+	kubectl apply -f definitions/secrets
+	kubectl apply -f definitions/backup/config-mtls-env.yaml
+	yq e '.spec.podSecurityContext.fsGroup='$(id -u)' | .spec.podSecurityContext.runAsUser='$(id -u)'' definitions/backup/backup-mtls-env.yaml | kubectl apply -f -
+
+	try "at most 10 times every 5s to get backup named 'k8up-backup-mtls-env' and verify that '.status.started' is 'true'"
+	verify_object_value_by_label job 'k8up.io/owned-by=backup_k8up-backup-mtls-env' '.status.active' 1 true
+
+	wait_until backup/k8up-backup-mtls-env completed
+
+	run restic snapshots
+
+	echo "---BEGIN restic snapshots output---"
+	echo "${output}"
+	echo "---END---"
+
+	echo -n "Number of Snapshots >= 1? "
+	jq -e 'length >= 1' <<< "${output}"          # Ensure that there was actually a backup created
+
+	run get_latest_snap
+
+	run restic dump "${output}" "/data/subject-pvc/${expected_filename}"
+
+	echo "---BEGIN actual ${expected_filename}---"
+	echo "${output}"
+	echo "---END---"
+
+	[ "${output}" = "${expected_content}" ]
+}
+
 ### End backup section
 
 ### Start restore to pvc section
@@ -251,6 +290,30 @@ DEBUG_DETIK="true"
 	expect_dl_file_in_container 'deploy/subject-dl-deployment' 'subject-container' "/data/${expected_filename}" "${expected_content}"
 }
 
+@test "Given an existing Restic repository, When creating a Restore (mTLS with env), Then Restore to S3 (mTLS with env) - using self-signed issuer" {
+	# Backup
+	expected_content="Old content for mtls: $(timestamp)"
+	expected_filename="old_file.txt"
+	given_a_running_operator
+	given_a_clean_ns
+	given_s3_storage
+	give_self_signed_issuer
+	given_an_existing_backup "${expected_filename}" "${expected_content}"
+
+	# Restore
+	kubectl apply -f definitions/secrets
+	kubectl apply -f definitions/restore/config-mtls-env.yaml
+	yq e '.spec.podSecurityContext.fsGroup='$(id -u)' | .spec.podSecurityContext.runAsUser='$(id -u)'' definitions/restore/s3-mtls-restore-mtls-env.yaml | kubectl apply -f -
+
+	try "at most 10 times every 1s to get Restore named 'k8up-s3-mtls-restore-mtls-env' and verify that '.status.started' is 'true'"
+	try "at most 10 times every 1s to get Job named 'k8up-s3-mtls-restore-mtls-env' and verify that '.status.active' is '1'"
+
+	wait_until restore/k8up-s3-mtls-restore-mtls-env completed
+	verify "'.status.conditions[?(@.type==\"Completed\")].reason' is 'Succeeded' for Restore named 'k8up-s3-mtls-restore-mtls-env'"
+
+	expect_dl_file_in_container 'deploy/subject-dl-deployment' 'subject-container' "/data/${expected_filename}" "${expected_content}"
+}
+
 ### End restore to s3 section
 
 ### Start archive to s3 section
@@ -286,7 +349,7 @@ DEBUG_DETIK="true"
 	run mc ls minio/archive
 
 	echo "---BEGIN total archives output---"
-	total_archives=$(echo -e "${output}" | wc -l)
+	total_archives=$(echo -n -e "${output}" | wc -l)
 	echo "${total_archives}"
 	echo "---END---"
 
@@ -324,7 +387,7 @@ DEBUG_DETIK="true"
 	run mc ls minio/archive
 
 	echo "---BEGIN total archives output---"
-	total_archives=$(echo -e "${output}" | wc -l)
+	total_archives=$(echo -n -e "${output}" | wc -l)
 	echo "${total_archives}"
 	echo "---END---"
 
@@ -362,7 +425,7 @@ DEBUG_DETIK="true"
 	run mc ls minio/archive
 
 	echo "---BEGIN total archives output---"
-	total_archives=$(echo -e "${output}" | wc -l)
+	total_archives=$(echo -n -e "${output}" | wc -l)
 	echo "${total_archives}"
 	echo "---END---"
 
@@ -400,7 +463,46 @@ DEBUG_DETIK="true"
 	run mc ls minio/archive
 
 	echo "---BEGIN total archives output---"
-	total_archives=$(echo -e "${output}" | wc -l)
+	total_archives=$(echo -n -e "${output}" | wc -l)
+	echo "${total_archives}"
+	echo "---END---"
+
+	[ "$total_snapshots" -eq "$total_archives" ]
+}
+
+@test "Given an existing Restic repository, When creating a Archive (mTLS with env), Then Restore to S3 (mTLS with env) - using self-signed issuer" {
+	# Backup
+	expected_content="Old content for mtls: $(timestamp)"
+	expected_filename="old_file.txt"
+	given_a_running_operator
+	given_a_clean_ns
+	given_s3_storage
+	give_self_signed_issuer
+	given_an_existing_backup "${expected_filename}" "${expected_content}"
+	given_a_clean_archive archive
+
+	# Archive
+	kubectl apply -f definitions/secrets
+	kubectl apply -f definitions/archive/config-mtls-env.yaml
+	yq e '.spec.podSecurityContext.fsGroup='$(id -u)' | .spec.podSecurityContext.runAsUser='$(id -u)'' definitions/archive/s3-mtls-archive-mtls-env.yaml | kubectl apply -f -
+
+	try "at most 10 times every 1s to get Archive named 'k8up-s3-mtls-archive-mtls-env' and verify that '.status.started' is 'true'"
+	try "at most 10 times every 1s to get Job named 'k8up-s3-mtls-archive-mtls-env' and verify that '.status.active' is '1'"
+
+	wait_until archive/k8up-s3-mtls-archive-mtls-env completed
+	verify "'.status.conditions[?(@.type==\"Completed\")].reason' is 'Succeeded' for Archive named 'k8up-s3-mtls-archive-mtls-env'"
+
+	run restic list snapshots
+
+	echo "---BEGIN total restic snapshots output---"
+	total_snapshots=$(echo -e "${output}" | wc -l)
+	echo "${total_snapshots}"
+	echo "---END---"
+
+	run mc ls minio/archive
+
+	echo "---BEGIN total archives output---"
+	total_archives=$(echo -n -e "${output}" | wc -l)
 	echo "${total_archives}"
 	echo "---END---"
 
@@ -451,6 +553,28 @@ DEBUG_DETIK="true"
 
 	wait_until check/k8up-check-mtls completed
 	verify "'.status.conditions[?(@.type==\"Completed\")].reason' is 'Succeeded' for Check named 'k8up-check-mtls'"
+}
+
+@test "Given a PVC, When creating a Check (mTLS with env) of an app, Then expect Restic repository - using self-signed issuer" {
+	# Backup
+	expected_content="Old content for mtls: $(timestamp)"
+	expected_filename="old_file.txt"
+	given_a_running_operator
+	given_a_clean_ns
+	given_s3_storage
+	give_self_signed_issuer
+	given_an_existing_backup "${expected_filename}" "${expected_content}"
+
+	# Check
+	kubectl apply -f definitions/secrets
+	kubectl apply -f definitions/check/config-mtls-env.yaml
+	yq e '.spec.podSecurityContext.fsGroup='$(id -u)' | .spec.podSecurityContext.runAsUser='$(id -u)'' definitions/check/check-mtls-env.yaml | kubectl apply -f -
+
+	try "at most 10 times every 1s to get Check named 'k8up-check-mtls-env' and verify that '.status.started' is 'true'"
+	try "at most 10 times every 1s to get Job named 'k8up-check-mtls-env' and verify that '.status.active' is '1'"
+
+	wait_until check/k8up-check-mtls-env completed
+	verify "'.status.conditions[?(@.type==\"Completed\")].reason' is 'Succeeded' for Check named 'k8up-check-mtls-env'"
 }
 
 ### End check section
