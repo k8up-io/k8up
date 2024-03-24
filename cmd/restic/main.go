@@ -65,6 +65,7 @@ var (
 			&cli.StringFlag{Destination: &cfg.Config.RestoreS3Endpoint, Name: restoreS3EndpointArg, EnvVars: []string{"RESTORE_S3ENDPOINT"}, Usage: "S3 endpoint to connect to when restoring, e.g. 'https://minio.svc:9000/backup"},
 			&cli.BoolFlag{Destination: &cfg.Config.VerifyRestore, Name: "verifyRestore", Usage: "If the restore should get verified, only for PVCs restore"},
 			&cli.BoolFlag{Destination: &cfg.Config.RestoreTrimPath, Name: "trimRestorePath", EnvVars: []string{"TRIM_RESTOREPATH"}, Value: true, DefaultText: "enabled", Usage: "If set, strips the value of --restoreDir from the lefts side of the remote restore path value"},
+			&cli.BoolFlag{Destination: &cfg.Config.Insecure, Name: "insecure-tls", EnvVars: []string{"SET_INSECURE_TLS_FLAG"}, Value: false, DefaultText: "disable", Usage: "enable or disable insecure connection by restic"},
 
 			&cli.StringFlag{Destination: &cfg.Config.ResticBin, Name: "resticBin", EnvVars: []string{"RESTIC_BINARY"}, Usage: "The path to the restic binary.", Value: "/usr/local/bin/restic"},
 			&cli.StringFlag{Destination: &cfg.Config.ResticRepository, Name: "resticRepository", EnvVars: []string{"RESTIC_REPOSITORY"}, Usage: "The restic repository to perform the action with", Required: true},

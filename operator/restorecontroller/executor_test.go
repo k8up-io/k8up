@@ -102,11 +102,12 @@ func TestRestore_setupEnvVars(t *testing.T) {
 		"givenS3RestoreResource_whenSetupEnvVars_expectCertainEnvVars": {
 			GivenResource: newS3RestoreResource(),
 			ExpectedEnvVars: map[string]string{
-				"HOSTNAME":           "",
-				"RESTIC_PASSWORD":    "",
-				"RESTIC_REPOSITORY":  "s3:http://localhost:9000/test-backend",
-				"RESTORE_S3ENDPOINT": "http://localhost:9000/test",
-				"STATS_URL":          "",
+				"HOSTNAME":              "",
+				"RESTIC_PASSWORD":       "",
+				"RESTIC_REPOSITORY":     "s3:http://localhost:9000/test-backend",
+				"RESTORE_S3ENDPOINT":    "http://localhost:9000/test",
+				"SET_INSECURE_TLS_FLAG": "false",
+				"STATS_URL":             "",
 			},
 			ExpectedSecretKeyRefs: map[string]string{
 				"AWS_ACCESS_KEY_ID":       "accessKey-backend",
@@ -124,6 +125,7 @@ func TestRestore_setupEnvVars(t *testing.T) {
 				"RESTIC_PASSWORD":       "",
 				"RESTIC_REPOSITORY":     "s3:/",
 				"RESTORE_DIR":           "/restore",
+				"SET_INSECURE_TLS_FLAG": "false",
 				"STATS_URL":             "",
 			},
 			ExpectedSecretKeyRefs: map[string]string{},
