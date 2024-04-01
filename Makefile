@@ -10,7 +10,7 @@ MAKEFLAGS += --no-builtin-variables
 
 .PHONY: help
 help: ## Show this help
-	@grep -E -h '\s##\s' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
+	@grep -E -h '^[^#].+\s##\s' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
 
 # extensible array of targets. Modules can add target to this variable for the all-in-one target.
 clean_targets := build-clean
@@ -54,7 +54,7 @@ run-restic: run  ## Run the restic module. Use ARGS to pass arguments to the com
 .PHONY: install
 install: export KUBECONFIG = $(KIND_KUBECONFIG)
 install: generate kind-setup ## Install CRDs into a cluster
-	kubectl apply $(KIND_KUBECTL_ARGS) -f $(CRD_ROOT_DIR)/v1
+	kubectl apply $(KIND_KUBECTL_ARGS) -f $(CRD_ROOT_DIR)/v1 --server-side
 
 .PHONY: uninstall
 uninstall: export KUBECONFIG = $(KIND_KUBECONFIG)

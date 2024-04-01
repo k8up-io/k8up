@@ -16,6 +16,8 @@ K8up is a Kubernetes backup operator based on [Restic](https://restic.readthedoc
 Just create a `schedule` and a `credentials` object in the namespace you’d like to backup.
 It’s that easy. K8up takes care of the rest. It also provides a Prometheus endpoint for monitoring.
 
+K8up is production ready. It is used in production deployments since 2019.
+
 ## Documentation
 
 The documentation is written in AsciiDoc and published with Antora to [k8up.io](https://k8up.io/).
@@ -141,7 +143,19 @@ make clean
 There are a number of example configurations in [`config/samples`](config/samples).
 Apply them using `kubectl apply -f config/samples/somesample.yaml`
 
-### Code of Conduct
+# Community
+
+Read more about our community [in the documentation](https://k8up.io/k8up/about/community.html).
+
+## Chat with us
+
+The K8up project is present in the [CNCF Slack Workspace](https://slack.cncf.io/) in the [#k8up channel](https://app.slack.com/client/T08PSQ7BQ/C06GP0D5FEF).
+
+## Monthly community meeting
+
+We host a monthly community meeting. For more information, head over to [the community documentation](https://k8up.io/k8up/about/community.html).
+
+## Code of Conduct
 
 Our code of conduct can be read at [k8up.io](https://k8up.io/k8up/about/code_of_conduct.html).
 

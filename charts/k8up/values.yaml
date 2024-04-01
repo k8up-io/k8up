@@ -10,7 +10,7 @@ image:
   # -- Operator image repository
   repository: k8up-io/k8up
   # -- Operator image tag (version)
-  tag: v2.7.1
+  tag: v2.8.0
 
 imagePullSecrets: []
 serviceAccount:
@@ -49,6 +49,9 @@ k8up:
 
   # -- Specifies whether leader election should be enabled.
   enableLeaderElection: true
+
+  # -- Specifies whether K8up should ignore PVCs without the backup annotation (by default, `k8up.io/backup`)
+  skipWithoutAnnotation: false
 
   # -- Specifies the namespace in which K8up's `EffectiveSchedules` are stored.
   # Defaults to release namespace if left empty.
@@ -142,4 +145,3 @@ cleanup:
   repository: bitnami/kubectl
   # -- Cleanup-job image tag (version)
   tag: latest
-

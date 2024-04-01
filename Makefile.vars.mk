@@ -24,7 +24,7 @@ CRD_DOCS_REF_PATH ?= docs/modules/ROOT/pages/references/api-reference.adoc
 SAMPLES_ROOT_DIR ?= config/samples
 minio_sentinel = $(e2etest_dir)/minio_sentinel
 
-KIND_NODE_VERSION ?= v1.24.4
+KIND_NODE_VERSION ?= v1.26.6
 KIND_KUBECONFIG ?= $(e2etest_dir)/kind-kubeconfig-$(KIND_NODE_VERSION)
 KIND_CLUSTER ?= k8up-$(KIND_NODE_VERSION)
 KIND_KUBECTL_ARGS ?= --validate=true
@@ -46,4 +46,4 @@ K8UP_QUAY_IMG ?= quay.io/k8up-io/k8up:$(IMG_TAG)
 ENVTEST_ADDITIONAL_FLAGS ?= --bin-dir "$(go_bin)"
 INTEGRATION_TEST_DEBUG_OUTPUT ?= false
 # See https://storage.googleapis.com/kubebuilder-tools/ for list of supported K8s versions
-ENVTEST_K8S_VERSION = 1.24.x
+ENVTEST_K8S_VERSION = 1.26.x

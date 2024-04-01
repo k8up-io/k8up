@@ -3,10 +3,35 @@
 Connect with the K8up community:
 
 https://github.com/k8up-io/k8up/discussions[Discussions]:: The project has GitHub discussions enabled where we discuss everything around K8up. Feel free to hop in there.
-https://community.appuio.ch/[Chat]:: We use the _APPUiO Community Chat_ (registration open) and are reachable in the https://community.appuio.ch/channel/k8up[#k8up] channel.
+https://app.slack.com/client/T08PSQ7BQ/C06GP0D5FEF[Chat]:: We use the https://slack.cncf.io/[CNCF Slack Workspace] and are reachable in the #k8up channel.
 https://github.com/k8up-io/k8up[GitHub]:: The source code and issue tracking is available on _GitHub_ under https://github.com/k8up-io/k8up[k8up-io/k8up].
+<<Monthly community meeting>>:: Join us in our monthly recurring community meeting.
 
-[discrete]
+== Monthly community meeting
+
+The K8up community hosts a monthly community meeting in Zoom:
+
+Time and Date::
+Every first Monday of the month at 5:00 PM Europe/Zurich timezone.
+You can use https://www.timeanddate.com/worldclock/converter.html?p1=268[timeanddate.com^] to convert into your timezone.
+
+Zoom link::
+https://vshn.zoom.us/j/82326347868?pwd=0ImBHdwZH98raNP78fFlVI9zci7w6w.1[Zoom^]
+
+The agenda::
+We collect inputs for the agenda in a https://docs.google.com/document/d/1O687amnDyQIXReeeKkylzxWgq1BZ7tZdIQN0-x3ca5g/edit?usp=sharing[Google Docs^] document.
++
+The general agenda is:
+
+* Ask the maintainer
+* Discuss roadmap
+
+Currently, we don't do any recordings of the meeting, until the community wishes to do so.
+
+== Maintainer
+
+Current maintainers are documented in the https://github.com/k8up-io/k8up/blob/master/OWNERS.md[OWNERS.md] file.
+
 == Project sponsor
 
 The project is sponsored by https://vshn.ch/[VSHN AG].

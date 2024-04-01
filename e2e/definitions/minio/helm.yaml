@@ -1,6 +1,5 @@
-accessKey: myaccesskey
-secretKey: mysecretkey
 replicas: 1
+mode: standalone
 resources:
   requests:
     memory: 250M
@@ -10,3 +9,6 @@ buckets:
   - name: backup
     policy: none
     purge: false
+mode: standalone
+rootUser: minioadmin
+rootPassword: minioadmin

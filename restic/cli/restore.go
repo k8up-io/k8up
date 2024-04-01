@@ -141,7 +141,13 @@ func (r *Restic) getLatestSnapshot(snapshotID string, log logr.Logger) (dto.Snap
 
 func (r *Restic) folderRestore(restoreDir string, snapshot dto.Snapshot, restoreFilter string, verify bool, log logr.Logger) error {
 	var linkedDir string
-	if cfg.Config.RestoreTrimPath {
+
+	singleFile, err := r.isRestoreSingleFile(log, snapshot)
+	if err != nil {
+		return err
+	}
+
+	if !singleFile && cfg.Config.RestoreTrimPath {
 		restoreRoot, err := r.linkRestorePaths(snapshot, restoreDir)
 		if err != nil {
 			return err
@@ -219,6 +225,62 @@ func (r *Restic) linkRestorePaths(snapshot dto.Snapshot, restoreDir string) (str
 	}
 
 	return restoreRoot, nil
+}
+
+func (r *Restic) isRestoreSingleFile(log logr.Logger, snapshot dto.Snapshot) (bool, error) {
+	buf := bytes.Buffer{}
+
+	opts := CommandOptions{
+		Path:   r.resticPath,
+		Args:   r.globalFlags.ApplyToCommand("ls", "--json", snapshot.ID),
+		StdOut: &buf,
+	}
+
+	cmd := NewCommand(r.ctx, log, opts)
+	cmd.Run()
+	capturedStdOut := buf.String()
+
+	stdOutLines := strings.Split(capturedStdOut, "\n")
+
+	if len(stdOutLines) == 0 {
+		err := fmt.Errorf("no list exist for snapshot %v", snapshot.ID)
+		log.Error(err, "the snapshot list is empty")
+		return false, err
+	}
+
+	err := json.Unmarshal([]byte(stdOutLines[0]), &dto.Snapshot{})
+	if err != nil {
+		return false, err
+	}
+
+	count := 0
+	for i := 1; i < len(stdOutLines); i++ {
+		if len(stdOutLines[i]) == 0 {
+			continue
+		}
+
+		node := &fileNode{}
+		err := json.Unmarshal([]byte(stdOutLines[i]), node)
+		if err != nil {
+			return false, err
+		}
+		if node.Type == "file" {
+			count++
+		}
+		if node.Type == "dir" {
+			count = 0
+			break
+		}
+		if count >= 2 {
+			break
+		}
+	}
+
+	if count == 1 {
+		return true, nil
+	}
+
+	return false, nil
 }
 
 func (r *Restic) parsePath(paths []string) string {

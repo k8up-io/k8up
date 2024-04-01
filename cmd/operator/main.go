@@ -19,6 +19,8 @@ import (
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/metrics/server"
+	"sigs.k8s.io/controller-runtime/pkg/webhook"
 )
 
 const (
@@ -79,6 +81,7 @@ var (
 			&cli.StringFlag{Destination: &cfg.Config.PodExecRoleName, Name: "podexecrolename", EnvVars: []string{"BACKUP_PODEXECROLENAME"}, Value: "pod-executor", Usage: "set the role name that should be used for pod command execution"},
 
 			&cli.BoolFlag{Destination: &cfg.Config.EnableLeaderElection, Name: "enable-leader-election", EnvVars: []string{"BACKUP_ENABLE_LEADER_ELECTION"}, Value: true, DefaultText: "enabled", Usage: "enable leader election within the operator Pod"},
+			&cli.BoolFlag{Destination: &cfg.Config.SkipWithoutAnnotation, Name: "skip-pvcs-without-annotation", EnvVars: []string{"BACKUP_SKIP_WITHOUT_ANNOTATION"}, Value: false, DefaultText: "disabled", Usage: "skip selecting PVCs that don't have the BACKUP_ANNOTATION"},
 			&cli.StringFlag{Destination: &cfg.Config.BackupCheckSchedule, Name: "checkschedule", EnvVars: []string{"BACKUP_CHECKSCHEDULE"}, Value: "0 0 * * 0", Usage: "the default check schedule"},
 			&cli.StringFlag{Destination: &cfg.Config.OperatorNamespace, Name: "operator-namespace", EnvVars: []string{"BACKUP_OPERATOR_NAMESPACE"}, Required: true, Usage: "set the namespace in which the K8up operator itself runs"},
 		},
@@ -99,11 +102,19 @@ func operatorMain(c *cli.Context) error {
 	}
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
-		Scheme:             k8upScheme(),
-		MetricsBindAddress: cfg.Config.MetricsBindAddress,
-		Port:               9443,
-		LeaderElection:     cfg.Config.EnableLeaderElection,
-		LeaderElectionID:   leaderElectionID,
+		Scheme: k8upScheme(),
+		// MetricsBindAddress: cfg.Config.MetricsBindAddress,
+		// Port:               9443,
+		LeaderElection:   cfg.Config.EnableLeaderElection,
+		LeaderElectionID: leaderElectionID,
+		Metrics: server.Options{
+			BindAddress: cfg.Config.MetricsBindAddress,
+		},
+		WebhookServer: &webhook.DefaultServer{
+			Options: webhook.Options{
+				Port: 9443,
+			},
+		},
 	})
 	if err != nil {
 		operatorLog.Error(err, "unable to initialize operator mode", "step", "manager")
