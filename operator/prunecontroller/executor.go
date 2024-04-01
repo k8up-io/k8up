@@ -42,6 +42,13 @@ func (p *PruneExecutor) Execute(ctx context.Context) error {
 			return mutateErr
 		}
 
+		if p.prune.Spec.Backend.InsecureTLS {
+			batchJob.Spec.Template.Spec.Containers[0].Env = append(batchJob.Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{
+				Name:  "SET_INSECURE_TLS_FLAG",
+				Value: "true",
+			})
+		}
+
 		batchJob.Spec.Template.Spec.Containers[0].Env = p.setupEnvVars(ctx, p.prune)
 		batchJob.Spec.Template.Spec.ServiceAccountName = cfg.Config.ServiceAccount
 		p.prune.Spec.AppendEnvFromToContainer(&batchJob.Spec.Template.Spec.Containers[0])

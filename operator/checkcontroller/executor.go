@@ -49,6 +49,13 @@ func (c *CheckExecutor) Execute(ctx context.Context) error {
 			return mutateErr
 		}
 
+		if c.check.Spec.Backend.InsecureTLS {
+			batchJob.Spec.Template.Spec.Containers[0].Env = append(batchJob.Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{
+				Name:  "SET_INSECURE_TLS_FLAG",
+				Value: "true",
+			})
+		}
+
 		batchJob.Spec.Template.Spec.Containers[0].Env = c.setupEnvVars(ctx)
 		c.check.Spec.AppendEnvFromToContainer(&batchJob.Spec.Template.Spec.Containers[0])
 		batchJob.Spec.Template.Spec.Containers[0].Args = []string{"-check"}

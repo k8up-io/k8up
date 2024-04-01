@@ -269,6 +269,13 @@ func (b *BackupExecutor) startBackup(ctx context.Context) error {
 			batchJob.job.Spec.Template.Spec.Volumes = batchJob.volumes
 			batchJob.job.Spec.Template.Spec.Containers[0].VolumeMounts = b.newVolumeMounts(batchJob.job.Spec.Template.Spec.Volumes)
 
+			if b.backup.Spec.Backend.InsecureTLS {
+				batchJob.job.Spec.Template.Spec.Containers[0].Env = append(batchJob.job.Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{
+					Name:  "SET_INSECURE_TLS_FLAG",
+					Value: "true",
+				})
+			}
+
 			index++
 			return nil
 		})

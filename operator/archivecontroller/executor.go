@@ -48,6 +48,13 @@ func (a *ArchiveExecutor) Execute(ctx context.Context) error {
 			return mutateErr
 		}
 
+		if archive.Spec.Backend.InsecureTLS {
+			batchJob.Spec.Template.Spec.Containers[0].Env = append(batchJob.Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{
+				Name:  "SET_INSECURE_TLS_FLAG",
+				Value: "true",
+			})
+		}
+
 		batchJob.Spec.Template.Spec.Containers[0].Env = a.setupEnvVars(ctx, archive)
 		archive.Spec.AppendEnvFromToContainer(&batchJob.Spec.Template.Spec.Containers[0])
 		batchJob.Spec.Template.Spec.Containers[0].Args = a.setupArgs(archive)
