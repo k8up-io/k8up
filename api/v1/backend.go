@@ -17,14 +17,15 @@ type (
 		// RepoPasswordSecretRef references a secret key to look up the restic repository password
 		RepoPasswordSecretRef *corev1.SecretKeySelector `json:"repoPasswordSecretRef,omitempty"`
 		// EnvFrom adds all environment variables from a an external source to the Restic job.
-		EnvFrom []corev1.EnvFromSource `json:"envFrom,omitempty"`
-		Local   *LocalSpec             `json:"local,omitempty"`
-		S3      *S3Spec                `json:"s3,omitempty"`
-		GCS     *GCSSpec               `json:"gcs,omitempty"`
-		Azure   *AzureSpec             `json:"azure,omitempty"`
-		Swift   *SwiftSpec             `json:"swift,omitempty"`
-		B2      *B2Spec                `json:"b2,omitempty"`
-		Rest    *RestServerSpec        `json:"rest,omitempty"`
+		EnvFrom     []corev1.EnvFromSource `json:"envFrom,omitempty"`
+		Local       *LocalSpec             `json:"local,omitempty"`
+		S3          *S3Spec                `json:"s3,omitempty"`
+		GCS         *GCSSpec               `json:"gcs,omitempty"`
+		Azure       *AzureSpec             `json:"azure,omitempty"`
+		Swift       *SwiftSpec             `json:"swift,omitempty"`
+		B2          *B2Spec                `json:"b2,omitempty"`
+		Rest        *RestServerSpec        `json:"rest,omitempty"`
+		InsecureTLS bool                   `json:"insecureTLS,omitempty"`
 	}
 
 	// +k8s:deepcopy-gen=false

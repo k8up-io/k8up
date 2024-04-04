@@ -240,6 +240,8 @@ spec:
                             type: object
                             x-kubernetes-map-type: atomic
                         type: object
+                      insecureTLS:
+                        type: boolean
                       local:
                         properties:
                           mountPath:
@@ -897,6 +899,8 @@ spec:
                         type: object
                         x-kubernetes-map-type: atomic
                     type: object
+                  insecureTLS:
+                    type: boolean
                   local:
                     properties:
                       mountPath:
@@ -1229,6 +1233,8 @@ spec:
                             type: object
                             x-kubernetes-map-type: atomic
                         type: object
+                      insecureTLS:
+                        type: boolean
                       local:
                         properties:
                           mountPath:
@@ -1832,6 +1838,8 @@ spec:
                             type: object
                             x-kubernetes-map-type: atomic
                         type: object
+                      insecureTLS:
+                        type: boolean
                       local:
                         properties:
                           mountPath:
@@ -2610,6 +2618,8 @@ spec:
                             type: object
                             x-kubernetes-map-type: atomic
                         type: object
+                      insecureTLS:
+                        type: boolean
                       local:
                         properties:
                           mountPath:
@@ -3287,6 +3297,8 @@ spec:
                             type: object
                             x-kubernetes-map-type: atomic
                         type: object
+                      insecureTLS:
+                        type: boolean
                       local:
                         properties:
                           mountPath:

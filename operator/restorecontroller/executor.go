@@ -20,6 +20,7 @@ const restorePath = "/restore"
 
 type RestoreExecutor struct {
 	executor.Generic
+	restore *k8upv1.Restore
 }
 
 // NewRestoreExecutor will return a new executor for Restore jobs.
@@ -67,6 +68,14 @@ func (r *RestoreExecutor) createRestoreObject(ctx context.Context, restore *k8up
 		if mutateErr != nil {
 			return mutateErr
 		}
+
+		if r.restore.Spec.Backend.InsecureTLS {
+			batchJob.Spec.Template.Spec.Containers[0].Env = append(batchJob.Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{
+				Name:  "SET_INSECURE_TLS_FLAG",
+				Value: "true",
+			})
+		}
+
 		batchJob.Labels[job.K8upExclusive] = "true"
 		batchJob.Spec.Template.Spec.Containers[0].Env = r.setupEnvVars(ctx, restore)
 		restore.Spec.AppendEnvFromToContainer(&batchJob.Spec.Template.Spec.Containers[0])

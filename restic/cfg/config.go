@@ -27,6 +27,7 @@ type Configuration struct {
 	DoPrune   bool
 	DoRestore bool
 	DoArchive bool
+	Insecure  bool
 
 	BackupCommandAnnotation       string
 	BackupFileExtensionAnnotation string
