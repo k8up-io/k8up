@@ -2,13 +2,13 @@ package cli
 
 import (
 	"context"
-	"github.com/k8up-io/k8up/v2/operator/utils"
 	"path"
 	"path/filepath"
 	"strings"
 
 	"github.com/go-logr/logr"
 
+	"github.com/k8up-io/k8up/v2/operator/utils"
 	"github.com/k8up-io/k8up/v2/restic/cfg"
 	"github.com/k8up-io/k8up/v2/restic/dto"
 )

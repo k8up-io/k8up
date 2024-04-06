@@ -5,14 +5,12 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/k8up-io/k8up/v2/operator/executor"
 	"github.com/k8up-io/k8up/v2/operator/utils"
-
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	controllerruntime "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
-
-	"github.com/k8up-io/k8up/v2/operator/executor"
 
 	k8upv1 "github.com/k8up-io/k8up/v2/api/v1"
 	"github.com/k8up-io/k8up/v2/operator/cfg"
@@ -53,13 +51,7 @@ func (r *RestoreExecutor) Execute(ctx context.Context) error {
 	restoreJob, err := r.createRestoreObject(ctx, restore)
 	if err != nil {
 		log.Error(err, "unable to create or update restore object")
-		r.SetConditionFalseWithMessage(
-			ctx,
-			k8upv1.ConditionReady,
-			k8upv1.ReasonCreationFailed,
-			"unable to create restore object: %v",
-			err,
-		)
+		r.SetConditionFalseWithMessage(ctx, k8upv1.ConditionReady, k8upv1.ReasonCreationFailed, "unable to create restore object: %v", err)
 		return nil
 	}
 
@@ -79,28 +71,23 @@ func (r *RestoreExecutor) createRestoreObject(
 	batchJob := &batchv1.Job{}
 	batchJob.Name = r.jobName()
 	batchJob.Namespace = restore.Namespace
-	_, err := controllerutil.CreateOrUpdate(
-		ctx, r.Client, batchJob, func() error {
-			mutateErr := job.MutateBatchJob(batchJob, restore, r.Config)
-			if mutateErr != nil {
-				return mutateErr
-			}
-			batchJob.Labels[job.K8upExclusive] = "true"
-			batchJob.Spec.Template.Spec.Containers[0].Env = r.setupEnvVars(ctx, restore)
-			restore.Spec.AppendEnvFromToContainer(&batchJob.Spec.Template.Spec.Containers[0])
+	_, err := controllerutil.CreateOrUpdate(ctx, r.Client, batchJob, func() error {
+		mutateErr := job.MutateBatchJob(batchJob, restore, r.Config)
+		if mutateErr != nil {
+			return mutateErr
+		}
+		batchJob.Labels[job.K8upExclusive] = "true"
+		batchJob.Spec.Template.Spec.Containers[0].Env = r.setupEnvVars(ctx, restore)
+		restore.Spec.AppendEnvFromToContainer(&batchJob.Spec.Template.Spec.Containers[0])
 
-			volumes, volumeMounts := r.volumeConfig(restore)
-			batchJob.Spec.Template.Spec.Volumes = append(volumes, r.attachMoreVolumes()...)
-			batchJob.Spec.Template.Spec.Containers[0].VolumeMounts = append(
-				volumeMounts,
-				r.attachMoreVolumeMounts()...,
-			)
+		volumes, volumeMounts := r.volumeConfig(restore)
+		batchJob.Spec.Template.Spec.Volumes = append(volumes, r.attachMoreVolumes()...)
+		batchJob.Spec.Template.Spec.Containers[0].VolumeMounts = append(volumeMounts, r.attachMoreVolumeMounts()...)
 
-			args, argsErr := r.setupArgs(restore)
-			batchJob.Spec.Template.Spec.Containers[0].Args = args
-			return argsErr
-		},
-	)
+		args, argsErr := r.setupArgs(restore)
+		batchJob.Spec.Template.Spec.Containers[0].Args = args
+		return argsErr
+	})
 
 	return batchJob, err
 }
@@ -129,11 +116,7 @@ func (r *RestoreExecutor) setupArgs(restore *k8upv1.Restore) ([]string, error) {
 	case restore.Spec.RestoreMethod.S3 != nil:
 		args = append(args, "-restoreType", "s3")
 	default:
-		return nil, fmt.Errorf(
-			"undefined restore method (-restoreType) on '%v/%v'",
-			restore.Namespace,
-			restore.Name,
-		)
+		return nil, fmt.Errorf("undefined restore method (-restoreType) on '%v/%v'", restore.Namespace, restore.Name)
 	}
 
 	args = append(args, r.appendOptionsArgs()...)
@@ -147,15 +130,13 @@ func (r *RestoreExecutor) volumeConfig(restore *k8upv1.Restore) (
 ) {
 	volumes := make([]corev1.Volume, 0)
 	if restore.Spec.RestoreMethod.S3 == nil {
-		volumes = append(
-			volumes,
-			corev1.Volume{
-				Name: restore.Spec.RestoreMethod.Folder.ClaimName,
-				VolumeSource: corev1.VolumeSource{
-					PersistentVolumeClaim: restore.Spec.RestoreMethod.Folder.PersistentVolumeClaimVolumeSource,
-				},
+		addVolume := corev1.Volume{
+			Name: restore.Spec.RestoreMethod.Folder.ClaimName,
+			VolumeSource: corev1.VolumeSource{
+				PersistentVolumeClaim: restore.Spec.RestoreMethod.Folder.PersistentVolumeClaimVolumeSource,
 			},
-		)
+		}
+		volumes = append(volumes, addVolume)
 	}
 
 	mounts := make([]corev1.VolumeMount, 0)
@@ -170,10 +151,7 @@ func (r *RestoreExecutor) volumeConfig(restore *k8upv1.Restore) (
 	return volumes, mounts
 }
 
-func (r *RestoreExecutor) setupEnvVars(
-	ctx context.Context,
-	restore *k8upv1.Restore,
-) []corev1.EnvVar {
+func (r *RestoreExecutor) setupEnvVars(ctx context.Context, restore *k8upv1.Restore) []corev1.EnvVar {
 	log := controllerruntime.LoggerFrom(ctx)
 	vars := executor.NewEnvVarConverter()
 
@@ -199,14 +177,7 @@ func (r *RestoreExecutor) setupEnvVars(
 
 	err := vars.Merge(executor.DefaultEnv(r.Obj.GetNamespace()))
 	if err != nil {
-		log.Error(
-			err,
-			"error while merging the environment variables",
-			"name",
-			r.Obj.GetName(),
-			"namespace",
-			r.Obj.GetNamespace(),
-		)
+		log.Error(err, "error while merging the environment variables", "name", r.Obj.GetName(), "namespace", r.Obj.GetNamespace())
 	}
 
 	return vars.Convert()
@@ -220,35 +191,28 @@ func (r *RestoreExecutor) appendOptionsArgs() []string {
 			args = append(args, []string{"--caCert", r.restore.Spec.Backend.Options.CACert}...)
 		}
 		if r.restore.Spec.Backend.Options.ClientCert != "" && r.restore.Spec.Backend.Options.ClientKey != "" {
-			args = append(
-				args,
-				[]string{
-					"--clientCert",
-					r.restore.Spec.Backend.Options.ClientCert,
-					"--clientKey",
-					r.restore.Spec.Backend.Options.ClientKey,
-				}...,
-			)
+			addMoreArgs := []string{
+				"--clientCert",
+				r.restore.Spec.Backend.Options.ClientCert,
+				"--clientKey",
+				r.restore.Spec.Backend.Options.ClientKey,
+			}
+			args = append(args, addMoreArgs...)
 		}
 	}
 
 	if r.restore.Spec.RestoreMethod != nil && r.restore.Spec.RestoreMethod.Options != nil {
 		if r.restore.Spec.RestoreMethod.Options.CACert != "" {
-			args = append(
-				args,
-				[]string{"--restoreCaCert", r.restore.Spec.RestoreMethod.Options.CACert}...,
-			)
+			args = append(args, []string{"--restoreCaCert", r.restore.Spec.RestoreMethod.Options.CACert}...)
 		}
 		if r.restore.Spec.RestoreMethod.Options.ClientCert != "" && r.restore.Spec.RestoreMethod.Options.ClientKey != "" {
-			args = append(
-				args,
-				[]string{
-					"--restoreClientCert",
-					r.restore.Spec.RestoreMethod.Options.ClientCert,
-					"--restoreClientKey",
-					r.restore.Spec.RestoreMethod.Options.ClientKey,
-				}...,
-			)
+			addMoreArgs := []string{
+				"--restoreClientCert",
+				r.restore.Spec.RestoreMethod.Options.ClientCert,
+				"--restoreClientKey",
+				r.restore.Spec.RestoreMethod.Options.ClientKey,
+			}
+			args = append(args, addMoreArgs...)
 		}
 	}
 
@@ -281,12 +245,11 @@ func (r *RestoreExecutor) attachMoreVolumes() []corev1.Volume {
 			continue
 		}
 
-		moreVolumes = append(
-			moreVolumes, corev1.Volume{
-				Name:         vol.Name,
-				VolumeSource: volumeSource,
-			},
-		)
+		addVolume := corev1.Volume{
+			Name:         vol.Name,
+			VolumeSource: volumeSource,
+		}
+		moreVolumes = append(moreVolumes, addVolume)
 	}
 
 	return moreVolumes
@@ -319,8 +282,11 @@ func (r *RestoreExecutor) attachMoreVolumeMounts() []corev1.VolumeMount {
 		}
 	}
 
-	ku8pVolumeMount := corev1.VolumeMount{Name: _dataDirName, MountPath: cfg.Config.PodVarDir}
-	volumeMount = append(volumeMount, ku8pVolumeMount)
+	addVolumeMount := corev1.VolumeMount{
+		Name:      _dataDirName,
+		MountPath: cfg.Config.PodVarDir,
+	}
+	volumeMount = append(volumeMount, addVolumeMount)
 
 	return volumeMount
 }

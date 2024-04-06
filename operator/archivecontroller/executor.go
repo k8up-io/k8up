@@ -3,13 +3,12 @@ package archivecontroller
 import (
 	"context"
 
+	"github.com/k8up-io/k8up/v2/operator/executor"
+	"github.com/k8up-io/k8up/v2/operator/utils"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	controllerruntime "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
-
-	"github.com/k8up-io/k8up/v2/operator/executor"
-	"github.com/k8up-io/k8up/v2/operator/utils"
 
 	k8upv1 "github.com/k8up-io/k8up/v2/api/v1"
 	"github.com/k8up-io/k8up/v2/operator/cfg"
@@ -48,33 +47,25 @@ func (a *ArchiveExecutor) Execute(ctx context.Context) error {
 	batchJob.Name = a.jobName()
 	batchJob.Namespace = a.archive.Namespace
 
-	_, err := controllerutil.CreateOrUpdate(
-		ctx, a.Client, batchJob, func() error {
-			mutateErr := job.MutateBatchJob(batchJob, a.archive, a.Config)
-			if mutateErr != nil {
-				return mutateErr
-			}
+	_, err := controllerutil.CreateOrUpdate(ctx, a.Client, batchJob, func() error {
+		mutateErr := job.MutateBatchJob(batchJob, a.archive, a.Config)
+		if mutateErr != nil {
+			return mutateErr
+		}
 
-			batchJob.Spec.Template.Spec.Containers[0].Env = a.setupEnvVars(ctx, a.archive)
-			a.archive.Spec.AppendEnvFromToContainer(&batchJob.Spec.Template.Spec.Containers[0])
-			batchJob.Spec.Template.Spec.Containers[0].VolumeMounts = a.attachMoreVolumeMounts()
-			batchJob.Spec.Template.Spec.Volumes = a.attachMoreVolumes()
+		batchJob.Spec.Template.Spec.Containers[0].Env = a.setupEnvVars(ctx, a.archive)
+		a.archive.Spec.AppendEnvFromToContainer(&batchJob.Spec.Template.Spec.Containers[0])
+		batchJob.Spec.Template.Spec.Containers[0].VolumeMounts = a.attachMoreVolumeMounts()
+		batchJob.Spec.Template.Spec.Volumes = a.attachMoreVolumes()
 
-			args, argsErr := a.setupArgs()
-			batchJob.Spec.Template.Spec.Containers[0].Args = args
+		args, argsErr := a.setupArgs()
+		batchJob.Spec.Template.Spec.Containers[0].Args = args
 
-			return argsErr
-		},
-	)
+		return argsErr
+	})
 	if err != nil {
 		log.Error(err, "could not create job")
-		a.SetConditionFalseWithMessage(
-			ctx,
-			k8upv1.ConditionReady,
-			k8upv1.ReasonCreationFailed,
-			"could not create job: %v",
-			err,
-		)
+		a.SetConditionFalseWithMessage(ctx, k8upv1.ConditionReady, k8upv1.ReasonCreationFailed, "could not create job: %v", err)
 		return err
 	}
 
@@ -96,10 +87,7 @@ func (a *ArchiveExecutor) setupArgs() ([]string, error) {
 	return args, nil
 }
 
-func (a *ArchiveExecutor) setupEnvVars(
-	ctx context.Context,
-	archive *k8upv1.Archive,
-) []corev1.EnvVar {
+func (a *ArchiveExecutor) setupEnvVars(ctx context.Context, archive *k8upv1.Archive) []corev1.EnvVar {
 	log := controllerruntime.LoggerFrom(ctx)
 	vars := executor.NewEnvVarConverter()
 
@@ -129,14 +117,7 @@ func (a *ArchiveExecutor) setupEnvVars(
 
 	err := vars.Merge(executor.DefaultEnv(a.Obj.GetNamespace()))
 	if err != nil {
-		log.Error(
-			err,
-			"error while merging the environment variables",
-			"name",
-			a.Obj.GetName(),
-			"namespace",
-			a.Obj.GetNamespace(),
-		)
+		log.Error(err, "error while merging the environment variables", "name", a.Obj.GetName(), "namespace", a.Obj.GetNamespace())
 	}
 
 	return vars.Convert()
@@ -154,35 +135,28 @@ func (a *ArchiveExecutor) appendOptionsArgs() []string {
 			args = append(args, []string{"-caCert", a.archive.Spec.Backend.Options.CACert}...)
 		}
 		if a.archive.Spec.Backend.Options.ClientCert != "" && a.archive.Spec.Backend.Options.ClientKey != "" {
-			args = append(
-				args,
-				[]string{
-					"-clientCert",
-					a.archive.Spec.Backend.Options.ClientCert,
-					"-clientKey",
-					a.archive.Spec.Backend.Options.ClientKey,
-				}...,
-			)
+			addMoreArgs := []string{
+				"-clientCert",
+				a.archive.Spec.Backend.Options.ClientCert,
+				"-clientKey",
+				a.archive.Spec.Backend.Options.ClientKey,
+			}
+			args = append(args, addMoreArgs...)
 		}
 	}
 
 	if a.archive.Spec.RestoreSpec != nil && a.archive.Spec.RestoreMethod.Options != nil {
 		if a.archive.Spec.RestoreMethod.Options.CACert != "" {
-			args = append(
-				args,
-				[]string{"-restoreCaCert", a.archive.Spec.RestoreMethod.Options.CACert}...,
-			)
+			args = append(args, []string{"-restoreCaCert", a.archive.Spec.RestoreMethod.Options.CACert}...)
 		}
 		if a.archive.Spec.RestoreMethod.Options.ClientCert != "" && a.archive.Spec.RestoreMethod.Options.ClientKey != "" {
-			args = append(
-				args,
-				[]string{
-					"-restoreClientCert",
-					a.archive.Spec.RestoreMethod.Options.ClientCert,
-					"-restoreClientKey",
-					a.archive.Spec.RestoreMethod.Options.ClientKey,
-				}...,
-			)
+			addMoreArgs := []string{
+				"-restoreClientCert",
+				a.archive.Spec.RestoreMethod.Options.ClientCert,
+				"-restoreClientKey",
+				a.archive.Spec.RestoreMethod.Options.ClientKey,
+			}
+			args = append(args, addMoreArgs...)
 		}
 	}
 
@@ -215,12 +189,11 @@ func (a *ArchiveExecutor) attachMoreVolumes() []corev1.Volume {
 			continue
 		}
 
-		moreVolumes = append(
-			moreVolumes, corev1.Volume{
-				Name:         vol.Name,
-				VolumeSource: volumeSource,
-			},
-		)
+		addVolume := corev1.Volume{
+			Name:         vol.Name,
+			VolumeSource: volumeSource,
+		}
+		moreVolumes = append(moreVolumes, addVolume)
 	}
 
 	return moreVolumes
@@ -253,8 +226,11 @@ func (a *ArchiveExecutor) attachMoreVolumeMounts() []corev1.VolumeMount {
 		}
 	}
 
-	ku8pVolumeMount := corev1.VolumeMount{Name: _dataDirName, MountPath: cfg.Config.PodVarDir}
-	volumeMount = append(volumeMount, ku8pVolumeMount)
+	addVolumeMount := corev1.VolumeMount{
+		Name:      _dataDirName,
+		MountPath: cfg.Config.PodVarDir,
+	}
+	volumeMount = append(volumeMount, addVolumeMount)
 
 	return volumeMount
 }
