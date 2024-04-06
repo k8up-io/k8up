@@ -15,7 +15,7 @@ TIP: By default, all PVCs are backed up automatically. Adding the annotation `k8
 
 == Self-signed issuer and Mutual TLS
 
-If you are using self-signed issuer or using mutual tls for authenticate client, you be able to using volume for mounting cert files into backup object.
+If you are using self-signed issuer or using mutual tls for authenticate client, you're able use a volume for mounting cert files into the backup object.
 
 === Self-signed issuer
 
