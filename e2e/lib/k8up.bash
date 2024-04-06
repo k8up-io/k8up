@@ -56,9 +56,8 @@ clear_pv_data() {
 # It's very unreliable unfortunately. So running the pod, waiting and getting the
 # log output is a lot less prone for race conditions.
 restic() {
-	sleep 3
-	kubectl run "restic-$(timestamp)" \
-		--attach \
+	podname="restic-$(timestamp)"
+	kubectl run "$podname" \
 		--restart Never \
 		--namespace "${DETIK_CLIENT_NAMESPACE-"k8up-system"}" \
 		--image "${E2E_IMAGE}" \
@@ -78,7 +77,6 @@ restic() {
 }
 
 mc() {
-	sleep 3
 	podname="minio-mc-$(timestamp)"
 	kubectl run "$podname" \
 		--restart Never \
@@ -295,7 +293,6 @@ given_an_existing_backup() {
 		if [ ! -z "${output}" ]; then
 			break
 		fi
-		sleep 3
 	done
 
 	# shellcheck disable=SC2154
