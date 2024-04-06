@@ -2,6 +2,7 @@ package cfg
 
 import (
 	"fmt"
+
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 )
@@ -81,6 +82,7 @@ type Configuration struct {
 	EnableLeaderElection bool
 	OperatorNamespace    string
 
+	// the var data dir for read/write k8up data or temp file in the backup pod
 	PodVarDir string
 
 	// Allows to pass options to restic, see https://restic.readthedocs.io/en/stable/manual_rest.html?highlight=--option#usage-help

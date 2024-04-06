@@ -92,11 +92,7 @@ func IsNil(v interface{}) bool {
 	return v == nil || (reflect.ValueOf(v).Kind() == reflect.Ptr && reflect.ValueOf(v).IsNil())
 }
 
-func addEnvVarFromSecret(
-	vars map[string]*corev1.EnvVarSource,
-	key string,
-	ref *corev1.SecretKeySelector,
-) {
+func addEnvVarFromSecret(vars map[string]*corev1.EnvVarSource, key string, ref *corev1.SecretKeySelector) {
 	if ref != nil {
 		vars[key] = &corev1.EnvVarSource{
 			SecretKeyRef: ref,

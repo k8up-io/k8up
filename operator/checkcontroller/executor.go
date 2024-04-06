@@ -3,13 +3,11 @@ package checkcontroller
 import (
 	"context"
 
+	"github.com/k8up-io/k8up/v2/operator/executor"
 	"github.com/k8up-io/k8up/v2/operator/utils"
-
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	controllerruntime "sigs.k8s.io/controller-runtime"
-
-	"github.com/k8up-io/k8up/v2/operator/executor"
 
 	k8upv1 "github.com/k8up-io/k8up/v2/api/v1"
 	"github.com/k8up-io/k8up/v2/operator/cfg"
@@ -48,33 +46,26 @@ func (c *CheckExecutor) Execute(ctx context.Context) error {
 	batchJob.Name = c.jobName()
 	batchJob.Namespace = c.check.Namespace
 
-	_, err := controllerruntime.CreateOrUpdate(
-		ctx, c.Client, batchJob, func() error {
-			mutateErr := job.MutateBatchJob(batchJob, c.check, c.Config)
-			if mutateErr != nil {
-				return mutateErr
-			}
+	_, err := controllerruntime.CreateOrUpdate(ctx, c.Client, batchJob, func() error {
+		mutateErr := job.MutateBatchJob(batchJob, c.check, c.Config)
+		if mutateErr != nil {
+			return mutateErr
+		}
 
-			batchJob.Spec.Template.Spec.Containers[0].Env = c.setupEnvVars(ctx)
-			c.check.Spec.AppendEnvFromToContainer(&batchJob.Spec.Template.Spec.Containers[0])
-			batchJob.Spec.Template.Spec.Containers[0].VolumeMounts = c.attachMoreVolumeMounts()
-			batchJob.Spec.Template.Spec.Volumes = c.attachMoreVolumes()
-			batchJob.Labels[job.K8upExclusive] = "true"
+		batchJob.Spec.Template.Spec.Containers[0].Env = c.setupEnvVars(ctx)
+		c.check.Spec.AppendEnvFromToContainer(&batchJob.Spec.Template.Spec.Containers[0])
+		batchJob.Spec.Template.Spec.Containers[0].VolumeMounts = c.attachMoreVolumeMounts()
+		batchJob.Spec.Template.Spec.Volumes = c.attachMoreVolumes()
+		batchJob.Labels[job.K8upExclusive] = "true"
 
-			args, argsErr := c.setupArgs()
-			batchJob.Spec.Template.Spec.Containers[0].Args = args
+		args, argsErr := c.setupArgs()
+		batchJob.Spec.Template.Spec.Containers[0].Args = args
 
-			return argsErr
-		},
+		return argsErr
+	},
 	)
 	if err != nil {
-		c.SetConditionFalseWithMessage(
-			ctx,
-			k8upv1.ConditionReady,
-			k8upv1.ReasonCreationFailed,
-			"could not create job: %v",
-			err,
-		)
+		c.SetConditionFalseWithMessage(ctx, k8upv1.ConditionReady, k8upv1.ReasonCreationFailed, "could not create job: %v", err)
 		return err
 	}
 	c.SetStarted(ctx, "the job '%v/%v' was created", batchJob.Namespace, batchJob.Name)
@@ -109,14 +100,7 @@ func (c *CheckExecutor) setupEnvVars(ctx context.Context) []corev1.EnvVar {
 
 	err := vars.Merge(executor.DefaultEnv(c.Obj.GetNamespace()))
 	if err != nil {
-		log.Error(
-			err,
-			"error while merging the environment variables",
-			"name",
-			c.Obj.GetName(),
-			"namespace",
-			c.Obj.GetNamespace(),
-		)
+		log.Error(err, "error while merging the environment variables", "name", c.Obj.GetName(), "namespace", c.Obj.GetNamespace())
 	}
 
 	return vars.Convert()
@@ -136,15 +120,13 @@ func (c *CheckExecutor) appendOptionsArgs() []string {
 		args = append(args, []string{"-caCert", c.check.Spec.Backend.Options.CACert}...)
 	}
 	if c.check.Spec.Backend.Options.ClientCert != "" && c.check.Spec.Backend.Options.ClientKey != "" {
-		args = append(
-			args,
-			[]string{
-				"-clientCert",
-				c.check.Spec.Backend.Options.ClientCert,
-				"-clientKey",
-				c.check.Spec.Backend.Options.ClientKey,
-			}...,
-		)
+		addMoreArgs := []string{
+			"-clientCert",
+			c.check.Spec.Backend.Options.ClientCert,
+			"-clientKey",
+			c.check.Spec.Backend.Options.ClientKey,
+		}
+		args = append(args, addMoreArgs...)
 	}
 
 	return args
@@ -176,12 +158,11 @@ func (c *CheckExecutor) attachMoreVolumes() []corev1.Volume {
 			continue
 		}
 
-		moreVolumes = append(
-			moreVolumes, corev1.Volume{
-				Name:         vol.Name,
-				VolumeSource: volumeSource,
-			},
-		)
+		addVolume := corev1.Volume{
+			Name:         vol.Name,
+			VolumeSource: volumeSource,
+		}
+		moreVolumes = append(moreVolumes, addVolume)
 	}
 
 	return moreVolumes
@@ -194,7 +175,10 @@ func (c *CheckExecutor) attachMoreVolumeMounts() []corev1.VolumeMount {
 		volumeMount = *c.check.Spec.Backend.VolumeMounts
 	}
 
-	ku8pVolumeMount := corev1.VolumeMount{Name: _dataDirName, MountPath: cfg.Config.PodVarDir}
+	ku8pVolumeMount := corev1.VolumeMount{
+		Name:      _dataDirName,
+		MountPath: cfg.Config.PodVarDir,
+	}
 	volumeMount = append(volumeMount, ku8pVolumeMount)
 
 	return volumeMount

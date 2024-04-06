@@ -5,14 +5,12 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/k8up-io/k8up/v2/operator/executor"
 	"github.com/k8up-io/k8up/v2/operator/utils"
-
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	controllerruntime "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
-
-	"github.com/k8up-io/k8up/v2/operator/executor"
 
 	k8upv1 "github.com/k8up-io/k8up/v2/api/v1"
 	"github.com/k8up-io/k8up/v2/operator/cfg"
@@ -41,34 +39,26 @@ func (p *PruneExecutor) Execute(ctx context.Context) error {
 	batchJob.Name = p.jobName()
 	batchJob.Namespace = p.prune.Namespace
 
-	_, err := controllerutil.CreateOrUpdate(
-		ctx, p.Client, batchJob, func() error {
-			mutateErr := job.MutateBatchJob(batchJob, p.prune, p.Config)
-			if mutateErr != nil {
-				return mutateErr
-			}
+	_, err := controllerutil.CreateOrUpdate(ctx, p.Client, batchJob, func() error {
+		mutateErr := job.MutateBatchJob(batchJob, p.prune, p.Config)
+		if mutateErr != nil {
+			return mutateErr
+		}
 
-			batchJob.Spec.Template.Spec.Containers[0].Env = p.setupEnvVars(ctx, p.prune)
-			batchJob.Spec.Template.Spec.ServiceAccountName = cfg.Config.ServiceAccount
-			p.prune.Spec.AppendEnvFromToContainer(&batchJob.Spec.Template.Spec.Containers[0])
-			batchJob.Spec.Template.Spec.Containers[0].VolumeMounts = p.attachMoreVolumeMounts()
-			batchJob.Spec.Template.Spec.Volumes = p.attachMoreVolumes()
-			batchJob.Labels[job.K8upExclusive] = "true"
+		batchJob.Spec.Template.Spec.Containers[0].Env = p.setupEnvVars(ctx, p.prune)
+		batchJob.Spec.Template.Spec.ServiceAccountName = cfg.Config.ServiceAccount
+		p.prune.Spec.AppendEnvFromToContainer(&batchJob.Spec.Template.Spec.Containers[0])
+		batchJob.Spec.Template.Spec.Containers[0].VolumeMounts = p.attachMoreVolumeMounts()
+		batchJob.Spec.Template.Spec.Volumes = p.attachMoreVolumes()
+		batchJob.Labels[job.K8upExclusive] = "true"
 
-			args, argsErr := p.setupArgs()
-			batchJob.Spec.Template.Spec.Containers[0].Args = args
+		args, argsErr := p.setupArgs()
+		batchJob.Spec.Template.Spec.Containers[0].Args = args
 
-			return argsErr
-		},
-	)
+		return argsErr
+	})
 	if err != nil {
-		p.SetConditionFalseWithMessage(
-			ctx,
-			k8upv1.ConditionReady,
-			k8upv1.ReasonCreationFailed,
-			"could not create job: %v",
-			err,
-		)
+		p.SetConditionFalseWithMessage(ctx, k8upv1.ConditionReady, k8upv1.ReasonCreationFailed, "could not create job: %v", err)
 		return err
 	}
 
@@ -146,14 +136,7 @@ func (p *PruneExecutor) setupEnvVars(ctx context.Context, prune *k8upv1.Prune) [
 
 	err := vars.Merge(executor.DefaultEnv(p.Obj.GetNamespace()))
 	if err != nil {
-		log.Error(
-			err,
-			"error while merging the environment variables",
-			"name",
-			p.Obj.GetName(),
-			"namespace",
-			p.Obj.GetNamespace(),
-		)
+		log.Error(err, "error while merging the environment variables", "name", p.Obj.GetName(), "namespace", p.Obj.GetNamespace())
 	}
 
 	return vars.Convert()
@@ -169,15 +152,13 @@ func (p *PruneExecutor) appendOptionsArgs() []string {
 		args = append(args, []string{"-caCert", p.prune.Spec.Backend.Options.CACert}...)
 	}
 	if p.prune.Spec.Backend.Options.ClientCert != "" && p.prune.Spec.Backend.Options.ClientKey != "" {
-		args = append(
-			args,
-			[]string{
-				"-clientCert",
-				p.prune.Spec.Backend.Options.ClientCert,
-				"-clientKey",
-				p.prune.Spec.Backend.Options.ClientKey,
-			}...,
-		)
+		addMoreArgs := []string{
+			"-clientCert",
+			p.prune.Spec.Backend.Options.ClientCert,
+			"-clientKey",
+			p.prune.Spec.Backend.Options.ClientKey,
+		}
+		args = append(args, addMoreArgs...)
 	}
 
 	return args
@@ -209,12 +190,11 @@ func (p *PruneExecutor) attachMoreVolumes() []corev1.Volume {
 			continue
 		}
 
-		moreVolumes = append(
-			moreVolumes, corev1.Volume{
-				Name:         vol.Name,
-				VolumeSource: volumeSource,
-			},
-		)
+		addVolume := corev1.Volume{
+			Name:         vol.Name,
+			VolumeSource: volumeSource,
+		}
+		moreVolumes = append(moreVolumes, addVolume)
 	}
 
 	return moreVolumes
@@ -227,7 +207,10 @@ func (p *PruneExecutor) attachMoreVolumeMounts() []corev1.VolumeMount {
 		volumeMount = *p.prune.Spec.Backend.VolumeMounts
 	}
 
-	ku8pVolumeMount := corev1.VolumeMount{Name: _dataDirName, MountPath: cfg.Config.PodVarDir}
+	ku8pVolumeMount := corev1.VolumeMount{
+		Name:      _dataDirName,
+		MountPath: cfg.Config.PodVarDir,
+	}
 	volumeMount = append(volumeMount, ku8pVolumeMount)
 
 	return volumeMount
