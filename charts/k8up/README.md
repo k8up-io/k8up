@@ -69,6 +69,8 @@ Document your changes in values.yaml and let `make docs:helm` generate this sect
 | metrics.prometheusRule.jobFailedRulesFor | list | `["archive","backup","check","prune","restore"]` | Create default rules for the given job types. Valid values are "archive", "backup", "check", "prune", and "restore". |
 | metrics.prometheusRule.namespace | string | `""` | If the object should be installed in a different namespace than operator |
 | metrics.service.annotations | object | `{}` | Annotations to add to the service |
+| metrics.service.ipFamilies | list | `[]` | Sets the families that should be supported and the order in which they should be applied to ClusterIP as well. Can be IPv4 and/or IPv6. |
+| metrics.service.ipFamilyPolicy | string | `""` | Set the ip family policy to configure dual-stack see [Configure dual-stack](https://kubernetes.io/docs/concepts/services-networking/dual-stack/#services) |
 | metrics.service.nodePort | int | `0` | Service node port of the metrics endpoint, requires `metrics.service.type=NodePort` |
 | metrics.service.port | int | `8080` |  |
 | metrics.service.type | string | `"ClusterIP"` |  |
