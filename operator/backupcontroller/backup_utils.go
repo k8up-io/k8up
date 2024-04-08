@@ -76,14 +76,14 @@ func (b *BackupExecutor) createServiceAccountAndBinding(ctx context.Context) err
 	return err
 }
 
-func (b *BackupExecutor) setupArgs() ([]string, error) {
+func (b *BackupExecutor) setupArgs() []string {
 	args := []string{"--varDir", cfg.Config.PodVarDir}
 	if len(b.backup.Spec.Tags) > 0 {
 		args = append(args, executor.BuildTagArgs(b.backup.Spec.Tags)...)
 	}
 	args = append(args, b.appendOptionsArgs()...)
 
-	return args, nil
+	return args
 }
 
 func (b *BackupExecutor) setupEnvVars() ([]corev1.EnvVar, error) {

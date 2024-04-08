@@ -52,10 +52,9 @@ func (p *PruneExecutor) Execute(ctx context.Context) error {
 		batchJob.Spec.Template.Spec.Volumes = p.attachMoreVolumes()
 		batchJob.Labels[job.K8upExclusive] = "true"
 
-		args, argsErr := p.setupArgs()
-		batchJob.Spec.Template.Spec.Containers[0].Args = args
+		batchJob.Spec.Template.Spec.Containers[0].Args = p.setupArgs()
 
-		return argsErr
+		return nil
 	})
 	if err != nil {
 		p.SetConditionFalseWithMessage(ctx, k8upv1.ConditionReady, k8upv1.ReasonCreationFailed, "could not create job: %v", err)
@@ -70,14 +69,14 @@ func (p *PruneExecutor) jobName() string {
 	return k8upv1.PruneType.String() + "-" + p.prune.Name
 }
 
-func (p *PruneExecutor) setupArgs() ([]string, error) {
+func (p *PruneExecutor) setupArgs() []string {
 	args := []string{"-varDir", cfg.Config.PodVarDir, "-prune"}
 	if len(p.prune.Spec.Retention.Tags) > 0 {
 		args = append(args, executor.BuildTagArgs(p.prune.Spec.Retention.Tags)...)
 	}
 	args = append(args, p.appendOptionsArgs()...)
 
-	return args, nil
+	return args
 }
 
 // Exclusive should return true for jobs that can't run while other jobs run.

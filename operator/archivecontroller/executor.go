@@ -58,10 +58,9 @@ func (a *ArchiveExecutor) Execute(ctx context.Context) error {
 		batchJob.Spec.Template.Spec.Containers[0].VolumeMounts = a.attachMoreVolumeMounts()
 		batchJob.Spec.Template.Spec.Volumes = a.attachMoreVolumes()
 
-		args, argsErr := a.setupArgs()
-		batchJob.Spec.Template.Spec.Containers[0].Args = args
+		batchJob.Spec.Template.Spec.Containers[0].Args = a.setupArgs()
 
-		return argsErr
+		return nil
 	})
 	if err != nil {
 		log.Error(err, "could not create job")
@@ -77,14 +76,14 @@ func (a *ArchiveExecutor) jobName() string {
 	return k8upv1.ArchiveType.String() + "-" + a.Obj.GetName()
 }
 
-func (a *ArchiveExecutor) setupArgs() ([]string, error) {
+func (a *ArchiveExecutor) setupArgs() []string {
 	args := []string{"-varDir", cfg.Config.PodVarDir, "-archive", "-restoreType", "s3"}
 	if a.archive.Spec.RestoreSpec != nil && len(a.archive.Spec.RestoreSpec.Tags) > 0 {
 		args = append(args, executor.BuildTagArgs(a.archive.Spec.RestoreSpec.Tags)...)
 	}
 	args = append(args, a.appendOptionsArgs()...)
 
-	return args, nil
+	return args
 }
 
 func (a *ArchiveExecutor) setupEnvVars(ctx context.Context, archive *k8upv1.Archive) []corev1.EnvVar {
