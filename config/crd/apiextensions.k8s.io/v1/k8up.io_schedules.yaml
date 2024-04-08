@@ -245,15 +245,6 @@ spec:
                           mountPath:
                             type: string
                         type: object
-                      options:
-                        properties:
-                          caCert:
-                            type: string
-                          clientCert:
-                            type: string
-                          clientKey:
-                            type: string
-                        type: object
                       repoPasswordSecretRef:
                         description: RepoPasswordSecretRef references a secret key
                           to look up the restic repository password
@@ -377,6 +368,15 @@ spec:
                           container:
                             type: string
                           path:
+                            type: string
+                        type: object
+                      tlsOptions:
+                        properties:
+                          caCert:
+                            type: string
+                          clientCert:
+                            type: string
+                          clientKey:
                             type: string
                         type: object
                       volumeMounts:
@@ -689,15 +689,6 @@ spec:
                         required:
                         - claimName
                         type: object
-                      options:
-                        properties:
-                          caCert:
-                            type: string
-                          clientCert:
-                            type: string
-                          clientKey:
-                            type: string
-                        type: object
                       s3:
                         properties:
                           accessKeyIDSecretRef:
@@ -746,6 +737,15 @@ spec:
                             - key
                             type: object
                             x-kubernetes-map-type: atomic
+                        type: object
+                      tlsOptions:
+                        properties:
+                          caCert:
+                            type: string
+                          clientCert:
+                            type: string
+                          clientKey:
+                            type: string
                         type: object
                       volumeMounts:
                         items:
@@ -1167,15 +1167,6 @@ spec:
                       mountPath:
                         type: string
                     type: object
-                  options:
-                    properties:
-                      caCert:
-                        type: string
-                      clientCert:
-                        type: string
-                      clientKey:
-                        type: string
-                    type: object
                   repoPasswordSecretRef:
                     description: RepoPasswordSecretRef references a secret key to
                       look up the restic repository password
@@ -1299,6 +1290,15 @@ spec:
                       container:
                         type: string
                       path:
+                        type: string
+                    type: object
+                  tlsOptions:
+                    properties:
+                      caCert:
+                        type: string
+                      clientCert:
+                        type: string
+                      clientKey:
                         type: string
                     type: object
                   volumeMounts:
@@ -1550,15 +1550,6 @@ spec:
                           mountPath:
                             type: string
                         type: object
-                      options:
-                        properties:
-                          caCert:
-                            type: string
-                          clientCert:
-                            type: string
-                          clientKey:
-                            type: string
-                        type: object
                       repoPasswordSecretRef:
                         description: RepoPasswordSecretRef references a secret key
                           to look up the restic repository password
@@ -1682,6 +1673,15 @@ spec:
                           container:
                             type: string
                           path:
+                            type: string
+                        type: object
+                      tlsOptions:
+                        properties:
+                          caCert:
+                            type: string
+                          clientCert:
+                            type: string
+                          clientKey:
                             type: string
                         type: object
                       volumeMounts:
@@ -2367,15 +2367,6 @@ spec:
                           mountPath:
                             type: string
                         type: object
-                      options:
-                        properties:
-                          caCert:
-                            type: string
-                          clientCert:
-                            type: string
-                          clientKey:
-                            type: string
-                        type: object
                       repoPasswordSecretRef:
                         description: RepoPasswordSecretRef references a secret key
                           to look up the restic repository password
@@ -2499,6 +2490,15 @@ spec:
                           container:
                             type: string
                           path:
+                            type: string
+                        type: object
+                      tlsOptions:
+                        properties:
+                          caCert:
+                            type: string
+                          clientCert:
+                            type: string
+                          clientKey:
                             type: string
                         type: object
                       volumeMounts:
@@ -3359,15 +3359,6 @@ spec:
                           mountPath:
                             type: string
                         type: object
-                      options:
-                        properties:
-                          caCert:
-                            type: string
-                          clientCert:
-                            type: string
-                          clientKey:
-                            type: string
-                        type: object
                       repoPasswordSecretRef:
                         description: RepoPasswordSecretRef references a secret key
                           to look up the restic repository password
@@ -3491,6 +3482,15 @@ spec:
                           container:
                             type: string
                           path:
+                            type: string
+                        type: object
+                      tlsOptions:
+                        properties:
+                          caCert:
+                            type: string
+                          clientCert:
+                            type: string
+                          clientKey:
                             type: string
                         type: object
                       volumeMounts:
@@ -4250,15 +4250,6 @@ spec:
                           mountPath:
                             type: string
                         type: object
-                      options:
-                        properties:
-                          caCert:
-                            type: string
-                          clientCert:
-                            type: string
-                          clientKey:
-                            type: string
-                        type: object
                       repoPasswordSecretRef:
                         description: RepoPasswordSecretRef references a secret key
                           to look up the restic repository password
@@ -4382,6 +4373,15 @@ spec:
                           container:
                             type: string
                           path:
+                            type: string
+                        type: object
+                      tlsOptions:
+                        properties:
+                          caCert:
+                            type: string
+                          clientCert:
+                            type: string
+                          clientKey:
                             type: string
                         type: object
                       volumeMounts:
@@ -4694,15 +4694,6 @@ spec:
                         required:
                         - claimName
                         type: object
-                      options:
-                        properties:
-                          caCert:
-                            type: string
-                          clientCert:
-                            type: string
-                          clientKey:
-                            type: string
-                        type: object
                       s3:
                         properties:
                           accessKeyIDSecretRef:
@@ -4751,6 +4742,15 @@ spec:
                             - key
                             type: object
                             x-kubernetes-map-type: atomic
+                        type: object
+                      tlsOptions:
+                        properties:
+                          caCert:
+                            type: string
+                          clientCert:
+                            type: string
+                          clientKey:
+                            type: string
                         type: object
                       volumeMounts:
                         items:

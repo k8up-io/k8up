@@ -37,7 +37,7 @@ type RestoreSpec struct {
 type RestoreMethod struct {
 	S3           *S3Spec               `json:"s3,omitempty"`
 	Folder       *FolderRestore        `json:"folder,omitempty"`
-	Options      *RestoreOpts          `json:"options,omitempty"`
+	TLSOptions   *TLSOptions           `json:"tlsOptions,omitempty"`
 	VolumeMounts *[]corev1.VolumeMount `json:"volumeMounts,omitempty"`
 }
 
@@ -147,9 +147,3 @@ func init() {
 var (
 	RestoreKind = reflect.TypeOf(Restore{}).Name()
 )
-
-type RestoreOpts struct {
-	CACert     string `json:"caCert,omitempty"`
-	ClientCert string `json:"clientCert,omitempty"`
-	ClientKey  string `json:"clientKey,omitempty"`
-}

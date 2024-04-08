@@ -77,7 +77,7 @@ func (c *CheckExecutor) jobName() string {
 
 func (c *CheckExecutor) setupArgs() []string {
 	args := []string{"-varDir", cfg.Config.PodVarDir, "-check"}
-	args = append(args, c.appendOptionsArgs()...)
+	args = append(args, c.appendTLSOptionsArgs()...)
 
 	return args
 }
@@ -109,21 +109,21 @@ func (c *CheckExecutor) cleanupOldChecks(ctx context.Context, check *k8upv1.Chec
 	c.CleanupOldResources(ctx, &k8upv1.CheckList{}, check.Namespace, check)
 }
 
-func (c *CheckExecutor) appendOptionsArgs() []string {
+func (c *CheckExecutor) appendTLSOptionsArgs() []string {
 	var args []string
-	if !(c.check.Spec.Backend != nil && c.check.Spec.Backend.Options != nil) {
+	if !(c.check.Spec.Backend != nil && c.check.Spec.Backend.TLSOptions != nil) {
 		return args
 	}
 
-	if c.check.Spec.Backend.Options.CACert != "" {
-		args = append(args, []string{"-caCert", c.check.Spec.Backend.Options.CACert}...)
+	if c.check.Spec.Backend.TLSOptions.CACert != "" {
+		args = append(args, []string{"-caCert", c.check.Spec.Backend.TLSOptions.CACert}...)
 	}
-	if c.check.Spec.Backend.Options.ClientCert != "" && c.check.Spec.Backend.Options.ClientKey != "" {
+	if c.check.Spec.Backend.TLSOptions.ClientCert != "" && c.check.Spec.Backend.TLSOptions.ClientKey != "" {
 		addMoreArgs := []string{
 			"-clientCert",
-			c.check.Spec.Backend.Options.ClientCert,
+			c.check.Spec.Backend.TLSOptions.ClientCert,
 			"-clientKey",
-			c.check.Spec.Backend.Options.ClientKey,
+			c.check.Spec.Backend.TLSOptions.ClientKey,
 		}
 		args = append(args, addMoreArgs...)
 	}

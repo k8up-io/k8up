@@ -7,7 +7,7 @@ spec:
   failedJobsHistoryLimit: 1
   successfulJobsHistoryLimit: 1
   restoreMethod:
-    options:
+    tlsOptions:
       caCert: /mnt/ca/ca.crt
     s3:
       endpoint: https://minio-tls.minio-e2e.svc.cluster.local
@@ -25,7 +25,7 @@ spec:
     repoPasswordSecretRef:
       name: backup-repo
       key: password
-    options:
+    tlsOptions:
       caCert: /mnt/tls/ca.crt
       clientCert: /mnt/tls/tls.crt
       clientKey: /mnt/tls/tls.key

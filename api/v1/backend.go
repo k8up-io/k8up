@@ -26,7 +26,7 @@ type (
 		B2      *B2Spec                `json:"b2,omitempty"`
 		Rest    *RestServerSpec        `json:"rest,omitempty"`
 
-		Options      *BackendOpts          `json:"options,omitempty"`
+		TLSOptions   *TLSOptions           `json:"tlsOptions,omitempty"`
 		VolumeMounts *[]corev1.VolumeMount `json:"volumeMounts,omitempty"`
 	}
 
@@ -283,7 +283,7 @@ func (in *RestServerSpec) String() string {
 	return fmt.Sprintf("rest:%s://%s:%s@%s", protocol, "$(USER)", "$(PASSWORD)", url)
 }
 
-type BackendOpts struct {
+type TLSOptions struct {
 	CACert     string `json:"caCert,omitempty"`
 	ClientCert string `json:"clientCert,omitempty"`
 	ClientKey  string `json:"clientKey,omitempty"`

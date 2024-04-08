@@ -81,7 +81,7 @@ func (b *BackupExecutor) setupArgs() []string {
 	if len(b.backup.Spec.Tags) > 0 {
 		args = append(args, executor.BuildTagArgs(b.backup.Spec.Tags)...)
 	}
-	args = append(args, b.appendOptionsArgs()...)
+	args = append(args, b.appendTLSOptionsArgs()...)
 
 	return args
 }
@@ -162,22 +162,22 @@ func (b *BackupExecutor) attachMoreVolumeMounts() []corev1.VolumeMount {
 	return volumeMount
 }
 
-func (b *BackupExecutor) appendOptionsArgs() []string {
+func (b *BackupExecutor) appendTLSOptionsArgs() []string {
 	var args []string
 
-	if !(b.backup.Spec.Backend != nil && b.backup.Spec.Backend.Options != nil) {
+	if !(b.backup.Spec.Backend != nil && b.backup.Spec.Backend.TLSOptions != nil) {
 		return args
 	}
 
-	if b.backup.Spec.Backend.Options.CACert != "" {
-		args = append(args, []string{"-caCert", b.backup.Spec.Backend.Options.CACert}...)
+	if b.backup.Spec.Backend.TLSOptions.CACert != "" {
+		args = append(args, []string{"-caCert", b.backup.Spec.Backend.TLSOptions.CACert}...)
 	}
-	if b.backup.Spec.Backend.Options.ClientCert != "" && b.backup.Spec.Backend.Options.ClientKey != "" {
+	if b.backup.Spec.Backend.TLSOptions.ClientCert != "" && b.backup.Spec.Backend.TLSOptions.ClientKey != "" {
 		addMoreArgs := []string{
 			"-clientCert",
-			b.backup.Spec.Backend.Options.ClientCert,
+			b.backup.Spec.Backend.TLSOptions.ClientCert,
 			"-clientKey",
-			b.backup.Spec.Backend.Options.ClientKey,
+			b.backup.Spec.Backend.TLSOptions.ClientKey,
 		}
 		args = append(args, addMoreArgs...)
 	}

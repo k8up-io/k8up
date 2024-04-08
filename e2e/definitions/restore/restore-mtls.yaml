@@ -13,7 +13,7 @@ spec:
     repoPasswordSecretRef:
       name: backup-repo
       key: password
-    options:
+    tlsOptions:
       caCert: /mnt/tls/ca.crt
       clientCert: /mnt/tls/tls.crt
       clientKey: /mnt/tls/tls.key
