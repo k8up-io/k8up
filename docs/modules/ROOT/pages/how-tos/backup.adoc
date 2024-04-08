@@ -33,7 +33,7 @@ spec:
   backend:
     s3: {}
 
-    options:
+    tlsOptions:
       caCert: /mnt/ca/ca.crt
     volumeMounts:
       - name: ca-tls
@@ -103,7 +103,7 @@ spec:
   backend:
     s3: {}
 
-    options:
+    tlsOptions:
       caCert: /mnt/tls/ca.crt
       clientCert: /mnt/tls/tls.crt
       clientKey: /mnt/tls/tls.key

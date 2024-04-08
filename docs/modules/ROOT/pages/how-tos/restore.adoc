@@ -360,7 +360,7 @@ spec:
   backend:
     s3: {}
 
-    options:
+    tlsOptions:
       caCert: /mnt/ca/ca.crt
     volumeMounts:
       - name: ca-tls
@@ -439,7 +439,7 @@ spec:
   restoreMethod:
     s3: {}
 
-    options:
+    tlsOptions:
       caCert: /mnt/ca/ca.crt
     volumeMounts:
       - name: ca-tls
@@ -512,7 +512,7 @@ spec:
   backend:
     s3: {}
 
-    options:
+    tlsOptions:
       caCert: /mnt/ca/ca.crt
     volumeMounts:
       - name: ca-tls
@@ -521,7 +521,7 @@ spec:
   restoreMethod:
     s3: {}
 
-    options:
+    tlsOptions:
       caCert: /mnt/ca/ca.crt
 
   podSecurityContext:
@@ -592,7 +592,7 @@ spec:
   backend:
     s3: {}
 
-    options:
+    tlsOptions:
       caCert: /mnt/ca/ca.crt
     volumeMounts:
       - name: ca-tls
@@ -601,7 +601,7 @@ spec:
   restoreMethod:
     s3: {}
 
-    options:
+    tlsOptions:
       caCert: /mnt/custom-ca/ca.crt
     volumeMounts:
       - name: custom-ca-tls
@@ -689,7 +689,7 @@ spec:
   backend:
     s3: {}
 
-    options:
+    tlsOptions:
       caCert: /mnt/ca/ca.crt
       clientCert: /mnt/tls/tls.crt
       clientKey: /mnt/tls/tls.key
@@ -772,7 +772,7 @@ spec:
   restoreMethod:
     s3: {}
 
-    options:
+    tlsOptions:
       caCert: /mnt/tls/ca.crt
       clientCert: /mnt/tls/tls.crt
       clientKey: /mnt/tls/tls.key
@@ -849,7 +849,7 @@ spec:
   backend:
     s3: {}
 
-    options:
+    tlsOptions:
       caCert: /mnt/tls/ca.crt
       clientCert: /mnt/tls/tls.crt
       clientKey: /mnt/tls/tls.key
@@ -860,7 +860,7 @@ spec:
   restoreMethod:
     s3: {}
 
-    options:
+    tlsOptions:
       caCert: /mnt/tls/ca.crt
       clientCert: /mnt/tls/tls.crt
       clientKey: /mnt/tls/tls.key
@@ -937,7 +937,7 @@ spec:
   backend:
     s3: {}
 
-    options:
+    tlsOptions:
       caCert: /mnt/tls/ca.crt
       clientCert: /mnt/tls/tls.crt
       clientKey: /mnt/tls/tls.key
@@ -948,7 +948,7 @@ spec:
   restoreMethod:
     s3: {}
 
-    options:
+    tlsOptions:
       caCert: /mnt/custom-tls/ca.crt
       clientCert: /mnt/custom-tls/tls.crt
       clientKey: /mnt/custom-tls/tls.key

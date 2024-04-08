@@ -74,7 +74,7 @@ func (p *PruneExecutor) setupArgs() []string {
 	if len(p.prune.Spec.Retention.Tags) > 0 {
 		args = append(args, executor.BuildTagArgs(p.prune.Spec.Retention.Tags)...)
 	}
-	args = append(args, p.appendOptionsArgs()...)
+	args = append(args, p.appendTLSOptionsArgs()...)
 
 	return args
 }
@@ -141,21 +141,21 @@ func (p *PruneExecutor) setupEnvVars(ctx context.Context, prune *k8upv1.Prune) [
 	return vars.Convert()
 }
 
-func (p *PruneExecutor) appendOptionsArgs() []string {
+func (p *PruneExecutor) appendTLSOptionsArgs() []string {
 	var args []string
-	if !(p.prune.Spec.Backend != nil && p.prune.Spec.Backend.Options != nil) {
+	if !(p.prune.Spec.Backend != nil && p.prune.Spec.Backend.TLSOptions != nil) {
 		return args
 	}
 
-	if p.prune.Spec.Backend.Options.CACert != "" {
-		args = append(args, []string{"-caCert", p.prune.Spec.Backend.Options.CACert}...)
+	if p.prune.Spec.Backend.TLSOptions.CACert != "" {
+		args = append(args, []string{"-caCert", p.prune.Spec.Backend.TLSOptions.CACert}...)
 	}
-	if p.prune.Spec.Backend.Options.ClientCert != "" && p.prune.Spec.Backend.Options.ClientKey != "" {
+	if p.prune.Spec.Backend.TLSOptions.ClientCert != "" && p.prune.Spec.Backend.TLSOptions.ClientKey != "" {
 		addMoreArgs := []string{
 			"-clientCert",
-			p.prune.Spec.Backend.Options.ClientCert,
+			p.prune.Spec.Backend.TLSOptions.ClientCert,
 			"-clientKey",
-			p.prune.Spec.Backend.Options.ClientKey,
+			p.prune.Spec.Backend.TLSOptions.ClientKey,
 		}
 		args = append(args, addMoreArgs...)
 	}

@@ -81,7 +81,7 @@ func (a *ArchiveExecutor) setupArgs() []string {
 	if a.archive.Spec.RestoreSpec != nil && len(a.archive.Spec.RestoreSpec.Tags) > 0 {
 		args = append(args, executor.BuildTagArgs(a.archive.Spec.RestoreSpec.Tags)...)
 	}
-	args = append(args, a.appendOptionsArgs()...)
+	args = append(args, a.appendTLSOptionsArgs()...)
 
 	return args
 }
@@ -126,34 +126,34 @@ func (a *ArchiveExecutor) cleanupOldArchives(ctx context.Context, archive *k8upv
 	a.CleanupOldResources(ctx, &k8upv1.ArchiveList{}, archive.Namespace, archive)
 }
 
-func (a *ArchiveExecutor) appendOptionsArgs() []string {
+func (a *ArchiveExecutor) appendTLSOptionsArgs() []string {
 	var args []string
 
-	if a.archive.Spec.Backend != nil && a.archive.Spec.Backend.Options != nil {
-		if a.archive.Spec.Backend.Options.CACert != "" {
-			args = append(args, []string{"-caCert", a.archive.Spec.Backend.Options.CACert}...)
+	if a.archive.Spec.Backend != nil && a.archive.Spec.Backend.TLSOptions != nil {
+		if a.archive.Spec.Backend.TLSOptions.CACert != "" {
+			args = append(args, []string{"-caCert", a.archive.Spec.Backend.TLSOptions.CACert}...)
 		}
-		if a.archive.Spec.Backend.Options.ClientCert != "" && a.archive.Spec.Backend.Options.ClientKey != "" {
+		if a.archive.Spec.Backend.TLSOptions.ClientCert != "" && a.archive.Spec.Backend.TLSOptions.ClientKey != "" {
 			addMoreArgs := []string{
 				"-clientCert",
-				a.archive.Spec.Backend.Options.ClientCert,
+				a.archive.Spec.Backend.TLSOptions.ClientCert,
 				"-clientKey",
-				a.archive.Spec.Backend.Options.ClientKey,
+				a.archive.Spec.Backend.TLSOptions.ClientKey,
 			}
 			args = append(args, addMoreArgs...)
 		}
 	}
 
-	if a.archive.Spec.RestoreSpec != nil && a.archive.Spec.RestoreMethod.Options != nil {
-		if a.archive.Spec.RestoreMethod.Options.CACert != "" {
-			args = append(args, []string{"-restoreCaCert", a.archive.Spec.RestoreMethod.Options.CACert}...)
+	if a.archive.Spec.RestoreSpec != nil && a.archive.Spec.RestoreMethod.TLSOptions != nil {
+		if a.archive.Spec.RestoreMethod.TLSOptions.CACert != "" {
+			args = append(args, []string{"-restoreCaCert", a.archive.Spec.RestoreMethod.TLSOptions.CACert}...)
 		}
-		if a.archive.Spec.RestoreMethod.Options.ClientCert != "" && a.archive.Spec.RestoreMethod.Options.ClientKey != "" {
+		if a.archive.Spec.RestoreMethod.TLSOptions.ClientCert != "" && a.archive.Spec.RestoreMethod.TLSOptions.ClientKey != "" {
 			addMoreArgs := []string{
 				"-restoreClientCert",
-				a.archive.Spec.RestoreMethod.Options.ClientCert,
+				a.archive.Spec.RestoreMethod.TLSOptions.ClientCert,
 				"-restoreClientKey",
-				a.archive.Spec.RestoreMethod.Options.ClientKey,
+				a.archive.Spec.RestoreMethod.TLSOptions.ClientKey,
 			}
 			args = append(args, addMoreArgs...)
 		}

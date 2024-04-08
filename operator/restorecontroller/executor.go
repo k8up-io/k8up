@@ -119,7 +119,7 @@ func (r *RestoreExecutor) setupArgs(restore *k8upv1.Restore) ([]string, error) {
 		return nil, fmt.Errorf("undefined restore method (-restoreType) on '%v/%v'", restore.Namespace, restore.Name)
 	}
 
-	args = append(args, r.appendOptionsArgs()...)
+	args = append(args, r.appendTLSOptionsArgs()...)
 
 	return args, nil
 }
@@ -183,34 +183,34 @@ func (r *RestoreExecutor) setupEnvVars(ctx context.Context, restore *k8upv1.Rest
 	return vars.Convert()
 }
 
-func (r *RestoreExecutor) appendOptionsArgs() []string {
+func (r *RestoreExecutor) appendTLSOptionsArgs() []string {
 	var args []string
 
-	if r.restore.Spec.Backend != nil && r.restore.Spec.Backend.Options != nil {
-		if r.restore.Spec.Backend.Options.CACert != "" {
-			args = append(args, []string{"--caCert", r.restore.Spec.Backend.Options.CACert}...)
+	if r.restore.Spec.Backend != nil && r.restore.Spec.Backend.TLSOptions != nil {
+		if r.restore.Spec.Backend.TLSOptions.CACert != "" {
+			args = append(args, []string{"--caCert", r.restore.Spec.Backend.TLSOptions.CACert}...)
 		}
-		if r.restore.Spec.Backend.Options.ClientCert != "" && r.restore.Spec.Backend.Options.ClientKey != "" {
+		if r.restore.Spec.Backend.TLSOptions.ClientCert != "" && r.restore.Spec.Backend.TLSOptions.ClientKey != "" {
 			addMoreArgs := []string{
 				"--clientCert",
-				r.restore.Spec.Backend.Options.ClientCert,
+				r.restore.Spec.Backend.TLSOptions.ClientCert,
 				"--clientKey",
-				r.restore.Spec.Backend.Options.ClientKey,
+				r.restore.Spec.Backend.TLSOptions.ClientKey,
 			}
 			args = append(args, addMoreArgs...)
 		}
 	}
 
-	if r.restore.Spec.RestoreMethod != nil && r.restore.Spec.RestoreMethod.Options != nil {
-		if r.restore.Spec.RestoreMethod.Options.CACert != "" {
-			args = append(args, []string{"--restoreCaCert", r.restore.Spec.RestoreMethod.Options.CACert}...)
+	if r.restore.Spec.RestoreMethod != nil && r.restore.Spec.RestoreMethod.TLSOptions != nil {
+		if r.restore.Spec.RestoreMethod.TLSOptions.CACert != "" {
+			args = append(args, []string{"--restoreCaCert", r.restore.Spec.RestoreMethod.TLSOptions.CACert}...)
 		}
-		if r.restore.Spec.RestoreMethod.Options.ClientCert != "" && r.restore.Spec.RestoreMethod.Options.ClientKey != "" {
+		if r.restore.Spec.RestoreMethod.TLSOptions.ClientCert != "" && r.restore.Spec.RestoreMethod.TLSOptions.ClientKey != "" {
 			addMoreArgs := []string{
 				"--restoreClientCert",
-				r.restore.Spec.RestoreMethod.Options.ClientCert,
+				r.restore.Spec.RestoreMethod.TLSOptions.ClientCert,
 				"--restoreClientKey",
-				r.restore.Spec.RestoreMethod.Options.ClientKey,
+				r.restore.Spec.RestoreMethod.TLSOptions.ClientKey,
 			}
 			args = append(args, addMoreArgs...)
 		}
