@@ -271,11 +271,10 @@ func (b *BackupExecutor) startBackup(ctx context.Context) error {
 				b.attachMoreVolumeMounts()...,
 			)
 
-			args, argsErr := b.setupArgs()
-			batchJob.job.Spec.Template.Spec.Containers[0].Args = args
+			batchJob.job.Spec.Template.Spec.Containers[0].Args = b.setupArgs()
 
 			index++
-			return argsErr
+			return nil
 		})
 		if err != nil {
 			return fmt.Errorf("unable to createOrUpdate(%q): %w", batchJob.job.Name, err)

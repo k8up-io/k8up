@@ -58,10 +58,9 @@ func (c *CheckExecutor) Execute(ctx context.Context) error {
 		batchJob.Spec.Template.Spec.Volumes = c.attachMoreVolumes()
 		batchJob.Labels[job.K8upExclusive] = "true"
 
-		args, argsErr := c.setupArgs()
-		batchJob.Spec.Template.Spec.Containers[0].Args = args
+		batchJob.Spec.Template.Spec.Containers[0].Args = c.setupArgs()
 
-		return argsErr
+		return nil
 	},
 	)
 	if err != nil {
@@ -76,11 +75,11 @@ func (c *CheckExecutor) jobName() string {
 	return k8upv1.CheckType.String() + "-" + c.check.Name
 }
 
-func (c *CheckExecutor) setupArgs() ([]string, error) {
+func (c *CheckExecutor) setupArgs() []string {
 	args := []string{"-varDir", cfg.Config.PodVarDir, "-check"}
 	args = append(args, c.appendOptionsArgs()...)
 
-	return args, nil
+	return args
 }
 
 func (c *CheckExecutor) setupEnvVars(ctx context.Context) []corev1.EnvVar {
