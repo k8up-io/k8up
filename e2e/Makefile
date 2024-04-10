@@ -26,6 +26,7 @@ kind-load-image: kind-setup docker-build ## Load the e2e container image onto e2
 .PHONY: e2e-setup
 e2e-setup: export KUBECONFIG = $(KIND_KUBECONFIG)
 e2e-setup: chart-prepare
+e2e-setup: e2e-cmctl
 e2e-setup: e2e/node_modules kind-setup | $(e2etest_dir) ## Run the e2e setup
 
 .PHONY: clean
@@ -42,3 +43,6 @@ $(e2etest_dir):
 
 e2e/node_modules:
 	@npm --prefix ./e2e install
+
+e2e-cmctl:
+	@command -v cmctl > /dev/null || $(GO_EXEC) install github.com/cert-manager/cmctl/v2@latest
