@@ -18,8 +18,8 @@ import (
 )
 
 const (
-	restorePath  = "/restore"
-	_dataDirName = "k8up-dir"
+	restorePath    = "/restore"
+	certPrefixName = "restore"
 )
 
 type RestoreExecutor struct {
@@ -64,10 +64,7 @@ func (r *RestoreExecutor) cleanupOldRestores(ctx context.Context, restore *k8upv
 	r.CleanupOldResources(ctx, &k8upv1.RestoreList{}, restore.Namespace, restore)
 }
 
-func (r *RestoreExecutor) createRestoreObject(
-	ctx context.Context,
-	restore *k8upv1.Restore,
-) (*batchv1.Job, error) {
+func (r *RestoreExecutor) createRestoreObject(ctx context.Context, restore *k8upv1.Restore) (*batchv1.Job, error) {
 	batchJob := &batchv1.Job{}
 	batchJob.Name = r.jobName()
 	batchJob.Namespace = restore.Namespace
@@ -81,8 +78,8 @@ func (r *RestoreExecutor) createRestoreObject(
 		restore.Spec.AppendEnvFromToContainer(&batchJob.Spec.Template.Spec.Containers[0])
 
 		volumes, volumeMounts := r.volumeConfig(restore)
-		batchJob.Spec.Template.Spec.Volumes = append(volumes, r.attachMoreVolumes()...)
-		batchJob.Spec.Template.Spec.Containers[0].VolumeMounts = append(volumeMounts, r.attachMoreVolumeMounts()...)
+		batchJob.Spec.Template.Spec.Volumes = append(volumes, utils.AttachTLSVolumes(r.restore.Spec.Volumes)...)
+		batchJob.Spec.Template.Spec.Containers[0].VolumeMounts = append(volumeMounts, r.attachTLSVolumeMounts()...)
 
 		args, argsErr := r.setupArgs(restore)
 		batchJob.Spec.Template.Spec.Containers[0].Args = args
@@ -119,15 +116,17 @@ func (r *RestoreExecutor) setupArgs(restore *k8upv1.Restore) ([]string, error) {
 		return nil, fmt.Errorf("undefined restore method (-restoreType) on '%v/%v'", restore.Namespace, restore.Name)
 	}
 
-	args = append(args, r.appendTLSOptionsArgs()...)
+	if r.restore.Spec.Backend != nil {
+		args = append(args, utils.AppendTLSOptionsArgs(r.restore.Spec.Backend.TLSOptions)...)
+	}
+	if r.restore.Spec.RestoreMethod != nil {
+		args = append(args, utils.AppendTLSOptionsArgs(r.restore.Spec.RestoreMethod.TLSOptions, certPrefixName)...)
+	}
 
 	return args, nil
 }
 
-func (r *RestoreExecutor) volumeConfig(restore *k8upv1.Restore) (
-	[]corev1.Volume,
-	[]corev1.VolumeMount,
-) {
+func (r *RestoreExecutor) volumeConfig(restore *k8upv1.Restore) ([]corev1.Volume, []corev1.VolumeMount) {
 	volumes := make([]corev1.Volume, 0)
 	if restore.Spec.RestoreMethod.S3 == nil {
 		addVolume := corev1.Volume{
@@ -183,110 +182,14 @@ func (r *RestoreExecutor) setupEnvVars(ctx context.Context, restore *k8upv1.Rest
 	return vars.Convert()
 }
 
-func (r *RestoreExecutor) appendTLSOptionsArgs() []string {
-	var args []string
-
-	if r.restore.Spec.Backend != nil && r.restore.Spec.Backend.TLSOptions != nil {
-		if r.restore.Spec.Backend.TLSOptions.CACert != "" {
-			args = append(args, []string{"--caCert", r.restore.Spec.Backend.TLSOptions.CACert}...)
-		}
-		if r.restore.Spec.Backend.TLSOptions.ClientCert != "" && r.restore.Spec.Backend.TLSOptions.ClientKey != "" {
-			addMoreArgs := []string{
-				"--clientCert",
-				r.restore.Spec.Backend.TLSOptions.ClientCert,
-				"--clientKey",
-				r.restore.Spec.Backend.TLSOptions.ClientKey,
-			}
-			args = append(args, addMoreArgs...)
-		}
-	}
-
-	if r.restore.Spec.RestoreMethod != nil && r.restore.Spec.RestoreMethod.TLSOptions != nil {
-		if r.restore.Spec.RestoreMethod.TLSOptions.CACert != "" {
-			args = append(args, []string{"--restoreCaCert", r.restore.Spec.RestoreMethod.TLSOptions.CACert}...)
-		}
-		if r.restore.Spec.RestoreMethod.TLSOptions.ClientCert != "" && r.restore.Spec.RestoreMethod.TLSOptions.ClientKey != "" {
-			addMoreArgs := []string{
-				"--restoreClientCert",
-				r.restore.Spec.RestoreMethod.TLSOptions.ClientCert,
-				"--restoreClientKey",
-				r.restore.Spec.RestoreMethod.TLSOptions.ClientKey,
-			}
-			args = append(args, addMoreArgs...)
-		}
-	}
-
-	return args
-}
-
-func (r *RestoreExecutor) attachMoreVolumes() []corev1.Volume {
-	ku8pVolume := corev1.Volume{
-		Name:         _dataDirName,
-		VolumeSource: corev1.VolumeSource{EmptyDir: &corev1.EmptyDirVolumeSource{}},
-	}
-
-	if utils.ZeroLen(r.restore.Spec.Volumes) {
-		return []corev1.Volume{ku8pVolume}
-	}
-
-	moreVolumes := make([]corev1.Volume, 0, len(*r.restore.Spec.Volumes)+1)
-	moreVolumes = append(moreVolumes, ku8pVolume)
-	for _, v := range *r.restore.Spec.Volumes {
-		vol := v
-
-		var volumeSource corev1.VolumeSource
-		if vol.PersistentVolumeClaim != nil {
-			volumeSource.PersistentVolumeClaim = vol.PersistentVolumeClaim
-		} else if vol.Secret != nil {
-			volumeSource.Secret = vol.Secret
-		} else if vol.ConfigMap != nil {
-			volumeSource.ConfigMap = vol.ConfigMap
-		} else {
-			continue
-		}
-
-		addVolume := corev1.Volume{
-			Name:         vol.Name,
-			VolumeSource: volumeSource,
-		}
-		moreVolumes = append(moreVolumes, addVolume)
-	}
-
-	return moreVolumes
-}
-
-func (r *RestoreExecutor) attachMoreVolumeMounts() []corev1.VolumeMount {
-	var volumeMount []corev1.VolumeMount
-
+func (r *RestoreExecutor) attachTLSVolumeMounts() []corev1.VolumeMount {
+	var tlsVolumeMounts []corev1.VolumeMount
 	if r.restore.Spec.Backend != nil && !utils.ZeroLen(r.restore.Spec.Backend.VolumeMounts) {
-		volumeMount = append(volumeMount, *r.restore.Spec.Backend.VolumeMounts...)
+		tlsVolumeMounts = append(tlsVolumeMounts, *r.restore.Spec.Backend.VolumeMounts...)
 	}
 	if r.restore.Spec.RestoreMethod != nil && !utils.ZeroLen(r.restore.Spec.RestoreMethod.VolumeMounts) {
-		for _, v1 := range *r.restore.Spec.RestoreMethod.VolumeMounts {
-			vm1 := v1
-			var isExist bool
-
-			for _, v2 := range volumeMount {
-				vm2 := v2
-				if vm1.Name == vm2.Name && vm1.MountPath == vm2.MountPath {
-					isExist = true
-					break
-				}
-			}
-
-			if isExist {
-				continue
-			}
-
-			volumeMount = append(volumeMount, vm1)
-		}
+		tlsVolumeMounts = append(tlsVolumeMounts, *r.restore.Spec.RestoreMethod.VolumeMounts...)
 	}
 
-	addVolumeMount := corev1.VolumeMount{
-		Name:      _dataDirName,
-		MountPath: cfg.Config.PodVarDir,
-	}
-	volumeMount = append(volumeMount, addVolumeMount)
-
-	return volumeMount
+	return utils.AttachTLSVolumeMounts(cfg.Config.PodVarDir, &tlsVolumeMounts)
 }

@@ -14,8 +14,6 @@ import (
 	"github.com/k8up-io/k8up/v2/operator/cfg"
 )
 
-const _dataDirName = "k8up-dir"
-
 func (b *BackupExecutor) fetchPVCs(ctx context.Context, list client.ObjectList) error {
 	return b.Config.Client.List(ctx, list, client.InNamespace(b.backup.Namespace))
 }
@@ -81,7 +79,9 @@ func (b *BackupExecutor) setupArgs() []string {
 	if len(b.backup.Spec.Tags) > 0 {
 		args = append(args, executor.BuildTagArgs(b.backup.Spec.Tags)...)
 	}
-	args = append(args, b.appendTLSOptionsArgs()...)
+	if b.backup.Spec.Backend != nil {
+		args = append(args, utils.AppendTLSOptionsArgs(b.backup.Spec.Backend.TLSOptions)...)
+	}
 
 	return args
 }
@@ -108,79 +108,4 @@ func (b *BackupExecutor) setupEnvVars() ([]corev1.EnvVar, error) {
 		return nil, fmt.Errorf("cannot merge environment variables: %w", err)
 	}
 	return vars.Convert(), nil
-}
-
-func (b *BackupExecutor) attachMoreVolumes() []corev1.Volume {
-	ku8pVolume := corev1.Volume{
-		Name:         _dataDirName,
-		VolumeSource: corev1.VolumeSource{EmptyDir: &corev1.EmptyDirVolumeSource{}},
-	}
-
-	if utils.ZeroLen(b.backup.Spec.Volumes) {
-		return []corev1.Volume{ku8pVolume}
-	}
-
-	moreVolumes := make([]corev1.Volume, 0, len(*b.backup.Spec.Volumes)+1)
-	moreVolumes = append(moreVolumes, ku8pVolume)
-	for _, v := range *b.backup.Spec.Volumes {
-		vol := v
-
-		var volumeSource corev1.VolumeSource
-		if vol.PersistentVolumeClaim != nil {
-			volumeSource.PersistentVolumeClaim = vol.PersistentVolumeClaim
-		} else if vol.Secret != nil {
-			volumeSource.Secret = vol.Secret
-		} else if vol.ConfigMap != nil {
-			volumeSource.ConfigMap = vol.ConfigMap
-		} else {
-			continue
-		}
-
-		addVolume := corev1.Volume{
-			Name:         vol.Name,
-			VolumeSource: volumeSource,
-		}
-		moreVolumes = append(moreVolumes, addVolume)
-	}
-
-	return moreVolumes
-}
-
-func (b *BackupExecutor) attachMoreVolumeMounts() []corev1.VolumeMount {
-	var volumeMount []corev1.VolumeMount
-
-	if b.backup.Spec.Backend != nil && !utils.ZeroLen(b.backup.Spec.Backend.VolumeMounts) {
-		volumeMount = *b.backup.Spec.Backend.VolumeMounts
-	}
-
-	addVolumeMount := corev1.VolumeMount{
-		Name:      _dataDirName,
-		MountPath: cfg.Config.PodVarDir,
-	}
-	volumeMount = append(volumeMount, addVolumeMount)
-
-	return volumeMount
-}
-
-func (b *BackupExecutor) appendTLSOptionsArgs() []string {
-	var args []string
-
-	if !(b.backup.Spec.Backend != nil && b.backup.Spec.Backend.TLSOptions != nil) {
-		return args
-	}
-
-	if b.backup.Spec.Backend.TLSOptions.CACert != "" {
-		args = append(args, []string{"-caCert", b.backup.Spec.Backend.TLSOptions.CACert}...)
-	}
-	if b.backup.Spec.Backend.TLSOptions.ClientCert != "" && b.backup.Spec.Backend.TLSOptions.ClientKey != "" {
-		addMoreArgs := []string{
-			"-clientCert",
-			b.backup.Spec.Backend.TLSOptions.ClientCert,
-			"-clientKey",
-			b.backup.Spec.Backend.TLSOptions.ClientKey,
-		}
-		args = append(args, addMoreArgs...)
-	}
-
-	return args
 }
