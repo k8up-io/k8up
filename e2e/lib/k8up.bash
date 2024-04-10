@@ -221,7 +221,7 @@ give_self_signed_issuer() {
 	ns=${NAMESPACE=${DETIK_CLIENT_NAMESPACE}}
 
 	kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.14.4/cert-manager.yaml
-
+	cmctl check api --wait=120s
 	kubectl wait -n cert-manager --for=condition=Available deployment/cert-manager-webhook --timeout=120s
 	yq $(yq --help | grep -q eval && echo e) '.metadata.namespace='\"${MINIO_NAMESPACE}\"'' definitions/cert/issure.yaml | kubectl apply -f -
 	yq $(yq --help | grep -q eval && echo e) '.metadata.namespace='\"${MINIO_NAMESPACE}\"'' definitions/cert/minio-ca.yaml | kubectl apply -f -
@@ -287,6 +287,33 @@ given_an_existing_backup() {
 
 	wait_until backup/k8up-backup completed
 	verify "'.status.conditions[?(@.type==\"Completed\")].reason' is 'Succeeded' for Backup named 'k8up-backup'"
+
+	for i in {1..3}; do
+		run restic dump latest "/data/subject-pvc/${backup_file_name}"
+		if [ ! -z "${output}" ]; then
+			break
+		fi
+	done
+
+	# shellcheck disable=SC2154
+	[ "${backup_file_content}" = "${output}" ]
+
+	echo "✅  An existing backup is ready"
+}
+
+given_an_existing_mtls_backup() {
+	require_args 2 ${#}
+
+	local backup_file_name backup_file_content
+	backup_file_name=${1}
+	backup_file_content=${2}
+	given_a_subject "${backup_file_name}" "${backup_file_content}"
+
+	kubectl apply -f definitions/secrets
+	yq e '.spec.podSecurityContext.fsGroup='$(id -u)' | .spec.podSecurityContext.runAsUser='$(id -u)'' definitions/backup/backup-mtls.yaml | kubectl apply -f -
+
+	wait_until backup/k8up-backup-mtls completed
+	verify "'.status.conditions[?(@.type==\"Completed\")].reason' is 'Succeeded' for Backup named 'k8up-backup-mtls'"
 
 	for i in {1..3}; do
 		run restic dump latest "/data/subject-pvc/${backup_file_name}"
