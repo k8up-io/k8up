@@ -173,30 +173,11 @@ It is expected that users only configure one storage type.
 | *`swift`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-swiftspec[$$SwiftSpec$$]__ | 
 | *`b2`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-b2spec[$$B2Spec$$]__ | 
 | *`rest`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-restserverspec[$$RestServerSpec$$]__ | 
-| *`options`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-backendopts[$$BackendOpts$$]__ | 
+| *`tlsOptions`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-tlsoptions[$$TLSOptions$$]__ | 
 | *`volumeMounts`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#volumemount-v1-core[$$VolumeMount$$]__ | 
 |===
 
 
-
-
-[id="{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-backendopts"]
-=== BackendOpts 
-
-
-
-.Appears In:
-****
-- xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-backend[$$Backend$$]
-****
-
-[cols="25a,75a", options="header"]
-|===
-| Field | Description
-| *`caCert`* __string__ | 
-| *`clientCert`* __string__ | 
-| *`clientKey`* __string__ | 
-|===
 
 
 [id="{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-backup"]
@@ -763,27 +744,8 @@ all the settings are mutual exclusive.
 | Field | Description
 | *`s3`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-s3spec[$$S3Spec$$]__ | 
 | *`folder`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-folderrestore[$$FolderRestore$$]__ | 
-| *`options`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-restoreopts[$$RestoreOpts$$]__ | 
+| *`tlsOptions`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-tlsoptions[$$TLSOptions$$]__ | 
 | *`volumeMounts`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#volumemount-v1-core[$$VolumeMount$$]__ | 
-|===
-
-
-[id="{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-restoreopts"]
-=== RestoreOpts 
-
-
-
-.Appears In:
-****
-- xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-restoremethod[$$RestoreMethod$$]
-****
-
-[cols="25a,75a", options="header"]
-|===
-| Field | Description
-| *`caCert`* __string__ | 
-| *`clientCert`* __string__ | 
-| *`clientKey`* __string__ | 
 |===
 
 
@@ -1158,6 +1120,26 @@ can be restored.
 | Field | Description
 | *`container`* __string__ | 
 | *`path`* __string__ | 
+|===
+
+
+[id="{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-tlsoptions"]
+=== TLSOptions 
+
+
+
+.Appears In:
+****
+- xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-backend[$$Backend$$]
+- xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-restoremethod[$$RestoreMethod$$]
+****
+
+[cols="25a,75a", options="header"]
+|===
+| Field | Description
+| *`caCert`* __string__ | 
+| *`clientCert`* __string__ | 
+| *`clientKey`* __string__ | 
 |===
 
 

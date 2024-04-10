@@ -50,7 +50,7 @@ OPTIONS:
    --keepWithin value                         While pruning, keep tagged snapshots within the given duration, e.g. '2y5m7d3h' [$KEEP_WITHIN]
    --targetPods value [ --targetPods value ]  Filter list of pods by TARGET_PODS names [$TARGET_PODS]
    --sleepDuration value                      Sleep for specified amount until init starts (default: 0s) [$SLEEP_DURATION]
-   --varDir value                             The var directory is stored k8up metadata files and temporary files (default: /k8up)
+   --varDir value                             The var directory is stored k8up metadata files and temporary files (default: "/k8up")
    --caCert value                             The certificate authority file path [$CA_CERT_FILE]
    --clientCert value                         The client certificate file path [$CLIENT_CERT_FILE]
    --clientKey value                          The client private key file path [$CLIENT_KEY_FILE]

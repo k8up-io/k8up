@@ -18,7 +18,7 @@ OPTIONS:
    --global-concurrent-check-jobs-limit value          set the limit of concurrent check jobs (default: unlimited) [$BACKUP_GLOBAL_CONCURRENT_CHECK_JOBS_LIMIT]
    --global-concurrent-prune-jobs-limit value          set the limit of concurrent prune jobs (default: unlimited) [$BACKUP_GLOBAL_CONCURRENT_PRUNE_JOBS_LIMIT]
    --global-concurrent-restore-jobs-limit value        set the limit of concurrent restore jobs (default: unlimited) [$BACKUP_GLOBAL_CONCURRENT_RESTORE_JOBS_LIMIT]
-   --globalrestores3accesskeyid value                  set the global restore S3 accessKeyID for restores [$BACKUP_GLOBALRESTORES3ACCESKEYID] / [$BACKUP_GLOBALRESTORES3ACCESSKEYID]
+   --globalrestores3accesskeyid value                  set the global restore S3 accessKeyID for restores [$BACKUP_GLOBALRESTORES3ACCESKEYID, $BACKUP_GLOBALRESTORES3ACCESSKEYID]
    --globalrestores3bucket value                       set the global restore S3 bucket for restores [$BACKUP_GLOBALRESTORES3BUCKET]
    --globalrestores3endpoint value                     set the global restore S3 endpoint for the restores (needs the scheme 'http' or 'https') [$BACKUP_GLOBALRESTORES3ENDPOINT]
    --globalrestores3secretaccesskey value              set the global restore S3 SecretAccessKey for restores [$BACKUP_GLOBALRESTORES3SECRETACCESSKEY]
@@ -46,5 +46,5 @@ OPTIONS:
    --skip-pvcs-without-annotation                      skip selecting PVCs that don't have the BACKUP_ANNOTATION (default: disabled) [$BACKUP_SKIP_WITHOUT_ANNOTATION]
    --checkschedule value                               the default check schedule (default: "0 0 * * 0") [$BACKUP_CHECKSCHEDULE]
    --operator-namespace value                          set the namespace in which the K8up operator itself runs [$BACKUP_OPERATOR_NAMESPACE]
-   --vardir value                                      the var data dir for read/write k8up data or temp file in the backup pod (default: /k8up) [$VAR_DIR]
+   --vardir value                                      the var data dir for read/write k8up data or temp file in the backup pod (default: "/k8up") [$VAR_DIR]
    --help, -h                                          show help (default: false)
