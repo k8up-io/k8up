@@ -17,8 +17,6 @@ import (
 	"github.com/k8up-io/k8up/v2/operator/job"
 )
 
-const _dataDirName = "k8up-dir"
-
 // PruneExecutor will execute the batch.job for Prunes.
 type PruneExecutor struct {
 	executor.Generic
@@ -48,8 +46,8 @@ func (p *PruneExecutor) Execute(ctx context.Context) error {
 		batchJob.Spec.Template.Spec.Containers[0].Env = p.setupEnvVars(ctx, p.prune)
 		batchJob.Spec.Template.Spec.ServiceAccountName = cfg.Config.ServiceAccount
 		p.prune.Spec.AppendEnvFromToContainer(&batchJob.Spec.Template.Spec.Containers[0])
-		batchJob.Spec.Template.Spec.Containers[0].VolumeMounts = p.attachMoreVolumeMounts()
-		batchJob.Spec.Template.Spec.Volumes = p.attachMoreVolumes()
+		batchJob.Spec.Template.Spec.Containers[0].VolumeMounts = p.attachTLSVolumeMounts()
+		batchJob.Spec.Template.Spec.Volumes = utils.AttachTLSVolumes(p.prune.Spec.Volumes)
 		batchJob.Labels[job.K8upExclusive] = "true"
 
 		batchJob.Spec.Template.Spec.Containers[0].Args = p.setupArgs()
@@ -74,7 +72,9 @@ func (p *PruneExecutor) setupArgs() []string {
 	if len(p.prune.Spec.Retention.Tags) > 0 {
 		args = append(args, executor.BuildTagArgs(p.prune.Spec.Retention.Tags)...)
 	}
-	args = append(args, p.appendTLSOptionsArgs()...)
+	if p.prune.Spec.Backend != nil {
+		args = append(args, utils.AppendTLSOptionsArgs(p.prune.Spec.Backend.TLSOptions)...)
+	}
 
 	return args
 }
@@ -141,76 +141,11 @@ func (p *PruneExecutor) setupEnvVars(ctx context.Context, prune *k8upv1.Prune) [
 	return vars.Convert()
 }
 
-func (p *PruneExecutor) appendTLSOptionsArgs() []string {
-	var args []string
-	if !(p.prune.Spec.Backend != nil && p.prune.Spec.Backend.TLSOptions != nil) {
-		return args
-	}
-
-	if p.prune.Spec.Backend.TLSOptions.CACert != "" {
-		args = append(args, []string{"-caCert", p.prune.Spec.Backend.TLSOptions.CACert}...)
-	}
-	if p.prune.Spec.Backend.TLSOptions.ClientCert != "" && p.prune.Spec.Backend.TLSOptions.ClientKey != "" {
-		addMoreArgs := []string{
-			"-clientCert",
-			p.prune.Spec.Backend.TLSOptions.ClientCert,
-			"-clientKey",
-			p.prune.Spec.Backend.TLSOptions.ClientKey,
-		}
-		args = append(args, addMoreArgs...)
-	}
-
-	return args
-}
-
-func (p *PruneExecutor) attachMoreVolumes() []corev1.Volume {
-	ku8pVolume := corev1.Volume{
-		Name:         _dataDirName,
-		VolumeSource: corev1.VolumeSource{EmptyDir: &corev1.EmptyDirVolumeSource{}},
-	}
-
-	if utils.ZeroLen(p.prune.Spec.Volumes) {
-		return []corev1.Volume{ku8pVolume}
-	}
-
-	moreVolumes := make([]corev1.Volume, 0, len(*p.prune.Spec.Volumes)+1)
-	moreVolumes = append(moreVolumes, ku8pVolume)
-	for _, v := range *p.prune.Spec.Volumes {
-		vol := v
-
-		var volumeSource corev1.VolumeSource
-		if vol.PersistentVolumeClaim != nil {
-			volumeSource.PersistentVolumeClaim = vol.PersistentVolumeClaim
-		} else if vol.Secret != nil {
-			volumeSource.Secret = vol.Secret
-		} else if vol.ConfigMap != nil {
-			volumeSource.ConfigMap = vol.ConfigMap
-		} else {
-			continue
-		}
-
-		addVolume := corev1.Volume{
-			Name:         vol.Name,
-			VolumeSource: volumeSource,
-		}
-		moreVolumes = append(moreVolumes, addVolume)
-	}
-
-	return moreVolumes
-}
-
-func (p *PruneExecutor) attachMoreVolumeMounts() []corev1.VolumeMount {
-	var volumeMount []corev1.VolumeMount
-
+func (p *PruneExecutor) attachTLSVolumeMounts() []corev1.VolumeMount {
+	var tlsVolumeMounts []corev1.VolumeMount
 	if p.prune.Spec.Backend != nil && !utils.ZeroLen(p.prune.Spec.Backend.VolumeMounts) {
-		volumeMount = *p.prune.Spec.Backend.VolumeMounts
+		tlsVolumeMounts = append(tlsVolumeMounts, *p.prune.Spec.Backend.VolumeMounts...)
 	}
 
-	ku8pVolumeMount := corev1.VolumeMount{
-		Name:      _dataDirName,
-		MountPath: cfg.Config.PodVarDir,
-	}
-	volumeMount = append(volumeMount, ku8pVolumeMount)
-
-	return volumeMount
+	return utils.AttachTLSVolumeMounts(cfg.Config.PodVarDir, &tlsVolumeMounts)
 }

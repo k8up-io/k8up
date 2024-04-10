@@ -2,7 +2,6 @@ package archivecontroller
 
 import (
 	"context"
-
 	"github.com/k8up-io/k8up/v2/operator/executor"
 	"github.com/k8up-io/k8up/v2/operator/utils"
 	batchv1 "k8s.io/api/batch/v1"
@@ -16,8 +15,8 @@ import (
 )
 
 const (
-	archivePath  = "/archive"
-	_dataDirName = "k8up-dir"
+	archivePath    = "/archive"
+	certPrefixName = "restore"
 )
 
 // ArchiveExecutor will execute the batch.job for archive.
@@ -55,8 +54,8 @@ func (a *ArchiveExecutor) Execute(ctx context.Context) error {
 
 		batchJob.Spec.Template.Spec.Containers[0].Env = a.setupEnvVars(ctx, a.archive)
 		a.archive.Spec.AppendEnvFromToContainer(&batchJob.Spec.Template.Spec.Containers[0])
-		batchJob.Spec.Template.Spec.Containers[0].VolumeMounts = a.attachMoreVolumeMounts()
-		batchJob.Spec.Template.Spec.Volumes = a.attachMoreVolumes()
+		batchJob.Spec.Template.Spec.Containers[0].VolumeMounts = a.attachTLSVolumeMounts()
+		batchJob.Spec.Template.Spec.Volumes = utils.AttachTLSVolumes(a.archive.Spec.Volumes)
 
 		batchJob.Spec.Template.Spec.Containers[0].Args = a.setupArgs()
 
@@ -81,7 +80,12 @@ func (a *ArchiveExecutor) setupArgs() []string {
 	if a.archive.Spec.RestoreSpec != nil && len(a.archive.Spec.RestoreSpec.Tags) > 0 {
 		args = append(args, executor.BuildTagArgs(a.archive.Spec.RestoreSpec.Tags)...)
 	}
-	args = append(args, a.appendTLSOptionsArgs()...)
+	if a.archive.Spec.Backend != nil {
+		args = append(args, utils.AppendTLSOptionsArgs(a.archive.Spec.Backend.TLSOptions)...)
+	}
+	if a.archive.Spec.RestoreSpec != nil && a.archive.Spec.RestoreSpec.RestoreMethod != nil {
+		args = append(args, utils.AppendTLSOptionsArgs(a.archive.Spec.RestoreSpec.RestoreMethod.TLSOptions, certPrefixName)...)
+	}
 
 	return args
 }
@@ -126,110 +130,14 @@ func (a *ArchiveExecutor) cleanupOldArchives(ctx context.Context, archive *k8upv
 	a.CleanupOldResources(ctx, &k8upv1.ArchiveList{}, archive.Namespace, archive)
 }
 
-func (a *ArchiveExecutor) appendTLSOptionsArgs() []string {
-	var args []string
-
-	if a.archive.Spec.Backend != nil && a.archive.Spec.Backend.TLSOptions != nil {
-		if a.archive.Spec.Backend.TLSOptions.CACert != "" {
-			args = append(args, []string{"-caCert", a.archive.Spec.Backend.TLSOptions.CACert}...)
-		}
-		if a.archive.Spec.Backend.TLSOptions.ClientCert != "" && a.archive.Spec.Backend.TLSOptions.ClientKey != "" {
-			addMoreArgs := []string{
-				"-clientCert",
-				a.archive.Spec.Backend.TLSOptions.ClientCert,
-				"-clientKey",
-				a.archive.Spec.Backend.TLSOptions.ClientKey,
-			}
-			args = append(args, addMoreArgs...)
-		}
-	}
-
-	if a.archive.Spec.RestoreSpec != nil && a.archive.Spec.RestoreMethod.TLSOptions != nil {
-		if a.archive.Spec.RestoreMethod.TLSOptions.CACert != "" {
-			args = append(args, []string{"-restoreCaCert", a.archive.Spec.RestoreMethod.TLSOptions.CACert}...)
-		}
-		if a.archive.Spec.RestoreMethod.TLSOptions.ClientCert != "" && a.archive.Spec.RestoreMethod.TLSOptions.ClientKey != "" {
-			addMoreArgs := []string{
-				"-restoreClientCert",
-				a.archive.Spec.RestoreMethod.TLSOptions.ClientCert,
-				"-restoreClientKey",
-				a.archive.Spec.RestoreMethod.TLSOptions.ClientKey,
-			}
-			args = append(args, addMoreArgs...)
-		}
-	}
-
-	return args
-}
-
-func (a *ArchiveExecutor) attachMoreVolumes() []corev1.Volume {
-	ku8pVolume := corev1.Volume{
-		Name:         _dataDirName,
-		VolumeSource: corev1.VolumeSource{EmptyDir: &corev1.EmptyDirVolumeSource{}},
-	}
-
-	if utils.ZeroLen(a.archive.Spec.Volumes) {
-		return []corev1.Volume{ku8pVolume}
-	}
-
-	moreVolumes := make([]corev1.Volume, 0, len(*a.archive.Spec.Volumes)+1)
-	moreVolumes = append(moreVolumes, ku8pVolume)
-	for _, v := range *a.archive.Spec.Volumes {
-		vol := v
-
-		var volumeSource corev1.VolumeSource
-		if vol.PersistentVolumeClaim != nil {
-			volumeSource.PersistentVolumeClaim = vol.PersistentVolumeClaim
-		} else if vol.Secret != nil {
-			volumeSource.Secret = vol.Secret
-		} else if vol.ConfigMap != nil {
-			volumeSource.ConfigMap = vol.ConfigMap
-		} else {
-			continue
-		}
-
-		addVolume := corev1.Volume{
-			Name:         vol.Name,
-			VolumeSource: volumeSource,
-		}
-		moreVolumes = append(moreVolumes, addVolume)
-	}
-
-	return moreVolumes
-}
-
-func (a *ArchiveExecutor) attachMoreVolumeMounts() []corev1.VolumeMount {
-	var volumeMount []corev1.VolumeMount
-
+func (a *ArchiveExecutor) attachTLSVolumeMounts() []corev1.VolumeMount {
+	var tlsVolumeMounts []corev1.VolumeMount
 	if a.archive.Spec.Backend != nil && !utils.ZeroLen(a.archive.Spec.Backend.VolumeMounts) {
-		volumeMount = append(volumeMount, *a.archive.Spec.Backend.VolumeMounts...)
+		tlsVolumeMounts = append(tlsVolumeMounts, *a.archive.Spec.Backend.VolumeMounts...)
 	}
-	if a.archive.Spec.RestoreMethod != nil && !utils.ZeroLen(a.archive.Spec.RestoreMethod.VolumeMounts) {
-		for _, v1 := range *a.archive.Spec.RestoreMethod.VolumeMounts {
-			vm1 := v1
-			var isExist bool
-
-			for _, v2 := range volumeMount {
-				vm2 := v2
-				if vm1.Name == vm2.Name && vm1.MountPath == vm2.MountPath {
-					isExist = true
-					break
-				}
-			}
-
-			if isExist {
-				continue
-			}
-
-			volumeMount = append(volumeMount, vm1)
-		}
+	if a.archive.Spec.RestoreSpec != nil && a.archive.Spec.RestoreSpec.RestoreMethod != nil && !utils.ZeroLen(a.archive.Spec.RestoreSpec.RestoreMethod.VolumeMounts) {
+		tlsVolumeMounts = append(tlsVolumeMounts, *a.archive.Spec.RestoreSpec.RestoreMethod.VolumeMounts...)
 	}
 
-	addVolumeMount := corev1.VolumeMount{
-		Name:      _dataDirName,
-		MountPath: cfg.Config.PodVarDir,
-	}
-	volumeMount = append(volumeMount, addVolumeMount)
-
-	return volumeMount
+	return utils.AttachTLSVolumeMounts(cfg.Config.PodVarDir, &tlsVolumeMounts)
 }
