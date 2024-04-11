@@ -23,9 +23,26 @@ func RandomStringGenerator(n int) string {
 }
 
 func ZeroLen(v interface{}) bool {
-	return v == nil ||
-		(reflect.ValueOf(v).Kind() == reflect.Ptr && reflect.ValueOf(v).IsNil()) ||
-		(reflect.ValueOf(v).Kind() == reflect.Ptr && !reflect.ValueOf(v).IsNil() && reflect.ValueOf(v).Elem().Len() == 0)
+	if v == nil {
+		return true
+	}
+
+	vv := reflect.ValueOf(v)
+	if vv.Kind() == reflect.Ptr {
+		if vv.IsNil() {
+			return true
+		}
+		vv = vv.Elem()
+	}
+	if !(vv.IsValid() && !vv.IsZero()) {
+		return true
+	}
+	switch vv.Kind() {
+	case reflect.Array, reflect.Chan, reflect.Map, reflect.Slice, reflect.String:
+		return vv.Len() == 0
+	}
+
+	return true
 }
 
 func AppendTLSOptionsArgs(opts *k8upv1.TLSOptions, prefixArgName ...string) []string {
