@@ -3,10 +3,12 @@ package cli
 import (
 	"context"
 	"path"
+	"path/filepath"
 	"strings"
 
 	"github.com/go-logr/logr"
 
+	"github.com/k8up-io/k8up/v2/operator/utils"
 	"github.com/k8up-io/k8up/v2/restic/cfg"
 	"github.com/k8up-io/k8up/v2/restic/dto"
 )
@@ -40,6 +42,15 @@ type Restic struct {
 	// globalFlags are applied to all invocations of restic
 	globalFlags  Flags
 	statsHandler StatsHandler
+
+	caCert     string
+	clientCert clientCert
+}
+
+type clientCert struct {
+	cert string
+	key  string
+	pem  string
 }
 
 // New returns a new Restic reference
@@ -52,11 +63,31 @@ func New(ctx context.Context, logger logr.Logger, statsHandler StatsHandler) *Re
 		globalFlags.AddFlag("--option", options...)
 	}
 
+	var caCert string
+	if cfg.Config.CACert != "" {
+		caCert = cfg.Config.CACert
+		globalFlags.AddFlag("--cacert", cfg.Config.CACert)
+	}
+	var cc clientCert
+	if cfg.Config.ClientCert != "" && cfg.Config.ClientKey != "" {
+		var pemFileName strings.Builder
+		pemFileName.WriteString("restic.repo.")
+		pemFileName.WriteString(utils.RandomStringGenerator(10))
+		pemFileName.WriteString(".pem")
+
+		cc.cert = cfg.Config.ClientCert
+		cc.key = cfg.Config.ClientKey
+		cc.pem = filepath.Join(cfg.Config.VarDir, pemFileName.String())
+		globalFlags.AddFlag("--tls-client-cert", cc.pem)
+	}
+
 	return &Restic{
 		logger:       logger,
 		resticPath:   cfg.Config.ResticBin,
 		ctx:          ctx,
 		bucket:       path.Base(cfg.Config.ResticRepository),
+		caCert:       caCert,
+		clientCert:   cc,
 		globalFlags:  globalFlags,
 		statsHandler: statsHandler,
 	}

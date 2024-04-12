@@ -2,9 +2,13 @@ package s3
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"fmt"
 	"io"
+	"net/http"
 	"net/url"
+	"os"
 	"strings"
 
 	"github.com/minio/minio-go/v7"
@@ -18,6 +22,13 @@ type Client struct {
 	SecretAccessKey string
 	minioClient     *minio.Client
 	bucket          string
+	cert            Cert
+}
+
+type Cert struct {
+	CACert     string
+	ClientCert string
+	ClientKey  string
 }
 
 type UploadObject struct {
@@ -26,11 +37,12 @@ type UploadObject struct {
 }
 
 // New returns a new Client
-func New(endpoint, accessKeyID, secretAccessKey string) *Client {
+func New(endpoint, accessKeyID, secretAccessKey string, cert Cert) *Client {
 	return &Client{
 		Endpoint:        endpoint,
 		AccessKeyID:     accessKeyID,
 		SecretAccessKey: secretAccessKey,
+		cert:            cert,
 	}
 }
 
@@ -50,11 +62,36 @@ func (c *Client) Connect(ctx context.Context) error {
 		return fmt.Errorf("endpoint '%v' has wrong scheme '%s' (should be 'http' or 'https')", c.Endpoint, u.Scheme)
 	}
 
+	var transportTlsConfig = &tls.Config{}
+	if c.cert.CACert != "" {
+		caCert, err := os.ReadFile(c.cert.CACert)
+		if err != nil {
+			return err
+		}
+		caCertPool := x509.NewCertPool()
+		caCertPool.AppendCertsFromPEM(caCert)
+
+		transportTlsConfig.RootCAs = caCertPool
+	}
+	if c.cert.ClientCert != "" && c.cert.ClientKey != "" {
+		clientCert, err := tls.LoadX509KeyPair(c.cert.ClientCert, c.cert.ClientKey)
+		if err != nil {
+			return err
+		}
+
+		transportTlsConfig.Certificates = []tls.Certificate{clientCert}
+	}
+
+	var TransportRoundTripper http.RoundTripper = &http.Transport{
+		TLSClientConfig: transportTlsConfig,
+	}
+
 	c.bucket = strings.Replace(u.Path, "/", "", 1)
 	c.Endpoint = u.Host
 	mc, err := minio.New(c.Endpoint, &minio.Options{
-		Creds:  credentials.NewStaticV2(c.AccessKeyID, c.SecretAccessKey, ""),
-		Secure: ssl,
+		Creds:     credentials.NewStaticV2(c.AccessKeyID, c.SecretAccessKey, ""),
+		Secure:    ssl,
+		Transport: TransportRoundTripper,
 	})
 	c.minioClient = mc
 

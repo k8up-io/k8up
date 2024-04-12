@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/k8up-io/k8up/v2/operator/executor"
+	"github.com/k8up-io/k8up/v2/operator/utils"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	controllerruntime "sigs.k8s.io/controller-runtime"
@@ -16,16 +17,21 @@ import (
 	"github.com/k8up-io/k8up/v2/operator/job"
 )
 
-const restorePath = "/restore"
+const (
+	restorePath    = "/restore"
+	certPrefixName = "restore"
+)
 
 type RestoreExecutor struct {
 	executor.Generic
+	restore *k8upv1.Restore
 }
 
 // NewRestoreExecutor will return a new executor for Restore jobs.
 func NewRestoreExecutor(config job.Config) *RestoreExecutor {
 	return &RestoreExecutor{
 		Generic: executor.Generic{Config: config},
+		restore: config.Obj.(*k8upv1.Restore),
 	}
 }
 
@@ -72,10 +78,10 @@ func (r *RestoreExecutor) createRestoreObject(ctx context.Context, restore *k8up
 		restore.Spec.AppendEnvFromToContainer(&batchJob.Spec.Template.Spec.Containers[0])
 
 		volumes, volumeMounts := r.volumeConfig(restore)
-		batchJob.Spec.Template.Spec.Volumes = volumes
-		batchJob.Spec.Template.Spec.Containers[0].VolumeMounts = volumeMounts
+		batchJob.Spec.Template.Spec.Volumes = append(volumes, utils.AttachTLSVolumes(r.restore.Spec.Volumes)...)
+		batchJob.Spec.Template.Spec.Containers[0].VolumeMounts = append(volumeMounts, r.attachTLSVolumeMounts()...)
 
-		args, argsErr := r.args(restore)
+		args, argsErr := r.setupArgs(restore)
 		batchJob.Spec.Template.Spec.Containers[0].Args = args
 		return argsErr
 	})
@@ -87,9 +93,8 @@ func (r *RestoreExecutor) jobName() string {
 	return k8upv1.RestoreType.String() + "-" + r.Obj.GetName()
 }
 
-func (r *RestoreExecutor) args(restore *k8upv1.Restore) ([]string, error) {
-	args := []string{"-restore"}
-
+func (r *RestoreExecutor) setupArgs(restore *k8upv1.Restore) ([]string, error) {
+	args := []string{"-varDir", cfg.Config.PodVarDir, "-restore"}
 	if len(restore.Spec.Tags) > 0 {
 		args = append(args, executor.BuildTagArgs(restore.Spec.Tags)...)
 	}
@@ -110,19 +115,27 @@ func (r *RestoreExecutor) args(restore *k8upv1.Restore) ([]string, error) {
 	default:
 		return nil, fmt.Errorf("undefined restore method (-restoreType) on '%v/%v'", restore.Namespace, restore.Name)
 	}
+
+	if r.restore.Spec.Backend != nil {
+		args = append(args, utils.AppendTLSOptionsArgs(r.restore.Spec.Backend.TLSOptions)...)
+	}
+	if r.restore.Spec.RestoreMethod != nil {
+		args = append(args, utils.AppendTLSOptionsArgs(r.restore.Spec.RestoreMethod.TLSOptions, certPrefixName)...)
+	}
+
 	return args, nil
 }
 
 func (r *RestoreExecutor) volumeConfig(restore *k8upv1.Restore) ([]corev1.Volume, []corev1.VolumeMount) {
 	volumes := make([]corev1.Volume, 0)
 	if restore.Spec.RestoreMethod.S3 == nil {
-		volumes = append(volumes,
-			corev1.Volume{
-				Name: restore.Spec.RestoreMethod.Folder.ClaimName,
-				VolumeSource: corev1.VolumeSource{
-					PersistentVolumeClaim: restore.Spec.RestoreMethod.Folder.PersistentVolumeClaimVolumeSource,
-				},
-			})
+		addVolume := corev1.Volume{
+			Name: restore.Spec.RestoreMethod.Folder.ClaimName,
+			VolumeSource: corev1.VolumeSource{
+				PersistentVolumeClaim: restore.Spec.RestoreMethod.Folder.PersistentVolumeClaimVolumeSource,
+			},
+		}
+		volumes = append(volumes, addVolume)
 	}
 
 	mounts := make([]corev1.VolumeMount, 0)
@@ -167,4 +180,16 @@ func (r *RestoreExecutor) setupEnvVars(ctx context.Context, restore *k8upv1.Rest
 	}
 
 	return vars.Convert()
+}
+
+func (r *RestoreExecutor) attachTLSVolumeMounts() []corev1.VolumeMount {
+	var tlsVolumeMounts []corev1.VolumeMount
+	if r.restore.Spec.Backend != nil && !utils.ZeroLen(r.restore.Spec.Backend.VolumeMounts) {
+		tlsVolumeMounts = append(tlsVolumeMounts, *r.restore.Spec.Backend.VolumeMounts...)
+	}
+	if r.restore.Spec.RestoreMethod != nil && !utils.ZeroLen(r.restore.Spec.RestoreMethod.VolumeMounts) {
+		tlsVolumeMounts = append(tlsVolumeMounts, *r.restore.Spec.RestoreMethod.VolumeMounts...)
+	}
+
+	return utils.AttachTLSVolumeMounts(cfg.Config.PodVarDir, &tlsVolumeMounts)
 }

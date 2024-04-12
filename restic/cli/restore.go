@@ -46,6 +46,13 @@ type S3Bucket struct {
 	Endpoint  string
 	AccessKey string
 	SecretKey string
+	Cert      S3Cert
+}
+
+type S3Cert struct {
+	CACert     string
+	ClientCert string
+	ClientKey  string
 }
 
 type fileNode struct {
@@ -71,7 +78,7 @@ func (r *Restic) Restore(snapshotID string, options RestoreOptions, tags ArrayOp
 	if len(tags) > 0 {
 		restorelogger.Info("loading snapshots", "tags", tags.String)
 	} else {
-		restorelogger.Info("loading all snapshots from repositoy")
+		restorelogger.Info("loading all snapshots from repository")
 	}
 
 	err := r.Snapshots(tags)
@@ -96,7 +103,7 @@ func (r *Restic) Restore(snapshotID string, options RestoreOptions, tags ArrayOp
 
 	case S3Restore:
 		stats = &RestoreStats{}
-		err = r.s3Restore(restorelogger, latestSnap, stats)
+		err = r.s3Restore(restorelogger, options.S3Destination, latestSnap, stats)
 	default:
 		err = fmt.Errorf("no valid restore type")
 	}
@@ -287,7 +294,7 @@ func (r *Restic) parsePath(paths []string) string {
 	return path.Base(paths[len(paths)-1])
 }
 
-func (r *Restic) s3Restore(log logr.Logger, snapshot dto.Snapshot, stats *RestoreStats) error {
+func (r *Restic) s3Restore(log logr.Logger, s3Options S3Bucket, snapshot dto.Snapshot, stats *RestoreStats) error {
 	log.Info("S3 chosen as restore destination")
 	cleanupCtx, cleanup := context.WithCancel(r.ctx)
 	defer cleanup()
@@ -296,10 +303,10 @@ func (r *Restic) s3Restore(log logr.Logger, snapshot dto.Snapshot, stats *Restor
 	PVCName := r.parsePath(snapshot.Paths)
 	fileName := fmt.Sprintf("backup-%v-%v-%v.tar.gz", snapshot.Hostname, PVCName, snapDate)
 
-	stats.RestoreLocation = fmt.Sprintf("%s/%s", cfg.Config.RestoreS3Endpoint, fileName)
+	stats.RestoreLocation = fmt.Sprintf("%s/%s", s3Options.Endpoint, fileName)
 	stats.SnapshotID = snapshot.ID
 
-	s3TransmissionErrorChannel, s3writer, err := r.s3Connect(r.ctx, fileName)
+	s3TransmissionErrorChannel, s3writer, err := r.s3Connect(r.ctx, s3Options, fileName)
 	if err != nil {
 		return err
 	}
@@ -311,12 +318,16 @@ func (r *Restic) s3Restore(log logr.Logger, snapshot dto.Snapshot, stats *Restor
 		}
 	}(cleanupCtx, log, s3writer)
 
-	err = r.s3Transmission(log, stats, s3writer)
-	if err != nil {
-		return err
-	}
+	go func(log logr.Logger, stats *RestoreStats, s3writer *io.PipeWriter) {
+		err = r.s3Transmission(log, stats, s3writer)
+		if err != nil {
+			s3TransmissionErrorChannel <- err
+			return
+		}
 
-	cleanup()
+		cleanup()
+	}(log, stats, s3writer)
+
 	return <-s3TransmissionErrorChannel
 }
 
@@ -374,8 +385,13 @@ func (r *Restic) doRestore(log logr.Logger, latestSnap dto.Snapshot, snapRoot st
 	cmd.Run()
 }
 
-func (r *Restic) s3Connect(ctx context.Context, fileName string) (chan error, *io.PipeWriter, error) {
-	s3Client := s3.New(cfg.Config.RestoreS3Endpoint, cfg.Config.RestoreS3AccessKey, cfg.Config.RestoreS3SecretKey)
+func (r *Restic) s3Connect(ctx context.Context, s3Options S3Bucket, fileName string) (chan error, *io.PipeWriter, error) {
+	s3Client := s3.New(
+		s3Options.Endpoint,
+		s3Options.AccessKey,
+		s3Options.SecretKey,
+		s3.Cert(s3Options.Cert),
+	)
 	err := s3Client.Connect(ctx)
 	if err != nil {
 		return nil, nil, err

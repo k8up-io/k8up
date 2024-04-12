@@ -12,3 +12,151 @@ Save the YAML above in a file named `backup.yaml` and use the `kubectl apply -f 
 TIP: To have backups run automatically at a regular interval look at xref:how-tos/schedules.adoc[schedules].
 
 TIP: By default, all PVCs are backed up automatically. Adding the annotation `k8up.io/backup=false` to a PVC object will exclude it from all following backups. Alternatively, you can set the environment variable `BACKUP_SKIP_WITHOUT_ANNOTATION=true` if you want K8up to ignore objects without the annotation.
+
+== Self-signed issuer and Mutual TLS
+
+If you are using self-signed issuer or using mutual tls for authenticate client, you're able use a volume for mounting cert files into the backup object.
+
+=== Self-signed issuer
+
+- Using with `options` feature
+
+[source,yaml]
+----
+apiVersion: k8up.io/v1
+kind: Backup
+metadata:
+  name: backup-test
+spec:
+  failedJobsHistoryLimit: 2
+  successfulJobsHistoryLimit: 2
+  backend:
+    s3: {}
+
+    tlsOptions:
+      caCert: /mnt/ca/ca.crt
+    volumeMounts:
+      - name: ca-tls
+        mountPath: /mnt/ca/
+
+  podSecurityContext:
+    fsGroup: 1000
+    runAsUser: 1000
+  volumes:
+    - name: ca-tls
+      secret:
+        secretName: ca-tls
+        defaultMode: 420
+----
+
+- Using with `env`
+
+[source,yaml]
+----
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backup-cert
+data:
+  CA_CERT_FILE: /mnt/ca/ca.crt
+---
+apiVersion: k8up.io/v1
+kind: Backup
+metadata:
+  name: backup-test
+spec:
+  failedJobsHistoryLimit: 2
+  successfulJobsHistoryLimit: 2
+  backend:
+    s3: {}
+
+    envFrom:
+      - configMapRef:
+          name: backup-cert
+    volumeMounts:
+      - name: ca-tls
+        mountPath: /mnt/ca/
+
+  podSecurityContext:
+    fsGroup: 1000
+    runAsUser: 1000
+  volumes:
+    - name: ca-tls
+      secret:
+        secretName: ca-tls
+        defaultMode: 420
+----
+
+=== Self-signed issuer with mTLS
+
+- Using with `options` feature
+
+[source,yaml]
+----
+apiVersion: k8up.io/v1
+kind: Backup
+metadata:
+  name: backup-test
+spec:
+  failedJobsHistoryLimit: 2
+  successfulJobsHistoryLimit: 2
+  backend:
+    s3: {}
+
+    tlsOptions:
+      caCert: /mnt/tls/ca.crt
+      clientCert: /mnt/tls/tls.crt
+      clientKey: /mnt/tls/tls.key
+    volumeMounts:
+      - name: client-tls
+        mountPath: /mnt/tls/
+
+  podSecurityContext:
+    fsGroup: 1000
+    runAsUser: 1000
+  volumes:
+    - name: client-tls
+      secret:
+        secretName: client-tls
+        defaultMode: 420
+----
+
+- Using with `env`
+
+[source,yaml]
+----
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backup-cert
+data:
+  CA_CERT_FILE: /mnt/tls/ca.crt
+  CLIENT_CERT_FILE: /mnt/tls/tls.crt
+  CLIENT_KEY_FILE: /mnt/tls/tls.key
+---
+apiVersion: k8up.io/v1
+kind: Backup
+metadata:
+  name: backup-test
+spec:
+  failedJobsHistoryLimit: 2
+  successfulJobsHistoryLimit: 2
+  backend:
+    s3: {}
+
+    envFrom:
+      - configMapRef:
+          name: backup-cert
+    volumeMounts:
+      - name: client-tls
+        mountPath: /mnt/tls/
+
+  podSecurityContext:
+    fsGroup: 1000
+    runAsUser: 1000
+  volumes:
+    - name: client-tls
+      secret:
+        secretName: client-tls
+        defaultMode: 420
+----

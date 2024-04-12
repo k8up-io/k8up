@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/k8up-io/k8up/v2/operator/executor"
+	"github.com/k8up-io/k8up/v2/operator/utils"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	controllerruntime "sigs.k8s.io/controller-runtime"
@@ -45,8 +46,12 @@ func (p *PruneExecutor) Execute(ctx context.Context) error {
 		batchJob.Spec.Template.Spec.Containers[0].Env = p.setupEnvVars(ctx, p.prune)
 		batchJob.Spec.Template.Spec.ServiceAccountName = cfg.Config.ServiceAccount
 		p.prune.Spec.AppendEnvFromToContainer(&batchJob.Spec.Template.Spec.Containers[0])
-		batchJob.Spec.Template.Spec.Containers[0].Args = append([]string{"-prune"}, executor.BuildTagArgs(p.prune.Spec.Retention.Tags)...)
+		batchJob.Spec.Template.Spec.Containers[0].VolumeMounts = p.attachTLSVolumeMounts()
+		batchJob.Spec.Template.Spec.Volumes = utils.AttachTLSVolumes(p.prune.Spec.Volumes)
 		batchJob.Labels[job.K8upExclusive] = "true"
+
+		batchJob.Spec.Template.Spec.Containers[0].Args = p.setupArgs()
+
 		return nil
 	})
 	if err != nil {
@@ -60,6 +65,18 @@ func (p *PruneExecutor) Execute(ctx context.Context) error {
 
 func (p *PruneExecutor) jobName() string {
 	return k8upv1.PruneType.String() + "-" + p.prune.Name
+}
+
+func (p *PruneExecutor) setupArgs() []string {
+	args := []string{"-varDir", cfg.Config.PodVarDir, "-prune"}
+	if len(p.prune.Spec.Retention.Tags) > 0 {
+		args = append(args, executor.BuildTagArgs(p.prune.Spec.Retention.Tags)...)
+	}
+	if p.prune.Spec.Backend != nil {
+		args = append(args, utils.AppendTLSOptionsArgs(p.prune.Spec.Backend.TLSOptions)...)
+	}
+
+	return args
 }
 
 // Exclusive should return true for jobs that can't run while other jobs run.
@@ -122,4 +139,13 @@ func (p *PruneExecutor) setupEnvVars(ctx context.Context, prune *k8upv1.Prune) [
 	}
 
 	return vars.Convert()
+}
+
+func (p *PruneExecutor) attachTLSVolumeMounts() []corev1.VolumeMount {
+	var tlsVolumeMounts []corev1.VolumeMount
+	if p.prune.Spec.Backend != nil && !utils.ZeroLen(p.prune.Spec.Backend.VolumeMounts) {
+		tlsVolumeMounts = append(tlsVolumeMounts, *p.prune.Spec.Backend.VolumeMounts...)
+	}
+
+	return utils.AttachTLSVolumeMounts(cfg.Config.PodVarDir, &tlsVolumeMounts)
 }

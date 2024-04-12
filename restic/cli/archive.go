@@ -1,7 +1,7 @@
 package cli
 
 // Archive uploads the last version of each snapshot to S3.
-func (r *Restic) Archive(restoreFilter string, verifyRestore bool, tags ArrayOpts) error {
+func (r *Restic) Archive(options RestoreOptions, tags ArrayOpts) error {
 
 	archiveLogger := r.logger.WithName("archive")
 
@@ -15,7 +15,7 @@ func (r *Restic) Archive(restoreFilter string, verifyRestore bool, tags ArrayOpt
 	for _, v := range r.snapshots {
 		PVCname := r.parsePath(v.Paths)
 		archiveLogger.Info("starting archival for", "namespace", v.Hostname, "pvc", PVCname)
-		err := r.Restore(v.ID, RestoreOptions{RestoreType: S3Restore, RestoreFilter: restoreFilter, Verify: verifyRestore}, nil)
+		err := r.Restore(v.ID, options, nil)
 		if err != nil {
 			return err
 		}

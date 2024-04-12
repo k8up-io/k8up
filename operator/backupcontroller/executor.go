@@ -3,6 +3,7 @@ package backupcontroller
 import (
 	"context"
 	"fmt"
+	"github.com/k8up-io/k8up/v2/operator/utils"
 	"strconv"
 	"strings"
 	"time"
@@ -265,9 +266,10 @@ func (b *BackupExecutor) startBackup(ctx context.Context) error {
 			}
 			b.backup.Spec.AppendEnvFromToContainer(&batchJob.job.Spec.Template.Spec.Containers[0])
 			batchJob.job.Spec.Template.Spec.ServiceAccountName = cfg.Config.ServiceAccount
-			batchJob.job.Spec.Template.Spec.Containers[0].Args = executor.BuildTagArgs(b.backup.Spec.Tags)
-			batchJob.job.Spec.Template.Spec.Volumes = batchJob.volumes
-			batchJob.job.Spec.Template.Spec.Containers[0].VolumeMounts = b.newVolumeMounts(batchJob.job.Spec.Template.Spec.Volumes)
+			batchJob.job.Spec.Template.Spec.Volumes = append(batchJob.volumes, utils.AttachTLSVolumes(b.backup.Spec.Volumes)...)
+			batchJob.job.Spec.Template.Spec.Containers[0].VolumeMounts = append(b.newVolumeMounts(batchJob.volumes), b.attachTLSVolumeMounts()...)
+
+			batchJob.job.Spec.Template.Spec.Containers[0].Args = b.setupArgs()
 
 			index++
 			return nil
@@ -300,4 +302,13 @@ func (b *BackupExecutor) cleanupOldBackups(ctx context.Context) {
 
 func (b *BackupExecutor) jobName(name string) string {
 	return k8upv1.BackupType.String() + "-" + b.backup.Name + "-" + name
+}
+
+func (b *BackupExecutor) attachTLSVolumeMounts() []corev1.VolumeMount {
+	var tlsVolumeMounts []corev1.VolumeMount
+	if b.backup.Spec.Backend != nil && !utils.ZeroLen(b.backup.Spec.Backend.VolumeMounts) {
+		tlsVolumeMounts = append(tlsVolumeMounts, *b.backup.Spec.Backend.VolumeMounts...)
+	}
+
+	return utils.AttachTLSVolumeMounts(cfg.Config.PodVarDir, &tlsVolumeMounts)
 }

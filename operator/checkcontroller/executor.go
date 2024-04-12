@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/k8up-io/k8up/v2/operator/executor"
+	"github.com/k8up-io/k8up/v2/operator/utils"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	controllerruntime "sigs.k8s.io/controller-runtime"
@@ -51,10 +52,15 @@ func (c *CheckExecutor) Execute(ctx context.Context) error {
 
 		batchJob.Spec.Template.Spec.Containers[0].Env = c.setupEnvVars(ctx)
 		c.check.Spec.AppendEnvFromToContainer(&batchJob.Spec.Template.Spec.Containers[0])
-		batchJob.Spec.Template.Spec.Containers[0].Args = []string{"-check"}
+		batchJob.Spec.Template.Spec.Containers[0].VolumeMounts = c.attachTLSVolumeMounts()
+		batchJob.Spec.Template.Spec.Volumes = utils.AttachTLSVolumes(c.check.Spec.Volumes)
 		batchJob.Labels[job.K8upExclusive] = "true"
+
+		batchJob.Spec.Template.Spec.Containers[0].Args = c.setupArgs()
+
 		return nil
-	})
+	},
+	)
 	if err != nil {
 		c.SetConditionFalseWithMessage(ctx, k8upv1.ConditionReady, k8upv1.ReasonCreationFailed, "could not create job: %v", err)
 		return err
@@ -65,6 +71,15 @@ func (c *CheckExecutor) Execute(ctx context.Context) error {
 
 func (c *CheckExecutor) jobName() string {
 	return k8upv1.CheckType.String() + "-" + c.check.Name
+}
+
+func (c *CheckExecutor) setupArgs() []string {
+	args := []string{"-varDir", cfg.Config.PodVarDir, "-check"}
+	if c.check.Spec.Backend != nil {
+		args = append(args, utils.AppendTLSOptionsArgs(c.check.Spec.Backend.TLSOptions)...)
+	}
+
+	return args
 }
 
 func (c *CheckExecutor) setupEnvVars(ctx context.Context) []corev1.EnvVar {
@@ -92,4 +107,13 @@ func (c *CheckExecutor) setupEnvVars(ctx context.Context) []corev1.EnvVar {
 
 func (c *CheckExecutor) cleanupOldChecks(ctx context.Context, check *k8upv1.Check) {
 	c.CleanupOldResources(ctx, &k8upv1.CheckList{}, check.Namespace, check)
+}
+
+func (c *CheckExecutor) attachTLSVolumeMounts() []corev1.VolumeMount {
+	var tlsVolumeMounts []corev1.VolumeMount
+	if c.check.Spec.Backend != nil && !utils.ZeroLen(c.check.Spec.Backend.VolumeMounts) {
+		tlsVolumeMounts = append(tlsVolumeMounts, *c.check.Spec.Backend.VolumeMounts...)
+	}
+
+	return utils.AttachTLSVolumeMounts(cfg.Config.PodVarDir, &tlsVolumeMounts)
 }

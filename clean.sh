@@ -9,7 +9,12 @@ pidfile_exists() {
 }
 
 pid_alive() {
-  xargs ps -p >/dev/null < "${1}"
+  if ps --help 2>&1 | grep -q BusyBox; then
+    xargs ps p >/dev/null < "${1}"
+  else
+    xargs ps -p >/dev/null < "${1}"
+  fi
+
   return $?
 }
 

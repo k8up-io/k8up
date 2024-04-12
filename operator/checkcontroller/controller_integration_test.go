@@ -26,6 +26,8 @@ type CheckTestSuite struct {
 	GivenChecks    []*k8upv1.Check
 	KeepSuccessful int
 	KeepFailed     int
+
+	BackupResource *k8upv1.Backup
 }
 
 func Test_Check(t *testing.T) {
@@ -135,4 +137,26 @@ func (ts *CheckTestSuite) expectNumberOfJobs(jobAmount int) {
 	ts.T().Logf("%d Jobs found", jobsLen)
 
 	ts.Assert().GreaterOrEqual(jobsLen, jobAmount)
+}
+
+func (ts *CheckTestSuite) Test_GivenCheckWithTlsOptions_ExpectCheckJobWithTlsOptions() {
+	checkResource := ts.newCheckTls()
+	ts.EnsureResources(checkResource)
+
+	result := ts.whenReconciling(checkResource)
+	ts.Require().GreaterOrEqual(result.RequeueAfter, 30*time.Second)
+
+	checkJob := ts.expectACheckJob()
+	ts.assertCheckTlsVolumeAndTlsOptions(checkJob)
+}
+
+func (ts *CheckTestSuite) Test_GivenCheckWithMutualTlsOptions_ExpectCheckJobWithMutualTlsOptions() {
+	checkResource := ts.newCheckMutualTls()
+	ts.EnsureResources(checkResource)
+
+	result := ts.whenReconciling(checkResource)
+	ts.Require().GreaterOrEqual(result.RequeueAfter, 30*time.Second)
+
+	checkJob := ts.expectACheckJob()
+	ts.assertCheckMutualTlsVolumeAndMutualTlsOptions(checkJob)
 }

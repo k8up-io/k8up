@@ -25,6 +25,9 @@ type (
 		Swift   *SwiftSpec             `json:"swift,omitempty"`
 		B2      *B2Spec                `json:"b2,omitempty"`
 		Rest    *RestServerSpec        `json:"rest,omitempty"`
+
+		TLSOptions   *TLSOptions           `json:"tlsOptions,omitempty"`
+		VolumeMounts *[]corev1.VolumeMount `json:"volumeMounts,omitempty"`
 	}
 
 	// +k8s:deepcopy-gen=false
@@ -278,4 +281,10 @@ func (in *RestServerSpec) EnvVars(vars map[string]*corev1.EnvVarSource) map[stri
 func (in *RestServerSpec) String() string {
 	protocol, url, _ := strings.Cut(in.URL, "://")
 	return fmt.Sprintf("rest:%s://%s:%s@%s", protocol, "$(USER)", "$(PASSWORD)", url)
+}
+
+type TLSOptions struct {
+	CACert     string `json:"caCert,omitempty"`
+	ClientCert string `json:"clientCert,omitempty"`
+	ClientKey  string `json:"clientKey,omitempty"`
 }

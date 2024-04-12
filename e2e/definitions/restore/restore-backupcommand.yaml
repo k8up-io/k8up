@@ -15,7 +15,7 @@ spec:
       name: backup-repo
       key: password
     s3:
-      endpoint: http://minio.minio.svc.cluster.local:9000
+      endpoint: http://minio.minio-e2e.svc.cluster.local:9000
       bucket: backup
       accessKeyIDSecretRef:
         name: backup-credentials

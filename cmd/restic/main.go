@@ -20,8 +20,14 @@ import (
 )
 
 const (
-	backupDirEnvKey  = "BACKUP_DIR"
-	restoreDirEnvKey = "RESTORE_DIR"
+	backupDirEnvKey             = "BACKUP_DIR"
+	restoreDirEnvKey            = "RESTORE_DIR"
+	caCertFileEnvKey            = "CA_CERT_FILE"
+	clientCertFileEnvKey        = "CLIENT_CERT_FILE"
+	clientKeyFileEnvKey         = "CLIENT_KEY_FILE"
+	restoreCaCertFileEnvKey     = "RESTORE_CA_CERT_FILE"
+	restoreClientCertFileEnvKey = "RESTORE_CLIENT_CERT_FILE"
+	restoreClientKeyFileEnvKey  = "RESTORE_CLIENT_KEY_FILE"
 
 	restoreTypeArg              = "restoreType"
 	restoreS3EndpointArg        = "restoreS3Endpoint"
@@ -63,6 +69,9 @@ var (
 			&cli.StringFlag{Destination: &cfg.Config.RestoreS3AccessKey, Name: restoreS3AccessKeyIDArg, EnvVars: []string{"RESTORE_ACCESSKEYID"}, Usage: "S3 access key used to connect to the S3 endpoint when restoring"},
 			&cli.StringFlag{Destination: &cfg.Config.RestoreS3SecretKey, Name: restoreS3SecretAccessKeyArg, EnvVars: []string{"RESTORE_SECRETACCESSKEY"}, Usage: "S3 secret key used to connect to the S3 endpoint when restoring"},
 			&cli.StringFlag{Destination: &cfg.Config.RestoreS3Endpoint, Name: restoreS3EndpointArg, EnvVars: []string{"RESTORE_S3ENDPOINT"}, Usage: "S3 endpoint to connect to when restoring, e.g. 'https://minio.svc:9000/backup"},
+			&cli.PathFlag{Destination: &cfg.Config.RestoreCACert, Name: "restoreCaCert", EnvVars: []string{restoreCaCertFileEnvKey}, Usage: "The certificate authority file path using for restore"},
+			&cli.PathFlag{Destination: &cfg.Config.RestoreClientCert, Name: "restoreClientCert", EnvVars: []string{restoreClientCertFileEnvKey}, Usage: "The client certificate file path using for restore"},
+			&cli.PathFlag{Destination: &cfg.Config.RestoreClientKey, Name: "restoreClientKey", EnvVars: []string{restoreClientKeyFileEnvKey}, Usage: "The client private key file path using for restore"},
 			&cli.BoolFlag{Destination: &cfg.Config.VerifyRestore, Name: "verifyRestore", Usage: "If the restore should get verified, only for PVCs restore"},
 			&cli.BoolFlag{Destination: &cfg.Config.RestoreTrimPath, Name: "trimRestorePath", EnvVars: []string{"TRIM_RESTOREPATH"}, Value: true, DefaultText: "enabled", Usage: "If set, strips the value of --restoreDir from the lefts side of the remote restore path value"},
 
@@ -87,6 +96,11 @@ var (
 
 			&cli.StringSliceFlag{Name: "targetPods", EnvVars: []string{"TARGET_PODS"}, Usage: "Filter list of pods by TARGET_PODS names"},
 			&cli.DurationFlag{Destination: &cfg.Config.SleepDuration, Name: "sleepDuration", EnvVars: []string{"SLEEP_DURATION"}, Usage: "Sleep for specified amount until init starts"},
+
+			&cli.PathFlag{Destination: &cfg.Config.VarDir, Name: "varDir", Value: "/k8up", Usage: "The var directory is stored k8up metadata files and temporary files"},
+			&cli.PathFlag{Destination: &cfg.Config.CACert, Name: "caCert", EnvVars: []string{caCertFileEnvKey}, Usage: "The certificate authority file path"},
+			&cli.PathFlag{Destination: &cfg.Config.ClientCert, Name: "clientCert", EnvVars: []string{clientCertFileEnvKey}, Usage: "The client certificate file path"},
+			&cli.PathFlag{Destination: &cfg.Config.ClientKey, Name: "clientKey", EnvVars: []string{clientKeyFileEnvKey}, Usage: "The client private key file path"},
 		},
 	}
 )
@@ -197,30 +211,52 @@ func doCheck(resticCLI *resticCli.Restic) error {
 }
 
 func doRestore(resticCLI *resticCli.Restic) error {
-	if cfg.Config.DoRestore {
-		if err := resticCLI.Restore(cfg.Config.RestoreSnap, resticCli.RestoreOptions{
-			RestoreType:   resticCli.RestoreType(cfg.Config.RestoreType),
-			RestoreDir:    cfg.Config.RestoreDir,
-			RestoreFilter: cfg.Config.RestoreFilter,
-			Verify:        cfg.Config.VerifyRestore,
-			S3Destination: resticCli.S3Bucket{
-				Endpoint:  cfg.Config.RestoreS3Endpoint,
-				AccessKey: cfg.Config.RestoreS3AccessKey,
-				SecretKey: cfg.Config.RestoreS3SecretKey,
-			},
-		}, cfg.Config.Tags); err != nil {
-			return fmt.Errorf("restore job failed: %w", err)
-		}
+	if !cfg.Config.DoRestore {
+		return nil
 	}
+
+	restoreOptions := resticCli.RestoreOptions{
+		RestoreType:   resticCli.RestoreType(cfg.Config.RestoreType),
+		RestoreDir:    cfg.Config.RestoreDir,
+		RestoreFilter: cfg.Config.RestoreFilter,
+		Verify:        cfg.Config.VerifyRestore,
+		S3Destination: resticCli.S3Bucket{
+			Endpoint:  cfg.Config.RestoreS3Endpoint,
+			AccessKey: cfg.Config.RestoreS3AccessKey,
+			SecretKey: cfg.Config.RestoreS3SecretKey,
+			Cert:      fillRestoreS3Cert(),
+		},
+	}
+
+	if err := resticCLI.Restore(cfg.Config.RestoreSnap, restoreOptions, cfg.Config.Tags); err != nil {
+		return fmt.Errorf("restore job failed: %w", err)
+	}
+
 	return nil
 }
 
 func doArchive(resticCLI *resticCli.Restic) error {
-	if cfg.Config.DoArchive {
-		if err := resticCLI.Archive(cfg.Config.ResticBin, cfg.Config.VerifyRestore, cfg.Config.Tags); err != nil {
-			return fmt.Errorf("archive job failed: %w", err)
-		}
+	if !cfg.Config.DoArchive {
+		return nil
 	}
+
+	restoreOptions := resticCli.RestoreOptions{
+		RestoreType:   resticCli.RestoreType(cfg.Config.RestoreType),
+		RestoreDir:    cfg.Config.RestoreDir,
+		RestoreFilter: cfg.Config.RestoreFilter,
+		Verify:        cfg.Config.VerifyRestore,
+		S3Destination: resticCli.S3Bucket{
+			Endpoint:  cfg.Config.RestoreS3Endpoint,
+			AccessKey: cfg.Config.RestoreS3AccessKey,
+			SecretKey: cfg.Config.RestoreS3SecretKey,
+			Cert:      fillRestoreS3Cert(),
+		},
+	}
+
+	if err := resticCLI.Archive(restoreOptions, cfg.Config.Tags); err != nil {
+		return fmt.Errorf("archive job failed: %w", err)
+	}
+
 	return nil
 }
 
@@ -288,4 +324,16 @@ func cancelOnTermination(cancel context.CancelFunc, mainLogger logr.Logger) {
 		mainLogger.Info("received signal", "signal", <-s)
 		cancel()
 	}()
+}
+
+func fillRestoreS3Cert() (cert resticCli.S3Cert) {
+	if cfg.Config.RestoreCACert != "" {
+		cert.CACert = cfg.Config.RestoreCACert
+	}
+	if cfg.Config.RestoreClientCert != "" && cfg.Config.RestoreClientKey != "" {
+		cert.ClientCert = cfg.Config.RestoreClientCert
+		cert.ClientKey = cfg.Config.RestoreClientKey
+	}
+
+	return cert
 }

@@ -1,0 +1,35 @@
+apiVersion: k8up.io/v1
+kind: Backup
+metadata:
+  name: k8up-backup-mtls-env
+  namespace: k8up-e2e-subject
+spec:
+  failedJobsHistoryLimit: 1
+  successfulJobsHistoryLimit: 1
+  backend:
+    repoPasswordSecretRef:
+      name: backup-repo
+      key: password
+    envFrom:
+      - configMapRef:
+          name: k8up-backup-mtls-env
+    s3:
+      endpoint: https://minio-mtls.minio-e2e.svc.cluster.local
+      bucket: backup
+      accessKeyIDSecretRef:
+        name: backup-credentials
+        key: username
+      secretAccessKeySecretRef:
+        name: backup-credentials
+        key: password
+    volumeMounts:
+      - name: minio-client-mtls
+        mountPath: /mnt/tls/
+  podSecurityContext:
+    fsGroup: $ID
+    runAsUser: $ID
+  volumes:
+    - name: minio-client-mtls
+      secret:
+        secretName: minio-client-mtls
+        defaultMode: 420

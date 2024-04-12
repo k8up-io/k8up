@@ -83,6 +83,8 @@ var (
 			&cli.BoolFlag{Destination: &cfg.Config.SkipWithoutAnnotation, Name: "skip-pvcs-without-annotation", EnvVars: []string{"BACKUP_SKIP_WITHOUT_ANNOTATION"}, Value: false, DefaultText: "disabled", Usage: "skip selecting PVCs that don't have the BACKUP_ANNOTATION"},
 			&cli.StringFlag{Destination: &cfg.Config.BackupCheckSchedule, Name: "checkschedule", EnvVars: []string{"BACKUP_CHECKSCHEDULE"}, Value: "0 0 * * 0", Usage: "the default check schedule"},
 			&cli.StringFlag{Destination: &cfg.Config.OperatorNamespace, Name: "operator-namespace", EnvVars: []string{"BACKUP_OPERATOR_NAMESPACE"}, Required: true, Usage: "set the namespace in which the K8up operator itself runs"},
+
+			&cli.StringFlag{Destination: &cfg.Config.PodVarDir, Name: "vardir", EnvVars: []string{"VAR_DIR"}, Value: "/k8up", Usage: "the var data dir for read/write k8up data or temp file in the backup pod"},
 		},
 	}
 )

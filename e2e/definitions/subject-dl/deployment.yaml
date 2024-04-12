@@ -1,0 +1,104 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: subject-dl-deployment
+  namespace: k8up-e2e-subject
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: subject-dl
+  template:
+    metadata:
+      labels:
+        app: subject-dl
+    spec:
+      initContainers:
+        - name: restic-container
+          image: ghcr.io/k8up-io/k8up:latest
+          imagePullPolicy: IfNotPresent
+          command:
+            - /bin/bash
+            - -c
+            - restic ls latest --json | awk '{ print; exit }' | awk '{print ("backup-" gensub(/.*"hostname"\s*:\s*"([^".]+)".*/, "\\1", "g") "-" gensub(/.*"paths"\s*:\[\s*"([^"]+\/)?([^".]+)".*\].*/, "\\2", "g") "-" gensub(/.*"time"\s*:\s*"([^".]+)(.[0-9]+)?Z".*/, "\\1Z", "g") ".tar.gz")}' > /mnt/share/filename.txt
+          env:
+            - name: RESTIC_REPOSITORY
+              value: s3:http://minio.minio-e2e.svc.cluster.local:9000/backup
+            - name: RESTIC_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: backup-repo
+                  key: password
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: backup-credentials
+                  key: username
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: backup-credentials
+                  key: password
+          securityContext:
+            runAsUser: $ID
+          volumeMounts:
+            - name: share
+              mountPath: /mnt/share
+        - name: minio-mc-container
+          image: minio/mc
+          imagePullPolicy: IfNotPresent
+          command:
+            - bash
+            - -c
+            - |
+              mc alias set minio $MINIO_HOST $MINIO_USERNAME $MINIO_PASSWORD
+              mc cp minio/$MINIO_BUCKET/$(cat /mnt/share/filename.txt) /data/
+          env:
+            - name: MC_CONFIG_DIR
+              value: /conf/.mc
+            - name: MINIO_HOST
+              value: http://minio.minio-e2e.svc.cluster.local:9000
+            - name: MINIO_BUCKET
+              value: restore
+            - name: MINIO_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: backup-credentials
+                  key: username
+            - name: MINIO_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: backup-credentials
+                  key: password
+          securityContext:
+            runAsUser: $ID
+          volumeMounts:
+            - name: volume
+              mountPath: /data
+            - name: share
+              mountPath: /mnt/share
+            - name: conf
+              mountPath: /conf
+      containers:
+        - name: subject-container
+          image: quay.io/prometheus/busybox:latest
+          imagePullPolicy: IfNotPresent
+          args:
+            - sh
+            - -c
+            - |
+              tar -xzf *.tar.gz --strip-components=2
+              sleep infinity
+          workingDir: /data/
+          securityContext:
+            runAsUser: 1000
+          volumeMounts:
+            - name: volume
+              mountPath: /data
+      volumes:
+        - name: volume
+          emptyDir: { }
+        - name: share
+          emptyDir: { }
+        - name: conf
+          emptyDir: { }
