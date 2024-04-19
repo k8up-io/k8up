@@ -14,7 +14,7 @@ require (
 	github.com/stretchr/testify v1.9.0
 	github.com/urfave/cli/v2 v2.23.7
 	go.uber.org/zap v1.26.0
-	golang.org/x/net v0.22.0
+	golang.org/x/net v0.23.0
 	k8s.io/api v0.29.2
 	k8s.io/apimachinery v0.29.2
 	k8s.io/client-go v0.29.2
