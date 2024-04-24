@@ -53,7 +53,7 @@ Document your changes in values.yaml and let `make docs:helm` generate this sect
 | k8up.backupImage.repository | string | `""` | The backup runner image repository. Defaults to `{image.registry}/{image.repository}`. Specify an image repository including registry, e.g. `example.com/repo/image` |
 | k8up.backupImage.tag | string | `""` | The backup runner image tag Defaults to `{image.tag}` |
 | k8up.enableLeaderElection | bool | `true` | Specifies whether leader election should be enabled. |
-| k8up.envVars | list | `[]` | envVars allows the specification of additional environment variables. See [values.yaml](values.yaml) how to specify See documentation which variables are supported. |
+| k8up.envVars | list | `[]` | envVars allows the specification of additional environment variables. See [values.yaml](values.yaml) how to specify See documentation which variables are supported. List of names of imagePullSecrets for backupImage Example: imagePullSecrets: "one_secret, two_secret" |
 | k8up.globalResources | object | empty values | Specify the resource requests and limits that the Pods should have when they are scheduled by K8up. You are still able to override those via K8up resources, but this gives cluster administrators custom defaults. |
 | k8up.globalResources.limits.cpu | string | `""` | Global CPU resource limit applied to jobs. See [supported units][resource-units]. |
 | k8up.globalResources.limits.memory | string | `""` | Global Memory resource limit applied to jobs. See [supported units][resource-units]. |

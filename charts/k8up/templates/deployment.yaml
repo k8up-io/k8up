@@ -32,6 +32,10 @@ spec:
           env:
             - name: BACKUP_IMAGE
               value: "{{ include "k8up.backupImage" . }}"
+          {{- with .Values.k8up.imagePullSecrets }}
+            - name: IMAGE_SECRETS
+              value: "{{ . }}"
+          {{- end }}
           {{- with .Values.k8up.timezone }}
             - name: TZ
               value: {{ . }}

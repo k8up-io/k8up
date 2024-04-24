@@ -26,6 +26,10 @@ k8up:
   # -- envVars allows the specification of additional environment variables.
   # See [values.yaml](values.yaml) how to specify
   # See documentation which variables are supported.
+
+  # List of names of imagePullSecrets for backupImage
+  # Example:
+  # imagePullSecrets: "one_secret, two_secret"
   envVars: []
   # - name: BACKUP_GLOBALACCESSKEYID
   #   valueFrom:
