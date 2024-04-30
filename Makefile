@@ -37,6 +37,7 @@ test: ## Run tests
 build: generate fmt vet $(BIN_FILENAME) docs-update-usage ## Build manager binary
 
 .PHONY: run
+run: export ARGS := $(ARGS) operator
 run: export BACKUP_ENABLE_LEADER_ELECTION = $(ENABLE_LEADER_ELECTION)
 run: export K8UP_DEBUG = true
 run: export BACKUP_OPERATOR_NAMESPACE = default
