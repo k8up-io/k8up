@@ -103,7 +103,6 @@ func (b *BackupExecutor) setupEnvVars() ([]corev1.EnvVar, error) {
 	vars.SetStringOrDefault("PROM_URL", b.backup.Spec.PromURL, cfg.Config.PromURL)
 	vars.SetString("BACKUPCOMMAND_ANNOTATION", cfg.Config.BackupCommandAnnotation)
 	vars.SetString("FILEEXTENSION_ANNOTATION", cfg.Config.FileExtensionAnnotation)
-	vars.SetString("BACKUP_PRIORITY_CLASS_NAME_ANNOTATION", cfg.Config.BackupPriorityClassName)
 
 	err := vars.Merge(executor.DefaultEnv(b.backup.GetNamespace()))
 	if err != nil {
