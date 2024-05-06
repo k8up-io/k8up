@@ -225,7 +225,6 @@ func defaultConfiguration() *cfg.Configuration {
 		BackupAnnotation:                 "k8up.io/backup",
 		BackupCommandAnnotation:          "k8up.io/backupcommand",
 		FileExtensionAnnotation:          "k8up.io/file-extension",
-		BackupPriorityClassName:          "k8up.io/backup-priority-class-name",
 		ServiceAccount:                   "pod-executor",
 		BackupCheckSchedule:              "0 0 * * 0",
 		GlobalFailedJobsHistoryLimit:     3,
