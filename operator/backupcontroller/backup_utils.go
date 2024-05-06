@@ -3,11 +3,12 @@ package backupcontroller
 import (
 	"context"
 	"fmt"
+	"path"
+
 	"github.com/k8up-io/k8up/v2/operator/executor"
 	"github.com/k8up-io/k8up/v2/operator/utils"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
-	"path"
 	controllerruntime "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -102,6 +103,7 @@ func (b *BackupExecutor) setupEnvVars() ([]corev1.EnvVar, error) {
 	vars.SetStringOrDefault("PROM_URL", b.backup.Spec.PromURL, cfg.Config.PromURL)
 	vars.SetString("BACKUPCOMMAND_ANNOTATION", cfg.Config.BackupCommandAnnotation)
 	vars.SetString("FILEEXTENSION_ANNOTATION", cfg.Config.FileExtensionAnnotation)
+	vars.SetString("BACKUP_PRIORITY_CLASS_NAME_ANNOTATION", cfg.Config.BackupPriorityClassName)
 
 	err := vars.Merge(executor.DefaultEnv(b.backup.GetNamespace()))
 	if err != nil {

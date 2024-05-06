@@ -28,6 +28,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
 	"sigs.k8s.io/controller-runtime/pkg/log"
+
 	// +kubebuilder:scaffold:imports
 
 	k8upv1 "github.com/k8up-io/k8up/v2/api/v1"
@@ -224,6 +225,7 @@ func defaultConfiguration() *cfg.Configuration {
 		BackupAnnotation:                 "k8up.io/backup",
 		BackupCommandAnnotation:          "k8up.io/backupcommand",
 		FileExtensionAnnotation:          "k8up.io/file-extension",
+		BackupPriorityClassName:          "k8up.io/backup-priority-class-name",
 		ServiceAccount:                   "pod-executor",
 		BackupCheckSchedule:              "0 0 * * 0",
 		GlobalFailedJobsHistoryLimit:     3,

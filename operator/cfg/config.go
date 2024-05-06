@@ -44,6 +44,7 @@ type Configuration struct {
 	BackupAnnotation                 string
 	BackupContainerAnnotation        string
 	BackupCommandAnnotation          string
+	BackupPriorityClassName          string
 	FileExtensionAnnotation          string
 	ServiceAccount                   string
 	BackupCheckSchedule              string

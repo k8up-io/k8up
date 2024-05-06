@@ -10,8 +10,9 @@ import (
 // by the operator.
 type PreBackupPodSpec struct {
 	// BackupCommand will be added to the backupcommand annotation on the pod.
-	BackupCommand string `json:"backupCommand,omitempty"`
-	FileExtension string `json:"fileExtension,omitempty"`
+	BackupCommand     string `json:"backupCommand,omitempty"`
+	FileExtension     string `json:"fileExtension,omitempty"`
+	PriorityClassName string `json:"priorityClassName,omitempty"`
 	// +kubebuilder:validation:Required
 	Pod *Pod `json:"pod,omitempty"`
 }

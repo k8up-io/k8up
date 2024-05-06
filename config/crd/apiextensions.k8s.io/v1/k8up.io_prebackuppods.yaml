@@ -7526,6 +7526,8 @@ spec:
                     - containers
                     type: object
                 type: object
+              priorityClassName:
+                type: string
             type: object
         type: object
     served: true

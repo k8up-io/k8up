@@ -49,6 +49,7 @@ func (b *BackupExecutor) generateDeployments(ctx context.Context, templates []k8
 		}
 
 		template.Spec.Pod.PodTemplateSpec.ObjectMeta.Labels = podLabels
+		template.Spec.Pod.PodTemplateSpec.Spec.PriorityClassName = template.Spec.PriorityClassName
 
 		deployment := &appsv1.Deployment{
 			ObjectMeta: metav1.ObjectMeta{
