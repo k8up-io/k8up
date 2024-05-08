@@ -141,6 +141,8 @@ resources:
     memory: 128Mi
 
 cleanup:
+  # -- Whether to enable cleanup of leftover rolebindings and roles from older k8up versions
+  enabled: false
   # -- Cleanup-job image pull policy
   pullPolicy: IfNotPresent
   # -- Cleanup-job image registry
@@ -149,3 +151,5 @@ cleanup:
   repository: bitnami/kubectl
   # -- Cleanup-job image tag (version)
   tag: latest
+  # -- Cleanup-job Image pull secrets to use 
+  imagePullSecrets: []

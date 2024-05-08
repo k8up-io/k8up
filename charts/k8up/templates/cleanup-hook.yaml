@@ -1,3 +1,5 @@
+{{- if .Values.cleanup.enabled -}}
+
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -79,6 +81,10 @@ spec:
       labels:
         {{- include "k8up.selectorLabels" . | nindent 8 }}
     spec:
+    {{- with .Values.cleanup.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
       restartPolicy: Never
       serviceAccountName: cleanup-service-account
       containers:
@@ -99,3 +105,5 @@ spec:
               kubectl -n "$ns" delete rolebinding pod-executor-namespaced --ignore-not-found=true
               kubectl -n "$ns" delete role pod-executor --ignore-not-found=true
             done
+
+{{- end -}}
