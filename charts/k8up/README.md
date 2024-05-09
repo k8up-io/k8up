@@ -62,6 +62,9 @@ Document your changes in values.yaml and let `make docs:helm` generate this sect
 | k8up.operatorNamespace | string | `""` | Specifies the namespace in which K8up's `EffectiveSchedules` are stored. Defaults to release namespace if left empty. |
 | k8up.skipWithoutAnnotation | bool | `false` | Specifies whether K8up should ignore PVCs without the backup annotation (by default, `k8up.io/backup`) |
 | k8up.timezone | string | `""` | Specifies the timezone K8up is using for scheduling. Empty value defaults to the timezone in which Kubernetes is deployed. Accepts `tz database` compatible entries, e.g. `Europe/Zurich` |
+| metrics.grafanaDashboard.additionalLabels | object | `{}` | Add labels to the Grafana Dashboard object |
+| metrics.grafanaDashboard.enable | bool | `false` | Whether to deploy the Grafana dashboard |
+| metrics.grafanaDashboard.namespace | string | `""` | If the object should be installed in a different namespace than operator |
 | metrics.prometheusRule.additionalLabels | object | `{}` | Add labels to the PrometheusRule object |
 | metrics.prometheusRule.additionalRules | list | `[]` | Provide additional alert rules in addition to the defaults |
 | metrics.prometheusRule.createDefaultRules | bool | `true` | Whether the default rules should be installed |
