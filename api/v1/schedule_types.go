@@ -1,11 +1,13 @@
 package v1
 
 import (
+	"context"
 	"strings"
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // ScheduleSpec defines the schedules for the various job types.
@@ -36,6 +38,10 @@ type ScheduleSpec struct {
 
 	// PodSecurityContext describes the security context with which actions (such as backups) shall be executed.
 	PodSecurityContext *corev1.PodSecurityContext `json:"podSecurityContext,omitempty"`
+
+	// PodConfigRef will apply the given template to all job definitions in this Schedule.
+	// It can be overriden for specific jobs if necessary.
+	PodConfigRef *corev1.LocalObjectReference `json:"podConfigRef,omitempty"`
 }
 
 // ScheduleDefinition is the actual cron-type expression that defines the interval of the actions.
@@ -183,6 +189,13 @@ func (s *Schedule) GetSuccessfulJobsHistoryLimit() *int {
 		return s.Spec.SuccessfulJobsHistoryLimit
 	}
 	return s.Spec.KeepJobs
+}
+
+func (s *Schedule) GetPodConfig(ctx context.Context, c client.Client) (*PodConfig, error) {
+	if s.Spec.PodConfigRef == nil {
+		return nil, nil
+	}
+	return NewPodConfig(ctx, s.Spec.PodConfigRef.Name, s.GetNamespace(), c)
 }
 
 // String casts the value to string.

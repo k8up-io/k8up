@@ -1,6 +1,8 @@
 package v1
 
 import (
+	"context"
+
 	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -19,6 +21,8 @@ type JobObject interface {
 	GetPodSecurityContext() *corev1.PodSecurityContext
 	// GetActiveDeadlineSeconds returns the specified active deadline seconds timeout.
 	GetActiveDeadlineSeconds() *int64
+	// GetPodConfig returns the defined PodSpec
+	GetPodConfig(context.Context, client.Client) (*PodConfig, error)
 }
 
 // +k8s:deepcopy-gen=false

@@ -162,6 +162,27 @@ rules:
 - apiGroups:
   - k8up.io
   resources:
+  - podconfigs
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - k8up.io
+  resources:
+  - podconfigs/status
+  - snapshots/finalizers
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - k8up.io
+  resources:
   - prebackuppods
   verbs:
   - create

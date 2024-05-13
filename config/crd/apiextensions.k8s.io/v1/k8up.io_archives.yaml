@@ -441,6 +441,21 @@ spec:
 
                   Deprecated: Use FailedJobsHistoryLimit and SuccessfulJobsHistoryLimit respectively.
                 type: integer
+              podConfigRef:
+                description: |-
+                  PodConfigRef describes the pod spec with wich this action shall be executed.
+                  It takes precedence over the Resources or PodSecurityContext field.
+                  It does not allow changing the image or the command of the resulting pod.
+                  This is for advanced use-cases only. Please only set this if you know what you're doing.
+                properties:
+                  name:
+                    description: |-
+                      Name of the referent.
+                      More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                      TODO: Add other useful fields. apiVersion, kind, uid?
+                    type: string
+                type: object
+                x-kubernetes-map-type: atomic
               podSecurityContext:
                 description: PodSecurityContext describes the security context with
                   which this action shall be executed.

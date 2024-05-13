@@ -1,10 +1,12 @@
 package v1
 
 import (
+	"context"
 	"reflect"
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // PruneSpec needs to contain the repository information as well as the desired
@@ -113,6 +115,13 @@ func (p *Prune) GetSuccessfulJobsHistoryLimit() *int {
 		return p.Spec.SuccessfulJobsHistoryLimit
 	}
 	return p.Spec.KeepJobs
+}
+
+func (p *Prune) GetPodConfig(ctx context.Context, c client.Client) (*PodConfig, error) {
+	if p.Spec.RunnableSpec.PodConfigRef == nil {
+		return nil, nil
+	}
+	return NewPodConfig(ctx, p.Spec.RunnableSpec.PodConfigRef.Name, p.GetNamespace(), c)
 }
 
 // GetJobObjects returns a sortable list of jobs

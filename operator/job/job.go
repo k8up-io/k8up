@@ -7,6 +7,7 @@ import (
 	"crypto/sha256"
 	"fmt"
 
+	"github.com/imdario/mergo"
 	k8upv1 "github.com/k8up-io/k8up/v2/api/v1"
 	"github.com/k8up-io/k8up/v2/operator/cfg"
 	"github.com/k8up-io/k8up/v2/operator/monitoring"
@@ -45,7 +46,7 @@ func NewConfig(client client.Client, obj k8upv1.JobObject, repository string) Co
 }
 
 // MutateBatchJob mutates the given Job with generic spec applicable to all K8up-spawned Jobs.
-func MutateBatchJob(batchJob *batchv1.Job, jobObj k8upv1.JobObject, config Config) error {
+func MutateBatchJob(ctx context.Context, batchJob *batchv1.Job, jobObj k8upv1.JobObject, config Config, c client.Client) error {
 	batchJob.Labels = labels.Merge(batchJob.Labels, labels.Set{
 		K8uplabel:                  "true",
 		k8upv1.LabelK8upType:       jobObj.GetType().String(),
@@ -60,15 +61,38 @@ func MutateBatchJob(batchJob *batchv1.Job, jobObj k8upv1.JobObject, config Confi
 	batchJob.Spec.Template.Spec.RestartPolicy = corev1.RestartPolicyOnFailure
 	batchJob.Spec.Template.Spec.SecurityContext = jobObj.GetPodSecurityContext()
 
-	containers := batchJob.Spec.Template.Spec.Containers
-	if len(containers) == 0 {
-		containers = make([]corev1.Container, 1)
+	if len(batchJob.Spec.Template.Spec.Containers) == 0 {
+		batchJob.Spec.Template.Spec.Containers = make([]corev1.Container, 1)
 	}
-	containers[0].Name = config.Obj.GetType().String()
-	containers[0].Image = cfg.Config.BackupImage
-	containers[0].Command = cfg.Config.BackupCommandRestic
-	containers[0].Resources = config.Obj.GetResources()
-	batchJob.Spec.Template.Spec.Containers = containers
+
+	batchJob.Spec.Template.Spec.Containers[0].Resources = config.Obj.GetResources()
+
+	podConfig, err := jobObj.GetPodConfig(ctx, c)
+	if err != nil {
+		return fmt.Errorf("cannot get pod config: %w", err)
+	}
+
+	if podConfig != nil {
+		err = mergo.Merge(&batchJob.Spec.Template.Spec, podConfig.Spec.Template.Spec, mergo.WithOverride)
+		if err != nil {
+			return fmt.Errorf("cannot merge podConfig with defaults: %w", err)
+		}
+
+		err = mergo.Merge(&batchJob.Spec.Template.ObjectMeta.Annotations, podConfig.GetAnnotations())
+		if err != nil {
+			return err
+		}
+
+		err = mergo.Merge(&batchJob.Spec.Template.ObjectMeta.Labels, podConfig.GetLabels())
+		if err != nil {
+			return err
+		}
+	}
+
+	// Override the most important fields after the merge.
+	batchJob.Spec.Template.Spec.Containers[0].Name = config.Obj.GetType().String()
+	batchJob.Spec.Template.Spec.Containers[0].Image = cfg.Config.BackupImage
+	batchJob.Spec.Template.Spec.Containers[0].Command = cfg.Config.BackupCommandRestic
 
 	return controllerruntime.SetControllerReference(jobObj, batchJob, config.Client.Scheme())
 }

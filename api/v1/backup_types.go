@@ -1,10 +1,12 @@
 package v1
 
 import (
+	"context"
 	"reflect"
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // BackupSpec defines a single backup. It must contain all information to connect to
@@ -125,6 +127,13 @@ func (b *Backup) GetSuccessfulJobsHistoryLimit() *int {
 		return b.Spec.SuccessfulJobsHistoryLimit
 	}
 	return b.Spec.KeepJobs
+}
+
+func (b *Backup) GetPodConfig(ctx context.Context, c client.Client) (*PodConfig, error) {
+	if b.Spec.RunnableSpec.PodConfigRef == nil {
+		return nil, nil
+	}
+	return NewPodConfig(ctx, b.Spec.RunnableSpec.PodConfigRef.Name, b.GetNamespace(), c)
 }
 
 // GetJobObjects returns a sortable list of jobs

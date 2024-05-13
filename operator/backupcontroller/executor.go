@@ -3,10 +3,11 @@ package backupcontroller
 import (
 	"context"
 	"fmt"
-	"github.com/k8up-io/k8up/v2/operator/utils"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/k8up-io/k8up/v2/operator/utils"
 
 	k8upv1 "github.com/k8up-io/k8up/v2/api/v1"
 	"github.com/k8up-io/k8up/v2/operator/cfg"
@@ -234,7 +235,7 @@ func (b *BackupExecutor) startBackup(ctx context.Context) error {
 	index := 0
 	for _, batchJob := range backupJobs {
 		_, err = controllerruntime.CreateOrUpdate(ctx, b.Generic.Config.Client, batchJob.job, func() error {
-			mutateErr := job.MutateBatchJob(batchJob.job, b.backup, b.Generic.Config)
+			mutateErr := job.MutateBatchJob(ctx, batchJob.job, b.backup, b.Generic.Config, b.Client)
 			if mutateErr != nil {
 				return mutateErr
 			}
@@ -243,7 +244,7 @@ func (b *BackupExecutor) startBackup(ctx context.Context) error {
 			if setupErr != nil {
 				return setupErr
 			}
-			batchJob.job.Spec.Template.Spec.Containers[0].Env = vars
+			batchJob.job.Spec.Template.Spec.Containers[0].Env = append(batchJob.job.Spec.Template.Spec.Containers[0].Env, vars...)
 			if len(batchJob.targetPods) > 0 {
 				batchJob.job.Spec.Template.Spec.Containers[0].Env = append(batchJob.job.Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{
 					Name:  "TARGET_PODS",
@@ -265,11 +266,15 @@ func (b *BackupExecutor) startBackup(ctx context.Context) error {
 				})
 			}
 			b.backup.Spec.AppendEnvFromToContainer(&batchJob.job.Spec.Template.Spec.Containers[0])
-			batchJob.job.Spec.Template.Spec.ServiceAccountName = cfg.Config.ServiceAccount
-			batchJob.job.Spec.Template.Spec.Volumes = append(batchJob.volumes, utils.AttachTLSVolumes(b.backup.Spec.Volumes)...)
+			batchJob.job.Spec.Template.Spec.Volumes = append(batchJob.job.Spec.Template.Spec.Volumes, batchJob.volumes...)
+			batchJob.job.Spec.Template.Spec.Volumes = append(batchJob.job.Spec.Template.Spec.Volumes, utils.AttachTLSVolumes(b.backup.Spec.Volumes)...)
 			batchJob.job.Spec.Template.Spec.Containers[0].VolumeMounts = append(b.newVolumeMounts(batchJob.volumes), b.attachTLSVolumeMounts()...)
 
 			batchJob.job.Spec.Template.Spec.Containers[0].Args = b.setupArgs()
+
+			if batchJob.job.Spec.Template.Spec.ServiceAccountName == "" {
+				batchJob.job.Spec.Template.Spec.ServiceAccountName = cfg.Config.ServiceAccount
+			}
 
 			index++
 			return nil
