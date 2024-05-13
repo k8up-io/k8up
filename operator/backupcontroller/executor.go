@@ -262,7 +262,7 @@ func (b *BackupExecutor) startBackup(ctx context.Context) error {
 			if index > 0 {
 				batchJob.job.Spec.Template.Spec.Containers[0].Env = append(batchJob.job.Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{
 					Name:  "SLEEP_DURATION",
-					Value: (5 * time.Second).String(),
+					Value: (time.Duration(index) * time.Second).String(),
 				})
 			}
 			b.backup.Spec.AppendEnvFromToContainer(&batchJob.job.Spec.Template.Spec.Containers[0])
