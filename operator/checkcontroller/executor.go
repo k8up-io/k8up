@@ -45,15 +45,15 @@ func (c *CheckExecutor) Execute(ctx context.Context) error {
 	batchJob.Namespace = c.check.Namespace
 
 	_, err := controllerruntime.CreateOrUpdate(ctx, c.Client, batchJob, func() error {
-		mutateErr := job.MutateBatchJob(batchJob, c.check, c.Config)
+		mutateErr := job.MutateBatchJob(ctx, batchJob, c.check, c.Config, c.Client)
 		if mutateErr != nil {
 			return mutateErr
 		}
 
-		batchJob.Spec.Template.Spec.Containers[0].Env = c.setupEnvVars(ctx)
+		batchJob.Spec.Template.Spec.Containers[0].Env = append(batchJob.Spec.Template.Spec.Containers[0].Env, c.setupEnvVars(ctx)...)
 		c.check.Spec.AppendEnvFromToContainer(&batchJob.Spec.Template.Spec.Containers[0])
-		batchJob.Spec.Template.Spec.Containers[0].VolumeMounts = c.attachTLSVolumeMounts()
-		batchJob.Spec.Template.Spec.Volumes = utils.AttachTLSVolumes(c.check.Spec.Volumes)
+		batchJob.Spec.Template.Spec.Containers[0].VolumeMounts = append(batchJob.Spec.Template.Spec.Containers[0].VolumeMounts, c.attachTLSVolumeMounts()...)
+		batchJob.Spec.Template.Spec.Volumes = append(batchJob.Spec.Template.Spec.Volumes, utils.AttachTLSVolumes(c.check.Spec.Volumes)...)
 		batchJob.Labels[job.K8upExclusive] = "true"
 
 		batchJob.Spec.Template.Spec.Containers[0].Args = c.setupArgs()

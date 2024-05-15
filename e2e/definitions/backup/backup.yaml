@@ -3,6 +3,8 @@ kind: Backup
 metadata:
   name: k8up-backup
   namespace: k8up-e2e-subject
+  labels:
+    e2e: 'true'
 spec:
   failedJobsHistoryLimit: 1
   successfulJobsHistoryLimit: 1

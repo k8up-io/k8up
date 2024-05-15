@@ -1,0 +1,20 @@
+apiVersion: k8up.io/v1
+kind: PodConfig
+metadata:
+  name: podconfig
+  namespace: k8up-e2e-subject
+  annotations:
+    test: test
+spec:
+  template:
+    spec:
+      containers:
+        - name: foo # Should not be in the final container
+          command: # Should not be in the final container
+            - more
+            - foo
+          env:
+            - name: FOO
+              value: bar
+          securityContext:
+            allowPrivilegeEscalation: true

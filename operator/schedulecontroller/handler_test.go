@@ -1,14 +1,25 @@
 package schedulecontroller
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 
 	k8upv1 "github.com/k8up-io/k8up/v2/api/v1"
 	"github.com/k8up-io/k8up/v2/operator/cfg"
+	"github.com/k8up-io/k8up/v2/operator/job"
+	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
+)
+
+const (
+	nsName = "myns"
 )
 
 func TestScheduleHandler_mergeResourcesWithDefaults(t *testing.T) {
@@ -214,6 +225,100 @@ func TestScheduleHandler_mergePodSecurityContextWithDefaults(t *testing.T) {
 			}
 			schedule.mergeSecurityContextWithDefaults(res)
 			assert.Equal(t, *tt.expectedPodSecurityContext, *res.PodSecurityContext)
+		})
+	}
+}
+
+type mockScheduler struct {
+}
+
+func (m *mockScheduler) HasSchedule(_ string) bool {
+	return true
+}
+
+func (m *mockScheduler) RemoveSchedule(_ context.Context, _ string) {}
+
+// SetSchedule will just apply the object to the cluster immediately
+func (m *mockScheduler) SetSchedule(_ context.Context, _ string, _ k8upv1.ScheduleDefinition, fn func(_ context.Context)) error {
+	fn(context.TODO())
+	return nil
+}
+
+func TestCreateJobList_mergePodConfig(t *testing.T) {
+	tests := []struct {
+		name              string
+		jobConfigRef      string
+		scheduleConfigRef string
+		wantRef           string
+	}{
+		{
+			name:         "GivenJobTemplate_ThenExpectTemplate",
+			jobConfigRef: "jobRef",
+			wantRef:      "jobRef",
+		},
+		{
+			name:              "GivenScheduleTemplate_ThenExpectTemplate",
+			scheduleConfigRef: "scheduleRef",
+			wantRef:           "scheduleRef",
+		},
+		{
+			name:              "GivenBothTemplates_ThenExpectPodHasPrecedence",
+			scheduleConfigRef: "scheduleRef",
+			jobConfigRef:      "jobRef",
+			wantRef:           "jobRef",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+
+			scheme := runtime.NewScheme()
+			assert.NoError(t, clientgoscheme.AddToScheme(scheme))
+			assert.NoError(t, k8upv1.AddToScheme(scheme))
+
+			fclient := fake.NewClientBuilder().
+				WithScheme(scheme).
+				WithObjects(&corev1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: nsName}}).
+				Build()
+
+			var jobConfigRef *corev1.LocalObjectReference
+			var scheduleConfigRef *corev1.LocalObjectReference
+
+			if tt.jobConfigRef != "" {
+				jobConfigRef = &corev1.LocalObjectReference{Name: tt.jobConfigRef}
+			}
+
+			if tt.scheduleConfigRef != "" {
+				scheduleConfigRef = &corev1.LocalObjectReference{Name: tt.scheduleConfigRef}
+			}
+
+			schedule := ScheduleHandler{
+				Config: job.Config{Client: fclient},
+				schedule: &k8upv1.Schedule{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "schedule",
+						Namespace: nsName,
+					},
+					Spec: k8upv1.ScheduleSpec{
+						PodConfigRef: scheduleConfigRef,
+						Backup: &k8upv1.BackupSchedule{
+							ScheduleCommon: &k8upv1.ScheduleCommon{
+								Schedule: "* * * * *",
+							},
+							BackupSpec: k8upv1.BackupSpec{
+								RunnableSpec: k8upv1.RunnableSpec{
+									PodConfigRef: jobConfigRef,
+								},
+							},
+						},
+					}}}
+
+			sched := &mockScheduler{}
+			assert.NoError(t, schedule.createJobList(context.TODO(), sched))
+
+			backups := &k8upv1.BackupList{}
+			assert.NoError(t, fclient.List(context.TODO(), backups, &client.ListOptions{Namespace: nsName}))
+			assert.Equal(t, backups.Items[0].Spec.PodConfigRef.Name, tt.wantRef)
 		})
 	}
 }

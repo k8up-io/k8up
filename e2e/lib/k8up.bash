@@ -404,6 +404,7 @@ verify_job_pod_values() {
 	done
 
 	if [[ "$valid" == "0" ]]; then
+		echo "pod values don't match, property: ${property}, want: ${want}"
 		return 102
 	fi
 

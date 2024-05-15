@@ -15,6 +15,12 @@ type RunnableSpec struct {
 	// PodSecurityContext describes the security context with which this action shall be executed.
 	PodSecurityContext *corev1.PodSecurityContext `json:"podSecurityContext,omitempty"`
 
+	// PodConfigRef describes the pod spec with wich this action shall be executed.
+	// It takes precedence over the Resources or PodSecurityContext field.
+	// It does not allow changing the image or the command of the resulting pod.
+	// This is for advanced use-cases only. Please only set this if you know what you're doing.
+	PodConfigRef *corev1.LocalObjectReference `json:"podConfigRef,omitempty"`
+
 	// Volumes List of volumes that can be mounted by containers belonging to the pod.
 	Volumes *[]RunnableVolumeSpec `json:"volumes,omitempty"`
 

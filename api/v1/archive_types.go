@@ -1,10 +1,12 @@
 package v1
 
 import (
+	"context"
 	"reflect"
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // ArchiveSpec defines the desired state of Archive.
@@ -85,6 +87,13 @@ func (a *Archive) GetSuccessfulJobsHistoryLimit() *int {
 		return a.Spec.SuccessfulJobsHistoryLimit
 	}
 	return a.Spec.KeepJobs
+}
+
+func (a *Archive) GetPodConfig(ctx context.Context, c client.Client) (*PodConfig, error) {
+	if a.Spec.RunnableSpec.PodConfigRef == nil {
+		return nil, nil
+	}
+	return NewPodConfig(ctx, a.Spec.RunnableSpec.PodConfigRef.Name, a.GetNamespace(), c)
 }
 
 // GetJobObjects returns a sortable list of jobs

@@ -2,6 +2,7 @@ package archivecontroller
 
 import (
 	"context"
+
 	"github.com/k8up-io/k8up/v2/operator/executor"
 	"github.com/k8up-io/k8up/v2/operator/utils"
 	batchv1 "k8s.io/api/batch/v1"
@@ -47,12 +48,12 @@ func (a *ArchiveExecutor) Execute(ctx context.Context) error {
 	batchJob.Namespace = a.archive.Namespace
 
 	_, err := controllerutil.CreateOrUpdate(ctx, a.Client, batchJob, func() error {
-		mutateErr := job.MutateBatchJob(batchJob, a.archive, a.Config)
+		mutateErr := job.MutateBatchJob(ctx, batchJob, a.archive, a.Config, a.Client)
 		if mutateErr != nil {
 			return mutateErr
 		}
 
-		batchJob.Spec.Template.Spec.Containers[0].Env = a.setupEnvVars(ctx, a.archive)
+		batchJob.Spec.Template.Spec.Containers[0].Env = append(batchJob.Spec.Template.Spec.Containers[0].Env, a.setupEnvVars(ctx, a.archive)...)
 		a.archive.Spec.AppendEnvFromToContainer(&batchJob.Spec.Template.Spec.Containers[0])
 		batchJob.Spec.Template.Spec.Containers[0].VolumeMounts = a.attachTLSVolumeMounts()
 		batchJob.Spec.Template.Spec.Volumes = utils.AttachTLSVolumes(a.archive.Spec.Volumes)
