@@ -9,8 +9,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-// +kubebuilder:rbac:groups=k8up.io,resources=podconfigs,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=k8up.io,resources=podconfigs/status;snapshots/finalizers,verbs=get;update;patch
+// +kubebuilder:rbac:groups=k8up.io,resources=podconfigs,verbs=get;list;watch
 
 // PodConfigSpec contains the podTemplate definition.
 type PodConfigSpec struct {
