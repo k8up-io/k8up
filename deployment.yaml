@@ -1,0 +1,28 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: test-deployment
+  labels:
+    app: test-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: test-app
+  template:
+    metadata:
+      labels:
+        app: test-app
+    spec:
+      containers:
+        - name: test
+          image: busybox
+          command: ["sleep", "100000"]
+          volumeMounts:
+          - name: test
+            mountPath: /test
+      volumes:
+      - name: test
+        persistentVolumeClaim:
+          claimName: test-pvc

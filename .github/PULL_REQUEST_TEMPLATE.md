@@ -11,6 +11,7 @@
   `bug`, `enhancement`, `documentation`, `change`, `breaking`, `dependency`
   as they show up in the changelog
 - [ ] PR contains the label `area:operator`
+- [ ] Commits are [signed off](https://docs.github.com/en/authentication/managing-commit-signature-verification/signing-commits)
 - [ ] Link this PR to related issues
 - [ ] I have not made _any_ changes in the `charts/` directory.
 
@@ -21,6 +22,7 @@
   as they show up in the changelog
 - [ ] PR contains the label `area:chart`
 - [ ] PR contains the chart label, e.g. `chart:k8up`
+- [ ] Commits are [signed off](https://docs.github.com/en/authentication/managing-commit-signature-verification/signing-commits)
 - [ ] Variables are documented in the values.yaml using the format required by [Helm-Docs](https://github.com/norwoodj/helm-docs#valuesyaml-metadata).
 - [ ] Chart Version bumped if immediate release after merging is planned
 - [ ] I have run `make chart-docs`
