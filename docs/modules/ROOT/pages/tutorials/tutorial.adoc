@@ -1,5 +1,3 @@
-:k8up_version: v2.2.0
-
 = Backing up Kubernetes Clusters with K8up
 
 A common question we were asked by our clients moving to Kubernetes for the first time had almost always to do with backups:
@@ -76,7 +74,12 @@ IMPORTANT: On some laptops, running Minikube on battery power severely undermine
 * `kubectl apply -k wordpress`
 
 . Install the CRDs K8up uses:
-* `kubectl apply -f \https://github.com/k8up-io/k8up/releases/download/{k8up_version}/k8up-crd.yaml`
+ifeval::["{page-component-version}" == "master"]
+* `kubectl apply -f \https://github.com/k8up-io/k8up/releases/download/v{page-component-latest-version}.0/k8up-crd.yaml`
+endif::[]
+ifeval::["{page-component-version}" != "master"]
+* `kubectl apply -f \https://github.com/k8up-io/k8up/releases/download/{releaseVersion}/k8up-crd.yaml`
+endif::[]
 
 . Install K8up in Minikube:
 * `helm repo add k8up-io \https://k8up-io.github.io/k8up`
