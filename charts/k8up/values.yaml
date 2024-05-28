@@ -124,6 +124,13 @@ metrics:
     jobFailedRulesFor: ["archive", "backup", "check", "prune", "restore"]
     # -- Provide additional alert rules in addition to the defaults
     additionalRules: []
+  grafanaDashboard:
+    # -- Whether to deploy the Grafana dashboard
+    enable: false
+    # -- If the object should be installed in a different namespace than operator
+    namespace: ""
+    # -- Add labels to the Grafana Dashboard object
+    additionalLabels: {}
 
 rbac:
   # -- Create cluster roles and rolebinding.
