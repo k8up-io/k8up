@@ -69,16 +69,17 @@ func (r *RestoreExecutor) createRestoreObject(ctx context.Context, restore *k8up
 	batchJob.Name = r.jobName()
 	batchJob.Namespace = restore.Namespace
 	_, err := controllerutil.CreateOrUpdate(ctx, r.Client, batchJob, func() error {
-		mutateErr := job.MutateBatchJob(batchJob, restore, r.Config)
+		mutateErr := job.MutateBatchJob(ctx, batchJob, restore, r.Config, r.Client)
 		if mutateErr != nil {
 			return mutateErr
 		}
 		batchJob.Labels[job.K8upExclusive] = "true"
-		batchJob.Spec.Template.Spec.Containers[0].Env = r.setupEnvVars(ctx, restore)
+		batchJob.Spec.Template.Spec.Containers[0].Env = append(batchJob.Spec.Template.Spec.Containers[0].Env, r.setupEnvVars(ctx, restore)...)
 		restore.Spec.AppendEnvFromToContainer(&batchJob.Spec.Template.Spec.Containers[0])
 
 		volumes, volumeMounts := r.volumeConfig(restore)
-		batchJob.Spec.Template.Spec.Volumes = append(volumes, utils.AttachTLSVolumes(r.restore.Spec.Volumes)...)
+		batchJob.Spec.Template.Spec.Volumes = append(batchJob.Spec.Template.Spec.Volumes, volumes...)
+		batchJob.Spec.Template.Spec.Volumes = append(batchJob.Spec.Template.Spec.Volumes, utils.AttachTLSVolumes(r.restore.Spec.Volumes)...)
 		batchJob.Spec.Template.Spec.Containers[0].VolumeMounts = append(volumeMounts, r.attachTLSVolumeMounts()...)
 
 		args, argsErr := r.setupArgs(restore)

@@ -10,7 +10,7 @@ image:
   # -- Operator image repository
   repository: k8up-io/k8up
   # -- Operator image tag (version)
-  tag: v2.8.0
+  tag: v2.10.0
 
 imagePullSecrets: []
 serviceAccount:
@@ -128,6 +128,13 @@ metrics:
     jobFailedRulesFor: ["archive", "backup", "check", "prune", "restore"]
     # -- Provide additional alert rules in addition to the defaults
     additionalRules: []
+  grafanaDashboard:
+    # -- Whether to deploy the Grafana dashboard
+    enable: false
+    # -- If the object should be installed in a different namespace than operator
+    namespace: ""
+    # -- Add labels to the Grafana Dashboard object
+    additionalLabels: {}
 
 rbac:
   # -- Create cluster roles and rolebinding.

@@ -162,6 +162,14 @@ rules:
 - apiGroups:
   - k8up.io
   resources:
+  - podconfigs
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - k8up.io
+  resources:
   - prebackuppods
   verbs:
   - create

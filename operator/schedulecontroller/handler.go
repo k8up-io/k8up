@@ -41,7 +41,7 @@ func NewScheduleHandler(config job.Config, schedule *k8upv1.Schedule, logger log
 func (s *ScheduleHandler) Handle(ctx context.Context) error {
 	var err error
 
-	err = s.createJobList(ctx)
+	err = s.createJobList(ctx, scheduler.GetScheduler())
 	if err != nil {
 		s.SetConditionFalseWithMessage(ctx, k8upv1.ConditionReady, k8upv1.ReasonFailed, "cannot add to cron: %v", err.Error())
 		return err
@@ -63,7 +63,7 @@ func (s *ScheduleHandler) Handle(ctx context.Context) error {
 	return err
 }
 
-func (s *ScheduleHandler) createJobList(ctx context.Context) error {
+func (s *ScheduleHandler) createJobList(ctx context.Context, sched scheduler.SchedulerInterface) error {
 	type objectInstantiator struct {
 		spec k8upv1.ScheduleSpecInterface
 		ctor func(spec k8upv1.ScheduleSpecInterface) k8upv1.JobObject
@@ -71,22 +71,52 @@ func (s *ScheduleHandler) createJobList(ctx context.Context) error {
 
 	for jobType, jb := range map[k8upv1.JobType]objectInstantiator{
 		k8upv1.PruneType: {spec: s.schedule.Spec.Prune, ctor: func(spec k8upv1.ScheduleSpecInterface) k8upv1.JobObject {
-			return &k8upv1.Prune{Spec: spec.(*k8upv1.PruneSchedule).PruneSpec}
+			prune := &k8upv1.Prune{Spec: spec.(*k8upv1.PruneSchedule).PruneSpec}
+
+			if prune.Spec.RunnableSpec.PodConfigRef == nil && s.schedule.Spec.PodConfigRef != nil {
+				prune.Spec.PodConfigRef = s.schedule.Spec.PodConfigRef
+
+			}
+
+			return prune
 		}},
 		k8upv1.BackupType: {spec: s.schedule.Spec.Backup, ctor: func(spec k8upv1.ScheduleSpecInterface) k8upv1.JobObject {
-			return &k8upv1.Backup{Spec: spec.(*k8upv1.BackupSchedule).BackupSpec}
+			backup := &k8upv1.Backup{Spec: spec.(*k8upv1.BackupSchedule).BackupSpec}
+
+			if backup.Spec.RunnableSpec.PodConfigRef == nil && s.schedule.Spec.PodConfigRef != nil {
+				backup.Spec.PodConfigRef = s.schedule.Spec.PodConfigRef
+			}
+
+			return backup
 		}},
 		k8upv1.CheckType: {spec: s.schedule.Spec.Check, ctor: func(spec k8upv1.ScheduleSpecInterface) k8upv1.JobObject {
-			return &k8upv1.Check{Spec: spec.(*k8upv1.CheckSchedule).CheckSpec}
+			check := &k8upv1.Check{Spec: spec.(*k8upv1.CheckSchedule).CheckSpec}
+
+			if check.Spec.RunnableSpec.PodConfigRef == nil && s.schedule.Spec.PodConfigRef != nil {
+				check.Spec.PodConfigRef = s.schedule.Spec.PodConfigRef
+			}
+
+			return check
 		}},
 		k8upv1.RestoreType: {spec: s.schedule.Spec.Restore, ctor: func(spec k8upv1.ScheduleSpecInterface) k8upv1.JobObject {
-			return &k8upv1.Restore{Spec: spec.(*k8upv1.RestoreSchedule).RestoreSpec}
+			restore := &k8upv1.Restore{Spec: spec.(*k8upv1.RestoreSchedule).RestoreSpec}
+
+			if restore.Spec.RunnableSpec.PodConfigRef == nil && s.schedule.Spec.PodConfigRef != nil {
+				restore.Spec.PodConfigRef = s.schedule.Spec.PodConfigRef
+			}
+
+			return restore
 		}},
 		k8upv1.ArchiveType: {spec: s.schedule.Spec.Archive, ctor: func(spec k8upv1.ScheduleSpecInterface) k8upv1.JobObject {
-			return &k8upv1.Archive{Spec: spec.(*k8upv1.ArchiveSchedule).ArchiveSpec}
+			archive := &k8upv1.Archive{Spec: spec.(*k8upv1.ArchiveSchedule).ArchiveSpec}
+
+			if archive.Spec.RunnableSpec.PodConfigRef == nil && s.schedule.Spec.PodConfigRef != nil {
+				archive.Spec.PodConfigRef = s.schedule.Spec.PodConfigRef
+			}
+
+			return archive
 		}},
 	} {
-		sched := scheduler.GetScheduler()
 		key := keyOf(s.schedule, jobType)
 		hasSchedule := sched.HasSchedule(key)
 		if k8upv1.IsNil(jb.spec) {

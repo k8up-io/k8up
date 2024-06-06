@@ -38,17 +38,20 @@ func (p *PruneExecutor) Execute(ctx context.Context) error {
 	batchJob.Namespace = p.prune.Namespace
 
 	_, err := controllerutil.CreateOrUpdate(ctx, p.Client, batchJob, func() error {
-		mutateErr := job.MutateBatchJob(batchJob, p.prune, p.Config)
+		mutateErr := job.MutateBatchJob(ctx, batchJob, p.prune, p.Config, p.Client)
 		if mutateErr != nil {
 			return mutateErr
 		}
 
-		batchJob.Spec.Template.Spec.Containers[0].Env = p.setupEnvVars(ctx, p.prune)
-		batchJob.Spec.Template.Spec.ServiceAccountName = cfg.Config.ServiceAccount
+		batchJob.Spec.Template.Spec.Containers[0].Env = append(batchJob.Spec.Template.Spec.Containers[0].Env, p.setupEnvVars(ctx, p.prune)...)
 		p.prune.Spec.AppendEnvFromToContainer(&batchJob.Spec.Template.Spec.Containers[0])
-		batchJob.Spec.Template.Spec.Containers[0].VolumeMounts = p.attachTLSVolumeMounts()
-		batchJob.Spec.Template.Spec.Volumes = utils.AttachTLSVolumes(p.prune.Spec.Volumes)
+		batchJob.Spec.Template.Spec.Containers[0].VolumeMounts = append(batchJob.Spec.Template.Spec.Containers[0].VolumeMounts, p.attachTLSVolumeMounts()...)
+		batchJob.Spec.Template.Spec.Volumes = append(batchJob.Spec.Template.Spec.Volumes, utils.AttachTLSVolumes(p.prune.Spec.Volumes)...)
 		batchJob.Labels[job.K8upExclusive] = "true"
+
+		if batchJob.Spec.Template.Spec.ServiceAccountName == "" {
+			batchJob.Spec.Template.Spec.ServiceAccountName = cfg.Config.ServiceAccount
+		}
 
 		batchJob.Spec.Template.Spec.Containers[0].Args = p.setupArgs()
 

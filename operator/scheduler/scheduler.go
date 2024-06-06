@@ -21,6 +21,11 @@ type (
 		Schedule k8upv1.ScheduleDefinition
 		Runnable func(ctx context.Context)
 	}
+	SchedulerInterface interface {
+		HasSchedule(string) bool
+		SetSchedule(context.Context, string, k8upv1.ScheduleDefinition, func(ctx context.Context)) error
+		RemoveSchedule(context.Context, string)
+	}
 )
 
 var scheduler = newScheduler()
