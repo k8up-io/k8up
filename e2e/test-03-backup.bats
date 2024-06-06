@@ -21,7 +21,9 @@ DEBUG_DETIK="true"
 	given_a_subject "${expected_filename}" "${expected_content}"
 
 	kubectl apply -f definitions/secrets
-	yq e '.spec.podSecurityContext.runAsUser='$(id -u)'' definitions/backup/backup.yaml | kubectl apply -f -
+	kubectl apply -f definitions/backup/podconfig.yaml
+	yq e '.spec.podSecurityContext.runAsUser='$(id -u)'' definitions/backup/backup.yaml | \
+	yq e '.spec.podConfigRef.name="podconfig"' - | kubectl apply -f -
 
 	try "at most 10 times every 5s to get backup named 'k8up-backup' and verify that '.status.started' is 'true'"
 	verify_object_value_by_label job 'k8up.io/owned-by=backup_k8up-backup' '.status.active' 1 true
@@ -47,4 +49,14 @@ DEBUG_DETIK="true"
 
 	echo "${output} = ${expected_content}"
 	[ "${output}" = "${expected_content}" ]
+
+	# Check podConfig merging behaviour
+	annotation="$(kubectl -n "${DETIK_CLIENT_NAMESPACE}" get podConfig podconfig -ojson | jq -r '.metadata.annotations.test')"
+	verify_job_pod_values 'k8up.io/owned-by=backup_k8up-backup' .metadata.annotations.test "$annotation"
+
+	name="$(kubectl -n "${DETIK_CLIENT_NAMESPACE}" get podConfig podconfig -ojson | jq -r '.spec.template.spec.containers[0].env[0].name')"
+	verify_job_pod_values 'k8up.io/owned-by=backup_k8up-backup' .spec.containers[0].env[0].name "$name"
+
+	secCont="$(kubectl -n "${DETIK_CLIENT_NAMESPACE}" get podConfig podconfig -ojson | jq -r '.spec.template.spec.containers[0].securityContext.allowPrivilegeEscalation')"
+	verify_job_pod_values 'k8up.io/owned-by=backup_k8up-backup' .spec.containers[0].securityContext.allowPrivilegeEscalation "${secCont}"
 }

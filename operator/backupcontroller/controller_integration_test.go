@@ -138,6 +138,37 @@ func (ts *BackupTestSuite) Test_GivenBackupWithSecurityContext_ExpectBackupJobWi
 	ts.Assert().Equal(int64(500), *backupJob.Spec.ActiveDeadlineSeconds)
 }
 
+func (ts *BackupTestSuite) Test_GivenBackupWithTlsOptions_ExpectBackupJobWithTlsOptions() {
+	ts.BackupResource = ts.newBackupTls()
+	pvc := ts.newPvc("test-pvc", corev1.ReadWriteMany)
+	ts.EnsureResources(ts.BackupResource, pvc)
+
+	pvc.Status.Phase = corev1.ClaimBound
+	ts.UpdateStatus(pvc)
+
+	result := ts.whenReconciling(ts.BackupResource)
+	ts.Require().GreaterOrEqual(result.RequeueAfter, 30*time.Second)
+
+	backupJob := ts.expectABackupJob()
+	ts.Assert().NotNil(backupJob.Spec.Template.Spec.Volumes)
+	ts.assertBackupTlsVolumeAndTlsOptions(backupJob)
+}
+
+func (ts *BackupTestSuite) Test_GivenBackupWithMutualTlsOptions_ExpectBackupJobWithMutualTlsOptions() {
+	ts.BackupResource = ts.newBackupMutualTls()
+	pvc := ts.newPvc("test-pvc", corev1.ReadWriteMany)
+	ts.EnsureResources(ts.BackupResource, pvc)
+
+	pvc.Status.Phase = corev1.ClaimBound
+	ts.UpdateStatus(pvc)
+
+	result := ts.whenReconciling(ts.BackupResource)
+	ts.Require().GreaterOrEqual(result.RequeueAfter, 30*time.Second)
+
+	backupJob := ts.expectABackupJob()
+	ts.assertBackupMutualTlsVolumeAndMutualTlsOptions(backupJob)
+}
+
 func (ts *BackupTestSuite) Test_GivenPreBackupPods_ExpectPreBackupDeployment() {
 	ts.EnsureResources(ts.BackupResource, ts.newPreBackupPod())
 

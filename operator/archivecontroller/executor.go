@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/k8up-io/k8up/v2/operator/executor"
+	"github.com/k8up-io/k8up/v2/operator/utils"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	controllerruntime "sigs.k8s.io/controller-runtime"
@@ -14,17 +15,22 @@ import (
 	"github.com/k8up-io/k8up/v2/operator/job"
 )
 
-const archivePath = "/archive"
+const (
+	archivePath    = "/archive"
+	certPrefixName = "restore"
+)
 
 // ArchiveExecutor will execute the batch.job for archive.
 type ArchiveExecutor struct {
 	executor.Generic
+	archive *k8upv1.Archive
 }
 
 // NewArchiveExecutor will return a new executor for archive jobs.
 func NewArchiveExecutor(config job.Config) *ArchiveExecutor {
 	return &ArchiveExecutor{
 		Generic: executor.Generic{Config: config},
+		archive: config.Obj.(*k8upv1.Archive),
 	}
 }
 
@@ -36,28 +42,29 @@ func (a *ArchiveExecutor) GetConcurrencyLimit() int {
 // Execute creates the actual batch.job on the k8s api.
 func (a *ArchiveExecutor) Execute(ctx context.Context) error {
 	log := controllerruntime.LoggerFrom(ctx)
-	archive := a.Obj.(*k8upv1.Archive)
 
 	batchJob := &batchv1.Job{}
 	batchJob.Name = a.jobName()
-	batchJob.Namespace = archive.Namespace
+	batchJob.Namespace = a.archive.Namespace
 
 	_, err := controllerutil.CreateOrUpdate(ctx, a.Client, batchJob, func() error {
-		mutateErr := job.MutateBatchJob(batchJob, archive, a.Config)
+		mutateErr := job.MutateBatchJob(ctx, batchJob, a.archive, a.Config, a.Client)
 		if mutateErr != nil {
 			return mutateErr
 		}
-
 		if archive.Spec.Backend.InsecureTLS {
 			batchJob.Spec.Template.Spec.Containers[0].Env = append(batchJob.Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{
 				Name:  "SET_INSECURE_TLS_FLAG",
 				Value: "true",
 			})
 		}
+		batchJob.Spec.Template.Spec.Containers[0].Env = append(batchJob.Spec.Template.Spec.Containers[0].Env, a.setupEnvVars(ctx, a.archive)...)
+		a.archive.Spec.AppendEnvFromToContainer(&batchJob.Spec.Template.Spec.Containers[0])
+		batchJob.Spec.Template.Spec.Containers[0].VolumeMounts = a.attachTLSVolumeMounts()
+		batchJob.Spec.Template.Spec.Volumes = utils.AttachTLSVolumes(a.archive.Spec.Volumes)
 
-		batchJob.Spec.Template.Spec.Containers[0].Env = a.setupEnvVars(ctx, archive)
-		archive.Spec.AppendEnvFromToContainer(&batchJob.Spec.Template.Spec.Containers[0])
-		batchJob.Spec.Template.Spec.Containers[0].Args = a.setupArgs(archive)
+		batchJob.Spec.Template.Spec.Containers[0].Args = a.setupArgs()
+
 		return nil
 	})
 	if err != nil {
@@ -74,13 +81,16 @@ func (a *ArchiveExecutor) jobName() string {
 	return k8upv1.ArchiveType.String() + "-" + a.Obj.GetName()
 }
 
-func (a *ArchiveExecutor) setupArgs(archive *k8upv1.Archive) []string {
-	args := []string{"-archive", "-restoreType", "s3"}
-
-	if archive.Spec.RestoreSpec != nil {
-		if len(archive.Spec.RestoreSpec.Tags) > 0 {
-			args = append(args, executor.BuildTagArgs(archive.Spec.RestoreSpec.Tags)...)
-		}
+func (a *ArchiveExecutor) setupArgs() []string {
+	args := []string{"-varDir", cfg.Config.PodVarDir, "-archive", "-restoreType", "s3"}
+	if a.archive.Spec.RestoreSpec != nil && len(a.archive.Spec.RestoreSpec.Tags) > 0 {
+		args = append(args, executor.BuildTagArgs(a.archive.Spec.RestoreSpec.Tags)...)
+	}
+	if a.archive.Spec.Backend != nil {
+		args = append(args, utils.AppendTLSOptionsArgs(a.archive.Spec.Backend.TLSOptions)...)
+	}
+	if a.archive.Spec.RestoreSpec != nil && a.archive.Spec.RestoreSpec.RestoreMethod != nil {
+		args = append(args, utils.AppendTLSOptionsArgs(a.archive.Spec.RestoreSpec.RestoreMethod.TLSOptions, certPrefixName)...)
 	}
 
 	return args
@@ -124,4 +134,16 @@ func (a *ArchiveExecutor) setupEnvVars(ctx context.Context, archive *k8upv1.Arch
 
 func (a *ArchiveExecutor) cleanupOldArchives(ctx context.Context, archive *k8upv1.Archive) {
 	a.CleanupOldResources(ctx, &k8upv1.ArchiveList{}, archive.Namespace, archive)
+}
+
+func (a *ArchiveExecutor) attachTLSVolumeMounts() []corev1.VolumeMount {
+	var tlsVolumeMounts []corev1.VolumeMount
+	if a.archive.Spec.Backend != nil && !utils.ZeroLen(a.archive.Spec.Backend.VolumeMounts) {
+		tlsVolumeMounts = append(tlsVolumeMounts, *a.archive.Spec.Backend.VolumeMounts...)
+	}
+	if a.archive.Spec.RestoreSpec != nil && a.archive.Spec.RestoreSpec.RestoreMethod != nil && !utils.ZeroLen(a.archive.Spec.RestoreSpec.RestoreMethod.VolumeMounts) {
+		tlsVolumeMounts = append(tlsVolumeMounts, *a.archive.Spec.RestoreSpec.RestoreMethod.VolumeMounts...)
+	}
+
+	return utils.AttachTLSVolumeMounts(cfg.Config.PodVarDir, &tlsVolumeMounts)
 }

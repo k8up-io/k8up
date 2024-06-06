@@ -4,6 +4,8 @@ package backupcontroller
 
 import (
 	"context"
+	"github.com/k8up-io/k8up/v2/operator/cfg"
+	"k8s.io/utils/ptr"
 
 	appsv1 "k8s.io/api/apps/v1"
 	batchv1 "k8s.io/api/batch/v1"
@@ -23,6 +25,18 @@ import (
 
 const (
 	backupTag = "integrationTag"
+
+	backupTlsVolumeName       = "minio-client-tls"
+	backupTlsVolumeSecretName = "minio-client-tls"
+	backupTlsVolumeMount      = "/mnt/tls"
+	backupTlsCaCertPath       = backupTlsVolumeMount + "/ca.cert"
+
+	backupMutualTlsVolumeName       = "minio-client-mtls"
+	backupMutualTlsVolumeSecretName = "minio-client-mtls"
+	backupMutualTlsVolumeMount      = "/mnt/mtls"
+	backupMutualTlsCaCertPath       = backupMutualTlsVolumeMount + "/ca.cert"
+	backupMutualTlsClientCertPath   = backupMutualTlsVolumeMount + "/client.cert"
+	backupMutualTlsKeyCertPath      = backupMutualTlsVolumeMount + "/client.key"
 )
 
 func (ts *BackupTestSuite) newPvc(name string, accessMode corev1.PersistentVolumeAccessMode) *corev1.PersistentVolumeClaim {
@@ -132,6 +146,125 @@ func (ts *BackupTestSuite) newBackup() *k8upv1.Backup {
 			RunnableSpec: k8upv1.RunnableSpec{},
 		},
 	}
+}
+
+func (ts *BackupTestSuite) newBackupTls() *k8upv1.Backup {
+	return &k8upv1.Backup{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "backup",
+			Namespace: ts.NS,
+			UID:       uuid.NewUUID(),
+		},
+		Spec: k8upv1.BackupSpec{
+			RunnableSpec: k8upv1.RunnableSpec{
+				Backend: &k8upv1.Backend{
+					TLSOptions: &k8upv1.TLSOptions{CACert: backupTlsCaCertPath},
+					VolumeMounts: &[]corev1.VolumeMount{
+						{
+							Name:      backupTlsVolumeName,
+							MountPath: backupTlsVolumeMount,
+						},
+					},
+				},
+				Volumes: &[]k8upv1.RunnableVolumeSpec{
+					{
+						Name: backupTlsVolumeName,
+						Secret: &corev1.SecretVolumeSource{
+							SecretName:  backupTlsVolumeSecretName,
+							DefaultMode: ptr.To(corev1.SecretVolumeSourceDefaultMode),
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+func (ts *BackupTestSuite) assertBackupTlsVolumeAndTlsOptions(job *batchv1.Job) {
+	expectArgs := []string{"-varDir", cfg.Config.PodVarDir, "-caCert", backupTlsCaCertPath}
+	expectVolumeMount := corev1.VolumeMount{Name: backupTlsVolumeName, MountPath: backupTlsVolumeMount}
+	expectVolume := corev1.Volume{
+		Name: backupTlsVolumeName,
+		VolumeSource: corev1.VolumeSource{
+			Secret: &corev1.SecretVolumeSource{
+				SecretName:  backupTlsVolumeSecretName,
+				DefaultMode: ptr.To(corev1.SecretVolumeSourceDefaultMode),
+			},
+		},
+	}
+
+	jobArguments := job.Spec.Template.Spec.Containers[0].Args
+	ts.Assert().Equal(jobArguments, expectArgs, "backup tls contains caCert path in job args")
+	jobVolumeMounts := job.Spec.Template.Spec.Containers[0].VolumeMounts
+	ts.Assert().NotNil(jobVolumeMounts)
+	ts.Assert().Contains(jobVolumeMounts, expectVolumeMount, "backup ca cert in job volume mount")
+	jobVolumes := job.Spec.Template.Spec.Volumes
+	ts.Assert().NotNil(jobVolumes)
+	ts.Assert().Contains(jobVolumes, expectVolume, "backup ca cert in job volume mount")
+}
+
+func (ts *BackupTestSuite) newBackupMutualTls() *k8upv1.Backup {
+	return &k8upv1.Backup{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "backup",
+			Namespace: ts.NS,
+			UID:       uuid.NewUUID(),
+		},
+		Spec: k8upv1.BackupSpec{
+			RunnableSpec: k8upv1.RunnableSpec{
+				Backend: &k8upv1.Backend{
+					TLSOptions: &k8upv1.TLSOptions{
+						CACert:     backupMutualTlsCaCertPath,
+						ClientCert: backupMutualTlsClientCertPath,
+						ClientKey:  backupMutualTlsKeyCertPath,
+					},
+					VolumeMounts: &[]corev1.VolumeMount{
+						{
+							Name:      backupMutualTlsVolumeName,
+							MountPath: backupMutualTlsVolumeMount,
+						},
+					},
+				},
+				Volumes: &[]k8upv1.RunnableVolumeSpec{
+					{
+						Name: backupMutualTlsVolumeName,
+						Secret: &corev1.SecretVolumeSource{
+							SecretName:  backupMutualTlsVolumeSecretName,
+							DefaultMode: ptr.To(corev1.SecretVolumeSourceDefaultMode),
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+func (ts *BackupTestSuite) assertBackupMutualTlsVolumeAndMutualTlsOptions(job *batchv1.Job) {
+	expectArgs := []string{
+		"-varDir", cfg.Config.PodVarDir,
+		"-caCert", backupMutualTlsCaCertPath,
+		"-clientCert", backupMutualTlsClientCertPath,
+		"-clientKey", backupMutualTlsKeyCertPath,
+	}
+	expectVolumeMount := corev1.VolumeMount{Name: backupMutualTlsVolumeName, MountPath: backupMutualTlsVolumeMount}
+	expectVolume := corev1.Volume{
+		Name: backupMutualTlsVolumeName,
+		VolumeSource: corev1.VolumeSource{
+			Secret: &corev1.SecretVolumeSource{
+				SecretName:  backupMutualTlsVolumeSecretName,
+				DefaultMode: ptr.To(corev1.SecretVolumeSourceDefaultMode),
+			},
+		},
+	}
+
+	jobArguments := job.Spec.Template.Spec.Containers[0].Args
+	ts.Assert().Equal(jobArguments, expectArgs, "backup tls contains caCert path in job args")
+	jobVolumeMounts := job.Spec.Template.Spec.Containers[0].VolumeMounts
+	ts.Assert().NotNil(jobVolumeMounts)
+	ts.Assert().Contains(jobVolumeMounts, expectVolumeMount, "backup ca cert in job volume mount")
+	jobVolumes := job.Spec.Template.Spec.Volumes
+	ts.Assert().NotNil(jobVolumes)
+	ts.Assert().Contains(jobVolumes, expectVolume, "backup ca cert in job volume mount")
 }
 
 func (ts *BackupTestSuite) newBackupWithSecurityContext() *k8upv1.Backup {

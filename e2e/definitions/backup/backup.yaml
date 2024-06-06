@@ -3,6 +3,8 @@ kind: Backup
 metadata:
   name: k8up-backup
   namespace: k8up-e2e-subject
+  labels:
+    e2e: 'true'
 spec:
   failedJobsHistoryLimit: 1
   successfulJobsHistoryLimit: 1
@@ -11,7 +13,7 @@ spec:
       name: backup-repo
       key: password
     s3:
-      endpoint: http://minio.minio.svc.cluster.local:9000
+      endpoint: http://minio.minio-e2e.svc.cluster.local:9000
       bucket: backup
       accessKeyIDSecretRef:
         name: backup-credentials

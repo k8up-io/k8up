@@ -23,6 +23,8 @@ TIP: A more sophisticated documentation is available under https://doc.crds.dev/
 - xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-backuplist[$$BackupList$$]
 - xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-check[$$Check$$]
 - xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-checklist[$$CheckList$$]
+- xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-podconfig[$$PodConfig$$]
+- xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-podconfiglist[$$PodConfigList$$]
 - xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-prebackuppod[$$PreBackupPod$$]
 - xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-prebackuppodlist[$$PreBackupPodList$$]
 - xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-prune[$$Prune$$]
@@ -85,24 +87,6 @@ ArchiveSchedule manages schedules for the archival service
 - xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-schedulespec[$$ScheduleSpec$$]
 ****
 
-[cols="25a,75a", options="header"]
-|===
-| Field | Description
-| *`backend`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-backend[$$Backend$$]__ | Backend contains the restic repo where the job should backup to.
-| *`resources`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#resourcerequirements-v1-core[$$ResourceRequirements$$]__ | Resources describes the compute resource requirements (cpu, memory, etc.)
-| *`podSecurityContext`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#podsecuritycontext-v1-core[$$PodSecurityContext$$]__ | PodSecurityContext describes the security context with which this action shall be executed.
-| *`activeDeadlineSeconds`* __integer__ | ActiveDeadlineSeconds specifies the duration in seconds relative to the startTime that the job may be continuously active before the system tries to terminate it. Value must be positive integer if given.
-| *`restoreMethod`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-restoremethod[$$RestoreMethod$$]__ | 
-| *`restoreFilter`* __string__ | 
-| *`snapshot`* __string__ | 
-| *`keepJobs`* __integer__ | KeepJobs amount of jobs to keep for later analysis. 
- Deprecated: Use FailedJobsHistoryLimit and SuccessfulJobsHistoryLimit respectively.
-| *`failedJobsHistoryLimit`* __integer__ | FailedJobsHistoryLimit amount of failed jobs to keep for later analysis. KeepJobs is used property is not specified.
-| *`successfulJobsHistoryLimit`* __integer__ | SuccessfulJobsHistoryLimit amount of successful jobs to keep for later analysis. KeepJobs is used property is not specified.
-| *`tags`* __string array__ | Tags is a list of arbitrary tags that get added to the backup via Restic's tagging system
-| *`schedule`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-scheduledefinition[$$ScheduleDefinition$$]__ | 
-| *`concurrentRunsAllowed`* __boolean__ | 
-|===
 
 
 [id="{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-archivespec"]
@@ -116,22 +100,6 @@ ArchiveSpec defines the desired state of Archive.
 - xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-archiveschedule[$$ArchiveSchedule$$]
 ****
 
-[cols="25a,75a", options="header"]
-|===
-| Field | Description
-| *`backend`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-backend[$$Backend$$]__ | Backend contains the restic repo where the job should backup to.
-| *`resources`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#resourcerequirements-v1-core[$$ResourceRequirements$$]__ | Resources describes the compute resource requirements (cpu, memory, etc.)
-| *`podSecurityContext`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#podsecuritycontext-v1-core[$$PodSecurityContext$$]__ | PodSecurityContext describes the security context with which this action shall be executed.
-| *`activeDeadlineSeconds`* __integer__ | ActiveDeadlineSeconds specifies the duration in seconds relative to the startTime that the job may be continuously active before the system tries to terminate it. Value must be positive integer if given.
-| *`restoreMethod`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-restoremethod[$$RestoreMethod$$]__ | 
-| *`restoreFilter`* __string__ | 
-| *`snapshot`* __string__ | 
-| *`keepJobs`* __integer__ | KeepJobs amount of jobs to keep for later analysis. 
- Deprecated: Use FailedJobsHistoryLimit and SuccessfulJobsHistoryLimit respectively.
-| *`failedJobsHistoryLimit`* __integer__ | FailedJobsHistoryLimit amount of failed jobs to keep for later analysis. KeepJobs is used property is not specified.
-| *`successfulJobsHistoryLimit`* __integer__ | SuccessfulJobsHistoryLimit amount of successful jobs to keep for later analysis. KeepJobs is used property is not specified.
-| *`tags`* __string array__ | Tags is a list of arbitrary tags that get added to the backup via Restic's tagging system
-|===
 
 
 [id="{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-azurespec"]
@@ -144,6 +112,14 @@ ArchiveSpec defines the desired state of Archive.
 - xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-backend[$$Backend$$]
 ****
 
+[cols="25a,75a", options="header"]
+|===
+| Field | Description
+| *`container`* __string__ | 
+| *`path`* __string__ | 
+| *`accountNameSecretRef`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#secretkeyselector-v1-core[$$SecretKeySelector$$]__ | 
+| *`accountKeySecretRef`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#secretkeyselector-v1-core[$$SecretKeySelector$$]__ | 
+|===
 
 
 [id="{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-b2spec"]
@@ -156,17 +132,24 @@ ArchiveSpec defines the desired state of Archive.
 - xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-backend[$$Backend$$]
 ****
 
+[cols="25a,75a", options="header"]
+|===
+| Field | Description
+| *`bucket`* __string__ | 
+| *`path`* __string__ | 
+| *`accountIDSecretRef`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#secretkeyselector-v1-core[$$SecretKeySelector$$]__ | 
+| *`accountKeySecretRef`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#secretkeyselector-v1-core[$$SecretKeySelector$$]__ | 
+|===
 
 
 [id="{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-backend"]
 === Backend 
 
-Backend allows configuring several backend implementations. It is expected that users only configure one storage type.
+Backend allows configuring several backend implementations.
+It is expected that users only configure one storage type.
 
 .Appears In:
 ****
-- xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-archiveschedule[$$ArchiveSchedule$$]
-- xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-archivespec[$$ArchiveSpec$$]
 - xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-backupschedule[$$BackupSchedule$$]
 - xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-backupspec[$$BackupSpec$$]
 - xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-backuptemplate[$$BackupTemplate$$]
@@ -192,6 +175,8 @@ Backend allows configuring several backend implementations. It is expected that 
 | *`swift`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-swiftspec[$$SwiftSpec$$]__ | 
 | *`b2`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-b2spec[$$B2Spec$$]__ | 
 | *`rest`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-restserverspec[$$RestServerSpec$$]__ | 
+| *`tlsOptions`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-tlsoptions[$$TLSOptions$$]__ | 
+| *`volumeMounts`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#volumemount-v1-core[$$VolumeMount$$]__ | 
 |===
 
 
@@ -252,23 +237,35 @@ BackupSchedule manages schedules for the backup service
 | *`backend`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-backend[$$Backend$$]__ | Backend contains the restic repo where the job should backup to.
 | *`resources`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#resourcerequirements-v1-core[$$ResourceRequirements$$]__ | Resources describes the compute resource requirements (cpu, memory, etc.)
 | *`podSecurityContext`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#podsecuritycontext-v1-core[$$PodSecurityContext$$]__ | PodSecurityContext describes the security context with which this action shall be executed.
-| *`activeDeadlineSeconds`* __integer__ | ActiveDeadlineSeconds specifies the duration in seconds relative to the startTime that the job may be continuously active before the system tries to terminate it. Value must be positive integer if given.
-| *`keepJobs`* __integer__ | KeepJobs amount of jobs to keep for later analysis. 
- Deprecated: Use FailedJobsHistoryLimit and SuccessfulJobsHistoryLimit respectively.
-| *`failedJobsHistoryLimit`* __integer__ | FailedJobsHistoryLimit amount of failed jobs to keep for later analysis. KeepJobs is used property is not specified.
-| *`successfulJobsHistoryLimit`* __integer__ | SuccessfulJobsHistoryLimit amount of successful jobs to keep for later analysis. KeepJobs is used property is not specified.
+| *`podConfigRef`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#localobjectreference-v1-core[$$LocalObjectReference$$]__ | PodConfigRef describes the pod spec with wich this action shall be executed.
+It takes precedence over the Resources or PodSecurityContext field.
+It does not allow changing the image or the command of the resulting pod.
+This is for advanced use-cases only. Please only set this if you know what you're doing.
+| *`volumes`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-runnablevolumespec[$$RunnableVolumeSpec$$]__ | Volumes List of volumes that can be mounted by containers belonging to the pod.
+| *`activeDeadlineSeconds`* __integer__ | ActiveDeadlineSeconds specifies the duration in seconds relative to the startTime that the job may be continuously active before the system tries to terminate it.
+Value must be positive integer if given.
+| *`keepJobs`* __integer__ | KeepJobs amount of jobs to keep for later analysis.
+
+
+Deprecated: Use FailedJobsHistoryLimit and SuccessfulJobsHistoryLimit respectively.
+| *`failedJobsHistoryLimit`* __integer__ | FailedJobsHistoryLimit amount of failed jobs to keep for later analysis.
+KeepJobs is used property is not specified.
+| *`successfulJobsHistoryLimit`* __integer__ | SuccessfulJobsHistoryLimit amount of successful jobs to keep for later analysis.
+KeepJobs is used property is not specified.
 | *`promURL`* __string__ | PromURL sets a prometheus push URL where the backup container send metrics to
-| *`statsURL`* __string__ | StatsURL sets an arbitrary URL where the restic container posts metrics and information about the snapshots to. This is in addition to the prometheus pushgateway.
+| *`statsURL`* __string__ | StatsURL sets an arbitrary URL where the restic container posts metrics and
+information about the snapshots to. This is in addition to the prometheus
+pushgateway.
 | *`tags`* __string array__ | Tags is a list of arbitrary tags that get added to the backup via Restic's tagging system
-| *`schedule`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-scheduledefinition[$$ScheduleDefinition$$]__ | 
-| *`concurrentRunsAllowed`* __boolean__ | 
 |===
 
 
 [id="{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-backupspec"]
 === BackupSpec 
 
-BackupSpec defines a single backup. It must contain all information to connect to the backup repository when applied. If used with defaults or schedules the operator will ensure that the defaults are applied before creating the object on the API.
+BackupSpec defines a single backup. It must contain all information to connect to
+the backup repository when applied. If used with defaults or schedules the operator will
+ensure that the defaults are applied before creating the object on the API.
 
 .Appears In:
 ****
@@ -282,13 +279,25 @@ BackupSpec defines a single backup. It must contain all information to connect t
 | *`backend`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-backend[$$Backend$$]__ | Backend contains the restic repo where the job should backup to.
 | *`resources`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#resourcerequirements-v1-core[$$ResourceRequirements$$]__ | Resources describes the compute resource requirements (cpu, memory, etc.)
 | *`podSecurityContext`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#podsecuritycontext-v1-core[$$PodSecurityContext$$]__ | PodSecurityContext describes the security context with which this action shall be executed.
-| *`activeDeadlineSeconds`* __integer__ | ActiveDeadlineSeconds specifies the duration in seconds relative to the startTime that the job may be continuously active before the system tries to terminate it. Value must be positive integer if given.
-| *`keepJobs`* __integer__ | KeepJobs amount of jobs to keep for later analysis. 
- Deprecated: Use FailedJobsHistoryLimit and SuccessfulJobsHistoryLimit respectively.
-| *`failedJobsHistoryLimit`* __integer__ | FailedJobsHistoryLimit amount of failed jobs to keep for later analysis. KeepJobs is used property is not specified.
-| *`successfulJobsHistoryLimit`* __integer__ | SuccessfulJobsHistoryLimit amount of successful jobs to keep for later analysis. KeepJobs is used property is not specified.
+| *`podConfigRef`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#localobjectreference-v1-core[$$LocalObjectReference$$]__ | PodConfigRef describes the pod spec with wich this action shall be executed.
+It takes precedence over the Resources or PodSecurityContext field.
+It does not allow changing the image or the command of the resulting pod.
+This is for advanced use-cases only. Please only set this if you know what you're doing.
+| *`volumes`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-runnablevolumespec[$$RunnableVolumeSpec$$]__ | Volumes List of volumes that can be mounted by containers belonging to the pod.
+| *`activeDeadlineSeconds`* __integer__ | ActiveDeadlineSeconds specifies the duration in seconds relative to the startTime that the job may be continuously active before the system tries to terminate it.
+Value must be positive integer if given.
+| *`keepJobs`* __integer__ | KeepJobs amount of jobs to keep for later analysis.
+
+
+Deprecated: Use FailedJobsHistoryLimit and SuccessfulJobsHistoryLimit respectively.
+| *`failedJobsHistoryLimit`* __integer__ | FailedJobsHistoryLimit amount of failed jobs to keep for later analysis.
+KeepJobs is used property is not specified.
+| *`successfulJobsHistoryLimit`* __integer__ | SuccessfulJobsHistoryLimit amount of successful jobs to keep for later analysis.
+KeepJobs is used property is not specified.
 | *`promURL`* __string__ | PromURL sets a prometheus push URL where the backup container send metrics to
-| *`statsURL`* __string__ | StatsURL sets an arbitrary URL where the restic container posts metrics and information about the snapshots to. This is in addition to the prometheus pushgateway.
+| *`statsURL`* __string__ | StatsURL sets an arbitrary URL where the restic container posts metrics and
+information about the snapshots to. This is in addition to the prometheus
+pushgateway.
 | *`tags`* __string array__ | Tags is a list of arbitrary tags that get added to the backup via Restic's tagging system
 |===
 
@@ -350,21 +359,30 @@ CheckSchedule manages the schedules for the checks
 | *`backend`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-backend[$$Backend$$]__ | Backend contains the restic repo where the job should backup to.
 | *`resources`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#resourcerequirements-v1-core[$$ResourceRequirements$$]__ | Resources describes the compute resource requirements (cpu, memory, etc.)
 | *`podSecurityContext`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#podsecuritycontext-v1-core[$$PodSecurityContext$$]__ | PodSecurityContext describes the security context with which this action shall be executed.
-| *`activeDeadlineSeconds`* __integer__ | ActiveDeadlineSeconds specifies the duration in seconds relative to the startTime that the job may be continuously active before the system tries to terminate it. Value must be positive integer if given.
+| *`podConfigRef`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#localobjectreference-v1-core[$$LocalObjectReference$$]__ | PodConfigRef describes the pod spec with wich this action shall be executed.
+It takes precedence over the Resources or PodSecurityContext field.
+It does not allow changing the image or the command of the resulting pod.
+This is for advanced use-cases only. Please only set this if you know what you're doing.
+| *`volumes`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-runnablevolumespec[$$RunnableVolumeSpec$$]__ | Volumes List of volumes that can be mounted by containers belonging to the pod.
+| *`activeDeadlineSeconds`* __integer__ | ActiveDeadlineSeconds specifies the duration in seconds relative to the startTime that the job may be continuously active before the system tries to terminate it.
+Value must be positive integer if given.
 | *`promURL`* __string__ | PromURL sets a prometheus push URL where the backup container send metrics to
-| *`keepJobs`* __integer__ | KeepJobs amount of jobs to keep for later analysis. 
- Deprecated: Use FailedJobsHistoryLimit and SuccessfulJobsHistoryLimit respectively.
-| *`failedJobsHistoryLimit`* __integer__ | FailedJobsHistoryLimit amount of failed jobs to keep for later analysis. KeepJobs is used property is not specified.
-| *`successfulJobsHistoryLimit`* __integer__ | SuccessfulJobsHistoryLimit amount of successful jobs to keep for later analysis. KeepJobs is used property is not specified.
-| *`schedule`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-scheduledefinition[$$ScheduleDefinition$$]__ | 
-| *`concurrentRunsAllowed`* __boolean__ | 
+| *`keepJobs`* __integer__ | KeepJobs amount of jobs to keep for later analysis.
+
+
+Deprecated: Use FailedJobsHistoryLimit and SuccessfulJobsHistoryLimit respectively.
+| *`failedJobsHistoryLimit`* __integer__ | FailedJobsHistoryLimit amount of failed jobs to keep for later analysis.
+KeepJobs is used property is not specified.
+| *`successfulJobsHistoryLimit`* __integer__ | SuccessfulJobsHistoryLimit amount of successful jobs to keep for later analysis.
+KeepJobs is used property is not specified.
 |===
 
 
 [id="{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-checkspec"]
 === CheckSpec 
 
-CheckSpec defines the desired state of Check. It needs to contain the repository information.
+CheckSpec defines the desired state of Check. It needs to contain the repository
+information.
 
 .Appears In:
 ****
@@ -378,13 +396,27 @@ CheckSpec defines the desired state of Check. It needs to contain the repository
 | *`backend`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-backend[$$Backend$$]__ | Backend contains the restic repo where the job should backup to.
 | *`resources`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#resourcerequirements-v1-core[$$ResourceRequirements$$]__ | Resources describes the compute resource requirements (cpu, memory, etc.)
 | *`podSecurityContext`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#podsecuritycontext-v1-core[$$PodSecurityContext$$]__ | PodSecurityContext describes the security context with which this action shall be executed.
-| *`activeDeadlineSeconds`* __integer__ | ActiveDeadlineSeconds specifies the duration in seconds relative to the startTime that the job may be continuously active before the system tries to terminate it. Value must be positive integer if given.
+| *`podConfigRef`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#localobjectreference-v1-core[$$LocalObjectReference$$]__ | PodConfigRef describes the pod spec with wich this action shall be executed.
+It takes precedence over the Resources or PodSecurityContext field.
+It does not allow changing the image or the command of the resulting pod.
+This is for advanced use-cases only. Please only set this if you know what you're doing.
+| *`volumes`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-runnablevolumespec[$$RunnableVolumeSpec$$]__ | Volumes List of volumes that can be mounted by containers belonging to the pod.
+| *`activeDeadlineSeconds`* __integer__ | ActiveDeadlineSeconds specifies the duration in seconds relative to the startTime that the job may be continuously active before the system tries to terminate it.
+Value must be positive integer if given.
 | *`promURL`* __string__ | PromURL sets a prometheus push URL where the backup container send metrics to
-| *`keepJobs`* __integer__ | KeepJobs amount of jobs to keep for later analysis. 
- Deprecated: Use FailedJobsHistoryLimit and SuccessfulJobsHistoryLimit respectively.
-| *`failedJobsHistoryLimit`* __integer__ | FailedJobsHistoryLimit amount of failed jobs to keep for later analysis. KeepJobs is used property is not specified.
-| *`successfulJobsHistoryLimit`* __integer__ | SuccessfulJobsHistoryLimit amount of successful jobs to keep for later analysis. KeepJobs is used property is not specified.
+| *`keepJobs`* __integer__ | KeepJobs amount of jobs to keep for later analysis.
+
+
+Deprecated: Use FailedJobsHistoryLimit and SuccessfulJobsHistoryLimit respectively.
+| *`failedJobsHistoryLimit`* __integer__ | FailedJobsHistoryLimit amount of failed jobs to keep for later analysis.
+KeepJobs is used property is not specified.
+| *`successfulJobsHistoryLimit`* __integer__ | SuccessfulJobsHistoryLimit amount of successful jobs to keep for later analysis.
+KeepJobs is used property is not specified.
 |===
+
+
+
+
 
 
 [id="{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-effectiveschedule"]
@@ -400,7 +432,7 @@ CheckSpec defines the desired state of Check. It needs to contain the repository
 [cols="25a,75a", options="header"]
 |===
 | Field | Description
-| *`jobType`* __JobType__ | 
+| *`jobType`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-jobtype[$$JobType$$]__ | 
 | *`generatedSchedule`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-scheduledefinition[$$ScheduleDefinition$$]__ | 
 |===
 
@@ -433,11 +465,6 @@ CheckSpec defines the desired state of Check. It needs to contain the repository
 - xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-restoremethod[$$RestoreMethod$$]
 ****
 
-[cols="25a,75a", options="header"]
-|===
-| Field | Description
-| *`PersistentVolumeClaimVolumeSource`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#persistentvolumeclaimvolumesource-v1-core[$$PersistentVolumeClaimVolumeSource$$]__ | 
-|===
 
 
 [id="{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-gcsspec"]
@@ -450,9 +477,38 @@ CheckSpec defines the desired state of Check. It needs to contain the repository
 - xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-backend[$$Backend$$]
 ****
 
+[cols="25a,75a", options="header"]
+|===
+| Field | Description
+| *`bucket`* __string__ | 
+| *`projectIDSecretRef`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#secretkeyselector-v1-core[$$SecretKeySelector$$]__ | 
+| *`accessTokenSecretRef`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#secretkeyselector-v1-core[$$SecretKeySelector$$]__ | 
+|===
+
+
+[id="{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-jobobject"]
+=== JobObject (interface{GetActiveDeadlineSeconds() *int64; GetPodConfig(context.Context, sigs.k8s.io/controller-runtime/pkg/client.Client) (*PodConfig, error); GetPodSecurityContext() *k8s.io/api/core/v1.PodSecurityContext; GetResources() k8s.io/api/core/v1.ResourceRequirements; GetStatus() Status; GetType() JobType; SetStatus(s Status); sigs.k8s.io/controller-runtime/pkg/client.Object}) 
+
+JobObject is an interface that must be implemented by all CRDs that implement a job.
+
+.Appears In:
+****
+- xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-jobobjectlist[$$JobObjectList$$]
+****
 
 
 
+
+
+[id="{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-jobtype"]
+=== JobType (string) 
+
+JobType defines what job type this is.
+
+.Appears In:
+****
+- xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-effectiveschedule[$$EffectiveSchedule$$]
+****
 
 
 
@@ -466,6 +522,11 @@ CheckSpec defines the desired state of Check. It needs to contain the repository
 - xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-backend[$$Backend$$]
 ****
 
+[cols="25a,75a", options="header"]
+|===
+| Field | Description
+| *`mountPath`* __string__ | 
+|===
 
 
 [id="{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-pod"]
@@ -483,8 +544,69 @@ Pod is a dummy struct to fix some code generation issues.
 | Field | Description
 | *`metadata`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#objectmeta-v1-meta[$$ObjectMeta$$]__ | Refer to Kubernetes API documentation for fields of `metadata`.
 
-| *`spec`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#podspec-v1-core[$$PodSpec$$]__ | Specification of the desired behavior of the pod. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
+| *`spec`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#podspec-v1-core[$$PodSpec$$]__ | Specification of the desired behavior of the pod.
+More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
 |===
+
+
+[id="{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-podconfig"]
+=== PodConfig 
+
+PodConfig is the Schema for the PodConcig API
+Any annotations and labels set on this object will also be set on
+the final pod.
+
+.Appears In:
+****
+- xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-podconfiglist[$$PodConfigList$$]
+****
+
+[cols="25a,75a", options="header"]
+|===
+| Field | Description
+| *`apiVersion`* __string__ | `k8up.io/v1`
+| *`kind`* __string__ | `PodConfig`
+| *`metadata`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#objectmeta-v1-meta[$$ObjectMeta$$]__ | Refer to Kubernetes API documentation for fields of `metadata`.
+
+| *`spec`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-podconfigspec[$$PodConfigSpec$$]__ | 
+|===
+
+
+[id="{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-podconfiglist"]
+=== PodConfigList 
+
+SnapshotList contains a list of Snapshot
+
+
+
+[cols="25a,75a", options="header"]
+|===
+| Field | Description
+| *`apiVersion`* __string__ | `k8up.io/v1`
+| *`kind`* __string__ | `PodConfigList`
+| *`metadata`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#listmeta-v1-meta[$$ListMeta$$]__ | Refer to Kubernetes API documentation for fields of `metadata`.
+
+| *`items`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-podconfig[$$PodConfig$$] array__ | 
+|===
+
+
+[id="{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-podconfigspec"]
+=== PodConfigSpec 
+
+PodConfigSpec contains the podTemplate definition.
+
+.Appears In:
+****
+- xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-podconfig[$$PodConfig$$]
+****
+
+[cols="25a,75a", options="header"]
+|===
+| Field | Description
+| *`template`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#podtemplatespec-v1-core[$$PodTemplateSpec$$]__ | 
+|===
+
+
 
 
 [id="{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-prebackuppod"]
@@ -529,7 +651,9 @@ PreBackupPodList contains a list of PreBackupPod
 [id="{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-prebackuppodspec"]
 === PreBackupPodSpec 
 
-PreBackupPodSpec define pods that will be launched during the backup. After the backup has finished (successfully or not), they should be removed again automatically by the operator.
+PreBackupPodSpec define pods that will be launched during the backup. After the backup
+has finished (successfully or not), they should be removed again automatically
+by the operator.
 
 .Appears In:
 ****
@@ -600,21 +724,30 @@ PruneSchedule manages the schedules for the prunes
 | *`backend`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-backend[$$Backend$$]__ | Backend contains the restic repo where the job should backup to.
 | *`resources`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#resourcerequirements-v1-core[$$ResourceRequirements$$]__ | Resources describes the compute resource requirements (cpu, memory, etc.)
 | *`podSecurityContext`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#podsecuritycontext-v1-core[$$PodSecurityContext$$]__ | PodSecurityContext describes the security context with which this action shall be executed.
-| *`activeDeadlineSeconds`* __integer__ | ActiveDeadlineSeconds specifies the duration in seconds relative to the startTime that the job may be continuously active before the system tries to terminate it. Value must be positive integer if given.
+| *`podConfigRef`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#localobjectreference-v1-core[$$LocalObjectReference$$]__ | PodConfigRef describes the pod spec with wich this action shall be executed.
+It takes precedence over the Resources or PodSecurityContext field.
+It does not allow changing the image or the command of the resulting pod.
+This is for advanced use-cases only. Please only set this if you know what you're doing.
+| *`volumes`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-runnablevolumespec[$$RunnableVolumeSpec$$]__ | Volumes List of volumes that can be mounted by containers belonging to the pod.
+| *`activeDeadlineSeconds`* __integer__ | ActiveDeadlineSeconds specifies the duration in seconds relative to the startTime that the job may be continuously active before the system tries to terminate it.
+Value must be positive integer if given.
 | *`retention`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-retentionpolicy[$$RetentionPolicy$$]__ | Retention sets how many backups should be kept after a forget and prune
-| *`keepJobs`* __integer__ | KeepJobs amount of jobs to keep for later analysis. 
- Deprecated: Use FailedJobsHistoryLimit and SuccessfulJobsHistoryLimit respectively.
-| *`failedJobsHistoryLimit`* __integer__ | FailedJobsHistoryLimit amount of failed jobs to keep for later analysis. KeepJobs is used property is not specified.
-| *`successfulJobsHistoryLimit`* __integer__ | SuccessfulJobsHistoryLimit amount of successful jobs to keep for later analysis. KeepJobs is used property is not specified.
-| *`schedule`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-scheduledefinition[$$ScheduleDefinition$$]__ | 
-| *`concurrentRunsAllowed`* __boolean__ | 
+| *`keepJobs`* __integer__ | KeepJobs amount of jobs to keep for later analysis.
+
+
+Deprecated: Use FailedJobsHistoryLimit and SuccessfulJobsHistoryLimit respectively.
+| *`failedJobsHistoryLimit`* __integer__ | FailedJobsHistoryLimit amount of failed jobs to keep for later analysis.
+KeepJobs is used property is not specified.
+| *`successfulJobsHistoryLimit`* __integer__ | SuccessfulJobsHistoryLimit amount of successful jobs to keep for later analysis.
+KeepJobs is used property is not specified.
 |===
 
 
 [id="{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-prunespec"]
 === PruneSpec 
 
-PruneSpec needs to contain the repository information as well as the desired retention policies.
+PruneSpec needs to contain the repository information as well as the desired
+retention policies.
 
 .Appears In:
 ****
@@ -628,12 +761,22 @@ PruneSpec needs to contain the repository information as well as the desired ret
 | *`backend`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-backend[$$Backend$$]__ | Backend contains the restic repo where the job should backup to.
 | *`resources`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#resourcerequirements-v1-core[$$ResourceRequirements$$]__ | Resources describes the compute resource requirements (cpu, memory, etc.)
 | *`podSecurityContext`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#podsecuritycontext-v1-core[$$PodSecurityContext$$]__ | PodSecurityContext describes the security context with which this action shall be executed.
-| *`activeDeadlineSeconds`* __integer__ | ActiveDeadlineSeconds specifies the duration in seconds relative to the startTime that the job may be continuously active before the system tries to terminate it. Value must be positive integer if given.
+| *`podConfigRef`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#localobjectreference-v1-core[$$LocalObjectReference$$]__ | PodConfigRef describes the pod spec with wich this action shall be executed.
+It takes precedence over the Resources or PodSecurityContext field.
+It does not allow changing the image or the command of the resulting pod.
+This is for advanced use-cases only. Please only set this if you know what you're doing.
+| *`volumes`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-runnablevolumespec[$$RunnableVolumeSpec$$]__ | Volumes List of volumes that can be mounted by containers belonging to the pod.
+| *`activeDeadlineSeconds`* __integer__ | ActiveDeadlineSeconds specifies the duration in seconds relative to the startTime that the job may be continuously active before the system tries to terminate it.
+Value must be positive integer if given.
 | *`retention`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-retentionpolicy[$$RetentionPolicy$$]__ | Retention sets how many backups should be kept after a forget and prune
-| *`keepJobs`* __integer__ | KeepJobs amount of jobs to keep for later analysis. 
- Deprecated: Use FailedJobsHistoryLimit and SuccessfulJobsHistoryLimit respectively.
-| *`failedJobsHistoryLimit`* __integer__ | FailedJobsHistoryLimit amount of failed jobs to keep for later analysis. KeepJobs is used property is not specified.
-| *`successfulJobsHistoryLimit`* __integer__ | SuccessfulJobsHistoryLimit amount of successful jobs to keep for later analysis. KeepJobs is used property is not specified.
+| *`keepJobs`* __integer__ | KeepJobs amount of jobs to keep for later analysis.
+
+
+Deprecated: Use FailedJobsHistoryLimit and SuccessfulJobsHistoryLimit respectively.
+| *`failedJobsHistoryLimit`* __integer__ | FailedJobsHistoryLimit amount of failed jobs to keep for later analysis.
+KeepJobs is used property is not specified.
+| *`successfulJobsHistoryLimit`* __integer__ | SuccessfulJobsHistoryLimit amount of successful jobs to keep for later analysis.
+KeepJobs is used property is not specified.
 |===
 
 
@@ -647,6 +790,13 @@ PruneSpec needs to contain the repository information as well as the desired ret
 - xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-backend[$$Backend$$]
 ****
 
+[cols="25a,75a", options="header"]
+|===
+| Field | Description
+| *`url`* __string__ | 
+| *`userSecretRef`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#secretkeyselector-v1-core[$$SecretKeySelector$$]__ | 
+| *`passwordSecretReg`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#secretkeyselector-v1-core[$$SecretKeySelector$$]__ | 
+|===
 
 
 [id="{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-restore"]
@@ -691,12 +841,11 @@ RestoreList contains a list of Restore
 [id="{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-restoremethod"]
 === RestoreMethod 
 
-RestoreMethod contains how and where the restore should happen all the settings are mutual exclusive.
+RestoreMethod contains how and where the restore should happen
+all the settings are mutual exclusive.
 
 .Appears In:
 ****
-- xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-archiveschedule[$$ArchiveSchedule$$]
-- xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-archivespec[$$ArchiveSpec$$]
 - xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-restoreschedule[$$RestoreSchedule$$]
 - xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-restorespec[$$RestoreSpec$$]
 ****
@@ -706,6 +855,8 @@ RestoreMethod contains how and where the restore should happen all the settings 
 | Field | Description
 | *`s3`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-s3spec[$$S3Spec$$]__ | 
 | *`folder`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-folderrestore[$$FolderRestore$$]__ | 
+| *`tlsOptions`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-tlsoptions[$$TLSOptions$$]__ | 
+| *`volumeMounts`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#volumemount-v1-core[$$VolumeMount$$]__ | 
 |===
 
 
@@ -725,24 +876,33 @@ RestoreSchedule manages schedules for the restore service
 | *`backend`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-backend[$$Backend$$]__ | Backend contains the restic repo where the job should backup to.
 | *`resources`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#resourcerequirements-v1-core[$$ResourceRequirements$$]__ | Resources describes the compute resource requirements (cpu, memory, etc.)
 | *`podSecurityContext`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#podsecuritycontext-v1-core[$$PodSecurityContext$$]__ | PodSecurityContext describes the security context with which this action shall be executed.
-| *`activeDeadlineSeconds`* __integer__ | ActiveDeadlineSeconds specifies the duration in seconds relative to the startTime that the job may be continuously active before the system tries to terminate it. Value must be positive integer if given.
+| *`podConfigRef`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#localobjectreference-v1-core[$$LocalObjectReference$$]__ | PodConfigRef describes the pod spec with wich this action shall be executed.
+It takes precedence over the Resources or PodSecurityContext field.
+It does not allow changing the image or the command of the resulting pod.
+This is for advanced use-cases only. Please only set this if you know what you're doing.
+| *`volumes`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-runnablevolumespec[$$RunnableVolumeSpec$$]__ | Volumes List of volumes that can be mounted by containers belonging to the pod.
+| *`activeDeadlineSeconds`* __integer__ | ActiveDeadlineSeconds specifies the duration in seconds relative to the startTime that the job may be continuously active before the system tries to terminate it.
+Value must be positive integer if given.
 | *`restoreMethod`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-restoremethod[$$RestoreMethod$$]__ | 
 | *`restoreFilter`* __string__ | 
 | *`snapshot`* __string__ | 
-| *`keepJobs`* __integer__ | KeepJobs amount of jobs to keep for later analysis. 
- Deprecated: Use FailedJobsHistoryLimit and SuccessfulJobsHistoryLimit respectively.
-| *`failedJobsHistoryLimit`* __integer__ | FailedJobsHistoryLimit amount of failed jobs to keep for later analysis. KeepJobs is used property is not specified.
-| *`successfulJobsHistoryLimit`* __integer__ | SuccessfulJobsHistoryLimit amount of successful jobs to keep for later analysis. KeepJobs is used property is not specified.
+| *`keepJobs`* __integer__ | KeepJobs amount of jobs to keep for later analysis.
+
+
+Deprecated: Use FailedJobsHistoryLimit and SuccessfulJobsHistoryLimit respectively.
+| *`failedJobsHistoryLimit`* __integer__ | FailedJobsHistoryLimit amount of failed jobs to keep for later analysis.
+KeepJobs is used property is not specified.
+| *`successfulJobsHistoryLimit`* __integer__ | SuccessfulJobsHistoryLimit amount of successful jobs to keep for later analysis.
+KeepJobs is used property is not specified.
 | *`tags`* __string array__ | Tags is a list of arbitrary tags that get added to the backup via Restic's tagging system
-| *`schedule`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-scheduledefinition[$$ScheduleDefinition$$]__ | 
-| *`concurrentRunsAllowed`* __boolean__ | 
 |===
 
 
 [id="{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-restorespec"]
 === RestoreSpec 
 
-RestoreSpec can either contain an S3 restore point or a local one. For the local one you need to define an existing PVC.
+RestoreSpec can either contain an S3 restore point or a local one. For the local
+one you need to define an existing PVC.
 
 .Appears In:
 ****
@@ -758,14 +918,24 @@ RestoreSpec can either contain an S3 restore point or a local one. For the local
 | *`backend`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-backend[$$Backend$$]__ | Backend contains the restic repo where the job should backup to.
 | *`resources`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#resourcerequirements-v1-core[$$ResourceRequirements$$]__ | Resources describes the compute resource requirements (cpu, memory, etc.)
 | *`podSecurityContext`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#podsecuritycontext-v1-core[$$PodSecurityContext$$]__ | PodSecurityContext describes the security context with which this action shall be executed.
-| *`activeDeadlineSeconds`* __integer__ | ActiveDeadlineSeconds specifies the duration in seconds relative to the startTime that the job may be continuously active before the system tries to terminate it. Value must be positive integer if given.
+| *`podConfigRef`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#localobjectreference-v1-core[$$LocalObjectReference$$]__ | PodConfigRef describes the pod spec with wich this action shall be executed.
+It takes precedence over the Resources or PodSecurityContext field.
+It does not allow changing the image or the command of the resulting pod.
+This is for advanced use-cases only. Please only set this if you know what you're doing.
+| *`volumes`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-runnablevolumespec[$$RunnableVolumeSpec$$]__ | Volumes List of volumes that can be mounted by containers belonging to the pod.
+| *`activeDeadlineSeconds`* __integer__ | ActiveDeadlineSeconds specifies the duration in seconds relative to the startTime that the job may be continuously active before the system tries to terminate it.
+Value must be positive integer if given.
 | *`restoreMethod`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-restoremethod[$$RestoreMethod$$]__ | 
 | *`restoreFilter`* __string__ | 
 | *`snapshot`* __string__ | 
-| *`keepJobs`* __integer__ | KeepJobs amount of jobs to keep for later analysis. 
- Deprecated: Use FailedJobsHistoryLimit and SuccessfulJobsHistoryLimit respectively.
-| *`failedJobsHistoryLimit`* __integer__ | FailedJobsHistoryLimit amount of failed jobs to keep for later analysis. KeepJobs is used property is not specified.
-| *`successfulJobsHistoryLimit`* __integer__ | SuccessfulJobsHistoryLimit amount of successful jobs to keep for later analysis. KeepJobs is used property is not specified.
+| *`keepJobs`* __integer__ | KeepJobs amount of jobs to keep for later analysis.
+
+
+Deprecated: Use FailedJobsHistoryLimit and SuccessfulJobsHistoryLimit respectively.
+| *`failedJobsHistoryLimit`* __integer__ | FailedJobsHistoryLimit amount of failed jobs to keep for later analysis.
+KeepJobs is used property is not specified.
+| *`successfulJobsHistoryLimit`* __integer__ | SuccessfulJobsHistoryLimit amount of successful jobs to keep for later analysis.
+KeepJobs is used property is not specified.
 | *`tags`* __string array__ | Tags is a list of arbitrary tags that get added to the backup via Restic's tagging system
 |===
 
@@ -791,7 +961,8 @@ RestoreSpec can either contain an S3 restore point or a local one. For the local
 | *`keepMonthly`* __integer__ | 
 | *`keepYearly`* __integer__ | 
 | *`keepTags`* __string array__ | 
-| *`tags`* __string array__ | Tags is a filter on what tags the policy should be applied DO NOT CONFUSE THIS WITH KeepTags OR YOU'LL have a bad time
+| *`tags`* __string array__ | Tags is a filter on what tags the policy should be applied
+DO NOT CONFUSE THIS WITH KeepTags OR YOU'LL have a bad time
 | *`hostnames`* __string array__ | Hostnames is a filter on what hostnames the policy should be applied
 |===
 
@@ -803,8 +974,6 @@ RunnableSpec defines the fields that are necessary on the specs of all actions t
 
 .Appears In:
 ****
-- xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-archiveschedule[$$ArchiveSchedule$$]
-- xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-archivespec[$$ArchiveSpec$$]
 - xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-backupschedule[$$BackupSchedule$$]
 - xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-backupspec[$$BackupSpec$$]
 - xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-checkschedule[$$CheckSchedule$$]
@@ -821,7 +990,46 @@ RunnableSpec defines the fields that are necessary on the specs of all actions t
 | *`backend`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-backend[$$Backend$$]__ | Backend contains the restic repo where the job should backup to.
 | *`resources`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#resourcerequirements-v1-core[$$ResourceRequirements$$]__ | Resources describes the compute resource requirements (cpu, memory, etc.)
 | *`podSecurityContext`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#podsecuritycontext-v1-core[$$PodSecurityContext$$]__ | PodSecurityContext describes the security context with which this action shall be executed.
-| *`activeDeadlineSeconds`* __integer__ | ActiveDeadlineSeconds specifies the duration in seconds relative to the startTime that the job may be continuously active before the system tries to terminate it. Value must be positive integer if given.
+| *`podConfigRef`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#localobjectreference-v1-core[$$LocalObjectReference$$]__ | PodConfigRef describes the pod spec with wich this action shall be executed.
+It takes precedence over the Resources or PodSecurityContext field.
+It does not allow changing the image or the command of the resulting pod.
+This is for advanced use-cases only. Please only set this if you know what you're doing.
+| *`volumes`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-runnablevolumespec[$$RunnableVolumeSpec$$]__ | Volumes List of volumes that can be mounted by containers belonging to the pod.
+| *`activeDeadlineSeconds`* __integer__ | ActiveDeadlineSeconds specifies the duration in seconds relative to the startTime that the job may be continuously active before the system tries to terminate it.
+Value must be positive integer if given.
+|===
+
+
+[id="{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-runnablevolumespec"]
+=== RunnableVolumeSpec 
+
+
+
+.Appears In:
+****
+- xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-backupschedule[$$BackupSchedule$$]
+- xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-backupspec[$$BackupSpec$$]
+- xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-checkschedule[$$CheckSchedule$$]
+- xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-checkspec[$$CheckSpec$$]
+- xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-pruneschedule[$$PruneSchedule$$]
+- xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-prunespec[$$PruneSpec$$]
+- xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-restoreschedule[$$RestoreSchedule$$]
+- xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-restorespec[$$RestoreSpec$$]
+- xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-runnablespec[$$RunnableSpec$$]
+****
+
+[cols="25a,75a", options="header"]
+|===
+| Field | Description
+| *`name`* __string__ | name of the volume.
+Must be a DNS_LABEL and unique within the pod.
+More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+| *`persistentVolumeClaim`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#persistentvolumeclaimvolumesource-v1-core[$$PersistentVolumeClaimVolumeSource$$]__ | persistentVolumeClaimVolumeSource represents a reference to a
+PersistentVolumeClaim in the same namespace.
+More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#persistentvolumeclaims
+| *`secret`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#secretvolumesource-v1-core[$$SecretVolumeSource$$]__ | secret represents a secret that should populate this volume.
+More info: https://kubernetes.io/docs/concepts/storage/volumes#secret
+| *`configMap`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#configmapvolumesource-v1-core[$$ConfigMapVolumeSource$$]__ | configMap represents a configMap that should populate this volume
 |===
 
 
@@ -836,6 +1044,14 @@ RunnableSpec defines the fields that are necessary on the specs of all actions t
 - xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-restoremethod[$$RestoreMethod$$]
 ****
 
+[cols="25a,75a", options="header"]
+|===
+| Field | Description
+| *`endpoint`* __string__ | 
+| *`bucket`* __string__ | 
+| *`accessKeyIDSecretRef`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#secretkeyselector-v1-core[$$SecretKeySelector$$]__ | 
+| *`secretAccessKeySecretRef`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#secretkeyselector-v1-core[$$SecretKeySelector$$]__ | 
+|===
 
 
 [id="{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-schedule"]
@@ -888,12 +1104,7 @@ ScheduleDefinition is the actual cron-type expression that defines the interval 
 
 .Appears In:
 ****
-- xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-archiveschedule[$$ArchiveSchedule$$]
-- xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-backupschedule[$$BackupSchedule$$]
-- xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-checkschedule[$$CheckSchedule$$]
 - xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-effectiveschedule[$$EffectiveSchedule$$]
-- xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-pruneschedule[$$PruneSchedule$$]
-- xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-restoreschedule[$$RestoreSchedule$$]
 - xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-schedulecommon[$$ScheduleCommon$$]
 ****
 
@@ -936,12 +1147,18 @@ ScheduleSpec defines the schedules for the various job types.
 | *`check`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-checkschedule[$$CheckSchedule$$]__ | 
 | *`prune`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-pruneschedule[$$PruneSchedule$$]__ | 
 | *`backend`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-backend[$$Backend$$]__ | 
-| *`keepJobs`* __integer__ | KeepJobs amount of jobs to keep for later analysis. 
- Deprecated: Use FailedJobsHistoryLimit and SuccessfulJobsHistoryLimit respectively.
-| *`failedJobsHistoryLimit`* __integer__ | FailedJobsHistoryLimit amount of failed jobs to keep for later analysis. KeepJobs is used property is not specified.
-| *`successfulJobsHistoryLimit`* __integer__ | SuccessfulJobsHistoryLimit amount of successful jobs to keep for later analysis. KeepJobs is used property is not specified.
+| *`keepJobs`* __integer__ | KeepJobs amount of jobs to keep for later analysis.
+
+
+Deprecated: Use FailedJobsHistoryLimit and SuccessfulJobsHistoryLimit respectively.
+| *`failedJobsHistoryLimit`* __integer__ | FailedJobsHistoryLimit amount of failed jobs to keep for later analysis.
+KeepJobs is used property is not specified.
+| *`successfulJobsHistoryLimit`* __integer__ | SuccessfulJobsHistoryLimit amount of successful jobs to keep for later analysis.
+KeepJobs is used property is not specified.
 | *`resourceRequirementsTemplate`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#resourcerequirements-v1-core[$$ResourceRequirements$$]__ | ResourceRequirementsTemplate describes the compute resource requirements (cpu, memory, etc.)
 | *`podSecurityContext`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#podsecuritycontext-v1-core[$$PodSecurityContext$$]__ | PodSecurityContext describes the security context with which actions (such as backups) shall be executed.
+| *`podConfigRef`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#localobjectreference-v1-core[$$LocalObjectReference$$]__ | PodConfigRef will apply the given template to all job definitions in this Schedule.
+It can be overriden for specific jobs if necessary.
 |===
 
 
@@ -991,7 +1208,8 @@ SnapshotList contains a list of Snapshot
 [id="{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-snapshotspec"]
 === SnapshotSpec 
 
-SnapshotSpec contains all information needed about a restic snapshot so it can be restored.
+SnapshotSpec contains all information needed about a restic snapshot so it
+can be restored.
 
 .Appears In:
 ****
@@ -1022,5 +1240,31 @@ SnapshotSpec contains all information needed about a restic snapshot so it can b
 - xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-backend[$$Backend$$]
 ****
 
+[cols="25a,75a", options="header"]
+|===
+| Field | Description
+| *`container`* __string__ | 
+| *`path`* __string__ | 
+|===
+
+
+[id="{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-tlsoptions"]
+=== TLSOptions 
+
+
+
+.Appears In:
+****
+- xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-backend[$$Backend$$]
+- xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-restoremethod[$$RestoreMethod$$]
+****
+
+[cols="25a,75a", options="header"]
+|===
+| Field | Description
+| *`caCert`* __string__ | 
+| *`clientCert`* __string__ | 
+| *`clientKey`* __string__ | 
+|===
 
 

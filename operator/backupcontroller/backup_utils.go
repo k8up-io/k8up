@@ -3,11 +3,11 @@ package backupcontroller
 import (
 	"context"
 	"fmt"
-	"path"
-
 	"github.com/k8up-io/k8up/v2/operator/executor"
+	"github.com/k8up-io/k8up/v2/operator/utils"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
+	"path"
 	controllerruntime "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -72,6 +72,18 @@ func (b *BackupExecutor) createServiceAccountAndBinding(ctx context.Context) err
 		return nil
 	})
 	return err
+}
+
+func (b *BackupExecutor) setupArgs() []string {
+	args := []string{"-varDir", cfg.Config.PodVarDir}
+	if len(b.backup.Spec.Tags) > 0 {
+		args = append(args, executor.BuildTagArgs(b.backup.Spec.Tags)...)
+	}
+	if b.backup.Spec.Backend != nil {
+		args = append(args, utils.AppendTLSOptionsArgs(b.backup.Spec.Backend.TLSOptions)...)
+	}
+
+	return args
 }
 
 func (b *BackupExecutor) setupEnvVars() ([]corev1.EnvVar, error) {

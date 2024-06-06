@@ -131,7 +131,7 @@ func initTest(t *testing.T) *testEnvironment {
 
 func connectToS3Server(t *testing.T, ctx context.Context) *s3.Client {
 	repo := getS3Repo()
-	s3client := s3.New(repo, os.Getenv("AWS_ACCESS_KEY_ID"), os.Getenv("AWS_SECRET_ACCESS_KEY"))
+	s3client := s3.New(repo, os.Getenv("AWS_ACCESS_KEY_ID"), os.Getenv("AWS_SECRET_ACCESS_KEY"), s3.Cert{})
 
 	err := s3client.Connect(ctx)
 	require.NoErrorf(t, err, "Unable to connect to S3 repo '%s'", repo)
@@ -211,7 +211,7 @@ func testBackup(t *testing.T) *testEnvironment {
 }
 
 func testCheckS3Restore(t *testing.T, ctx context.Context) {
-	s3c := s3.New(os.Getenv("RESTORE_S3ENDPOINT"), os.Getenv("RESTORE_ACCESSKEYID"), os.Getenv("RESTORE_SECRETACCESSKEY"))
+	s3c := s3.New(os.Getenv("RESTORE_S3ENDPOINT"), os.Getenv("RESTORE_ACCESSKEYID"), os.Getenv("RESTORE_SECRETACCESSKEY"), s3.Cert{})
 	err := s3c.Connect(ctx)
 	require.NoError(t, err)
 	files, err := s3c.ListObjects(ctx)

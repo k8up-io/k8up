@@ -7,6 +7,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/k8up-io/k8up/v2/operator/utils"
+
 	k8upv1 "github.com/k8up-io/k8up/v2/api/v1"
 	"github.com/k8up-io/k8up/v2/operator/cfg"
 	"github.com/k8up-io/k8up/v2/operator/executor"
@@ -233,7 +235,7 @@ func (b *BackupExecutor) startBackup(ctx context.Context) error {
 	index := 0
 	for _, batchJob := range backupJobs {
 		_, err = controllerruntime.CreateOrUpdate(ctx, b.Generic.Config.Client, batchJob.job, func() error {
-			mutateErr := job.MutateBatchJob(batchJob.job, b.backup, b.Generic.Config)
+			mutateErr := job.MutateBatchJob(ctx, batchJob.job, b.backup, b.Generic.Config, b.Client)
 			if mutateErr != nil {
 				return mutateErr
 			}
@@ -242,7 +244,7 @@ func (b *BackupExecutor) startBackup(ctx context.Context) error {
 			if setupErr != nil {
 				return setupErr
 			}
-			batchJob.job.Spec.Template.Spec.Containers[0].Env = vars
+			batchJob.job.Spec.Template.Spec.Containers[0].Env = append(batchJob.job.Spec.Template.Spec.Containers[0].Env, vars...)
 			if len(batchJob.targetPods) > 0 {
 				batchJob.job.Spec.Template.Spec.Containers[0].Env = append(batchJob.job.Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{
 					Name:  "TARGET_PODS",
@@ -260,14 +262,19 @@ func (b *BackupExecutor) startBackup(ctx context.Context) error {
 			if index > 0 {
 				batchJob.job.Spec.Template.Spec.Containers[0].Env = append(batchJob.job.Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{
 					Name:  "SLEEP_DURATION",
-					Value: (5 * time.Second).String(),
+					Value: (time.Duration(index) * time.Second).String(),
 				})
 			}
 			b.backup.Spec.AppendEnvFromToContainer(&batchJob.job.Spec.Template.Spec.Containers[0])
-			batchJob.job.Spec.Template.Spec.ServiceAccountName = cfg.Config.ServiceAccount
-			batchJob.job.Spec.Template.Spec.Containers[0].Args = executor.BuildTagArgs(b.backup.Spec.Tags)
-			batchJob.job.Spec.Template.Spec.Volumes = batchJob.volumes
-			batchJob.job.Spec.Template.Spec.Containers[0].VolumeMounts = b.newVolumeMounts(batchJob.job.Spec.Template.Spec.Volumes)
+			batchJob.job.Spec.Template.Spec.Volumes = append(batchJob.job.Spec.Template.Spec.Volumes, batchJob.volumes...)
+			batchJob.job.Spec.Template.Spec.Volumes = append(batchJob.job.Spec.Template.Spec.Volumes, utils.AttachTLSVolumes(b.backup.Spec.Volumes)...)
+			batchJob.job.Spec.Template.Spec.Containers[0].VolumeMounts = append(b.newVolumeMounts(batchJob.volumes), b.attachTLSVolumeMounts()...)
+
+			batchJob.job.Spec.Template.Spec.Containers[0].Args = b.setupArgs()
+
+			if batchJob.job.Spec.Template.Spec.ServiceAccountName == "" {
+				batchJob.job.Spec.Template.Spec.ServiceAccountName = cfg.Config.ServiceAccount
+			}
 
 			if b.backup.Spec.Backend.InsecureTLS {
 				batchJob.job.Spec.Template.Spec.Containers[0].Env = append(batchJob.job.Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{
@@ -307,4 +314,13 @@ func (b *BackupExecutor) cleanupOldBackups(ctx context.Context) {
 
 func (b *BackupExecutor) jobName(name string) string {
 	return k8upv1.BackupType.String() + "-" + b.backup.Name + "-" + name
+}
+
+func (b *BackupExecutor) attachTLSVolumeMounts() []corev1.VolumeMount {
+	var tlsVolumeMounts []corev1.VolumeMount
+	if b.backup.Spec.Backend != nil && !utils.ZeroLen(b.backup.Spec.Backend.VolumeMounts) {
+		tlsVolumeMounts = append(tlsVolumeMounts, *b.backup.Spec.Backend.VolumeMounts...)
+	}
+
+	return utils.AttachTLSVolumeMounts(cfg.Config.PodVarDir, &tlsVolumeMounts)
 }

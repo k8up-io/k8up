@@ -42,3 +42,11 @@ e2e/debug
 # Charts
 .cr-release-packages/
 .cr-index/
+
+# Vagrant
+.vagrant/
+
+# Container volumes mount
+.config/
+.kube/
+.npm/

@@ -1,3 +1,5 @@
+//go:build integration
+
 package restorecontroller
 
 import (
@@ -228,15 +230,16 @@ func TestRestore_args(t *testing.T) {
 	}{
 		"givenS3RestoreResource_whenArgs_expectS3RestoreType": {
 			GivenResource: newS3RestoreResource(),
-			ExpectedArgs:  []string{"-restore", "-restoreType", "s3"},
+			ExpectedArgs:  []string{"-varDir", "/k8up", "-restore", "-restoreType", "s3"},
 		},
 		"givenFolderRestoreResource_whenArgs_expectFolderRestoreType": {
 			GivenResource: newFolderRestoreResource(),
-			ExpectedArgs:  []string{"-restore", "-restoreType", "folder"},
+			ExpectedArgs:  []string{"-varDir", "/k8up", "-restore", "-restoreType", "folder"},
 		},
 		"givenFolderRestoreResourceWithAdditionalArguments_whenBuildRestoreObject_expectJobResource": {
 			GivenResource: newFilteredFolderRestoreResource(),
 			ExpectedArgs: []string{
+				"-varDir", "/k8up",
 				"-restore",
 				"--tag", "testtag",
 				"--tag", "another",
@@ -250,7 +253,7 @@ func TestRestore_args(t *testing.T) {
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
 			e := NewRestoreExecutor(*newConfig())
-			args, err := e.args(tt.GivenResource)
+			args, err := e.setupArgs(tt.GivenResource)
 
 			require.NoError(t, err)
 			assert.Equal(t, tt.ExpectedArgs, args)

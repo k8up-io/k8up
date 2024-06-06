@@ -17,15 +17,19 @@ type (
 		// RepoPasswordSecretRef references a secret key to look up the restic repository password
 		RepoPasswordSecretRef *corev1.SecretKeySelector `json:"repoPasswordSecretRef,omitempty"`
 		// EnvFrom adds all environment variables from a an external source to the Restic job.
-		EnvFrom     []corev1.EnvFromSource `json:"envFrom,omitempty"`
-		Local       *LocalSpec             `json:"local,omitempty"`
-		S3          *S3Spec                `json:"s3,omitempty"`
-		GCS         *GCSSpec               `json:"gcs,omitempty"`
-		Azure       *AzureSpec             `json:"azure,omitempty"`
-		Swift       *SwiftSpec             `json:"swift,omitempty"`
-		B2          *B2Spec                `json:"b2,omitempty"`
-		Rest        *RestServerSpec        `json:"rest,omitempty"`
+		EnvFrom []corev1.EnvFromSource `json:"envFrom,omitempty"`
+		Local   *LocalSpec             `json:"local,omitempty"`
+		S3      *S3Spec                `json:"s3,omitempty"`
+		GCS     *GCSSpec               `json:"gcs,omitempty"`
+		Azure   *AzureSpec             `json:"azure,omitempty"`
+		Swift   *SwiftSpec             `json:"swift,omitempty"`
+		B2      *B2Spec                `json:"b2,omitempty"`
+		Rest    *RestServerSpec        `json:"rest,omitempty"`
 		InsecureTLS bool                   `json:"insecureTLS,omitempty"`
+
+
+		TLSOptions   *TLSOptions           `json:"tlsOptions,omitempty"`
+		VolumeMounts *[]corev1.VolumeMount `json:"volumeMounts,omitempty"`
 	}
 
 	// +k8s:deepcopy-gen=false
@@ -279,4 +283,10 @@ func (in *RestServerSpec) EnvVars(vars map[string]*corev1.EnvVarSource) map[stri
 func (in *RestServerSpec) String() string {
 	protocol, url, _ := strings.Cut(in.URL, "://")
 	return fmt.Sprintf("rest:%s://%s:%s@%s", protocol, "$(USER)", "$(PASSWORD)", url)
+}
+
+type TLSOptions struct {
+	CACert     string `json:"caCert,omitempty"`
+	ClientCert string `json:"clientCert,omitempty"`
+	ClientKey  string `json:"clientKey,omitempty"`
 }

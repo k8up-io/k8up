@@ -12,3 +12,210 @@ Save the YAML above in a file named `backup.yaml` and use the `kubectl apply -f 
 TIP: To have backups run automatically at a regular interval look at xref:how-tos/schedules.adoc[schedules].
 
 TIP: By default, all PVCs are backed up automatically. Adding the annotation `k8up.io/backup=false` to a PVC object will exclude it from all following backups. Alternatively, you can set the environment variable `BACKUP_SKIP_WITHOUT_ANNOTATION=true` if you want K8up to ignore objects without the annotation.
+
+== Self-signed issuer and Mutual TLS
+
+If you are using self-signed issuer or using mutual tls for authenticate client, you're able use a volume for mounting cert files into the backup object.
+
+=== Self-signed issuer
+
+- Using with `options` feature
+
+[source,yaml]
+----
+apiVersion: k8up.io/v1
+kind: Backup
+metadata:
+  name: backup-test
+spec:
+  failedJobsHistoryLimit: 2
+  successfulJobsHistoryLimit: 2
+  backend:
+    s3: {}
+
+    tlsOptions:
+      caCert: /mnt/ca/ca.crt
+    volumeMounts:
+      - name: ca-tls
+        mountPath: /mnt/ca/
+
+  podSecurityContext:
+    fsGroup: 1000
+    runAsUser: 1000
+  volumes:
+    - name: ca-tls
+      secret:
+        secretName: ca-tls
+        defaultMode: 420
+----
+
+- Using with `env`
+
+[source,yaml]
+----
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backup-cert
+data:
+  CA_CERT_FILE: /mnt/ca/ca.crt
+---
+apiVersion: k8up.io/v1
+kind: Backup
+metadata:
+  name: backup-test
+spec:
+  failedJobsHistoryLimit: 2
+  successfulJobsHistoryLimit: 2
+  backend:
+    s3: {}
+
+    envFrom:
+      - configMapRef:
+          name: backup-cert
+    volumeMounts:
+      - name: ca-tls
+        mountPath: /mnt/ca/
+
+  podSecurityContext:
+    fsGroup: 1000
+    runAsUser: 1000
+  volumes:
+    - name: ca-tls
+      secret:
+        secretName: ca-tls
+        defaultMode: 420
+----
+
+=== Self-signed issuer with mTLS
+
+- Using with `options` feature
+
+[source,yaml]
+----
+apiVersion: k8up.io/v1
+kind: Backup
+metadata:
+  name: backup-test
+spec:
+  failedJobsHistoryLimit: 2
+  successfulJobsHistoryLimit: 2
+  backend:
+    s3: {}
+
+    tlsOptions:
+      caCert: /mnt/tls/ca.crt
+      clientCert: /mnt/tls/tls.crt
+      clientKey: /mnt/tls/tls.key
+    volumeMounts:
+      - name: client-tls
+        mountPath: /mnt/tls/
+
+  podSecurityContext:
+    fsGroup: 1000
+    runAsUser: 1000
+  volumes:
+    - name: client-tls
+      secret:
+        secretName: client-tls
+        defaultMode: 420
+----
+
+- Using with `env`
+
+[source,yaml]
+----
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backup-cert
+data:
+  CA_CERT_FILE: /mnt/tls/ca.crt
+  CLIENT_CERT_FILE: /mnt/tls/tls.crt
+  CLIENT_KEY_FILE: /mnt/tls/tls.key
+---
+apiVersion: k8up.io/v1
+kind: Backup
+metadata:
+  name: backup-test
+spec:
+  failedJobsHistoryLimit: 2
+  successfulJobsHistoryLimit: 2
+  backend:
+    s3: {}
+
+    envFrom:
+      - configMapRef:
+          name: backup-cert
+    volumeMounts:
+      - name: client-tls
+        mountPath: /mnt/tls/
+
+  podSecurityContext:
+    fsGroup: 1000
+    runAsUser: 1000
+  volumes:
+    - name: client-tls
+      secret:
+        secretName: client-tls
+        defaultMode: 420
+----
+
+== Customize Pod Spec
+You can override most of the fields in the podSpec for the backup jobs.
+
+These are the fields you can't override:
+
+* image
+* command
+* container name
+* args
+
+The podSpec has to be created via a separate object of the type `PodConfig`.
+Any annotations and labels set on the `PodConfig` will also be applied to the pod.
+Any fields on the `PodConfig` object has precedence over settings specified in the job.
+For example, if the job has `podSecurityContext` set and the `PodConfig` has it set as well, then the setting from the `PodConfig` will override the setting in the job definition.
+
+[source,yaml]
+----
+apiVersion: k8up.io/v1
+kind: PodConfig
+metadata:
+  name: podconfig
+  namespace: prod
+  annotations:
+    test: test
+spec:
+  template:
+    spec:
+      containers:
+        - env:
+            - name: FOO
+              value: bar
+          securityContext:
+            allowPrivilegeEscalation: true
+---
+apiVersion: k8up.io/v1
+kind: Backup
+metadata:
+  name: k8up-backup
+  namespace: prod
+spec:
+  failedJobsHistoryLimit: 1
+  successfulJobsHistoryLimit: 1
+  backend:
+    repoPasswordSecretRef:
+      name: backup-repo
+      key: password
+    s3:
+      endpoint: http://minio.minio-e2e.svc.cluster.local:9000
+      bucket: backup
+      accessKeyIDSecretRef:
+        name: backup-credentials
+        key: username
+      secretAccessKeySecretRef:
+        name: backup-credentials
+        key: password
+  podConfigRef:
+    name: podconfig
+----

@@ -34,4 +34,4 @@ $(KIND_KUBECONFIG): $(KIND)
 
 $(KIND): export GOBIN = $(go_bin)
 $(KIND): | $(go_bin)
-	go install sigs.k8s.io/kind@latest
+	$(GO_EXEC) install sigs.k8s.io/kind@latest

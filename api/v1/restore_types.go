@@ -1,10 +1,12 @@
 package v1
 
 import (
+	"context"
 	"reflect"
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // RestoreSpec can either contain an S3 restore point or a local one. For the local
@@ -35,8 +37,10 @@ type RestoreSpec struct {
 // RestoreMethod contains how and where the restore should happen
 // all the settings are mutual exclusive.
 type RestoreMethod struct {
-	S3     *S3Spec        `json:"s3,omitempty"`
-	Folder *FolderRestore `json:"folder,omitempty"`
+	S3           *S3Spec               `json:"s3,omitempty"`
+	Folder       *FolderRestore        `json:"folder,omitempty"`
+	TLSOptions   *TLSOptions           `json:"tlsOptions,omitempty"`
+	VolumeMounts *[]corev1.VolumeMount `json:"volumeMounts,omitempty"`
 }
 
 type FolderRestore struct {
@@ -103,6 +107,13 @@ func (r *Restore) GetSuccessfulJobsHistoryLimit() *int {
 		return r.Spec.SuccessfulJobsHistoryLimit
 	}
 	return r.Spec.KeepJobs
+}
+
+func (r *Restore) GetPodConfig(ctx context.Context, c client.Client) (*PodConfig, error) {
+	if r.Spec.RunnableSpec.PodConfigRef == nil {
+		return nil, nil
+	}
+	return NewPodConfig(ctx, r.Spec.RunnableSpec.PodConfigRef.Name, r.GetNamespace(), c)
 }
 
 // GetJobObjects returns a sortable list of jobs

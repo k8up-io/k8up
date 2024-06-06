@@ -1,10 +1,12 @@
 package v1
 
 import (
+	"context"
 	"reflect"
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // CheckSpec defines the desired state of Check. It needs to contain the repository
@@ -104,6 +106,13 @@ func (c *Check) GetSuccessfulJobsHistoryLimit() *int {
 		return c.Spec.SuccessfulJobsHistoryLimit
 	}
 	return c.Spec.KeepJobs
+}
+
+func (b *Check) GetPodConfig(ctx context.Context, c client.Client) (*PodConfig, error) {
+	if b.Spec.RunnableSpec.PodConfigRef == nil {
+		return nil, nil
+	}
+	return NewPodConfig(ctx, b.Spec.RunnableSpec.PodConfigRef.Name, b.GetNamespace(), c)
 }
 
 // GetJobObjects returns a sortable list of jobs

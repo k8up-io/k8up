@@ -381,6 +381,57 @@ spec:
                       path:
                         type: string
                     type: object
+                  tlsOptions:
+                    properties:
+                      caCert:
+                        type: string
+                      clientCert:
+                        type: string
+                      clientKey:
+                        type: string
+                    type: object
+                  volumeMounts:
+                    items:
+                      description: VolumeMount describes a mounting of a Volume within
+                        a container.
+                      properties:
+                        mountPath:
+                          description: |-
+                            Path within the container at which the volume should be mounted.  Must
+                            not contain ':'.
+                          type: string
+                        mountPropagation:
+                          description: |-
+                            mountPropagation determines how mounts are propagated from the host
+                            to container and the other way around.
+                            When not set, MountPropagationNone is used.
+                            This field is beta in 1.10.
+                          type: string
+                        name:
+                          description: This must match the Name of a Volume.
+                          type: string
+                        readOnly:
+                          description: |-
+                            Mounted read-only if true, read-write otherwise (false or unspecified).
+                            Defaults to false.
+                          type: boolean
+                        subPath:
+                          description: |-
+                            Path within the volume from which the container's volume should be mounted.
+                            Defaults to "" (volume's root).
+                          type: string
+                        subPathExpr:
+                          description: |-
+                            Expanded path within the volume from which the container's volume should be mounted.
+                            Behaves similarly to SubPath but environment variable references $(VAR_NAME) are expanded using the container's environment.
+                            Defaults to "" (volume's root).
+                            SubPathExpr and SubPath are mutually exclusive.
+                          type: string
+                      required:
+                      - mountPath
+                      - name
+                      type: object
+                    type: array
                 type: object
               failedJobsHistoryLimit:
                 description: |-
@@ -394,6 +445,21 @@ spec:
 
                   Deprecated: Use FailedJobsHistoryLimit and SuccessfulJobsHistoryLimit respectively.
                 type: integer
+              podConfigRef:
+                description: |-
+                  PodConfigRef describes the pod spec with wich this action shall be executed.
+                  It takes precedence over the Resources or PodSecurityContext field.
+                  It does not allow changing the image or the command of the resulting pod.
+                  This is for advanced use-cases only. Please only set this if you know what you're doing.
+                properties:
+                  name:
+                    description: |-
+                      Name of the referent.
+                      More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                      TODO: Add other useful fields. apiVersion, kind, uid?
+                    type: string
+                type: object
+                x-kubernetes-map-type: atomic
               podSecurityContext:
                 description: PodSecurityContext describes the security context with
                   which this action shall be executed.
@@ -664,6 +730,167 @@ spec:
                   SuccessfulJobsHistoryLimit amount of successful jobs to keep for later analysis.
                   KeepJobs is used property is not specified.
                 type: integer
+              volumes:
+                description: Volumes List of volumes that can be mounted by containers
+                  belonging to the pod.
+                items:
+                  properties:
+                    configMap:
+                      description: configMap represents a configMap that should populate
+                        this volume
+                      properties:
+                        defaultMode:
+                          description: |-
+                            defaultMode is optional: mode bits used to set permissions on created files by default.
+                            Must be an octal value between 0000 and 0777 or a decimal value between 0 and 511.
+                            YAML accepts both octal and decimal values, JSON requires decimal values for mode bits.
+                            Defaults to 0644.
+                            Directories within the path are not affected by this setting.
+                            This might be in conflict with other options that affect the file
+                            mode, like fsGroup, and the result can be other mode bits set.
+                          format: int32
+                          type: integer
+                        items:
+                          description: |-
+                            items if unspecified, each key-value pair in the Data field of the referenced
+                            ConfigMap will be projected into the volume as a file whose name is the
+                            key and content is the value. If specified, the listed keys will be
+                            projected into the specified paths, and unlisted keys will not be
+                            present. If a key is specified which is not present in the ConfigMap,
+                            the volume setup will error unless it is marked optional. Paths must be
+                            relative and may not contain the '..' path or start with '..'.
+                          items:
+                            description: Maps a string key to a path within a volume.
+                            properties:
+                              key:
+                                description: key is the key to project.
+                                type: string
+                              mode:
+                                description: |-
+                                  mode is Optional: mode bits used to set permissions on this file.
+                                  Must be an octal value between 0000 and 0777 or a decimal value between 0 and 511.
+                                  YAML accepts both octal and decimal values, JSON requires decimal values for mode bits.
+                                  If not specified, the volume defaultMode will be used.
+                                  This might be in conflict with other options that affect the file
+                                  mode, like fsGroup, and the result can be other mode bits set.
+                                format: int32
+                                type: integer
+                              path:
+                                description: |-
+                                  path is the relative path of the file to map the key to.
+                                  May not be an absolute path.
+                                  May not contain the path element '..'.
+                                  May not start with the string '..'.
+                                type: string
+                            required:
+                            - key
+                            - path
+                            type: object
+                          type: array
+                        name:
+                          description: |-
+                            Name of the referent.
+                            More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                            TODO: Add other useful fields. apiVersion, kind, uid?
+                          type: string
+                        optional:
+                          description: optional specify whether the ConfigMap or its
+                            keys must be defined
+                          type: boolean
+                      type: object
+                      x-kubernetes-map-type: atomic
+                    name:
+                      description: |-
+                        name of the volume.
+                        Must be a DNS_LABEL and unique within the pod.
+                        More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                      type: string
+                    persistentVolumeClaim:
+                      description: |-
+                        persistentVolumeClaimVolumeSource represents a reference to a
+                        PersistentVolumeClaim in the same namespace.
+                        More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#persistentvolumeclaims
+                      properties:
+                        claimName:
+                          description: |-
+                            claimName is the name of a PersistentVolumeClaim in the same namespace as the pod using this volume.
+                            More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#persistentvolumeclaims
+                          type: string
+                        readOnly:
+                          description: |-
+                            readOnly Will force the ReadOnly setting in VolumeMounts.
+                            Default false.
+                          type: boolean
+                      required:
+                      - claimName
+                      type: object
+                    secret:
+                      description: |-
+                        secret represents a secret that should populate this volume.
+                        More info: https://kubernetes.io/docs/concepts/storage/volumes#secret
+                      properties:
+                        defaultMode:
+                          description: |-
+                            defaultMode is Optional: mode bits used to set permissions on created files by default.
+                            Must be an octal value between 0000 and 0777 or a decimal value between 0 and 511.
+                            YAML accepts both octal and decimal values, JSON requires decimal values
+                            for mode bits. Defaults to 0644.
+                            Directories within the path are not affected by this setting.
+                            This might be in conflict with other options that affect the file
+                            mode, like fsGroup, and the result can be other mode bits set.
+                          format: int32
+                          type: integer
+                        items:
+                          description: |-
+                            items If unspecified, each key-value pair in the Data field of the referenced
+                            Secret will be projected into the volume as a file whose name is the
+                            key and content is the value. If specified, the listed keys will be
+                            projected into the specified paths, and unlisted keys will not be
+                            present. If a key is specified which is not present in the Secret,
+                            the volume setup will error unless it is marked optional. Paths must be
+                            relative and may not contain the '..' path or start with '..'.
+                          items:
+                            description: Maps a string key to a path within a volume.
+                            properties:
+                              key:
+                                description: key is the key to project.
+                                type: string
+                              mode:
+                                description: |-
+                                  mode is Optional: mode bits used to set permissions on this file.
+                                  Must be an octal value between 0000 and 0777 or a decimal value between 0 and 511.
+                                  YAML accepts both octal and decimal values, JSON requires decimal values for mode bits.
+                                  If not specified, the volume defaultMode will be used.
+                                  This might be in conflict with other options that affect the file
+                                  mode, like fsGroup, and the result can be other mode bits set.
+                                format: int32
+                                type: integer
+                              path:
+                                description: |-
+                                  path is the relative path of the file to map the key to.
+                                  May not be an absolute path.
+                                  May not contain the path element '..'.
+                                  May not start with the string '..'.
+                                type: string
+                            required:
+                            - key
+                            - path
+                            type: object
+                          type: array
+                        optional:
+                          description: optional field specify whether the Secret or
+                            its keys must be defined
+                          type: boolean
+                        secretName:
+                          description: |-
+                            secretName is the name of the secret in the pod's namespace to use.
+                            More info: https://kubernetes.io/docs/concepts/storage/volumes#secret
+                          type: string
+                      type: object
+                  required:
+                  - name
+                  type: object
+                type: array
             type: object
           status:
             description: |-

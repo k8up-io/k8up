@@ -1,6 +1,6 @@
 # k8up
 
-![Version: 4.5.1](https://img.shields.io/badge/Version-4.5.1-informational?style=flat-square)
+![Version: 4.7.0](https://img.shields.io/badge/Version-4.7.0-informational?style=flat-square)
 
 Kubernetes and OpenShift Backup Operator based on restic
 
@@ -13,7 +13,7 @@ helm repo add k8up-io https://k8up-io.github.io/k8up
 helm install k8up k8up-io/k8up
 ```
 ```bash
-kubectl apply -f https://github.com/k8up-io/k8up/releases/download/k8up-4.5.1/k8up-crd.yaml
+kubectl apply -f https://github.com/k8up-io/k8up/releases/download/k8up-4.7.0/k8up-crd.yaml
 ```
 
 <!---
@@ -48,7 +48,7 @@ Document your changes in values.yaml and let `make docs:helm` generate this sect
 | image.pullPolicy | string | `"IfNotPresent"` | Operator image pull policy |
 | image.registry | string | `"ghcr.io"` | Operator image registry |
 | image.repository | string | `"k8up-io/k8up"` | Operator image repository |
-| image.tag | string | `"v2.8.0"` | Operator image tag (version) |
+| image.tag | string | `"v2.10.0"` | Operator image tag (version) |
 | imagePullSecrets | list | `[]` |  |
 | k8up.backupImage.repository | string | `""` | The backup runner image repository. Defaults to `{image.registry}/{image.repository}`. Specify an image repository including registry, e.g. `example.com/repo/image` |
 | k8up.backupImage.tag | string | `""` | The backup runner image tag Defaults to `{image.tag}` |
@@ -62,6 +62,9 @@ Document your changes in values.yaml and let `make docs:helm` generate this sect
 | k8up.operatorNamespace | string | `""` | Specifies the namespace in which K8up's `EffectiveSchedules` are stored. Defaults to release namespace if left empty. |
 | k8up.skipWithoutAnnotation | bool | `false` | Specifies whether K8up should ignore PVCs without the backup annotation (by default, `k8up.io/backup`) |
 | k8up.timezone | string | `""` | Specifies the timezone K8up is using for scheduling. Empty value defaults to the timezone in which Kubernetes is deployed. Accepts `tz database` compatible entries, e.g. `Europe/Zurich` |
+| metrics.grafanaDashboard.additionalLabels | object | `{}` | Add labels to the Grafana Dashboard object |
+| metrics.grafanaDashboard.enable | bool | `false` | Whether to deploy the Grafana dashboard |
+| metrics.grafanaDashboard.namespace | string | `""` | If the object should be installed in a different namespace than operator |
 | metrics.prometheusRule.additionalLabels | object | `{}` | Add labels to the PrometheusRule object |
 | metrics.prometheusRule.additionalRules | list | `[]` | Provide additional alert rules in addition to the defaults |
 | metrics.prometheusRule.createDefaultRules | bool | `true` | Whether the default rules should be installed |
@@ -69,6 +72,8 @@ Document your changes in values.yaml and let `make docs:helm` generate this sect
 | metrics.prometheusRule.jobFailedRulesFor | list | `["archive","backup","check","prune","restore"]` | Create default rules for the given job types. Valid values are "archive", "backup", "check", "prune", and "restore". |
 | metrics.prometheusRule.namespace | string | `""` | If the object should be installed in a different namespace than operator |
 | metrics.service.annotations | object | `{}` | Annotations to add to the service |
+| metrics.service.ipFamilies | list | `[]` | Sets the families that should be supported and the order in which they should be applied to ClusterIP as well. Can be IPv4 and/or IPv6. |
+| metrics.service.ipFamilyPolicy | string | `""` | Set the ip family policy to configure dual-stack see [Configure dual-stack](https://kubernetes.io/docs/concepts/services-networking/dual-stack/#services) |
 | metrics.service.nodePort | int | `0` | Service node port of the metrics endpoint, requires `metrics.service.type=NodePort` |
 | metrics.service.port | int | `8080` |  |
 | metrics.service.type | string | `"ClusterIP"` |  |
