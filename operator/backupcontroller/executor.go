@@ -69,6 +69,10 @@ func (b *BackupExecutor) listAndFilterPVCs(ctx context.Context, annotation strin
 		return nil, fmt.Errorf("list pods: %w", err)
 	}
 	for _, pod := range pods.Items {
+		if pod.Status.Phase == corev1.PodSucceeded || pod.Status.Phase == corev1.PodFailed {
+			log.V(1).Info("Ignoring terminated Pod", "pod", pod.GetName())
+			continue
+		}
 		for _, volume := range pod.Spec.Volumes {
 			if volume.PersistentVolumeClaim != nil {
 				pvcPodMap[volume.PersistentVolumeClaim.ClaimName] = pod
