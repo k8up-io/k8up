@@ -312,7 +312,9 @@ func (ts *BackupTestSuite) Test_GivenBackupAndMountedRWOPVCOnOneNode_ExpectBacku
 
 	pvc1.Status.Phase = corev1.ClaimBound
 	pvc2.Status.Phase = corev1.ClaimBound
-	ts.UpdateStatus(pvc1, pvc2)
+	pod1.Status.Phase = corev1.PodRunning
+	pod2.Status.Phase = corev1.PodRunning
+	ts.UpdateStatus(pvc1, pvc2, pod1, pod2)
 
 	result := ts.whenReconciling(ts.BackupResource)
 	ts.Assert().GreaterOrEqual(result.RequeueAfter, 30*time.Second)
@@ -359,7 +361,9 @@ func (ts *BackupTestSuite) Test_GivenBackupAndMountedRWOPVCOnTwoNodes_ExpectBack
 
 	pvc1.Status.Phase = corev1.ClaimBound
 	pvc2.Status.Phase = corev1.ClaimBound
-	ts.UpdateStatus(pvc1, pvc2)
+	pod1.Status.Phase = corev1.PodRunning
+	pod2.Status.Phase = corev1.PodRunning
+	ts.UpdateStatus(pvc1, pvc2, pod1, pod2)
 
 	result := ts.whenReconciling(ts.BackupResource)
 	ts.Assert().GreaterOrEqual(result.RequeueAfter, 30*time.Second)
@@ -395,7 +399,9 @@ func (ts *BackupTestSuite) Test_GivenBackupAndMountedRWOPVCOnOneNodeWithFinished
 	ts.EnsureResources(ts.BackupResource, pvc1, pod1, pod2)
 
 	pvc1.Status.Phase = corev1.ClaimBound
-	ts.UpdateStatus(pvc1)
+	pod1.Status.Phase = corev1.PodRunning
+	pod2.Status.Phase = corev1.PodRunning
+	ts.UpdateStatus(pvc1, pod1, pod2)
 
 	result := ts.whenReconciling(ts.BackupResource)
 	ts.Assert().GreaterOrEqual(result.RequeueAfter, 30*time.Second)
