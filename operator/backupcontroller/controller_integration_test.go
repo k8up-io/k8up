@@ -451,6 +451,35 @@ func (ts *BackupTestSuite) Test_GivenBackupAndUnmountedRWOPVCOnTwoNodes_ExpectBa
 	ts.assertJobSpecs(&job2, nodeNamePv2, []corev1.Volume{volumePvc2}, nil, []string{})
 }
 
+func (ts *BackupTestSuite) Test_GivenBackupAndRWOPVCWithFinishedPod_ExpectFinishedPodToBeIgnored() {
+	pvc1 := ts.newPvc("test-pvc1", corev1.ReadWriteOnce)
+	nodeNamePod1 := "worker"
+	nodeNamePod2 := "control-plane"
+	volumePvc1 := corev1.Volume{
+		Name: "test-pvc1",
+		VolumeSource: corev1.VolumeSource{
+			PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{
+				ClaimName: pvc1.Name,
+			},
+		},
+	}
+	tolerations := make([]corev1.Toleration, 0)
+	pod1 := ts.newPod("test-pod1", nodeNamePod1, tolerations, []corev1.Volume{volumePvc1})
+	pod2 := ts.newPod("test-pod2", nodeNamePod2, tolerations, []corev1.Volume{volumePvc1})
+
+	ts.EnsureResources(ts.BackupResource, pvc1, pod1, pod2)
+
+	pvc1.Status.Phase = corev1.ClaimBound
+	pod1.Status.Phase = corev1.PodRunning
+	pod2.Status.Phase = corev1.PodSucceeded
+	ts.UpdateStatus(pvc1, pod1, pod2)
+
+	ts.whenReconciling(ts.BackupResource)
+	job := ts.expectABackupJob()
+
+	ts.assertJobSpecs(job, nodeNamePod1, []corev1.Volume{volumePvc1}, tolerations, []string{pod1.Name})
+}
+
 func (ts *BackupTestSuite) assertCondition(conditions []metav1.Condition, condType k8upv1.ConditionType, reason k8upv1.ConditionReason, status metav1.ConditionStatus) {
 	cond := meta.FindStatusCondition(conditions, condType.String())
 	ts.Require().NotNil(cond, "condition of type %s missing", condType)
