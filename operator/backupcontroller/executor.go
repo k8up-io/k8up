@@ -143,8 +143,7 @@ func (b *BackupExecutor) listAndFilterPVCs(ctx context.Context, annotation strin
 
 			bi.node = findNode(pv, pvc)
 			if bi.node == "" {
-				log.Info("RWO PVC not bound and no PV node affinity set, skipping", "pvc", pvc.GetName(), "affinity", pv.Spec.NodeAffinity)
-				continue
+				log.Info("RWO PVC not bound and no PV node affinity set, adding", "pvc", pvc.GetName(), "affinity", pv.Spec.NodeAffinity)
 			}
 			log.V(1).Info("node found in PV or PVC", "pvc", pvc.GetName(), "node", bi.node)
 		} else {
