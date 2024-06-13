@@ -91,7 +91,7 @@ func (b *BackupExecutor) listAndFilterPVCs(ctx context.Context, annotation strin
 
 	for _, pvc := range claimlist.Items {
 		if pvc.Status.Phase != corev1.ClaimBound {
-			log.Info("PVC is not bound", "pvc", pvc.GetName())
+			log.Info("PVC is not bound, skipping PVC", "pvc", pvc.GetName())
 			continue
 		}
 
@@ -99,7 +99,7 @@ func (b *BackupExecutor) listAndFilterPVCs(ctx context.Context, annotation strin
 
 		isRWO := containsAccessMode(pvc.Spec.AccessModes, corev1.ReadWriteOnce)
 		if !containsAccessMode(pvc.Spec.AccessModes, corev1.ReadWriteMany) && !isRWO && !hasBackupAnnotation {
-			log.Info("PVC is neither RWX nor RWO and has no backup annotation", "pvc", pvc.GetName())
+			log.Info("PVC is neither RWX nor RWO and has no backup annotation, skipping PVC", "pvc", pvc.GetName())
 			continue
 		}
 
