@@ -14,6 +14,7 @@ import (
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
@@ -455,6 +456,42 @@ func (ts *BackupTestSuite) Test_GivenBackupAndUnmountedRWOPVCOnTwoNodes_ExpectBa
 	job2 := jobs.Items[1]
 	ts.assertJobSpecs(&job1, nodeNamePv1, []corev1.Volume{volumePvc1}, nil, []string{})
 	ts.assertJobSpecs(&job2, nodeNamePv2, []corev1.Volume{volumePvc2}, nil, []string{})
+}
+
+func (ts *BackupTestSuite) Test_GivenBackupAndUnmountedRWOPVC_ExpectBackup() {
+	pvc1 := ts.newPvc("test-pvc-without-node-affinity", corev1.ReadWriteOnce)
+	pv1 := &corev1.PersistentVolume{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test-pvc-without-node-affinity",
+		},
+		Spec: corev1.PersistentVolumeSpec{
+			AccessModes: []corev1.PersistentVolumeAccessMode{corev1.ReadWriteOnce},
+			Capacity: map[corev1.ResourceName]resource.Quantity{
+				corev1.ResourceStorage: resource.MustParse("1Mi"),
+			},
+			PersistentVolumeSource: corev1.PersistentVolumeSource{
+				HostPath: &corev1.HostPathVolumeSource{Path: "/tmp/integration-tests"},
+			},
+		},
+	}
+	volumePvc1 := corev1.Volume{
+		Name: "test-pvc-without-node-affinity",
+		VolumeSource: corev1.VolumeSource{
+			PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{
+				ClaimName: pvc1.Name,
+			},
+		},
+	}
+	ts.EnsureResources(ts.BackupResource, pvc1, pv1)
+
+	pvc1.Status.Phase = corev1.ClaimBound
+	ts.UpdateStatus(pvc1)
+
+	ts.whenReconciling(ts.BackupResource)
+	job := ts.expectABackupJob()
+
+	ts.Assert().Nil(job.Spec.Template.Spec.NodeSelector)
+	ts.Assert().Equal(volumePvc1.VolumeSource.PersistentVolumeClaim.ClaimName, job.Spec.Template.Spec.Volumes[0].VolumeSource.PersistentVolumeClaim.ClaimName)
 }
 
 func (ts *BackupTestSuite) Test_GivenBackupAndRWOPVCWithFinishedPod_ExpectFinishedPodToBeIgnored() {
