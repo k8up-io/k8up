@@ -6,7 +6,7 @@ keywords:
   - backup
   - operator
   - restic
-version: 4.7.0
+version: 4.8.0
 sources:
   - https://github.com/k8up-io/k8up
 maintainers:

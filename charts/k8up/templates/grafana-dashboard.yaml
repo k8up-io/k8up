@@ -5,7 +5,7 @@ metadata:
   namespace: {{ default .Release.Namespace .Values.metrics.grafanaDashboard.namespace }}
   labels:
     {{- include "k8up.labels" . | nindent 4 }}
-    {{- with .Values.metrics.prometheusRule.additionalLabels }}
+    {{- with .Values.metrics.grafanaDashboard.additionalLabels }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
 data:

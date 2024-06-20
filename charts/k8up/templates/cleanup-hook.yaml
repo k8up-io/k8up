@@ -81,6 +81,8 @@ spec:
     spec:
       restartPolicy: Never
       serviceAccountName: cleanup-service-account
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
       - name: "{{ .Release.Name }}-cleanup"
         image: "{{ include "cleanupImage" . }}"
@@ -99,3 +101,5 @@ spec:
               kubectl -n "$ns" delete rolebinding pod-executor-namespaced --ignore-not-found=true
               kubectl -n "$ns" delete role pod-executor --ignore-not-found=true
             done
+        securityContext:
+          {{- toYaml .Values.securityContext | nindent 12 }}
