@@ -80,6 +80,9 @@ podSecurityContext: {}
 # -- Container security context
 securityContext: {}
 
+# -- The name of the priority class to use.
+priorityClassName: ""
+
 nodeSelector: {}
 
 tolerations: []

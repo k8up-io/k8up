@@ -84,6 +84,7 @@ Document your changes in values.yaml and let `make docs:helm` generate this sect
 | nodeSelector | object | `{}` |  |
 | podAnnotations | object | `{}` | Annotations to add to the Pod spec. |
 | podSecurityContext | object | `{}` | Security context to add to the Pod spec. |
+| priorityClassName | string | `""` | The name of the priority class to use. |
 | rbac.create | bool | `true` | Create cluster roles and rolebinding. May need elevated permissions to create cluster roles and -bindings. |
 | replicaCount | int | `1` | How many operator pods should run. Note: Operator features leader election for K8s 1.16 and later, so that only 1 pod is reconciling/scheduling jobs. Follower pods reduce interruption time as they're on hot standby when leader is unresponsive. |
 | resources.limits.memory | string | `"256Mi"` | Memory limit of K8up operator. See [supported units][resource-units]. |
