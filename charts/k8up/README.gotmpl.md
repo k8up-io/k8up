@@ -1,5 +1,5 @@
 ```bash
-kubectl apply -f https://github.com/k8up-io/k8up/releases/download/k8up-{{ template "chart.version" . }}/k8up-crd.yaml
+kubectl apply -f https://github.com/k8up-io/k8up/releases/download/k8up-{{ template "chart.version" . }}/k8up-crd.yaml --server-side
 ```
 
 <!---
