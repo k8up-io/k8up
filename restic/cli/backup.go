@@ -113,7 +113,7 @@ func (r *Restic) sendSnapshotList() {
 		r.logger.Error(err, "webhook send failed")
 	}
 
-	err = kubernetes.SyncSnapshotList(r.ctx, r.snapshots, cfg.Config.Hostname, cfg.Config.ResticRepository)
+	err = kubernetes.SyncSnapshotList(r.ctx, r.snapshots, cfg.Config.Hostname, cfg.Config.ResticRepository, r.logger)
 	if err != nil {
 		r.logger.Error(err, "cannot sync snapshots to the cluster")
 	}
