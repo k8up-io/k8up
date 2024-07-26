@@ -3,6 +3,7 @@ package kubernetes
 import (
 	"context"
 
+	"github.com/go-logr/logr"
 	k8upv1 "github.com/k8up-io/k8up/v2/api/v1"
 	"github.com/k8up-io/k8up/v2/restic/dto"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -11,12 +12,12 @@ import (
 
 // SyncSnapshotList will take a k8upv1.SnapshotList and apply them to the k8s cluster.
 // It will remove any snapshots on the cluster that are not present in the list.
-func SyncSnapshotList(ctx context.Context, list []dto.Snapshot, namespace, repository string) error {
+func SyncSnapshotList(ctx context.Context, list []dto.Snapshot, namespace, repository string, l logr.Logger) error {
 
 	newList := filterAndConvert(list, namespace, repository)
 	oldList := &k8upv1.SnapshotList{}
 
-	kube, err := NewTypedClient()
+	kube, err := NewTypedClient(l)
 	if err != nil {
 		return err
 	}

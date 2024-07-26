@@ -7,7 +7,9 @@ import (
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/log"
 
+	"github.com/go-logr/logr"
 	k8upv1 "github.com/k8up-io/k8up/v2/api/v1"
 	"github.com/k8up-io/k8up/v2/restic/cfg"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
@@ -28,7 +30,10 @@ func getClientConfig() (*rest.Config, error) {
 	return config, nil
 }
 
-func NewTypedClient() (client.Client, error) {
+func NewTypedClient(l logr.Logger) (client.Client, error) {
+
+	log.SetLogger(l)
+
 	scheme := runtime.NewScheme()
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 	utilruntime.Must(k8upv1.AddToScheme(scheme))

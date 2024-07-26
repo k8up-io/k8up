@@ -283,7 +283,7 @@ func backupAnnotatedPods(ctx context.Context, resticCLI *resticCli.Restic, mainL
 		return nil
 	}
 
-	k8cli, err := kubernetes.NewTypedClient()
+	k8cli, err := kubernetes.NewTypedClient(mainLogger)
 	if err != nil {
 		return fmt.Errorf("Could not create kubernetes client: %w", err)
 	}
