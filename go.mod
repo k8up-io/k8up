@@ -8,7 +8,7 @@ require (
 	github.com/go-logr/zapr v1.3.0
 	github.com/imdario/mergo v0.3.16
 	github.com/minio/minio-go/v7 v7.0.66
-	github.com/prometheus/client_golang v1.19.0
+	github.com/prometheus/client_golang v1.19.1
 	github.com/restic/restic v0.16.4
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/stretchr/testify v1.9.0
