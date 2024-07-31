@@ -1,4 +1,4 @@
-FROM docker.io/library/alpine:3.19 as restic
+FROM docker.io/library/alpine:3.20 as restic
 
 RUN apk add --update --no-cache \
     bash \
@@ -9,7 +9,7 @@ COPY go.mod fetch_restic.sh ./
 RUN ./fetch_restic.sh /usr/local/bin/restic \
     && /usr/local/bin/restic version
 
-FROM docker.io/library/alpine:3.19 as k8up
+FROM docker.io/library/alpine:3.20 as k8up
 
 ENTRYPOINT ["k8up"]
 
