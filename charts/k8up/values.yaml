@@ -129,7 +129,7 @@ metrics:
     additionalRules: []
   grafanaDashboard:
     # -- Whether to deploy the Grafana dashboard
-    enable: false
+    enabled: false
     # -- If the object should be installed in a different namespace than operator
     namespace: ""
     # -- Add labels to the Grafana Dashboard object
