@@ -176,4 +176,4 @@ I1332 25:61:61.000016       1 backup.go:67] wrestic/backup "level"=0 "msg"="back
 
 The operator exposes a `:8080/metrics` endpoint for Prometheus scraping.
 This will give you additional metrics that can be used to find failed jobs.
-See the https://github.com/k8up-io/k8up/blob/v0.1.10/manifest/examples/prometheus[Prometheus examples in our GitHub repository].
+See the https://github.com/k8up-io/k8up/tree/master/config/samples/prometheus[Prometheus examples in our GitHub repository].
