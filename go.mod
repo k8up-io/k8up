@@ -1,6 +1,8 @@
 module github.com/k8up-io/k8up/v2
 
-go 1.21
+go 1.22.0
+
+toolchain go1.22.5
 
 require (
 	github.com/firepear/qsplit/v2 v2.5.0
@@ -15,9 +17,9 @@ require (
 	github.com/urfave/cli/v2 v2.23.7
 	go.uber.org/zap v1.27.0
 	golang.org/x/net v0.23.0
-	k8s.io/api v0.29.2
-	k8s.io/apimachinery v0.29.2
-	k8s.io/client-go v0.29.2
+	k8s.io/api v0.30.3
+	k8s.io/apimachinery v0.30.3
+	k8s.io/client-go v0.30.3
 	k8s.io/utils v0.0.0-20240310230437-4693a0247e57
 	sigs.k8s.io/controller-runtime v0.17.2
 	sigs.k8s.io/controller-tools v0.14.0
