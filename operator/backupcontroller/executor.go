@@ -185,7 +185,7 @@ func (b *BackupExecutor) startBackup(ctx context.Context) error {
 
 	backupItems, err := b.listAndFilterPVCs(ctx, cfg.Config.BackupAnnotation)
 	if err != nil {
-		b.Generic.SetConditionFalseWithMessage(ctx, k8upv1.ConditionReady, k8upv1.ReasonRetrievalFailed, err.Error())
+		b.Generic.SetConditionFalseWithMessage(ctx, k8upv1.ConditionReady, k8upv1.ReasonRetrievalFailed, "%s", err.Error())
 		return err
 	}
 
