@@ -148,7 +148,7 @@ func (c *Client) deleteBucketByName(ctx context.Context, name string) error {
 
 	// Print errors received from RemoveObjects API
 	for e := range errorCh {
-		return fmt.Errorf("Failed to remove " + e.ObjectName + ", error: " + e.Err.Error())
+		return fmt.Errorf("Failed to remove %v ,error: %v", e.ObjectName, e.Err.Error())
 	}
 
 	return c.minioClient.RemoveBucket(ctx, name)

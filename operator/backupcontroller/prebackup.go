@@ -71,8 +71,8 @@ func (b *BackupExecutor) allDeploymentsAreReady(ctx context.Context, deployments
 		ready, err := isPreBackupDeploymentReady(deployment)
 		if err != nil {
 			log.Info("backup failed: deadline exceeded on pre backup deployment")
-			b.SetConditionFalseWithMessage(ctx, k8upv1.ConditionPreBackupPodReady, k8upv1.ReasonFailed, err.Error())
-			b.SetConditionTrueWithMessage(ctx, k8upv1.ConditionReady, k8upv1.ReasonFailed, err.Error())
+			b.SetConditionFalseWithMessage(ctx, k8upv1.ConditionPreBackupPodReady, k8upv1.ReasonFailed, "%s", err.Error())
+			b.SetConditionTrueWithMessage(ctx, k8upv1.ConditionReady, k8upv1.ReasonFailed, "%s", err.Error())
 			b.deletePreBackupDeployment(ctx, deployment)
 			return false, err
 		}
