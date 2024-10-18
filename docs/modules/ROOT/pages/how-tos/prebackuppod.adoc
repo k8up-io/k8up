@@ -28,7 +28,7 @@ spec:
               value: topsecret
             - name: DB_HOST
               value: mariadb.example.com
-          image: mariadb
+          image: mariadb:10.4
           command:
             - 'sleep'
             - 'infinity'
