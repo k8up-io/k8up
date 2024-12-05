@@ -51,6 +51,7 @@ type Configuration struct {
 	GlobalKeepJobs                   int
 	GlobalFailedJobsHistoryLimit     int
 	GlobalSuccessfulJobsHistoryLimit int
+	GlobalBackoffLimit               int
 	GlobalRepoPassword               string
 	GlobalRestoreS3AccessKey         string
 	GlobalRestoreS3Bucket            string

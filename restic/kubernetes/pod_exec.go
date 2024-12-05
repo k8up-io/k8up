@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"os"
 	"strings"
 
 	"github.com/firepear/qsplit/v2"
@@ -73,6 +74,8 @@ func PodExec(pod BackupPod, log logr.Logger) (*ExecData, error) {
 
 		if err != nil {
 			execLogger.Error(err, "streaming data failed", "namespace", pod.Namespace, "pod", pod.PodName)
+			// we just completely hard fail the whole backup pod
+			os.Exit(1)
 			return
 		}
 	}()
