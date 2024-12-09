@@ -170,6 +170,15 @@ given_an_annotated_subject() {
 	echo "✅  The annotated subject is ready"
 }
 
+given_a_broken_annotated_subject() {
+	require_args 2 ${#}
+
+	kubectl apply -f definitions/pv/pvc.yaml
+	yq e '.spec.template.spec.containers[1].securityContext.runAsUser='$(id -u)' ' definitions/annotated-subject/deployment-error.yaml | kubectl apply -f -
+
+	echo "✅  The annotated subject is ready"
+}
+
 given_an_annotated_subject_pod() {
 	require_args 2 ${#}
 
@@ -456,6 +465,20 @@ wait_until() {
 	echo "Waiting for '${object}' in namespace '${ns}' to become '${condition}' ..."
 	kubectl -n "${ns}" wait --timeout 5m --for "condition=${condition}" "${object}"
 }
+
+wait_for_until_jsonpath() {
+	require_args 3 ${#}
+
+	local object condition ns
+	object=${1}
+	until=${2}
+	jsonpath=${3}
+	ns=${NAMESPACE=${DETIK_CLIENT_NAMESPACE}}
+
+	echo "Waiting for '${object}' in namespace '${ns}' to become '${condition}' ..."
+	kubectl -n "${ns}" wait --timeout "${until}" --for "${jsonpath}" "${object}"
+}
+
 
 expect_file_in_container() {
 	require_args 4 ${#}
