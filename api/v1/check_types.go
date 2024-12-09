@@ -18,6 +18,10 @@ type CheckSpec struct {
 	// +optional
 	PromURL string `json:"promURL,omitempty"`
 
+	// ClusterName sets athe kubernetes cluster name to send to pushgateway for grouping metrics
+	// +optional
+	ClusterName string `json:"clusterName,omitempty"`
+	
 	// KeepJobs amount of jobs to keep for later analysis.
 	//
 	// Deprecated: Use FailedJobsHistoryLimit and SuccessfulJobsHistoryLimit respectively.
