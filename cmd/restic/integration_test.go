@@ -91,9 +91,10 @@ func initTest(t *testing.T) *testEnvironment {
 	ctx := context.Background()
 
 	cfg.Config = &cfg.Configuration{
-		Hostname:   os.Getenv("HOSTNAME"),
-		PromURL:    os.Getenv("PROM_URL"),
-		WebhookURL: os.Getenv("STATS_URL"),
+		Hostname:    os.Getenv("HOSTNAME"),
+		PromURL:     os.Getenv("PROM_URL"),
+		ClusterName: os.Getenv("CLUSTER_NAME"),
+		WebhookURL:  os.Getenv("STATS_URL"),
 
 		RestoreS3Endpoint:  os.Getenv("RESTORE_S3ENDPOINT"),
 		RestoreS3AccessKey: os.Getenv("RESTORE_ACCESSKEYID"),
@@ -105,7 +106,7 @@ func initTest(t *testing.T) *testEnvironment {
 	}
 
 	mainLogger := zapr.NewLogger(zaptest.NewLogger(t))
-	statHandler := stats.NewHandler(cfg.Config.PromURL, cfg.Config.Hostname, cfg.Config.WebhookURL, mainLogger)
+	statHandler := stats.NewHandler(cfg.Config.PromURL, cfg.Config.ClusterName, cfg.Config.Hostname, cfg.Config.WebhookURL, mainLogger)
 	resticCli := cli.New(ctx, mainLogger, statHandler)
 
 	cleanupDirs(t)

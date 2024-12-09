@@ -73,7 +73,7 @@ var (
 			&cli.StringFlag{Destination: &cfg.Config.GlobalStatsURL, Name: "globalstatsurl", EnvVars: []string{"BACKUP_GLOBALSTATSURL"}, Usage: "set the URL to post metrics globally"},
 			&cli.StringFlag{Destination: &cfg.Config.MetricsBindAddress, Name: "metrics-bindaddress", EnvVars: []string{"BACKUP_METRICS_BINDADDRESS"}, Value: ":8080", Usage: "set the bind address for the prometheus endpoint"},
 			&cli.StringFlag{Destination: &cfg.Config.PromURL, Name: "promurl", EnvVars: []string{"BACKUP_PROMURL"}, Value: "http://127.0.0.1/", Usage: "set the operator wide default prometheus push gateway"},
-
+			&cli.StringFlag{Destination: &cfg.Config.ClusterName, Name: "clusterName", EnvVars: []string{"CLUSTER_NAME"}, Value: "default", Usage: "set the operator wide kubernetes cluster name to send to push gateway for grouping metrics"},
 			&cli.StringFlag{Destination: &cfg.Config.RestartPolicy, Name: "restartpolicy", EnvVars: []string{"BACKUP_RESTARTPOLICY"}, Value: "OnFailure", Usage: "set the RestartPolicy for the backup jobs. According to https://kubernetes.io/docs/concepts/workloads/controllers/jobs-run-to-completion/, this should be 'OnFailure' for jobs that terminate"},
 			&cli.StringFlag{Destination: &cfg.Config.PodFilter, Name: "podfilter", EnvVars: []string{"BACKUP_PODFILTER"}, Value: "backupPod=true", Usage: "the filter used to find the backup pods"},
 			&cli.StringFlag{Destination: &cfg.Config.ServiceAccount, Name: "podexecaccountname", Aliases: []string{"serviceaccount"}, EnvVars: []string{"BACKUP_PODEXECACCOUNTNAME"}, Value: "pod-executor", Usage: "set the service account name that should be used for the pod command execution"},
