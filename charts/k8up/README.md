@@ -1,6 +1,6 @@
 # k8up
 
-![Version: 4.8.1](https://img.shields.io/badge/Version-4.8.1-informational?style=flat-square)
+![Version: 4.8.2](https://img.shields.io/badge/Version-4.8.2-informational?style=flat-square)
 
 Kubernetes and OpenShift Backup Operator based on restic
 
@@ -13,7 +13,7 @@ helm repo add k8up-io https://k8up-io.github.io/k8up
 helm install k8up k8up-io/k8up
 ```
 ```bash
-kubectl apply -f https://github.com/k8up-io/k8up/releases/download/k8up-4.8.1/k8up-crd.yaml --server-side
+kubectl apply -f https://github.com/k8up-io/k8up/releases/download/k8up-4.8.2/k8up-crd.yaml --server-side
 ```
 
 <!---
