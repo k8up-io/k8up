@@ -75,6 +75,7 @@ type Configuration struct {
 	PodExecRoleName                  string
 	PodFilter                        string
 	PromURL                          string
+	ClusterName                      string
 	RestartPolicy                    string
 	SkipWithoutAnnotation            bool
 

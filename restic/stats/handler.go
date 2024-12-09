@@ -23,14 +23,16 @@ type Handler struct {
 	promURL      string
 	promHostname string
 	webhookURL   string
+	clusterName  string
 	log          logr.Logger
 }
 
-func NewHandler(promURL, promHostname, webhookURL string, log logr.Logger) *Handler {
+func NewHandler(promURL, clusterName, promHostname, webhookURL string, log logr.Logger) *Handler {
 	return &Handler{
 		promHostname: promHostname,
 		promURL:      promURL,
 		webhookURL:   webhookURL,
+		clusterName:  clusterName,
 		log:          log.WithName("statsHandler"),
 	}
 }
@@ -55,7 +57,7 @@ func (h *Handler) SendPrometheus(promStats cli.PrometheusProvider) error {
 
 func (h *Handler) updatePrometheus(collector prometheus.Collector) error {
 	return push.New(h.promURL, subsystem).Collector(collector).
-		Grouping("instance", h.promHostname).
+		Grouping("instance", h.promHostname).Grouping("cluster", h.clusterName).
 		Add()
 }
 
