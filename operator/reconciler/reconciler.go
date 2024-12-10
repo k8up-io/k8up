@@ -56,7 +56,7 @@ func (ctrl *controller[T, L]) Reconcile(ctx context.Context, request controllerr
 	} else {
 		res, provisionErr = ctrl.reconciler.Provision(ctx, obj)
 	}
-	if apierrors.IsConflict(err) { // ignore "the object has been modified; please apply your changes to the latest version and try again" error, but requeue
+	if apierrors.IsConflict(provisionErr) { // ignore "the object has been modified; please apply your changes to the latest version and try again" error, but requeue
 		log := controllerruntime.LoggerFrom(ctx)
 		log.Info("Object has been modified, retrying...", "error", provisionErr.Error())
 		res.Requeue = true
