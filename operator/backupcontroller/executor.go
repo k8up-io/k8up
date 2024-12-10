@@ -289,6 +289,13 @@ func (b *BackupExecutor) startBackup(ctx context.Context) error {
 		}
 	}
 
+	if len(backupJobs) == 0 {
+		status := b.Obj.GetStatus()
+		status.SetSucceeded("nothing to backup")
+		b.Obj.SetStatus(status)
+		return b.Client.Status().Update(ctx, b.Obj)
+	}
+
 	return nil
 }
 
