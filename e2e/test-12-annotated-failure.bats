@@ -11,7 +11,7 @@ DETIK_CLIENT_NAMESPACE="k8up-e2e-subject"
 # shellcheck disable=SC2034
 DEBUG_DETIK="true"
 
-@test "Annotated app, When creating a backup, Then expect Error" {
+@test "Given annotated app, When creating a backup, Then expect Error" {
 	expected_content="expected content: $(timestamp)"
 	expected_filename="expected_filename.txt"
 
