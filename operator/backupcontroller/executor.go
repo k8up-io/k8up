@@ -18,6 +18,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/utils/ptr"
 	controllerruntime "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -236,7 +237,7 @@ func (b *BackupExecutor) startBackup(ctx context.Context) error {
 	}
 
 	index := 0
-	for _, batchJob := range backupJobs {
+	for name, batchJob := range backupJobs {
 		_, err = controllerruntime.CreateOrUpdate(ctx, b.Generic.Config.Client, batchJob.job, func() error {
 			mutateErr := job.MutateBatchJob(ctx, batchJob.job, b.backup, b.Generic.Config, b.Client)
 			if mutateErr != nil {
@@ -262,16 +263,17 @@ func (b *BackupExecutor) startBackup(ctx context.Context) error {
 			}
 			// each job sleeps for index seconds to avoid concurrent restic repository creation. Not the prettiest way but it works and a repository
 			// is created only once usually.
-			if index > 0 {
+			if name == "prebackup" || index != 0 {
 				batchJob.job.Spec.Template.Spec.Containers[0].Env = append(batchJob.job.Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{
 					Name:  "SLEEP_DURATION",
-					Value: (time.Duration(index) * time.Second).String(),
+					Value: (3 * time.Second).String(),
 				})
 			}
 			b.backup.Spec.AppendEnvFromToContainer(&batchJob.job.Spec.Template.Spec.Containers[0])
 			batchJob.job.Spec.Template.Spec.Volumes = append(batchJob.job.Spec.Template.Spec.Volumes, batchJob.volumes...)
 			batchJob.job.Spec.Template.Spec.Volumes = append(batchJob.job.Spec.Template.Spec.Volumes, utils.AttachTLSVolumes(b.backup.Spec.Volumes)...)
 			batchJob.job.Spec.Template.Spec.Containers[0].VolumeMounts = append(b.newVolumeMounts(batchJob.volumes), b.attachTLSVolumeMounts()...)
+			batchJob.job.Spec.BackoffLimit = ptr.To(int32(cfg.Config.GlobalBackoffLimit))
 
 			batchJob.job.Spec.Template.Spec.Containers[0].Args = b.setupArgs()
 
@@ -285,6 +287,13 @@ func (b *BackupExecutor) startBackup(ctx context.Context) error {
 		if err != nil {
 			return fmt.Errorf("unable to createOrUpdate(%q): %w", batchJob.job.Name, err)
 		}
+	}
+
+	if len(backupJobs) == 0 {
+		status := b.Obj.GetStatus()
+		status.SetSucceeded("nothing to backup")
+		b.Obj.SetStatus(status)
+		return b.Client.Status().Update(ctx, b.Obj)
 	}
 
 	return nil

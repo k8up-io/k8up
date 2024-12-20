@@ -47,6 +47,7 @@ func (r *BackupReconciler) Provision(ctx context.Context, obj *k8upv1.Backup) (r
 		log.V(1).Info("backup just started, waiting")
 		return controllerruntime.Result{RequeueAfter: 5 * time.Second}, nil
 	}
+
 	if obj.Status.HasFinished() || isPrebackupFailed(obj) {
 		cleanupCond := meta.FindStatusCondition(obj.Status.Conditions, k8upv1.ConditionScrubbed.String())
 		if cleanupCond == nil || cleanupCond.Reason != k8upv1.ReasonSucceeded.String() {
@@ -110,6 +111,7 @@ func (r *BackupReconciler) ReconcileJobStatus(ctx context.Context, obj *k8upv1.B
 	} else if numStarted > 0 {
 		objStatus.SetStarted(message)
 	}
+
 	obj.SetStatus(objStatus)
 
 	log.V(1).Info("updating status")
