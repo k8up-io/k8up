@@ -17,12 +17,22 @@ spec:
       - name: data
         persistentVolumeClaim:
           claimName: minio-pvc
+      securityContext:
+        runAsUser: 10002
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
       containers:
       - name: minio
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
         volumeMounts:
         - name: data
           mountPath: "/data"
-        image: minio/minio
+        image: docker.io/minio/minio
         args:
         - server
         - /data
