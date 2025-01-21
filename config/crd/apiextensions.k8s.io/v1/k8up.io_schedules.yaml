@@ -1743,7 +1743,7 @@ spec:
                         type: array
                     type: object
                   clusterName:
-                    description: ClusterName sets athe kubernetes cluster name to
+                    description: ClusterName sets the kubernetes cluster name to
                       send to pushgateway for grouping metrics
                     type: string
                   concurrentRunsAllowed:
@@ -2579,7 +2579,7 @@ spec:
                         type: array
                     type: object
                   clusterName:
-                    description: ClusterName sets athe kubernetes cluster name to
+                    description: ClusterName sets the kubernetes cluster name to
                       send to pushgateway for grouping metrics
                     type: string
                   concurrentRunsAllowed:

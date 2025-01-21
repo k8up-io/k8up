@@ -33,7 +33,7 @@ type BackupSpec struct {
 	// +optional
 	PromURL string `json:"promURL,omitempty"`
 
-	// ClusterName sets athe kubernetes cluster name to send to pushgateway for grouping metrics
+	// ClusterName sets the kubernetes cluster name to send to pushgateway for grouping metrics
 	// +optional
 	ClusterName string `json:"clusterName,omitempty"`
 	
