@@ -1,0 +1,49 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: annotated-subject-deployment
+  namespace: k8up-e2e-subject
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: subject
+  template:
+    metadata:
+      labels:
+        app: subject
+      annotations:
+        k8up.io/backupcommand: 'invalid'
+        k8up.io/backupcommand-container: subject-container
+    spec:
+      containers:
+      - image: busybox
+        imagePullPolicy: IfNotPresent
+        name: dummy-container-blocking-first-position
+        command:
+        - "/bin/sh"
+        - "-c"
+        - "sleep infinity"
+      - name: subject-container
+        image: quay.io/prometheus/busybox:latest
+        imagePullPolicy: IfNotPresent
+        args:
+        - sh
+        - -c
+        - |
+          sleep infinity
+        securityContext:
+          runAsUser: $ID
+        volumeMounts:
+        - name: volume
+          mountPath: /data
+        env:
+        - name: BACKUP_FILE_CONTENT
+          value: ""
+        - name: BACKUP_FILE_NAME
+          value: ""
+      volumes:
+      - name: volume
+        persistentVolumeClaim:
+          claimName: subject-pvc
