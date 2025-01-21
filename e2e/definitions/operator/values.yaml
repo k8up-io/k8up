@@ -9,3 +9,5 @@ k8up:
   envVars:
     - name: K8UP_DEBUG
       value: "true"
+    - name: BACKUP_GLOBAL_BACKOFF_LIMIT
+      value: "2"

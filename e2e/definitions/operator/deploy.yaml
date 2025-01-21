@@ -1,4 +1,0 @@
-k8up:
-  envVars:
-    - name: K8UP_DEBUG
-      value: "true"

@@ -149,6 +149,9 @@ given_a_subject() {
 	kubectl apply -f definitions/pv/pvc.yaml
 	yq e '.spec.template.spec.containers[0].securityContext.runAsUser='$(id -u)' | .spec.template.spec.containers[0].env[0].value=strenv(BACKUP_FILE_CONTENT) | .spec.template.spec.containers[0].env[1].value=strenv(BACKUP_FILE_NAME)' definitions/subject/deployment.yaml | kubectl apply -f -
 
+	# Let's wait for the deployment to actually be ready
+	kubectl -n k8up-e2e-subject wait --timeout 1m --for=condition=available deployment subject-deployment
+
 	echo "✅  The subject is ready"
 }
 
@@ -167,6 +170,21 @@ given_an_annotated_subject() {
 	kubectl apply -f definitions/pv/pvc.yaml
 	yq e '.spec.template.spec.containers[1].securityContext.runAsUser='$(id -u)' | .spec.template.spec.containers[1].env[0].value=strenv(BACKUP_FILE_CONTENT) | .spec.template.spec.containers[1].env[1].value=strenv(BACKUP_FILE_NAME)' definitions/annotated-subject/deployment.yaml | kubectl apply -f -
 
+	# Let's wait for the deployment to actually be ready
+	kubectl -n k8up-e2e-subject wait --timeout 1m --for=condition=available deployment annotated-subject-deployment
+
+	echo "✅  The annotated subject is ready"
+}
+
+given_a_broken_annotated_subject() {
+	require_args 2 ${#}
+
+	kubectl apply -f definitions/pv/pvc.yaml
+	yq e '.spec.template.spec.containers[1].securityContext.runAsUser='$(id -u)' ' definitions/annotated-subject/deployment-error.yaml | kubectl apply -f -
+
+	# Let's wait for the deployment to actually be ready
+	kubectl -n k8up-e2e-subject wait --timeout 1m --for=condition=available deployment annotated-subject-deployment
+
 	echo "✅  The annotated subject is ready"
 }
 
@@ -177,6 +195,9 @@ given_an_annotated_subject_pod() {
 	export BACKUP_FILE_CONTENT=${2}
 
 	yq e '.spec.containers[1].securityContext.runAsUser='$(id -u)' | .spec.containers[1].env[0].value=strenv(BACKUP_FILE_CONTENT) | .spec.containers[1].env[1].value=strenv(BACKUP_FILE_NAME)' definitions/annotated-subject/pod.yaml | kubectl apply -f -
+
+	# Let's wait for the pod to actually be ready
+	kubectl -n k8up-e2e-subject wait --timeout 1m --for=condition=ready pod subject-pod
 
 	echo "✅  The annotated subject pod is ready"
 }
@@ -189,6 +210,9 @@ given_a_rwo_pvc_subject_in_worker_node() {
 
 	yq e 'with(select(document_index == 1) .spec.template.spec; .containers[0].securityContext.runAsUser='$(id -u)' | .containers[0].env[0].value=strenv(BACKUP_FILE_CONTENT) | .containers[0].env[1].value=strenv(BACKUP_FILE_NAME))' definitions/pvc-rwo-subject/worker.yaml | kubectl apply -f -
 
+	# Let's wait for the deployment to actually be ready
+	kubectl -n k8up-e2e-subject wait --timeout 1m --for=condition=available deployment pvc-rwo-subject-worker
+
 	echo "✅  The pvc rwo worker subject is ready"
 }
 
@@ -199,6 +223,9 @@ given_a_rwo_pvc_subject_in_controlplane_node() {
 	export BACKUP_FILE_CONTENT=${2}
 
 	yq e 'with(select(document_index == 1) .spec.template.spec; .containers[0].securityContext.runAsUser='$(id -u)' | .containers[0].env[0].value=strenv(BACKUP_FILE_CONTENT) | .containers[0].env[1].value=strenv(BACKUP_FILE_NAME))' definitions/pvc-rwo-subject/controlplane.yaml | kubectl apply -f -
+
+	# Let's wait for the deployment to actually be ready
+	kubectl -n k8up-e2e-subject wait --timeout 1m --for=condition=available deployment pvc-rwo-subject-controlplane
 
 	echo "✅  The pvc rwo controlplane subject is ready"
 }
@@ -315,14 +342,10 @@ given_an_existing_mtls_backup() {
 	wait_until backup/k8up-backup-mtls completed
 	verify "'.status.conditions[?(@.type==\"Completed\")].reason' is 'Succeeded' for Backup named 'k8up-backup-mtls'"
 
-	for i in {1..3}; do
-		run restic dump latest "/data/subject-pvc/${backup_file_name}"
-		if [ ! -z "${output}" ]; then
-			break
-		fi
-	done
+	run restic dump latest "/data/subject-pvc/${backup_file_name}"
 
 	# shellcheck disable=SC2154
+	echo "${backup_file_content} = ${output}"
 	[ "${backup_file_content}" = "${output}" ]
 
 	echo "✅  An existing backup is ready"
@@ -456,6 +479,20 @@ wait_until() {
 	echo "Waiting for '${object}' in namespace '${ns}' to become '${condition}' ..."
 	kubectl -n "${ns}" wait --timeout 5m --for "condition=${condition}" "${object}"
 }
+
+wait_for_until_jsonpath() {
+	require_args 3 ${#}
+
+	local object condition ns
+	object=${1}
+	until=${2}
+	jsonpath=${3}
+	ns=${NAMESPACE=${DETIK_CLIENT_NAMESPACE}}
+
+	echo "Waiting for '${object}' in namespace '${ns}' to become '${condition}' ..."
+	kubectl -n "${ns}" wait --timeout "${until}" --for "${jsonpath}" "${object}"
+}
+
 
 expect_file_in_container() {
 	require_args 4 ${#}

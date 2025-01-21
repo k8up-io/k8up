@@ -52,11 +52,11 @@ To run the end-to-end test (e.g. `make e2e-test`), you additionally need:
 These are the most common make targets: `build`, `test`, `docker-build`, `run`, `kind-run`.
 Run `make help` to get an overview over the relevant targets and their intentions.
 
-You can find the project roadmap at [k8up.io](https://k8up.io/k8up/about/roadmap.html).
+You can find the project roadmap [here](https://github.com/orgs/k8up-io/projects/2).
 
 We use [Snyk](https://snyk.io/test/github/k8up-io/k8up) to test the code regularly for vulnerabilities and other security issues.
 
-If you find any security issue, please follow our [Vulnerability Reporting](https://k8up.io/k8up/about/vulnerability_reporting.html) process.
+If you find any security issue, please follow our [Vulnerability Reporting](https://k8up.io/vulnerabilities/) process.
 
 ### Code Structure
 
@@ -145,7 +145,7 @@ Apply them using `kubectl apply -f config/samples/somesample.yaml`
 
 # Community
 
-Read more about our community [in the documentation](https://k8up.io/k8up/about/community.html).
+Read more about our community [in the documentation](https://k8up.io/community/).
 
 ## Chat with us
 
@@ -153,11 +153,11 @@ The K8up project is present in the [CNCF Slack Workspace](https://slack.cncf.io/
 
 ## Monthly community meeting
 
-We host a monthly community meeting. For more information, head over to [the community documentation](https://k8up.io/k8up/about/community.html).
+We host a monthly community meeting. For more information, head over to [the community documentation](https://k8up.io/community/).
 
 ## Code of Conduct
 
-Our code of conduct can be read at [k8up.io](https://k8up.io/k8up/about/code_of_conduct.html).
+Our code of conduct can be read at [k8up.io](https://k8up.io/coc/).
 
 [build]: https://github.com/k8up-io/k8up/actions?query=workflow%3ATest
 [releases]: https://github.com/k8up-io/k8up/releases
