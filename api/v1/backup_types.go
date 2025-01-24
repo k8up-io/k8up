@@ -36,7 +36,7 @@ type BackupSpec struct {
 	// ClusterName sets the kubernetes cluster name to send to pushgateway for grouping metrics
 	// +optional
 	ClusterName string `json:"clusterName,omitempty"`
-	
+
 	// StatsURL sets an arbitrary URL where the restic container posts metrics and
 	// information about the snapshots to. This is in addition to the prometheus
 	// pushgateway.
