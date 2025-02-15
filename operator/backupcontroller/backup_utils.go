@@ -3,19 +3,58 @@ package backupcontroller
 import (
 	"context"
 	"fmt"
+	"maps"
+	"path"
+	"slices"
+
 	"github.com/k8up-io/k8up/v2/operator/executor"
 	"github.com/k8up-io/k8up/v2/operator/utils"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
-	"path"
 	controllerruntime "sigs.k8s.io/controller-runtime"
+
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/k8up-io/k8up/v2/operator/cfg"
 )
 
-func (b *BackupExecutor) fetchPVCs(ctx context.Context, list client.ObjectList) error {
-	return b.Config.Client.List(ctx, list, client.InNamespace(b.backup.Namespace))
+func (b *BackupExecutor) fetchPVCs(ctx context.Context, list *corev1.PersistentVolumeClaimList) (err error) {
+	err = nil
+	if b.backup.Spec.LabelSelectors == nil {
+		return b.Config.Client.List(ctx, list, client.InNamespace(b.backup.Namespace))
+	}
+
+	labelSelectors := b.backup.Spec.LabelSelectors
+	uniquePVCs := make(map[string]corev1.PersistentVolumeClaim)
+
+	for _, labelSelector := range labelSelectors {
+		selector, err := metav1.LabelSelectorAsSelector(&labelSelector)
+		if err != nil {
+			return fmt.Errorf("cannot convert labelSelector %v to selector: %w", labelSelector, err)
+		}
+
+		options := client.ListOptions{
+			LabelSelector: selector,
+		}
+
+		matchingPVCs := &corev1.PersistentVolumeClaimList{}
+		err = b.Config.Client.List(ctx, matchingPVCs, client.InNamespace(b.backup.Namespace), &options)
+
+		if err != nil {
+			return fmt.Errorf("cannot list PVCs using labelSelector %v: %w", labelSelector, err)
+		}
+
+		for _, pvc := range matchingPVCs.Items {
+			uniquePVCs[pvc.Name] = pvc
+		}
+
+	}
+
+	list.Items = slices.Collect(maps.Values(uniquePVCs))
+
+	return err
+
 }
 
 func (b *BackupExecutor) newVolumeMounts(claims []corev1.Volume) []corev1.VolumeMount {
