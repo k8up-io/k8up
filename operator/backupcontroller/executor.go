@@ -56,6 +56,7 @@ type backupItem struct {
 	node        string
 	tolerations []corev1.Toleration
 	targetPod   string
+	resticArgs  utils.JsonArgsArray
 }
 
 // listAndFilterPVCs lists all PVCs in the given namespace and filters them for K8up specific usage.
@@ -129,6 +130,18 @@ func (b *BackupExecutor) listAndFilterPVCs(ctx context.Context, annotation strin
 			},
 		}
 
+		resticArgsAnnotation, hasResticArgsAnnotation := pvc.GetAnnotations()[cfg.Config.BackupResticArgsAnnotation]
+		if hasResticArgsAnnotation {
+			var argsArray utils.JsonArgsArray
+			if err := argsArray.UnmarshalJSON([]byte(resticArgsAnnotation)); err != nil {
+				log.Error(err, "failed to parse restic backup args from the annotation, skipping pvc", "annotation", resticArgsAnnotation)
+				continue
+			} else {
+				log.Info("adding restic args from annotation", "annotation", resticArgsAnnotation)
+				bi.resticArgs = argsArray
+			}
+		}
+
 		if pod, ok := pvcPodMap[pvc.GetName()]; ok {
 			bi.node = pod.Spec.NodeName
 			bi.tolerations = pod.Spec.Tolerations
@@ -194,25 +207,28 @@ func (b *BackupExecutor) startBackup(ctx context.Context) error {
 		job           *batchv1.Job
 		targetPods    []string
 		volumes       []corev1.Volume
+		resticArgs    []string
 		skipPreBackup bool
 	}
 	backupJobs := map[string]jobItem{}
 	for index, item := range backupItems {
-		if _, ok := backupJobs[item.node]; !ok {
-			backupJobs[item.node] = jobItem{
+		jobName := item.node + strings.Join(item.resticArgs, ",")
+		if _, ok := backupJobs[jobName]; !ok {
+			backupJobs[jobName] = jobItem{
 				job:           b.createJob(strconv.Itoa(index), item.node, item.tolerations),
 				targetPods:    make([]string, 0),
 				volumes:       make([]corev1.Volume, 0),
+				resticArgs:    []string(item.resticArgs),
 				skipPreBackup: true,
 			}
 		}
 
-		j := backupJobs[item.node]
+		j := backupJobs[jobName]
 		if item.targetPod != "" {
 			j.targetPods = append(j.targetPods, item.targetPod)
 		}
 		j.volumes = append(j.volumes, item.volume)
-		backupJobs[item.node] = j
+		backupJobs[jobName] = j
 	}
 
 	if err != nil {
@@ -275,7 +291,7 @@ func (b *BackupExecutor) startBackup(ctx context.Context) error {
 			batchJob.job.Spec.Template.Spec.Containers[0].VolumeMounts = append(b.newVolumeMounts(batchJob.volumes), b.attachTLSVolumeMounts()...)
 			batchJob.job.Spec.BackoffLimit = ptr.To(int32(cfg.Config.GlobalBackoffLimit))
 
-			batchJob.job.Spec.Template.Spec.Containers[0].Args = b.setupArgs()
+			batchJob.job.Spec.Template.Spec.Containers[0].Args = b.setupArgs(batchJob.resticArgs)
 
 			if batchJob.job.Spec.Template.Spec.ServiceAccountName == "" {
 				batchJob.job.Spec.Template.Spec.ServiceAccountName = cfg.Config.ServiceAccount
