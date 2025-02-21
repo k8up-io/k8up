@@ -1,6 +1,8 @@
 package utils
 
 import (
+	"encoding/json"
+	"errors"
 	"math/rand"
 	"reflect"
 	"time"
@@ -155,4 +157,31 @@ func AttachTLSVolumeMounts(k8upPodVarDir string, volumeMounts ...*[]corev1.Volum
 	}
 
 	return moreVolumeMounts
+}
+
+type JsonArgsArray []string
+
+func (aa *JsonArgsArray) UnmarshalJSON(data []byte) error {
+	var jsonObj interface{}
+	err := json.Unmarshal(data, &jsonObj)
+	if err != nil {
+		return err
+	}
+	switch obj := jsonObj.(type) {
+	case string:
+		*aa = JsonArgsArray([]string{obj})
+		return nil
+	case []interface{}:
+		s := make([]string, 0, len(obj))
+		for _, v := range obj {
+			value, ok := v.(string)
+			if !ok {
+				return errors.New("unexpected arg item, string expected")
+			}
+			s = append(s, value)
+		}
+		*aa = JsonArgsArray(s)
+		return nil
+	}
+	return errors.New("unexpected args array")
 }

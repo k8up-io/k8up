@@ -8,50 +8,61 @@ DESCRIPTION:
    Start k8up in restic mode
 
 OPTIONS:
-   --check                                    Set, if the container should do a check (default: false)
-   --prune                                    Set, if the container should do a prune (default: false)
-   --restore                                  Set, if the container should attempt a restore (default: false)
-   --archive                                  Set, if the container should do an archive (default: false)
-   --tag value [ --tag value ]                List of tags to consider for given operation
-   --backupCommandAnnotation value            Defines the command to invoke when doing a backup via STDOUT. [$BACKUPCOMMAND_ANNOTATION]
-   --fileExtensionAnnotation value            Defines the file extension to use for STDOUT backups. [$FILEEXTENSION_ANNOTATION]
-   --backucontainerannotation value           set the annotation name that specify the backup container inside the Pod (default: "k8up.io/backupcommand-container") [$BACKUP_CONTAINERANNOTATION]
-   --skipPreBackup                            If the job should skip the backup command and only backup volumes. (default: false) [$SKIP_PREBACKUP]
-   --promURL value                            Sets the URL of a prometheus push gateway to report metrics. [$PROM_URL]
-   --webhookURL value, --statsURL value       Sets the URL of a server which will retrieve a webhook after the action completes. [$STATS_URL]
-   --backupDir value                          Set from which directory the backup should be performed. (default: "/data") [$BACKUP_DIR]
-   --restoreDir value                         Set to which directory the restore should be performed. (default: "/data") [$RESTORE_DIR]
-   --restoreFilter value                      Simple filter to define what should get restored. For example the PVC name
-   --restoreSnap value                        Snapshot ID, if empty takes the latest snapshot
-   --restoreType value                        Type of this restore, 'folder' or 's3'
-   --restoreS3AccessKey value                 S3 access key used to connect to the S3 endpoint when restoring [$RESTORE_ACCESSKEYID]
-   --restoreS3SecretKey value                 S3 secret key used to connect to the S3 endpoint when restoring [$RESTORE_SECRETACCESSKEY]
-   --restoreS3Endpoint value                  S3 endpoint to connect to when restoring, e.g. 'https://minio.svc:9000/backup [$RESTORE_S3ENDPOINT]
-   --restoreCaCert value                      The certificate authority file path using for restore [$RESTORE_CA_CERT_FILE]
-   --restoreClientCert value                  The client certificate file path using for restore [$RESTORE_CLIENT_CERT_FILE]
-   --restoreClientKey value                   The client private key file path using for restore [$RESTORE_CLIENT_KEY_FILE]
-   --verifyRestore                            If the restore should get verified, only for PVCs restore (default: false)
-   --trimRestorePath                          If set, strips the value of --restoreDir from the lefts side of the remote restore path value (default: enabled) [$TRIM_RESTOREPATH]
-   --resticBin value                          The path to the restic binary. (default: "/usr/local/bin/restic") [$RESTIC_BINARY]
-   --resticRepository value                   The restic repository to perform the action with [$RESTIC_REPOSITORY]
-   --resticOptions value                      Additional options to pass to restic in the format 'key=value,key2=value2' [$RESTIC_OPTIONS]
-   --keepLatest value                         While pruning, keep at the latest snapshot (default: 0) [$KEEP_LAST, $KEEP_LATEST]
-   --keepHourly value                         While pruning, keep hourly snapshots (default: 0) [$KEEP_HOURLY]
-   --keepDaily value                          While pruning, keep daily snapshots (default: 0) [$KEEP_DAILY]
-   --keepWeekly value                         While pruning, keep weekly snapshots (default: 0) [$KEEP_WEEKLY]
-   --keepMonthly value                        While pruning, keep monthly snapshots (default: 0) [$KEEP_MONTHLY]
-   --keepYearly value                         While pruning, keep yearly snapshots (default: 0) [$KEEP_YEARLY]
-   --keepTags                                 While pruning, keep tagged snapshots (default: false) [$KEEP_TAG, $KEEP_TAGS]
-   --keepWithinHourly value                   While pruning, keep hourly snapshots within the given duration, e.g. '2y5m7d3h' [$KEEP_WITHIN_HOURLY]
-   --keepWithinDaily value                    While pruning, keep daily snapshots within the given duration, e.g. '2y5m7d3h' [$KEEP_WITHIN_DAILY]
-   --keepWithinWeekly value                   While pruning, keep weekly snapshots within the given duration, e.g. '2y5m7d3h' [$KEEP_WITHIN_WEEKLY]
-   --keepWithinMonthly value                  While pruning, keep monthly snapshots within the given duration, e.g. '2y5m7d3h' [$KEEP_WITHIN_MONTHLY]
-   --keepWithinYearly value                   While pruning, keep yearly snapshots within the given duration, e.g. '2y5m7d3h' [$KEEP_WITHIN_YEARLY]
-   --keepWithin value                         While pruning, keep tagged snapshots within the given duration, e.g. '2y5m7d3h' [$KEEP_WITHIN]
-   --targetPods value [ --targetPods value ]  Filter list of pods by TARGET_PODS names [$TARGET_PODS]
-   --sleepDuration value                      Sleep for specified amount until init starts (default: 0s) [$SLEEP_DURATION]
-   --varDir value                             The var directory is stored k8up metadata files and temporary files (default: "/k8up")
-   --caCert value                             The certificate authority file path [$CA_CERT_FILE]
-   --clientCert value                         The client certificate file path [$CLIENT_CERT_FILE]
-   --clientKey value                          The client private key file path [$CLIENT_KEY_FILE]
-   --help, -h                                 show help (default: false)
+   --check                                                                        Set, if the container should do a check (default: false)
+   --prune                                                                        Set, if the container should do a prune (default: false)
+   --restore                                                                      Set, if the container should attempt a restore (default: false)
+   --archive                                                                      Set, if the container should do an archive (default: false)
+   --tag value [ --tag value ]                                                    List of tags to consider for given operation
+   --backupCommandAnnotation value                                                Defines the command to invoke when doing a backup via STDOUT. [$BACKUPCOMMAND_ANNOTATION]
+   --fileExtensionAnnotation value                                                Defines the file extension to use for STDOUT backups. [$FILEEXTENSION_ANNOTATION]
+   --backucontainerannotation value                                               set the annotation name that specify the backup container inside the Pod (default: "k8up.io/backupcommand-container") [$BACKUP_CONTAINERANNOTATION]
+   --skipPreBackup                                                                If the job should skip the backup command and only backup volumes. (default: false) [$SKIP_PREBACKUP]
+   --promURL value                                                                Sets the URL of a prometheus push gateway to report metrics. [$PROM_URL]
+   --webhookURL value, --statsURL value                                           Sets the URL of a server which will retrieve a webhook after the action completes. [$STATS_URL]
+   --backupDir value                                                              Set from which directory the backup should be performed. (default: "/data") [$BACKUP_DIR]
+   --restoreDir value                                                             Set to which directory the restore should be performed. (default: "/data") [$RESTORE_DIR]
+   --restoreFilter value                                                          Simple filter to define what should get restored. For example the PVC name
+   --restoreSnap value                                                            Snapshot ID, if empty takes the latest snapshot
+   --restoreType value                                                            Type of this restore, 'folder' or 's3'
+   --restoreS3AccessKey value                                                     S3 access key used to connect to the S3 endpoint when restoring [$RESTORE_ACCESSKEYID]
+   --restoreS3SecretKey value                                                     S3 secret key used to connect to the S3 endpoint when restoring [$RESTORE_SECRETACCESSKEY]
+   --restoreS3Endpoint value                                                      S3 endpoint to connect to when restoring, e.g. 'https://minio.svc:9000/backup [$RESTORE_S3ENDPOINT]
+   --restoreCaCert value                                                          The certificate authority file path using for restore [$RESTORE_CA_CERT_FILE]
+   --restoreClientCert value                                                      The client certificate file path using for restore [$RESTORE_CLIENT_CERT_FILE]
+   --restoreClientKey value                                                       The client private key file path using for restore [$RESTORE_CLIENT_KEY_FILE]
+   --verifyRestore                                                                If the restore should get verified, only for PVCs restore (default: false)
+   --trimRestorePath                                                              If set, strips the value of --restoreDir from the lefts side of the remote restore path value (default: enabled) [$TRIM_RESTOREPATH]
+   --resticBin value                                                              The path to the restic binary. (default: "/usr/local/bin/restic") [$RESTIC_BINARY]
+   --resticRepository value                                                       The restic repository to perform the action with [$RESTIC_REPOSITORY]
+   --resticOptions value                                                          Additional options to pass to restic in the format 'key=value,key2=value2' [$RESTIC_OPTIONS]
+   --exclude pattern [ --exclude pattern ]                                        In backup, passed to restic: exclude a pattern (can be specified multiple times) [$RESTIC_EXCLUDE]
+   --excludeCaches                                                                In backup, passed to restic: excludes cache directories that are marked with a CACHEDIR.TAG file. See https://bford.info/cachedir/ for the Cache Directory Tagging Standard (default: false) [$RESTIC_EXCLUDE_CACHES]
+   --excludeFile file [ --excludeFile file ]                                      In backup, passed to restic: read exclude patterns from a file (can be specified multiple times). This file MUST be available in backup job container (e.g. in the directory being backed up) [$RESTIC_EXCLUDE_FILE]
+   --excludeIfPresent filename[:header] [ --excludeIfPresent filename[:header] ]  In backup, passed to restic: takes filename[:header], exclude contents of directories containing filename (except filename itself) if header of that file is as provided (can be specified multiple times) [$RESTIC_EXCLUDE_IF_PRESENT]
+   --excludeLargerThan size                                                       In backup, passed to restic: max size of the files to be backed up (allowed suffixes: k/K, m/M, g/G, t/T) [$RESTIC_EXCLUDE_LARGER_THAT]
+   --filesFrom file [ --filesFrom file ]                                          In backup, passed to restic: read the files to backup from file (can be combined with file args; can be specified multiple times) [$RESTIC_FILES_FROM]
+   --filesFromRaw file [ --filesFromRaw file ]                                    In backup, passed to restic: read the files to backup from file (can be combined with file args; can be specified multiple times) [$RESTIC_FILES_FROM_RAW]
+   --filesFromVerbatim file [ --filesFromVerbatim file ]                          In backup, passed to restic: read the files to backup from file (can be combined with file args; can be specified multiple times) [$RESTIC_FILES_FROM_VERBATIM]
+   --iExclude pattern [ --iExclude pattern ]                                      In backup, passed to restic: same as --exclude pattern but ignores the casing of filenames [$RESTIC_IEXCLUDE]
+   --iExcludeFile pattern [ --iExcludeFile pattern ]                              In backup, passed to restic: same as --exclude-file pattern but ignores the casing of filenames [$RESTIC_IEXCLUDE_FILE]
+   --oneFileSystem                                                                In backup, passed to restic: exclude other file systems, don't cross filesystem boundaries and subvolumes (default: false) [$RESTIC_ONE_FILESYSTEM]
+   --keepLatest value                                                             While pruning, keep at the latest snapshot (default: 0) [$KEEP_LAST, $KEEP_LATEST]
+   --keepHourly value                                                             While pruning, keep hourly snapshots (default: 0) [$KEEP_HOURLY]
+   --keepDaily value                                                              While pruning, keep daily snapshots (default: 0) [$KEEP_DAILY]
+   --keepWeekly value                                                             While pruning, keep weekly snapshots (default: 0) [$KEEP_WEEKLY]
+   --keepMonthly value                                                            While pruning, keep monthly snapshots (default: 0) [$KEEP_MONTHLY]
+   --keepYearly value                                                             While pruning, keep yearly snapshots (default: 0) [$KEEP_YEARLY]
+   --keepTags                                                                     While pruning, keep tagged snapshots (default: false) [$KEEP_TAG, $KEEP_TAGS]
+   --keepWithinHourly value                                                       While pruning, keep hourly snapshots within the given duration, e.g. '2y5m7d3h' [$KEEP_WITHIN_HOURLY]
+   --keepWithinDaily value                                                        While pruning, keep daily snapshots within the given duration, e.g. '2y5m7d3h' [$KEEP_WITHIN_DAILY]
+   --keepWithinWeekly value                                                       While pruning, keep weekly snapshots within the given duration, e.g. '2y5m7d3h' [$KEEP_WITHIN_WEEKLY]
+   --keepWithinMonthly value                                                      While pruning, keep monthly snapshots within the given duration, e.g. '2y5m7d3h' [$KEEP_WITHIN_MONTHLY]
+   --keepWithinYearly value                                                       While pruning, keep yearly snapshots within the given duration, e.g. '2y5m7d3h' [$KEEP_WITHIN_YEARLY]
+   --keepWithin value                                                             While pruning, keep tagged snapshots within the given duration, e.g. '2y5m7d3h' [$KEEP_WITHIN]
+   --targetPods value [ --targetPods value ]                                      Filter list of pods by TARGET_PODS names [$TARGET_PODS]
+   --sleepDuration value                                                          Sleep for specified amount until init starts (default: 0s) [$SLEEP_DURATION]
+   --varDir value                                                                 The var directory is stored k8up metadata files and temporary files (default: "/k8up")
+   --caCert value                                                                 The certificate authority file path [$CA_CERT_FILE]
+   --clientCert value                                                             The client certificate file path [$CLIENT_CERT_FILE]
+   --clientKey value                                                              The client private key file path [$CLIENT_KEY_FILE]
+   --help, -h                                                                     show help (default: false)

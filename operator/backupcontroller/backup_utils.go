@@ -74,7 +74,7 @@ func (b *BackupExecutor) createServiceAccountAndBinding(ctx context.Context) err
 	return err
 }
 
-func (b *BackupExecutor) setupArgs() []string {
+func (b *BackupExecutor) setupArgs(userArgs []string) []string {
 	args := []string{"-varDir", cfg.Config.PodVarDir}
 	if len(b.backup.Spec.Tags) > 0 {
 		args = append(args, executor.BuildTagArgs(b.backup.Spec.Tags)...)
@@ -82,6 +82,7 @@ func (b *BackupExecutor) setupArgs() []string {
 	if b.backup.Spec.Backend != nil {
 		args = append(args, utils.AppendTLSOptionsArgs(b.backup.Spec.Backend.TLSOptions)...)
 	}
+	args = append(args, userArgs...)
 
 	return args
 }
