@@ -1,0 +1,18 @@
+---
+apiVersion: k8up.io/v1
+kind: PreBackupPod
+metadata:
+  name: prebackup
+  namespace: k8up-e2e-subject
+spec:
+  backupCommand: sh -c 'echo hello there'
+  pod:
+    spec:
+      containers:
+        - image: busybox
+          command:
+            - 'sleep'
+            - 'infinity'
+          imagePullPolicy: Always
+          name: busybox
+

@@ -40,6 +40,11 @@ type BackupSpec struct {
 
 	// Tags is a list of arbitrary tags that get added to the backup via Restic's tagging system
 	Tags []string `json:"tags,omitempty"`
+
+	// LabelSelectors is a list of selectors that we filter for.
+	// When defined, only PVCs and PreBackupPods matching them are backed up.
+	// +optional
+	LabelSelectors []metav1.LabelSelector `json:"labelSelectors,omitempty"`
 }
 
 type BackupTemplate struct {
