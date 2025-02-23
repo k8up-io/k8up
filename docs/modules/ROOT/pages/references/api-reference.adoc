@@ -257,6 +257,8 @@ KeepJobs is used property is not specified.
 information about the snapshots to. This is in addition to the prometheus
 pushgateway.
 | *`tags`* __string array__ | Tags is a list of arbitrary tags that get added to the backup via Restic's tagging system
+| *`labelSelectors`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#labelselector-v1-meta[$$LabelSelector$$] array__ | LabelSelectors is a list of selectors that we filter for.
+When defined, only PVCs and PreBackupPods matching them are backed up.
 |===
 
 
@@ -299,6 +301,8 @@ KeepJobs is used property is not specified.
 information about the snapshots to. This is in addition to the prometheus
 pushgateway.
 | *`tags`* __string array__ | Tags is a list of arbitrary tags that get added to the backup via Restic's tagging system
+| *`labelSelectors`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#labelselector-v1-meta[$$LabelSelector$$] array__ | LabelSelectors is a list of selectors that we filter for.
+When defined, only PVCs and PreBackupPods matching them are backed up.
 |===
 
 
