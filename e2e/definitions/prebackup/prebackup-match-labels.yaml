@@ -1,0 +1,38 @@
+---
+apiVersion: k8up.io/v1
+kind: PreBackupPod
+metadata:
+  name: prebackup-label-specific-value-1
+  namespace: k8up-e2e-subject
+  labels:
+    specific-values: specific-value-1
+spec:
+  backupCommand: sh -c 'echo hello there'
+  pod:
+    spec:
+      containers:
+        - image: busybox
+          command:
+            - 'sleep'
+            - 'infinity'
+          imagePullPolicy: Always
+          name: specific-label-value-1
+---
+apiVersion: k8up.io/v1
+kind: PreBackupPod
+metadata:
+  name: prebackup-label-exists
+  namespace: k8up-e2e-subject
+  labels:
+    exists: arbitrary
+spec:
+  backupCommand: sh -c 'echo whatup'
+  pod:
+    spec:
+      containers:
+        - image: busybox
+          command:
+            - 'sleep'
+            - 'infinity'
+          imagePullPolicy: Always
+          name: arbitrary-label-value

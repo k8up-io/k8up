@@ -1,0 +1,51 @@
+---
+# used to test a backup with labelSelectors - the below match and should be picked up
+# The other, non-labeled PVC is expected to be ignored
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: subject-pvc-label-exists
+  namespace: k8up-e2e-subject
+  labels:
+    exists: value
+spec:
+  accessModes:
+  - ReadWriteMany
+  resources:
+    requests:
+      storage: 100Mi
+  storageClassName: standard
+  volumeMode: Filesystem
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: subject-pvc-specific-value-1
+  namespace: k8up-e2e-subject
+  labels:
+    specific-values: specific-value-1
+spec:
+  accessModes:
+  - ReadWriteMany
+  resources:
+    requests:
+      storage: 100Mi
+  storageClassName: standard
+  volumeMode: Filesystem
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: subject-pvc-specific-value-2
+  namespace: k8up-e2e-subject
+  labels:
+    specific-values: specific-value-2
+spec:
+  accessModes:
+  - ReadWriteMany
+  resources:
+    requests:
+      storage: 100Mi
+  storageClassName: standard
+  volumeMode: Filesystem
+

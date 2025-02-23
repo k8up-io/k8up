@@ -1,0 +1,34 @@
+---
+apiVersion: k8up.io/v1
+kind: Backup
+metadata:
+  name: k8up-backup-selectors
+  namespace: k8up-e2e-subject
+spec:
+  labelSelectors:
+    - matchExpressions:
+      - key: exists
+        operator: Exists
+    - matchExpressions:
+      - key: specific-values
+        operator: In
+        values:
+          - specific-value-1
+          - specific-value-2
+  failedJobsHistoryLimit: 1
+  successfulJobsHistoryLimit: 1
+  backend:
+    repoPasswordSecretRef:
+      name: backup-repo
+      key: password
+    s3:
+      endpoint: http://minio.minio-e2e.svc.cluster.local:9000
+      bucket: backup
+      accessKeyIDSecretRef:
+        name: backup-credentials
+        key: username
+      secretAccessKeySecretRef:
+        name: backup-credentials
+        key: password
+  podSecurityContext:
+    runAsUser: $ID
