@@ -141,16 +141,18 @@ given_a_clean_archive() {
 }
 
 given_a_subject() {
-	require_args 2 ${#}
+	(require_args 2 ${#}) || require_args 3 ${#}
 
 	export BACKUP_FILE_NAME=${1}
 	export BACKUP_FILE_CONTENT=${2}
+	CLAIM_NAME=${3-subject-pvc}
+	DEPLOYMENT_NAME_SUFFIX=${3-""}
 
 	kubectl apply -f definitions/pv/pvc.yaml
-	yq e '.spec.template.spec.containers[0].securityContext.runAsUser='$(id -u)' | .spec.template.spec.containers[0].env[0].value=strenv(BACKUP_FILE_CONTENT) | .spec.template.spec.containers[0].env[1].value=strenv(BACKUP_FILE_NAME)' definitions/subject/deployment.yaml | kubectl apply -f -
+	yq e '.spec.template.spec.containers[0].securityContext.runAsUser='$(id -u)' | .spec.template.spec.containers[0].env[0].value=strenv(BACKUP_FILE_CONTENT) | .spec.template.spec.containers[0].env[1].value=strenv(BACKUP_FILE_NAME) | .metadata.name="subject-deployment'${DEPLOYMENT_NAME_SUFFIX}'" | .spec.template.spec.volumes[0].persistentVolumeClaim.claimName="'${CLAIM_NAME}'"' definitions/subject/deployment.yaml | kubectl apply -f -
 
 	# Let's wait for the deployment to actually be ready
-	kubectl -n k8up-e2e-subject wait --timeout 1m --for=condition=available deployment subject-deployment
+	kubectl -n k8up-e2e-subject wait --timeout 1m --for=condition=available deployment "subject-deployment${DEPLOYMENT_NAME_SUFFIX}"
 
 	echo "✅  The subject is ready"
 }
