@@ -57,8 +57,8 @@ type clientCert struct {
 func New(ctx context.Context, logger logr.Logger, statsHandler StatsHandler) *Restic {
 	globalFlags := Flags{}
 
-	options := strings.Split(cfg.Config.ResticOptions, ",")
-	if len(options) > 0 {
+	if cfg.Config.ResticOptions != "" {
+		options := strings.Split(cfg.Config.ResticOptions, ",")
 		logger.Info("using the following restic options", "options", options)
 		globalFlags.AddFlag("--option", options...)
 	}
