@@ -219,3 +219,70 @@ spec:
   podConfigRef:
     name: podconfig
 ----
+
+== Target specific PVCs or PreBackupPods
+
+An optional labelSelectors field can be specified to target PVCs or PreBackupPods matching those expressions.
+You can specify multiple selectors - as long as at least one matches, the PVC/PreBackupPod will be included in the backup.
+
+Keep in mind that does NOT apply to terms within an individual labelSelector - this will be processed as usual, as we use the standard K8s API for this.
+To find out how selectors themselves work, you can consult the upstream Kubernetes documentation: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
+
+Below you can find a practical example. It would back up any resources with "my-label-key" defined OR "another-label-key" with one of the accepted values.
+
+[source,yaml]
+----
+apiVersion: k8up.io/v1
+kind: Backup
+metadata:
+  name: backup-test
+spec:
+  labelSelectors:
+    - matchExpressions:
+      - key: my-label-key
+        operator: Exists
+    - matchExpressions:
+      - key: another-label-key
+        operator: In
+	values:
+	  - acceptable-value
+	  - another-acceptable-value
+  failedJobsHistoryLimit: 2
+  successfulJobsHistoryLimit: 2
+  backend:
+    repoPasswordSecretRef:
+      name: backup-repo
+      key: password
+    s3:
+      endpoint: http://minio:9000
+      bucket: backups
+      accessKeyIDSecretRef:
+        name: minio-credentials
+        key: username
+      secretAccessKeySecretRef:
+        name: minio-credentials
+        key: password
+
+----
+
+If you'd like to only target entities having both labels, you can use a single labelSelector.
+This change will cause the backup to select only entities matching both conditions.
+
+[source,yaml]
+----
+apiVersion: k8up.io/v1
+kind: Backup
+metadata:
+  name: backup-test
+spec:
+  labelSelectors:
+    - matchExpressions:
+      - key: my-label-key
+        operator: Exists
+      - key: another-label-key
+        operator: In
+	values:
+	  - acceptable-value
+	  - another-acceptable-value
+...
+----
