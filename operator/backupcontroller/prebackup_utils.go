@@ -2,6 +2,8 @@ package backupcontroller
 
 import (
 	"fmt"
+	"maps"
+	"slices"
 
 	"golang.org/x/net/context"
 	appsv1 "k8s.io/api/apps/v1"
@@ -19,14 +21,43 @@ import (
 	"github.com/k8up-io/k8up/v2/operator/cfg"
 )
 
-// fetchPreBackupPodTemplates fetches all PreBackupPods from the same namespace as the originating backup.
+// fetchPreBackupPodTemplates fetches all PreBackupPods from the same namespace as the originating backup
+// when labelSelectors are defined for the backups, we only return PreBackupPods matching defined conditions
 func (b *BackupExecutor) fetchPreBackupPodTemplates(ctx context.Context) (*k8upv1.PreBackupPodList, error) {
 	podList := &k8upv1.PreBackupPodList{}
 
-	err := b.Client.List(ctx, podList, client.InNamespace(b.Obj.GetNamespace()))
-	if err != nil {
-		return nil, fmt.Errorf("could not list pod templates: %w", err)
+	labelSelectors := b.backup.Spec.LabelSelectors
+	if labelSelectors == nil {
+		err := b.Client.List(ctx, podList, client.InNamespace(b.Obj.GetNamespace()))
+		if err != nil {
+			return nil, fmt.Errorf("could not list pod templates: %w", err)
+		}
+
+		return podList, nil
 	}
+
+	uniquePreBackupPods := make(map[string]k8upv1.PreBackupPod)
+
+	for _, labelSelector := range labelSelectors {
+		selector, err := metav1.LabelSelectorAsSelector(&labelSelector)
+		if err != nil {
+			return nil, fmt.Errorf("cannot convert labelSelector %v to selector: %w", labelSelector, err)
+		}
+
+		options := client.ListOptions{
+			LabelSelector: selector,
+		}
+
+		matchingPreBackupPods := &k8upv1.PreBackupPodList{}
+		err = b.Client.List(ctx, matchingPreBackupPods, client.InNamespace(b.Obj.GetNamespace()), &options)
+		if err != nil {
+			return nil, fmt.Errorf("cannot list pod templates using labelSelector %v: %w", labelSelector, err)
+		}
+		for _, preBackupPod := range matchingPreBackupPods.Items {
+			uniquePreBackupPods[preBackupPod.Name] = preBackupPod
+		}
+	}
+	podList.Items = slices.Collect(maps.Values(uniquePreBackupPods))
 
 	return podList, nil
 }

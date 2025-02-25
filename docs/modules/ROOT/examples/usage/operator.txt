@@ -12,6 +12,7 @@ OPTIONS:
    --backupcommandannotation value                     set the annotation name that identify the backup commands on Pods (default: "k8up.io/backupcommand") [$BACKUP_BACKUPCOMMANDANNOTATION]
    --fileextensionannotation value                     set the annotation name where the file extension is stored for backup commands (default: "k8up.io/file-extension") [$BACKUP_FILEEXTENSIONANNOTATION]
    --backupresticargsannotation value                  set the annotation name to be used to modify restic wrapper call args on backup (e.g. to add excludes) (default: "k8up.io/backup-restic-args") [$BACKUP_RESTICARGSANNOTATION]
+   --global-backoff-limit value                        set the backoff limit for all backup jobs (default: 6) [$BACKUP_GLOBAL_BACKOFF_LIMIT]
    --global-failed-jobs-history-limit value            set the number of old, failed jobs to keep when cleaning up, applies to all job types (default: 3) [$BACKUP_GLOBAL_FAILED_JOBS_HISTORY_LIMIT]
    --global-successful-jobs-history-limit value        set the number of old, successful jobs to keep when cleaning up, applies to all job types (default: 3) [$BACKUP_GLOBAL_SUCCESSFUL_JOBS_HISTORY_LIMIT]
    --global-concurrent-archive-jobs-limit value        set the limit of concurrent archive jobs (default: unlimited) [$BACKUP_GLOBAL_CONCURRENT_ARCHIVE_JOBS_LIMIT]

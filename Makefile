@@ -75,7 +75,7 @@ deploy: kind-load-image install ## Deploy controller in the configured Kubernete
 		--set image.registry=$(E2E_REGISTRY) \
 		--set image.repository=$(E2E_REPO) \
 		--set image.tag=$(E2E_TAG) \
-		--values ./e2e/definitions/operator/deploy.yaml \
+		--values ./e2e/definitions/operator/values.yaml \
 		--wait $(deploy_args)
 
 .PHONY: generate
