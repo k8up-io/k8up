@@ -79,6 +79,18 @@ var (
 			&cli.StringFlag{Destination: &cfg.Config.ResticRepository, Name: "resticRepository", EnvVars: []string{"RESTIC_REPOSITORY"}, Usage: "The restic repository to perform the action with", Required: true},
 			&cli.StringFlag{Destination: &cfg.Config.ResticOptions, Name: "resticOptions", EnvVars: []string{"RESTIC_OPTIONS"}, Usage: "Additional options to pass to restic in the format 'key=value,key2=value2'"},
 
+			&cli.StringSliceFlag{Name: "exclude", EnvVars: []string{"RESTIC_EXCLUDE"}, Usage: "In backup, passed to restic: exclude a `pattern` (can be specified multiple times)"},
+			&cli.BoolFlag{Destination: &cfg.Config.ExcludeCaches, Name: "excludeCaches", EnvVars: []string{"RESTIC_EXCLUDE_CACHES"}, Usage: "In backup, passed to restic: excludes cache directories that are marked with a CACHEDIR.TAG file. See https://bford.info/cachedir/ for the Cache Directory Tagging Standard"},
+			&cli.StringSliceFlag{Name: "excludeFile", EnvVars: []string{"RESTIC_EXCLUDE_FILE"}, Usage: "In backup, passed to restic: read exclude patterns from a `file` (can be specified multiple times). This file MUST be available in backup job container (e.g. in the directory being backed up)"},
+			&cli.StringSliceFlag{Name: "excludeIfPresent", EnvVars: []string{"RESTIC_EXCLUDE_IF_PRESENT"}, Usage: "In backup, passed to restic: takes `filename[:header]`, exclude contents of directories containing filename (except filename itself) if header of that file is as provided (can be specified multiple times)"},
+			&cli.StringFlag{Destination: &cfg.Config.ExcludeLargerThan, Name: "excludeLargerThan", EnvVars: []string{"RESTIC_EXCLUDE_LARGER_THAT"}, Usage: "In backup, passed to restic: max `size` of the files to be backed up (allowed suffixes: k/K, m/M, g/G, t/T)"},
+			&cli.StringSliceFlag{Name: "filesFrom", EnvVars: []string{"RESTIC_FILES_FROM"}, Usage: "In backup, passed to restic: read the files to backup from `file` (can be combined with file args; can be specified multiple times)"},
+			&cli.StringSliceFlag{Name: "filesFromRaw", EnvVars: []string{"RESTIC_FILES_FROM_RAW"}, Usage: "In backup, passed to restic: read the files to backup from `file` (can be combined with file args; can be specified multiple times)"},
+			&cli.StringSliceFlag{Name: "filesFromVerbatim", EnvVars: []string{"RESTIC_FILES_FROM_VERBATIM"}, Usage: "In backup, passed to restic: read the files to backup from `file` (can be combined with file args; can be specified multiple times)"},
+			&cli.StringSliceFlag{Name: "iExclude", EnvVars: []string{"RESTIC_IEXCLUDE"}, Usage: "In backup, passed to restic: same as --exclude `pattern` but ignores the casing of filenames"},
+			&cli.StringSliceFlag{Name: "iExcludeFile", EnvVars: []string{"RESTIC_IEXCLUDE_FILE"}, Usage: "In backup, passed to restic: same as --exclude-file `pattern` but ignores the casing of filenames"},
+			&cli.BoolFlag{Destination: &cfg.Config.OneFileSystem, Name: "oneFileSystem", EnvVars: []string{"RESTIC_ONE_FILESYSTEM"}, Usage: "In backup, passed to restic: exclude other file systems, don't cross filesystem boundaries and subvolumes"},
+
 			&cli.IntFlag{Destination: &cfg.Config.PruneKeepLast, Name: "keepLatest", EnvVars: []string{"KEEP_LAST", "KEEP_LATEST"}, Usage: "While pruning, keep at the latest snapshot"},
 			&cli.IntFlag{Destination: &cfg.Config.PruneKeepHourly, Name: "keepHourly", EnvVars: []string{"KEEP_HOURLY"}, Usage: "While pruning, keep hourly snapshots"},
 			&cli.IntFlag{Destination: &cfg.Config.PruneKeepDaily, Name: "keepDaily", EnvVars: []string{"KEEP_DAILY"}, Usage: "While pruning, keep daily snapshots"},
@@ -111,6 +123,15 @@ func resticMain(c *cli.Context) error {
 
 	cfg.Config.Tags = c.StringSlice("tag")
 	cfg.Config.TargetPods = c.StringSlice("targetPods")
+
+	cfg.Config.Exclude = c.StringSlice("exclude")
+	cfg.Config.ExcludeFile = c.StringSlice("excludeFile")
+	cfg.Config.ExcludeIfPresent = c.StringSlice("excludeIfPresent")
+	cfg.Config.FilesFrom = c.StringSlice("filesFrom")
+	cfg.Config.FilesFromRaw = c.StringSlice("filesFromRaw")
+	cfg.Config.FilesFromVerbatim = c.StringSlice("filesFromVerbatim")
+	cfg.Config.IExclude = c.StringSlice("iExclude")
+	cfg.Config.IExcludeFile = c.StringSlice("iExcludeFile")
 
 	err := cfg.Config.Validate()
 	if err != nil {

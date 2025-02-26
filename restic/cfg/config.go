@@ -45,6 +45,18 @@ type Configuration struct {
 	ResticRepository string
 	ResticOptions    string
 
+	Exclude           []string
+	ExcludeCaches     bool
+	ExcludeFile       []string
+	ExcludeIfPresent  []string
+	ExcludeLargerThan string
+	FilesFrom         []string
+	FilesFromRaw      []string
+	FilesFromVerbatim []string
+	IExclude          []string
+	IExcludeFile      []string
+	OneFileSystem     bool
+
 	RestoreDir         string
 	RestoreS3Endpoint  string
 	RestoreS3AccessKey string

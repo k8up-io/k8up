@@ -48,6 +48,35 @@ func (r *Restic) Backup(backupDir string, tags ArrayOpts) error {
 	return nil
 }
 
+func mixinBackupFlags(flags Flags) Flags {
+	toMix := map[string][]string{
+		"--exclude":             cfg.Config.Exclude,
+		"--exclude-file":        cfg.Config.ExcludeFile,
+		"--exclude-if-present":  cfg.Config.ExcludeIfPresent,
+		"--files-from":          cfg.Config.FilesFrom,
+		"--files-from-raw":      cfg.Config.FilesFromRaw,
+		"--files-from-verbatim": cfg.Config.FilesFromVerbatim,
+		"--iexclude":            cfg.Config.IExclude,
+		"--iexclude-file":       cfg.Config.IExcludeFile,
+	}
+
+	for k, v := range toMix {
+		if len(v) > 0 {
+			flags = Combine(flags, Flags{k: v})
+		}
+	}
+
+	if cfg.Config.ExcludeCaches {
+		flags = Combine(flags, Flags{"--exclude-caches": {}})
+	}
+
+	if cfg.Config.OneFileSystem {
+		flags = Combine(flags, Flags{"--one-file-system": {}})
+	}
+
+	return flags
+}
+
 func (r *Restic) folderBackup(folder string, backuplogger logr.Logger, tags ArrayOpts) error {
 
 	outputWriter := r.newParseBackupOutput(backuplogger, folder)
@@ -58,6 +87,8 @@ func (r *Restic) folderBackup(folder string, backuplogger logr.Logger, tags Arra
 		"--host": {cfg.Config.Hostname},
 		"--json": {},
 	})
+
+	flags = mixinBackupFlags(flags)
 
 	opts := CommandOptions{
 		Path:   r.resticPath,
