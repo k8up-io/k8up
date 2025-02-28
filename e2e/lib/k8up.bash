@@ -154,6 +154,9 @@ given_a_subject() {
 	# Let's wait for the deployment to actually be ready
 	kubectl -n k8up-e2e-subject wait --timeout 1m --for=condition=available deployment "subject-deployment${DEPLOYMENT_NAME_SUFFIX}"
 
+	# Let's wait for the deployment to actually be ready
+	kubectl -n k8up-e2e-subject wait --timeout 1m --for=condition=available deployment subject-deployment
+
 	echo "✅  The subject is ready"
 }
 

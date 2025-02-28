@@ -1742,6 +1742,10 @@ spec:
                           type: object
                         type: array
                     type: object
+                  clusterName:
+                    description: ClusterName sets the kubernetes cluster name to send
+                      to pushgateway for grouping metrics
+                    type: string
                   concurrentRunsAllowed:
                     type: boolean
                   failedJobsHistoryLimit:
@@ -2626,6 +2630,10 @@ spec:
                           type: object
                         type: array
                     type: object
+                  clusterName:
+                    description: ClusterName sets the kubernetes cluster name to send
+                      to pushgateway for grouping metrics
+                    type: string
                   concurrentRunsAllowed:
                     type: boolean
                   failedJobsHistoryLimit:

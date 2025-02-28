@@ -431,6 +431,10 @@ spec:
                       type: object
                     type: array
                 type: object
+              clusterName:
+                description: ClusterName sets the kubernetes cluster name to send
+                  to pushgateway for grouping metrics
+                type: string
               failedJobsHistoryLimit:
                 description: |-
                   FailedJobsHistoryLimit amount of failed jobs to keep for later analysis.

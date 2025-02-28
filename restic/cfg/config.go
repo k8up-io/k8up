@@ -35,8 +35,9 @@ type Configuration struct {
 
 	SkipPreBackup bool
 
-	PromURL    string
-	WebhookURL string
+	PromURL     string
+	ClusterName string
+	WebhookURL  string
 
 	Hostname   string
 	KubeConfig string
