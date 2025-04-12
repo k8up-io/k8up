@@ -231,10 +231,6 @@ func (b *BackupExecutor) startBackup(ctx context.Context) error {
 		backupJobs[jobName] = j
 	}
 
-	if err != nil {
-		return err
-	}
-
 	log := controllerruntime.LoggerFrom(ctx)
 	podLister := kubernetes.NewPodLister(ctx, b.Client, cfg.Config.BackupCommandAnnotation, "", "", b.backup.Namespace, nil, false, log)
 	backupPods, err := podLister.ListPods()
