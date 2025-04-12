@@ -86,7 +86,7 @@ func AppendTLSOptionsArgs(opts *k8upv1.TLSOptions, prefixArgName ...string) []st
 }
 
 func AttachTLSVolumes(volumes *[]k8upv1.RunnableVolumeSpec) []corev1.Volume {
-	ku8pVolume := corev1.Volume{
+	k8upVolume := corev1.Volume{
 		Name:         _dataDirName,
 		VolumeSource: corev1.VolumeSource{EmptyDir: &corev1.EmptyDirVolumeSource{}},
 	}
@@ -102,11 +102,11 @@ func AttachTLSVolumes(volumes *[]k8upv1.RunnableVolumeSpec) []corev1.Volume {
 	}
 
 	if volumes == nil {
-		return []corev1.Volume{ku8pVolume, resticTmpVolume, resticCacheVolume}
+		return []corev1.Volume{k8upVolume, resticTmpVolume, resticCacheVolume}
 	}
 
 	var moreVolumes []corev1.Volume
-	moreVolumes = append(moreVolumes, ku8pVolume, resticTmpVolume, resticCacheVolume)
+	moreVolumes = append(moreVolumes, k8upVolume, resticTmpVolume, resticCacheVolume)
 	for _, v := range *volumes {
 		vol := v
 
