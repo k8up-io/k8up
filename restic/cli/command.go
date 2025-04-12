@@ -74,7 +74,7 @@ func (c *Command) Configure() {
 
 func (c *Command) setResticProgressFPSIfNotDefined(givenEnv []string) []string {
 	for _, envVar := range givenEnv {
-		if strings.HasPrefix("RESTIC_PROGRESS_FPS=", envVar) {
+		if strings.HasPrefix(envVar, "RESTIC_PROGRESS_FPS=") {
 			return givenEnv
 		}
 	}
