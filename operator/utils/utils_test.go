@@ -348,6 +348,14 @@ func Test_AttachTLSVolumes(t *testing.T) {
 					Name:         _dataDirName,
 					VolumeSource: corev1.VolumeSource{EmptyDir: &corev1.EmptyDirVolumeSource{}},
 				},
+				{
+					Name:         _resticTmpDirName,
+					VolumeSource: corev1.VolumeSource{EmptyDir: &corev1.EmptyDirVolumeSource{}},
+				},
+				{
+					Name:         _resticCacheDirName,
+					VolumeSource: corev1.VolumeSource{EmptyDir: &corev1.EmptyDirVolumeSource{}},
+				},
 			},
 		},
 		{
@@ -358,6 +366,14 @@ func Test_AttachTLSVolumes(t *testing.T) {
 			want: []corev1.Volume{
 				{
 					Name:         _dataDirName,
+					VolumeSource: corev1.VolumeSource{EmptyDir: &corev1.EmptyDirVolumeSource{}},
+				},
+				{
+					Name:         _resticTmpDirName,
+					VolumeSource: corev1.VolumeSource{EmptyDir: &corev1.EmptyDirVolumeSource{}},
+				},
+				{
+					Name:         _resticCacheDirName,
 					VolumeSource: corev1.VolumeSource{EmptyDir: &corev1.EmptyDirVolumeSource{}},
 				},
 			},
@@ -374,6 +390,14 @@ func Test_AttachTLSVolumes(t *testing.T) {
 			want: []corev1.Volume{
 				{
 					Name:         _dataDirName,
+					VolumeSource: corev1.VolumeSource{EmptyDir: &corev1.EmptyDirVolumeSource{}},
+				},
+				{
+					Name:         _resticTmpDirName,
+					VolumeSource: corev1.VolumeSource{EmptyDir: &corev1.EmptyDirVolumeSource{}},
+				},
+				{
+					Name:         _resticCacheDirName,
 					VolumeSource: corev1.VolumeSource{EmptyDir: &corev1.EmptyDirVolumeSource{}},
 				},
 			},
@@ -394,6 +418,14 @@ func Test_AttachTLSVolumes(t *testing.T) {
 			want: []corev1.Volume{
 				{
 					Name:         _dataDirName,
+					VolumeSource: corev1.VolumeSource{EmptyDir: &corev1.EmptyDirVolumeSource{}},
+				},
+				{
+					Name:         _resticTmpDirName,
+					VolumeSource: corev1.VolumeSource{EmptyDir: &corev1.EmptyDirVolumeSource{}},
+				},
+				{
+					Name:         _resticCacheDirName,
 					VolumeSource: corev1.VolumeSource{EmptyDir: &corev1.EmptyDirVolumeSource{}},
 				},
 				{
@@ -422,6 +454,14 @@ func Test_AttachTLSVolumes(t *testing.T) {
 			want: []corev1.Volume{
 				{
 					Name:         _dataDirName,
+					VolumeSource: corev1.VolumeSource{EmptyDir: &corev1.EmptyDirVolumeSource{}},
+				},
+				{
+					Name:         _resticTmpDirName,
+					VolumeSource: corev1.VolumeSource{EmptyDir: &corev1.EmptyDirVolumeSource{}},
+				},
+				{
+					Name:         _resticCacheDirName,
 					VolumeSource: corev1.VolumeSource{EmptyDir: &corev1.EmptyDirVolumeSource{}},
 				},
 				{
@@ -454,6 +494,14 @@ func Test_AttachTLSVolumes(t *testing.T) {
 					VolumeSource: corev1.VolumeSource{EmptyDir: &corev1.EmptyDirVolumeSource{}},
 				},
 				{
+					Name:         _resticTmpDirName,
+					VolumeSource: corev1.VolumeSource{EmptyDir: &corev1.EmptyDirVolumeSource{}},
+				},
+				{
+					Name:         _resticCacheDirName,
+					VolumeSource: corev1.VolumeSource{EmptyDir: &corev1.EmptyDirVolumeSource{}},
+				},
+				{
 					Name: "config",
 					VolumeSource: corev1.VolumeSource{
 						ConfigMap: &corev1.ConfigMapVolumeSource{
@@ -475,6 +523,8 @@ func Test_AttachTLSVolumes(t *testing.T) {
 
 func Test_AttachTLSVolumeMounts(t *testing.T) {
 	k8upPath := "/k8up"
+	resticTmpPath := "/tmp"
+	resticCachePath := "/.cache"
 	type args struct {
 		k8upPodVarDir      string
 		volumeMounts       *[]corev1.VolumeMount
@@ -494,6 +544,14 @@ func Test_AttachTLSVolumeMounts(t *testing.T) {
 					Name:      _dataDirName,
 					MountPath: k8upPath,
 				},
+				{
+					Name:      _resticTmpDirName,
+					MountPath: resticTmpPath,
+				},
+				{
+					Name:      _resticCacheDirName,
+					MountPath: resticCachePath,
+				},
 			},
 		},
 		{
@@ -503,6 +561,14 @@ func Test_AttachTLSVolumeMounts(t *testing.T) {
 				{
 					Name:      _dataDirName,
 					MountPath: k8upPath,
+				},
+				{
+					Name:      _resticTmpDirName,
+					MountPath: resticTmpPath,
+				},
+				{
+					Name:      _resticCacheDirName,
+					MountPath: resticCachePath,
 				},
 			},
 		},
@@ -517,6 +583,14 @@ func Test_AttachTLSVolumeMounts(t *testing.T) {
 				{
 					Name:      _dataDirName,
 					MountPath: k8upPath,
+				},
+				{
+					Name:      _resticTmpDirName,
+					MountPath: resticTmpPath,
+				},
+				{
+					Name:      _resticCacheDirName,
+					MountPath: resticCachePath,
 				},
 			},
 		},
@@ -535,6 +609,14 @@ func Test_AttachTLSVolumeMounts(t *testing.T) {
 				{
 					Name:      _dataDirName,
 					MountPath: k8upPath,
+				},
+				{
+					Name:      _resticTmpDirName,
+					MountPath: resticTmpPath,
+				},
+				{
+					Name:      _resticCacheDirName,
+					MountPath: resticCachePath,
 				},
 				{
 					Name:      "minio-client-mtls",
@@ -561,6 +643,14 @@ func Test_AttachTLSVolumeMounts(t *testing.T) {
 				{
 					Name:      _dataDirName,
 					MountPath: k8upPath,
+				},
+				{
+					Name:      _resticTmpDirName,
+					MountPath: resticTmpPath,
+				},
+				{
+					Name:      _resticCacheDirName,
+					MountPath: resticCachePath,
 				},
 				{
 					Name:      "minio-client-mtls",
