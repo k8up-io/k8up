@@ -33,12 +33,12 @@ spec:
             runbook_url: https://k8up.io/k8up/explanations/runbooks/K8upBackupNotRunning.html
         {{- range .Values.metrics.prometheusRule.jobFailedRulesFor }}
         - alert: K8up{{- . | title -}}Failed
-          expr: (sum(kube_job_status_failed) by(job_name, namespace) * on(job_name, namespace) group_right() kube_job_labels{label_k8up_syn_tools_type="{{- . -}}"}) > 0
+          expr: (sum(kube_job_status_failed) by(job_name, namespace) * on(job_name, namespace) group_right() kube_job_labels{label_k8up_io_type="{{- . -}}"}) > 0
           for: 1m
           labels:
             severity: critical
           annotations:
-            summary: "Job in {{ "{{ $labels.namespace }}" }} of type {{ "{{ $labels.label_k8up_syn_tools_type }}" }} failed"
+            summary: "Job in {{ "{{ $labels.namespace }}" }} of type {{ "{{ $labels.label_k8up_io_type }}" }} failed"
             runbook_url: https://k8up.io/k8up/explanations/runbooks/K8up{{- . | title -}}Failed.html
         {{- end }}
         {{- end }}
