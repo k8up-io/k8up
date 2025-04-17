@@ -89,9 +89,6 @@ func (b *BackupExecutor) createServiceAccountAndBinding(ctx context.Context) err
 		return err
 	}
 
-	if err != nil {
-		return err
-	}
 	roleBinding := &rbacv1.RoleBinding{}
 	roleBinding.Name = cfg.Config.PodExecRoleName + "-namespaced"
 	roleBinding.Namespace = b.backup.Namespace
