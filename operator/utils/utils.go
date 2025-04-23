@@ -85,7 +85,7 @@ func AppendTLSOptionsArgs(opts *k8upv1.TLSOptions, prefixArgName ...string) []st
 	return args
 }
 
-func AttachTLSVolumes(volumes *[]k8upv1.RunnableVolumeSpec) []corev1.Volume {
+func AttachEmptyDirVolumes(volumes *[]k8upv1.RunnableVolumeSpec) []corev1.Volume {
 	k8upVolume := corev1.Volume{
 		Name:         _dataDirName,
 		VolumeSource: corev1.VolumeSource{EmptyDir: &corev1.EmptyDirVolumeSource{}},
