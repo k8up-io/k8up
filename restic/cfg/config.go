@@ -161,16 +161,16 @@ func (c *Configuration) validateRestore() error {
 	switch c.RestoreType {
 	case RestoreTypeS3:
 		switch {
-		case "" == c.RestoreS3Endpoint:
+		case c.RestoreS3Endpoint == "":
 			return fmt.Errorf("if the restore type is set to '%s', then the restore s3 endpoint must be defined", RestoreTypeS3)
-		case "" == c.RestoreS3AccessKey:
+		case c.RestoreS3AccessKey == "":
 			return fmt.Errorf("if the restore type is set to '%s', then the restore s3 access key must be defined", RestoreTypeS3)
-		case "" == c.RestoreS3SecretKey:
+		case c.RestoreS3SecretKey == "":
 			return fmt.Errorf("if the restore type is set to '%s', then the restore s3 secret key must be defined", RestoreTypeS3)
 		}
 
 	case RestoreTypeFolder:
-		if "" == c.RestoreDir {
+		if c.RestoreDir == "" {
 			return fmt.Errorf("if the restore type is set to '%s', then the restore directory must be defined", RestoreTypeFolder)
 		}
 

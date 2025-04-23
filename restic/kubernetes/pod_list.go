@@ -101,7 +101,7 @@ func (p *PodLister) ListPods() ([]BackupPod, error) {
 			if len(owner) > 0 {
 				firstOwnerID = string(owner[0].UID)
 			} else {
-				firstOwnerID = string(pod.ObjectMeta.UID)
+				firstOwnerID = string(pod.UID)
 			}
 
 			if _, ok := sameOwner[firstOwnerID]; !ok {

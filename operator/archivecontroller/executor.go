@@ -78,14 +78,14 @@ func (a *ArchiveExecutor) jobName() string {
 
 func (a *ArchiveExecutor) setupArgs() []string {
 	args := []string{"-varDir", cfg.Config.PodVarDir, "-archive", "-restoreType", "s3"}
-	if a.archive.Spec.RestoreSpec != nil && len(a.archive.Spec.RestoreSpec.Tags) > 0 {
-		args = append(args, executor.BuildTagArgs(a.archive.Spec.RestoreSpec.Tags)...)
+	if a.archive.Spec.RestoreSpec != nil && len(a.archive.Spec.Tags) > 0 {
+		args = append(args, executor.BuildTagArgs(a.archive.Spec.Tags)...)
 	}
 	if a.archive.Spec.Backend != nil {
 		args = append(args, utils.AppendTLSOptionsArgs(a.archive.Spec.Backend.TLSOptions)...)
 	}
-	if a.archive.Spec.RestoreSpec != nil && a.archive.Spec.RestoreSpec.RestoreMethod != nil {
-		args = append(args, utils.AppendTLSOptionsArgs(a.archive.Spec.RestoreSpec.RestoreMethod.TLSOptions, certPrefixName)...)
+	if a.archive.Spec.RestoreSpec != nil && a.archive.Spec.RestoreMethod != nil {
+		args = append(args, utils.AppendTLSOptionsArgs(a.archive.Spec.RestoreMethod.TLSOptions, certPrefixName)...)
 	}
 
 	return args
@@ -95,7 +95,7 @@ func (a *ArchiveExecutor) setupEnvVars(ctx context.Context, archive *k8upv1.Arch
 	log := controllerruntime.LoggerFrom(ctx)
 	vars := executor.NewEnvVarConverter()
 
-	if archive.Spec.RestoreSpec != nil && archive.Spec.RestoreSpec.RestoreMethod != nil {
+	if archive.Spec.RestoreSpec != nil && archive.Spec.RestoreMethod != nil {
 		for key, value := range archive.Spec.RestoreMethod.S3.RestoreEnvVars() {
 			// FIXME(mw): ugly, due to EnvVarConverter()
 			if value.Value != "" {
@@ -106,8 +106,8 @@ func (a *ArchiveExecutor) setupEnvVars(ctx context.Context, archive *k8upv1.Arch
 		}
 	}
 
-	if archive.Spec.RestoreSpec != nil && archive.Spec.RestoreSpec.RestoreMethod != nil {
-		if archive.Spec.RestoreSpec.RestoreMethod.Folder != nil {
+	if archive.Spec.RestoreSpec != nil && archive.Spec.RestoreMethod != nil {
+		if archive.Spec.RestoreMethod.Folder != nil {
 			vars.SetString("RESTORE_DIR", archivePath)
 		}
 	}
@@ -136,8 +136,8 @@ func (a *ArchiveExecutor) attachTLSVolumeMounts() []corev1.VolumeMount {
 	if a.archive.Spec.Backend != nil && !utils.ZeroLen(a.archive.Spec.Backend.VolumeMounts) {
 		tlsVolumeMounts = append(tlsVolumeMounts, *a.archive.Spec.Backend.VolumeMounts...)
 	}
-	if a.archive.Spec.RestoreSpec != nil && a.archive.Spec.RestoreSpec.RestoreMethod != nil && !utils.ZeroLen(a.archive.Spec.RestoreSpec.RestoreMethod.VolumeMounts) {
-		tlsVolumeMounts = append(tlsVolumeMounts, *a.archive.Spec.RestoreSpec.RestoreMethod.VolumeMounts...)
+	if a.archive.Spec.RestoreSpec != nil && a.archive.Spec.RestoreMethod != nil && !utils.ZeroLen(a.archive.Spec.RestoreMethod.VolumeMounts) {
+		tlsVolumeMounts = append(tlsVolumeMounts, *a.archive.Spec.RestoreMethod.VolumeMounts...)
 	}
 
 	return utils.AttachTLSVolumeMounts(cfg.Config.PodVarDir, &tlsVolumeMounts)
