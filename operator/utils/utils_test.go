@@ -516,7 +516,7 @@ func Test_AttachTLSVolumes(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			assert.Equalf(t, tt.want, AttachTLSVolumes(tt.args.volumes), "AttachTLSVolumes(%v)", tt.args.volumes)
+			assert.Equalf(t, tt.want, AttachEmptyDirVolumes(tt.args.volumes), "AttachTLSVolumes(%v)", tt.args.volumes)
 		})
 	}
 }
@@ -662,11 +662,11 @@ func Test_AttachTLSVolumeMounts(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if tt.args.addNilVolumeMounts {
-				assert.Equalf(t, tt.want, AttachTLSVolumeMounts(tt.args.k8upPodVarDir, tt.args.volumeMounts, nil), "Test_AttachTLSVolumeMounts(%v, %v, %v)", tt.args.k8upPodVarDir, tt.args.volumeMounts, nil)
+				assert.Equalf(t, tt.want, AttachEmptyDirVolumeMounts(tt.args.k8upPodVarDir, tt.args.volumeMounts, nil), "Test_AttachTLSVolumeMounts(%v, %v, %v)", tt.args.k8upPodVarDir, tt.args.volumeMounts, nil)
 			} else if tt.args.volumeMounts != nil {
-				assert.Equalf(t, tt.want, AttachTLSVolumeMounts(tt.args.k8upPodVarDir, tt.args.volumeMounts), "Test_AttachTLSVolumeMounts(%v, %v)", tt.args.k8upPodVarDir, tt.args.volumeMounts)
+				assert.Equalf(t, tt.want, AttachEmptyDirVolumeMounts(tt.args.k8upPodVarDir, tt.args.volumeMounts), "Test_AttachTLSVolumeMounts(%v, %v)", tt.args.k8upPodVarDir, tt.args.volumeMounts)
 			} else {
-				assert.Equalf(t, tt.want, AttachTLSVolumeMounts(tt.args.k8upPodVarDir), "Test_AttachTLSVolumeMounts(%v)", tt.args.k8upPodVarDir)
+				assert.Equalf(t, tt.want, AttachEmptyDirVolumeMounts(tt.args.k8upPodVarDir), "Test_AttachTLSVolumeMounts(%v)", tt.args.k8upPodVarDir)
 			}
 		})
 	}

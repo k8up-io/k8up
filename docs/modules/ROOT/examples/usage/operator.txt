@@ -40,6 +40,7 @@ OPTIONS:
    --globalstatsurl value                              set the URL to post metrics globally [$BACKUP_GLOBALSTATSURL]
    --metrics-bindaddress value                         set the bind address for the prometheus endpoint (default: ":8080") [$BACKUP_METRICS_BINDADDRESS]
    --promurl value                                     set the operator wide default prometheus push gateway (default: "http://127.0.0.1/") [$BACKUP_PROMURL]
+   --clusterName value                                 set the operator wide kubernetes cluster name to send to push gateway for grouping metrics (default: "default") [$CLUSTER_NAME]
    --restartpolicy value                               set the RestartPolicy for the backup jobs. According to https://kubernetes.io/docs/concepts/workloads/controllers/jobs-run-to-completion/, this should be 'OnFailure' for jobs that terminate (default: "OnFailure") [$BACKUP_RESTARTPOLICY]
    --podfilter value                                   the filter used to find the backup pods (default: "backupPod=true") [$BACKUP_PODFILTER]
    --podexecaccountname value, --serviceaccount value  set the service account name that should be used for the pod command execution (default: "pod-executor") [$BACKUP_PODEXECACCOUNTNAME]

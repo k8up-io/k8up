@@ -131,7 +131,7 @@ func AttachEmptyDirVolumes(volumes *[]k8upv1.RunnableVolumeSpec) []corev1.Volume
 	return moreVolumes
 }
 
-func AttachTLSVolumeMounts(k8upPodVarDir string, volumeMounts ...*[]corev1.VolumeMount) []corev1.VolumeMount {
+func AttachEmptyDirVolumeMounts(k8upPodVarDir string, volumeMounts ...*[]corev1.VolumeMount) []corev1.VolumeMount {
 	k8upVolumeMount := corev1.VolumeMount{
 		Name:      _dataDirName,
 		MountPath: k8upPodVarDir,
