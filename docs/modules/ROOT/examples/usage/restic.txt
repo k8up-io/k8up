@@ -18,7 +18,6 @@ OPTIONS:
    --backucontainerannotation value                                               set the annotation name that specify the backup container inside the Pod (default: "k8up.io/backupcommand-container") [$BACKUP_CONTAINERANNOTATION]
    --skipPreBackup                                                                If the job should skip the backup command and only backup volumes. (default: false) [$SKIP_PREBACKUP]
    --promURL value                                                                Sets the URL of a prometheus push gateway to report metrics. [$PROM_URL]
-   --clusterName value                                                            Sets the Kubernetes cluster name for grouping metrics in push gateway [$CLUSTER_NAME]
    --webhookURL value, --statsURL value                                           Sets the URL of a server which will retrieve a webhook after the action completes. [$STATS_URL]
    --backupDir value                                                              Set from which directory the backup should be performed. (default: "/data") [$BACKUP_DIR]
    --restoreDir value                                                             Set to which directory the restore should be performed. (default: "/data") [$RESTORE_DIR]
