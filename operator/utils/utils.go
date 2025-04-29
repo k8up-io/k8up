@@ -38,7 +38,7 @@ func ZeroLen(v interface{}) bool {
 		}
 		vv = vv.Elem()
 	}
-	if !(vv.IsValid() && !vv.IsZero()) {
+	if !vv.IsValid() || vv.IsZero() {
 		return true
 	}
 	switch vv.Kind() {

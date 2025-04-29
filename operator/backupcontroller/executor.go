@@ -67,7 +67,7 @@ func (b *BackupExecutor) listAndFilterPVCs(ctx context.Context, annotation strin
 	pods := &corev1.PodList{}
 	pvcPodMap := make(map[string]corev1.Pod)
 	labelselector, _ := labels.Parse("!" + job.K8uplabel)
-	if err := b.Config.Client.List(ctx, pods, client.InNamespace(b.backup.Namespace), client.MatchingLabelsSelector{Selector: labelselector}); err != nil {
+	if err := b.Client.List(ctx, pods, client.InNamespace(b.backup.Namespace), client.MatchingLabelsSelector{Selector: labelselector}); err != nil {
 		return nil, fmt.Errorf("list pods: %w", err)
 	}
 	for _, pod := range pods.Items {
@@ -150,7 +150,7 @@ func (b *BackupExecutor) listAndFilterPVCs(ctx context.Context, annotation strin
 			log.V(1).Info("PVC mounted at pod", "pvc", pvc.GetName(), "targetPod", bi.targetPod, "node", bi.node, "tolerations", bi.tolerations)
 		} else if isRWO {
 			pv := &corev1.PersistentVolume{}
-			if err := b.Config.Client.Get(ctx, types.NamespacedName{Name: pvc.Spec.VolumeName}, pv); err != nil {
+			if err := b.Client.Get(ctx, types.NamespacedName{Name: pvc.Spec.VolumeName}, pv); err != nil {
 				log.Error(err, "unable to get PV, skipping pvc", "pvc", pvc.GetName(), "pv", pvc.Spec.VolumeName)
 				continue
 			}
@@ -199,7 +199,7 @@ func (b *BackupExecutor) startBackup(ctx context.Context) error {
 
 	backupItems, err := b.listAndFilterPVCs(ctx, cfg.Config.BackupAnnotation)
 	if err != nil {
-		b.Generic.SetConditionFalseWithMessage(ctx, k8upv1.ConditionReady, k8upv1.ReasonRetrievalFailed, "%s", err.Error())
+		b.SetConditionFalseWithMessage(ctx, k8upv1.ConditionReady, k8upv1.ReasonRetrievalFailed, "%s", err.Error())
 		return err
 	}
 
@@ -231,10 +231,6 @@ func (b *BackupExecutor) startBackup(ctx context.Context) error {
 		backupJobs[jobName] = j
 	}
 
-	if err != nil {
-		return err
-	}
-
 	log := controllerruntime.LoggerFrom(ctx)
 	podLister := kubernetes.NewPodLister(ctx, b.Client, cfg.Config.BackupCommandAnnotation, "", "", b.backup.Namespace, nil, false, log)
 	backupPods, err := podLister.ListPods()
@@ -254,8 +250,8 @@ func (b *BackupExecutor) startBackup(ctx context.Context) error {
 
 	index := 0
 	for name, batchJob := range backupJobs {
-		_, err = controllerruntime.CreateOrUpdate(ctx, b.Generic.Config.Client, batchJob.job, func() error {
-			mutateErr := job.MutateBatchJob(ctx, batchJob.job, b.backup, b.Generic.Config, b.Client)
+		_, err = controllerruntime.CreateOrUpdate(ctx, b.Client, batchJob.job, func() error {
+			mutateErr := job.MutateBatchJob(ctx, batchJob.job, b.backup, b.Config, b.Client)
 			if mutateErr != nil {
 				return mutateErr
 			}
@@ -330,7 +326,7 @@ func (b *BackupExecutor) createJob(name, node string, tolerations []corev1.Toler
 }
 
 func (b *BackupExecutor) cleanupOldBackups(ctx context.Context) {
-	b.Generic.CleanupOldResources(ctx, &k8upv1.BackupList{}, b.backup.Namespace, b.backup)
+	b.CleanupOldResources(ctx, &k8upv1.BackupList{}, b.backup.Namespace, b.backup)
 }
 
 func (b *BackupExecutor) jobName(name string) string {

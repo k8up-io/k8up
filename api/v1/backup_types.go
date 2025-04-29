@@ -139,10 +139,10 @@ func (b *Backup) GetSuccessfulJobsHistoryLimit() *int {
 }
 
 func (b *Backup) GetPodConfig(ctx context.Context, c client.Client) (*PodConfig, error) {
-	if b.Spec.RunnableSpec.PodConfigRef == nil {
+	if b.Spec.PodConfigRef == nil {
 		return nil, nil
 	}
-	return NewPodConfig(ctx, b.Spec.RunnableSpec.PodConfigRef.Name, b.GetNamespace(), c)
+	return NewPodConfig(ctx, b.Spec.PodConfigRef.Name, b.GetNamespace(), c)
 }
 
 // GetJobObjects returns a sortable list of jobs
