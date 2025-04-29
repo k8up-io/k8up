@@ -78,12 +78,12 @@ func MutateBatchJob(ctx context.Context, batchJob *batchv1.Job, jobObj k8upv1.Jo
 			return fmt.Errorf("cannot merge podConfig with defaults: %w", err)
 		}
 
-		err = mergo.Merge(&batchJob.Spec.Template.ObjectMeta.Annotations, podConfig.GetAnnotations())
+		err = mergo.Merge(&batchJob.Spec.Template.Annotations, podConfig.GetAnnotations())
 		if err != nil {
 			return err
 		}
 
-		err = mergo.Merge(&batchJob.Spec.Template.ObjectMeta.Labels, podConfig.GetLabels())
+		err = mergo.Merge(&batchJob.Spec.Template.Labels, podConfig.GetLabels())
 		if err != nil {
 			return err
 		}

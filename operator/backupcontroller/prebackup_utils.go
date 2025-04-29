@@ -69,7 +69,7 @@ func (b *BackupExecutor) generateDeployments(ctx context.Context, templates []k8
 
 	for _, template := range templates {
 
-		template.Spec.Pod.PodTemplateSpec.ObjectMeta.Annotations = map[string]string{
+		template.Spec.Pod.Annotations = map[string]string{
 			cfg.Config.BackupCommandAnnotation: template.Spec.BackupCommand,
 			cfg.Config.FileExtensionAnnotation: template.Spec.FileExtension,
 		}
@@ -79,7 +79,7 @@ func (b *BackupExecutor) generateDeployments(ctx context.Context, templates []k8
 			"k8up.io/preBackupPod":     template.Name,
 		}
 
-		template.Spec.Pod.PodTemplateSpec.ObjectMeta.Labels = podLabels
+		template.Spec.Pod.Labels = podLabels
 
 		deployment := &appsv1.Deployment{
 			ObjectMeta: metav1.ObjectMeta{
@@ -98,9 +98,9 @@ func (b *BackupExecutor) generateDeployments(ctx context.Context, templates []k8
 			},
 		}
 
-		err := controllerutil.SetOwnerReference(b.Config.Obj, deployment, b.Client.Scheme())
+		err := controllerutil.SetOwnerReference(b.Obj, deployment, b.Client.Scheme())
 		if err != nil {
-			log.Error(err, "cannot set the owner reference", "name", b.Config.Obj.GetName(), "namespace", b.Config.Obj.GetNamespace())
+			log.Error(err, "cannot set the owner reference", "name", b.Obj.GetName(), "namespace", b.Obj.GetNamespace())
 		}
 
 		deployments = append(deployments, deployment)
@@ -114,7 +114,7 @@ func (b *BackupExecutor) generateDeployments(ctx context.Context, templates []k8
 func (b *BackupExecutor) fetchOrCreatePreBackupDeployment(ctx context.Context, deployment *appsv1.Deployment) error {
 	name := k8upv1.MapToNamespacedName(deployment)
 	log := controllerruntime.LoggerFrom(ctx)
-	fetchErr := b.Generic.Client.Get(ctx, name, deployment)
+	fetchErr := b.Client.Get(ctx, name, deployment)
 	if fetchErr != nil {
 		if !errors.IsNotFound(fetchErr) {
 			err := fmt.Errorf("error getting pre backup pod '%v': %w", name.String(), fetchErr)

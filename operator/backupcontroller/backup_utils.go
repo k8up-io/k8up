@@ -22,7 +22,7 @@ import (
 func (b *BackupExecutor) fetchPVCs(ctx context.Context, list *corev1.PersistentVolumeClaimList) (err error) {
 	err = nil
 	if b.backup.Spec.LabelSelectors == nil {
-		return b.Config.Client.List(ctx, list, client.InNamespace(b.backup.Namespace))
+		return b.Client.List(ctx, list, client.InNamespace(b.backup.Namespace))
 	}
 
 	labelSelectors := b.backup.Spec.LabelSelectors
@@ -39,7 +39,7 @@ func (b *BackupExecutor) fetchPVCs(ctx context.Context, list *corev1.PersistentV
 		}
 
 		matchingPVCs := &corev1.PersistentVolumeClaimList{}
-		err = b.Config.Client.List(ctx, matchingPVCs, client.InNamespace(b.backup.Namespace), &options)
+		err = b.Client.List(ctx, matchingPVCs, client.InNamespace(b.backup.Namespace), &options)
 
 		if err != nil {
 			return fmt.Errorf("cannot list PVCs using labelSelector %v: %w", labelSelector, err)
@@ -82,7 +82,7 @@ func (b *BackupExecutor) createServiceAccountAndBinding(ctx context.Context) err
 	sa := &corev1.ServiceAccount{}
 	sa.Name = cfg.Config.ServiceAccount
 	sa.Namespace = b.backup.Namespace
-	_, err := controllerruntime.CreateOrUpdate(ctx, b.Config.Client, sa, func() error {
+	_, err := controllerruntime.CreateOrUpdate(ctx, b.Client, sa, func() error {
 		return nil
 	})
 	if err != nil {
@@ -92,7 +92,7 @@ func (b *BackupExecutor) createServiceAccountAndBinding(ctx context.Context) err
 	roleBinding := &rbacv1.RoleBinding{}
 	roleBinding.Name = cfg.Config.PodExecRoleName + "-namespaced"
 	roleBinding.Namespace = b.backup.Namespace
-	_, err = controllerruntime.CreateOrUpdate(ctx, b.Config.Client, roleBinding, func() error {
+	_, err = controllerruntime.CreateOrUpdate(ctx, b.Client, roleBinding, func() error {
 		roleBinding.Subjects = []rbacv1.Subject{
 			{
 				Kind:      "ServiceAccount",
