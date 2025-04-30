@@ -46,7 +46,7 @@ func (p *PruneExecutor) Execute(ctx context.Context) error {
 		batchJob.Spec.Template.Spec.Containers[0].Env = append(batchJob.Spec.Template.Spec.Containers[0].Env, p.setupEnvVars(ctx, p.prune)...)
 		p.prune.Spec.AppendEnvFromToContainer(&batchJob.Spec.Template.Spec.Containers[0])
 		batchJob.Spec.Template.Spec.Containers[0].VolumeMounts = append(batchJob.Spec.Template.Spec.Containers[0].VolumeMounts, p.attachTLSVolumeMounts()...)
-		batchJob.Spec.Template.Spec.Volumes = append(batchJob.Spec.Template.Spec.Volumes, utils.AttachTLSVolumes(p.prune.Spec.Volumes)...)
+		batchJob.Spec.Template.Spec.Volumes = append(batchJob.Spec.Template.Spec.Volumes, utils.AttachEmptyDirVolumes(p.prune.Spec.Volumes)...)
 		batchJob.Labels[job.K8upExclusive] = "true"
 
 		if batchJob.Spec.Template.Spec.ServiceAccountName == "" {
@@ -150,5 +150,5 @@ func (p *PruneExecutor) attachTLSVolumeMounts() []corev1.VolumeMount {
 		tlsVolumeMounts = append(tlsVolumeMounts, *p.prune.Spec.Backend.VolumeMounts...)
 	}
 
-	return utils.AttachTLSVolumeMounts(cfg.Config.PodVarDir, &tlsVolumeMounts)
+	return utils.AttachEmptyDirVolumeMounts(cfg.Config.PodVarDir, &tlsVolumeMounts)
 }

@@ -283,7 +283,7 @@ func (b *BackupExecutor) startBackup(ctx context.Context) error {
 			}
 			b.backup.Spec.AppendEnvFromToContainer(&batchJob.job.Spec.Template.Spec.Containers[0])
 			batchJob.job.Spec.Template.Spec.Volumes = append(batchJob.job.Spec.Template.Spec.Volumes, batchJob.volumes...)
-			batchJob.job.Spec.Template.Spec.Volumes = append(batchJob.job.Spec.Template.Spec.Volumes, utils.AttachTLSVolumes(b.backup.Spec.Volumes)...)
+			batchJob.job.Spec.Template.Spec.Volumes = append(batchJob.job.Spec.Template.Spec.Volumes, utils.AttachEmptyDirVolumes(b.backup.Spec.Volumes)...)
 			batchJob.job.Spec.Template.Spec.Containers[0].VolumeMounts = append(b.newVolumeMounts(batchJob.volumes), b.attachTLSVolumeMounts()...)
 			batchJob.job.Spec.BackoffLimit = ptr.To(int32(cfg.Config.GlobalBackoffLimit))
 
@@ -339,5 +339,5 @@ func (b *BackupExecutor) attachTLSVolumeMounts() []corev1.VolumeMount {
 		tlsVolumeMounts = append(tlsVolumeMounts, *b.backup.Spec.Backend.VolumeMounts...)
 	}
 
-	return utils.AttachTLSVolumeMounts(cfg.Config.PodVarDir, &tlsVolumeMounts)
+	return utils.AttachEmptyDirVolumeMounts(cfg.Config.PodVarDir, &tlsVolumeMounts)
 }

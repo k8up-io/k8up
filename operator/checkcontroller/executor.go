@@ -53,7 +53,7 @@ func (c *CheckExecutor) Execute(ctx context.Context) error {
 		batchJob.Spec.Template.Spec.Containers[0].Env = append(batchJob.Spec.Template.Spec.Containers[0].Env, c.setupEnvVars(ctx)...)
 		c.check.Spec.AppendEnvFromToContainer(&batchJob.Spec.Template.Spec.Containers[0])
 		batchJob.Spec.Template.Spec.Containers[0].VolumeMounts = append(batchJob.Spec.Template.Spec.Containers[0].VolumeMounts, c.attachTLSVolumeMounts()...)
-		batchJob.Spec.Template.Spec.Volumes = append(batchJob.Spec.Template.Spec.Volumes, utils.AttachTLSVolumes(c.check.Spec.Volumes)...)
+		batchJob.Spec.Template.Spec.Volumes = append(batchJob.Spec.Template.Spec.Volumes, utils.AttachEmptyDirVolumes(c.check.Spec.Volumes)...)
 		batchJob.Labels[job.K8upExclusive] = "true"
 
 		batchJob.Spec.Template.Spec.Containers[0].Args = c.setupArgs()
@@ -115,5 +115,5 @@ func (c *CheckExecutor) attachTLSVolumeMounts() []corev1.VolumeMount {
 		tlsVolumeMounts = append(tlsVolumeMounts, *c.check.Spec.Backend.VolumeMounts...)
 	}
 
-	return utils.AttachTLSVolumeMounts(cfg.Config.PodVarDir, &tlsVolumeMounts)
+	return utils.AttachEmptyDirVolumeMounts(cfg.Config.PodVarDir, &tlsVolumeMounts)
 }
