@@ -307,7 +307,7 @@ func backupAnnotatedPods(ctx context.Context, resticCLI *resticCli.Restic, mainL
 
 	k8cli, err := kubernetes.NewTypedClient(mainLogger)
 	if err != nil {
-		return fmt.Errorf("Could not create kubernetes client: %w", err)
+		return fmt.Errorf("could not create kubernetes client: %w", err)
 	}
 	podLister := kubernetes.NewPodLister(ctx, k8cli, cfg.Config.BackupCommandAnnotation, cfg.Config.BackupFileExtensionAnnotation, cfg.Config.BackupContainerAnnotation, cfg.Config.Hostname, cfg.Config.TargetPods, cfg.Config.SkipPreBackup, mainLogger)
 	podList, err := podLister.ListPods()

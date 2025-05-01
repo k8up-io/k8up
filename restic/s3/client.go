@@ -54,11 +54,12 @@ func (c *Client) Connect(ctx context.Context) error {
 	}
 
 	var ssl bool
-	if u.Scheme == "https" {
+	switch u.Scheme {
+	case "https":
 		ssl = true
-	} else if u.Scheme == "http" {
+	case "http":
 		ssl = false
-	} else {
+	default:
 		return fmt.Errorf("endpoint '%v' has wrong scheme '%s' (should be 'http' or 'https')", c.Endpoint, u.Scheme)
 	}
 
@@ -148,7 +149,7 @@ func (c *Client) deleteBucketByName(ctx context.Context, name string) error {
 
 	// Print errors received from RemoveObjects API
 	for e := range errorCh {
-		return fmt.Errorf("Failed to remove %v ,error: %v", e.ObjectName, e.Err.Error())
+		return fmt.Errorf("failed to remove %v ,error: %v", e.ObjectName, e.Err.Error())
 	}
 
 	return c.minioClient.RemoveBucket(ctx, name)

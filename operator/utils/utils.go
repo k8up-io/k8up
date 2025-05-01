@@ -13,6 +13,8 @@ import (
 )
 
 const _dataDirName = "k8up-dir"
+const _resticTmpDirName = "restic-tmp-dir"
+const _resticCacheDirName = "restic-cache-dir"
 
 func RandomStringGenerator(n int) string {
 	var characters = []rune("abcdefghijklmnopqrstuvwxyz1234567890")
@@ -36,7 +38,7 @@ func ZeroLen(v interface{}) bool {
 		}
 		vv = vv.Elem()
 	}
-	if !(vv.IsValid() && !vv.IsZero()) {
+	if !vv.IsValid() || vv.IsZero() {
 		return true
 	}
 	switch vv.Kind() {
@@ -83,18 +85,28 @@ func AppendTLSOptionsArgs(opts *k8upv1.TLSOptions, prefixArgName ...string) []st
 	return args
 }
 
-func AttachTLSVolumes(volumes *[]k8upv1.RunnableVolumeSpec) []corev1.Volume {
-	ku8pVolume := corev1.Volume{
+func AttachEmptyDirVolumes(volumes *[]k8upv1.RunnableVolumeSpec) []corev1.Volume {
+	k8upVolume := corev1.Volume{
 		Name:         _dataDirName,
 		VolumeSource: corev1.VolumeSource{EmptyDir: &corev1.EmptyDirVolumeSource{}},
 	}
 
-	if volumes == nil {
-		return []corev1.Volume{ku8pVolume}
+	resticTmpVolume := corev1.Volume{
+		Name:         _resticTmpDirName,
+		VolumeSource: corev1.VolumeSource{EmptyDir: &corev1.EmptyDirVolumeSource{}},
 	}
 
-	moreVolumes := make([]corev1.Volume, 0, len(*volumes)+1)
-	moreVolumes = append(moreVolumes, ku8pVolume)
+	resticCacheVolume := corev1.Volume{
+		Name:         _resticCacheDirName,
+		VolumeSource: corev1.VolumeSource{EmptyDir: &corev1.EmptyDirVolumeSource{}},
+	}
+
+	if volumes == nil {
+		return []corev1.Volume{k8upVolume, resticTmpVolume, resticCacheVolume}
+	}
+
+	var moreVolumes []corev1.Volume
+	moreVolumes = append(moreVolumes, k8upVolume, resticTmpVolume, resticCacheVolume)
 	for _, v := range *volumes {
 		vol := v
 
@@ -119,18 +131,28 @@ func AttachTLSVolumes(volumes *[]k8upv1.RunnableVolumeSpec) []corev1.Volume {
 	return moreVolumes
 }
 
-func AttachTLSVolumeMounts(k8upPodVarDir string, volumeMounts ...*[]corev1.VolumeMount) []corev1.VolumeMount {
+func AttachEmptyDirVolumeMounts(k8upPodVarDir string, volumeMounts ...*[]corev1.VolumeMount) []corev1.VolumeMount {
 	k8upVolumeMount := corev1.VolumeMount{
 		Name:      _dataDirName,
 		MountPath: k8upPodVarDir,
 	}
 
+	resticTmpVolumeMount := corev1.VolumeMount{
+		Name:      _resticTmpDirName,
+		MountPath: "/tmp",
+	}
+
+	resticCacheVolumeMount := corev1.VolumeMount{
+		Name:      _resticCacheDirName,
+		MountPath: "/.cache",
+	}
+
 	if len(volumeMounts) == 0 {
-		return []corev1.VolumeMount{k8upVolumeMount}
+		return []corev1.VolumeMount{k8upVolumeMount, resticTmpVolumeMount, resticCacheVolumeMount}
 	}
 
 	var moreVolumeMounts []corev1.VolumeMount
-	moreVolumeMounts = append(moreVolumeMounts, k8upVolumeMount)
+	moreVolumeMounts = append(moreVolumeMounts, k8upVolumeMount, resticTmpVolumeMount, resticCacheVolumeMount)
 	for _, vm := range volumeMounts {
 		if vm == nil {
 			continue

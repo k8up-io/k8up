@@ -73,7 +73,7 @@ func (s *ScheduleHandler) createJobList(ctx context.Context, sched scheduler.Sch
 		k8upv1.PruneType: {spec: s.schedule.Spec.Prune, ctor: func(spec k8upv1.ScheduleSpecInterface) k8upv1.JobObject {
 			prune := &k8upv1.Prune{Spec: spec.(*k8upv1.PruneSchedule).PruneSpec}
 
-			if prune.Spec.RunnableSpec.PodConfigRef == nil && s.schedule.Spec.PodConfigRef != nil {
+			if prune.Spec.PodConfigRef == nil && s.schedule.Spec.PodConfigRef != nil {
 				prune.Spec.PodConfigRef = s.schedule.Spec.PodConfigRef
 
 			}
@@ -83,7 +83,7 @@ func (s *ScheduleHandler) createJobList(ctx context.Context, sched scheduler.Sch
 		k8upv1.BackupType: {spec: s.schedule.Spec.Backup, ctor: func(spec k8upv1.ScheduleSpecInterface) k8upv1.JobObject {
 			backup := &k8upv1.Backup{Spec: spec.(*k8upv1.BackupSchedule).BackupSpec}
 
-			if backup.Spec.RunnableSpec.PodConfigRef == nil && s.schedule.Spec.PodConfigRef != nil {
+			if backup.Spec.PodConfigRef == nil && s.schedule.Spec.PodConfigRef != nil {
 				backup.Spec.PodConfigRef = s.schedule.Spec.PodConfigRef
 			}
 
@@ -92,7 +92,7 @@ func (s *ScheduleHandler) createJobList(ctx context.Context, sched scheduler.Sch
 		k8upv1.CheckType: {spec: s.schedule.Spec.Check, ctor: func(spec k8upv1.ScheduleSpecInterface) k8upv1.JobObject {
 			check := &k8upv1.Check{Spec: spec.(*k8upv1.CheckSchedule).CheckSpec}
 
-			if check.Spec.RunnableSpec.PodConfigRef == nil && s.schedule.Spec.PodConfigRef != nil {
+			if check.Spec.PodConfigRef == nil && s.schedule.Spec.PodConfigRef != nil {
 				check.Spec.PodConfigRef = s.schedule.Spec.PodConfigRef
 			}
 
@@ -101,7 +101,7 @@ func (s *ScheduleHandler) createJobList(ctx context.Context, sched scheduler.Sch
 		k8upv1.RestoreType: {spec: s.schedule.Spec.Restore, ctor: func(spec k8upv1.ScheduleSpecInterface) k8upv1.JobObject {
 			restore := &k8upv1.Restore{Spec: spec.(*k8upv1.RestoreSchedule).RestoreSpec}
 
-			if restore.Spec.RunnableSpec.PodConfigRef == nil && s.schedule.Spec.PodConfigRef != nil {
+			if restore.Spec.PodConfigRef == nil && s.schedule.Spec.PodConfigRef != nil {
 				restore.Spec.PodConfigRef = s.schedule.Spec.PodConfigRef
 			}
 
@@ -110,7 +110,7 @@ func (s *ScheduleHandler) createJobList(ctx context.Context, sched scheduler.Sch
 		k8upv1.ArchiveType: {spec: s.schedule.Spec.Archive, ctor: func(spec k8upv1.ScheduleSpecInterface) k8upv1.JobObject {
 			archive := &k8upv1.Archive{Spec: spec.(*k8upv1.ArchiveSchedule).ArchiveSpec}
 
-			if archive.Spec.RunnableSpec.PodConfigRef == nil && s.schedule.Spec.PodConfigRef != nil {
+			if archive.Spec.PodConfigRef == nil && s.schedule.Spec.PodConfigRef != nil {
 				archive.Spec.PodConfigRef = s.schedule.Spec.PodConfigRef
 			}
 
