@@ -13,7 +13,6 @@ import (
 	"github.com/k8up-io/k8up/v2/operator/cfg"
 	"github.com/k8up-io/k8up/v2/operator/executor"
 	"github.com/k8up-io/k8up/v2/operator/job"
-	"github.com/k8up-io/k8up/v2/restic/kubernetes"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -232,17 +231,24 @@ func (b *BackupExecutor) startBackup(ctx context.Context) error {
 	}
 
 	log := controllerruntime.LoggerFrom(ctx)
-	podLister := kubernetes.NewPodLister(ctx, b.Client, cfg.Config.BackupCommandAnnotation, "", "", b.backup.Namespace, nil, false, log)
-	backupPods, err := podLister.ListPods()
+	// validating that the correct backup annotations exist is already handled in the restic module
+	// we only need to pass it a list of pods it should go through
+
+	backupPods := &corev1.PodList{}
+	err = b.fetchCandidatePods(ctx, backupPods)
 	if err != nil {
 		log.Error(err, "could not list pods", "namespace", b.backup.Namespace)
 		return fmt.Errorf("could not list pods: %w", err)
 	}
 
-	if len(backupPods) > 0 {
+	if len(backupPods.Items) > 0 {
+		targetPods := make([]string, 0)
+		for _, pod := range backupPods.Items {
+			targetPods = append(targetPods, pod.Name)
+		}
 		backupJobs["prebackup"] = jobItem{
 			job:           b.createJob("prebackup", "", nil),
-			targetPods:    make([]string, 0),
+			targetPods:    targetPods,
 			volumes:       make([]corev1.Volume, 0),
 			skipPreBackup: false,
 		}
