@@ -77,6 +77,7 @@ func (b *BackupExecutor) generateDeployments(ctx context.Context, templates []k8
 		podLabels := map[string]string{
 			"k8up.io/backupCommandPod": "true",
 			"k8up.io/preBackupPod":     template.Name,
+			"k8up.io/ownerBackupUID":   string(b.Obj.GetUID()),
 		}
 
 		template.Spec.Pod.Labels = podLabels
