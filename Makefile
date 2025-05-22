@@ -84,6 +84,7 @@ generate: ## Generate manifests e.g. CRD, RBAC etc.
 	$(GO_EXEC) run sigs.k8s.io/controller-tools/cmd/controller-gen object:headerFile=".github/boilerplate.go.txt" paths="./..."
 	# Generate CRDs
 	$(GO_EXEC) run sigs.k8s.io/controller-tools/cmd/controller-gen rbac:roleName=manager-role webhook paths="./..." output:crd:artifacts:config=$(CRD_ROOT_DIR)/v1 crd:crdVersions=v1
+	$(GO_EXEC) run sigs.k8s.io/controller-tools/cmd/controller-gen rbac:roleName=manager-role webhook paths="./..." output:crd:artifacts:config=charts/k8up/crds crd:crdVersions=v1
 
 .PHONY: crd
 crd: generate ## Generate CRD to file
