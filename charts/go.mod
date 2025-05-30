@@ -6,7 +6,7 @@ toolchain go1.22.1
 
 require (
 	github.com/norwoodj/helm-docs v1.13.1
-	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.59.2
+	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.83.0
 )
 
 require (
