@@ -195,7 +195,7 @@ image::tutorial/minio-browser.png[]
 
 ==== How does K8up work?
 
-K8up runs Restic in the background to perform its job. It will automatically backup all PVCs in the cluster with the `ReadWriteMany` (or `RWX` for short) attribute.
+K8up runs Restic in the background to perform its job. It will automatically backup all PVCs in the cluster with the `ReadWriteMany` (`RWX` for short) or `ReadWriteOnce` (`RWO` for short) attribute.
 
 Just like any other Kubernetes object, K8up uses YAML files to describe every single action: backups, restores, archival, etc. The most important part of the YAML files used by K8up is the `backend` object:
 
