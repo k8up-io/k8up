@@ -57,6 +57,58 @@ func (b *BackupExecutor) fetchPVCs(ctx context.Context, list *corev1.PersistentV
 
 }
 
+// This is intentionally omitting annotation logic, as it's handled outside, in the restic modules
+func (b *BackupExecutor) fetchCandidatePods(ctx context.Context, list *corev1.PodList) (err error) {
+
+	if b.backup.Spec.LabelSelectors == nil {
+		return b.Client.List(ctx, list, client.InNamespace(b.backup.Namespace))
+	}
+
+	// pods created by startPreBackup will not have the user-defined labels,
+	// while existing, annotated pods will. We need to fetch both.
+	ownerUID := string(b.Obj.GetUID())
+	ownerSelector := metav1.LabelSelector{
+		MatchExpressions: []metav1.LabelSelectorRequirement{
+			{
+				Key:      "k8up.io/ownerBackupUID",
+				Operator: metav1.LabelSelectorOpIn,
+				Values:   []string{ownerUID},
+			},
+		},
+	}
+
+	labelSelectors := b.backup.Spec.LabelSelectors
+	labelSelectors = append(labelSelectors, ownerSelector)
+	uniquePods := make(map[string]corev1.Pod)
+
+	for _, labelSelector := range labelSelectors {
+		selector, err := metav1.LabelSelectorAsSelector(&labelSelector)
+		if err != nil {
+			return fmt.Errorf("cannot convert labelSelector %v to selector: %w", labelSelector, err)
+		}
+
+		options := client.ListOptions{
+			LabelSelector: selector,
+		}
+
+		matchingPods := &corev1.PodList{}
+		err = b.Client.List(ctx, matchingPods, client.InNamespace(b.backup.Namespace), &options)
+
+		if err != nil {
+			return fmt.Errorf("cannot list Pods using labelSelector %v: %w", labelSelector, err)
+		}
+
+		for _, pod := range matchingPods.Items {
+			uniquePods[pod.Name] = pod
+		}
+
+	}
+
+	list.Items = slices.Collect(maps.Values(uniquePods))
+
+	return err
+}
+
 func (b *BackupExecutor) newVolumeMounts(claims []corev1.Volume) []corev1.VolumeMount {
 	mounts := make([]corev1.VolumeMount, len(claims))
 	for i, volume := range claims {
