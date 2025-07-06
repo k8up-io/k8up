@@ -3,6 +3,7 @@ package backupcontroller
 import (
 	"context"
 	"fmt"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -13,6 +14,7 @@ import (
 	"github.com/k8up-io/k8up/v2/operator/cfg"
 	"github.com/k8up-io/k8up/v2/operator/executor"
 	"github.com/k8up-io/k8up/v2/operator/job"
+	"github.com/k8up-io/k8up/v2/restic/kubernetes"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -234,17 +236,37 @@ func (b *BackupExecutor) startBackup(ctx context.Context) error {
 	// validating that the correct backup annotations exist is already handled in the restic module
 	// we only need to pass it a list of pods it should go through
 
-	backupPods := &corev1.PodList{}
-	err = b.fetchCandidatePods(ctx, backupPods)
+	podLister := kubernetes.NewPodLister(ctx, b.Client, cfg.Config.BackupCommandAnnotation, "", "", b.backup.Namespace, nil, false, log)
+	viableBackupPods, err := podLister.ListPods()
 	if err != nil {
 		log.Error(err, "could not list pods", "namespace", b.backup.Namespace)
 		return fmt.Errorf("could not list pods: %w", err)
 	}
 
+	viableBackupPodNames := make([]string, 0, len(viableBackupPods))
+	for _, pod := range viableBackupPods {
+		viableBackupPodNames = append(viableBackupPodNames, pod.PodName)
+	}
+
+	backupPods := &corev1.PodList{}
+	err = b.fetchCandidatePods(ctx, backupPods)
+	if err != nil {
+		return fmt.Errorf("failed to fetch candidate pods: %w", err)
+	}
+
+	for i := len(backupPods.Items) - 1; i >= 0; i-- {
+		pod := backupPods.Items[i]
+		if !slices.Contains(viableBackupPodNames, pod.Name) {
+			backupPods.Items = append(backupPods.Items[:i], backupPods.Items[i+1:]...)
+		}
+	}
+
 	if len(backupPods.Items) > 0 {
 		targetPods := make([]string, 0)
 		for _, pod := range backupPods.Items {
-			targetPods = append(targetPods, pod.Name)
+			if slices.Contains(viableBackupPodNames, pod.Name) {
+				targetPods = append(targetPods, pod.Name)
+			}
 		}
 		backupJobs["prebackup"] = jobItem{
 			job:           b.createJob("prebackup", "", nil),
