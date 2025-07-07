@@ -59,4 +59,10 @@ DEBUG_DETIK="true"
 
 	secCont="$(kubectl -n "${DETIK_CLIENT_NAMESPACE}" get podConfig podconfig -ojson | jq -r '.spec.template.spec.containers[0].securityContext.allowPrivilegeEscalation')"
 	verify_job_pod_values 'k8up.io/owned-by=backup_k8up-backup' .spec.containers[0].securityContext.allowPrivilegeEscalation "${secCont}"
+
+	secCont="$(kubectl -n "${DETIK_CLIENT_NAMESPACE}" get podConfig podconfig -ojson | jq -r '.spec.template.spec.containers[0].volumeMounts[0].mountPath')"
+	verify_job_pod_values 'k8up.io/owned-by=backup_k8up-backup' .spec.containers[0].volumeMounts[0].mountPath "${secCont}"
+
+	secCont="$(kubectl -n "${DETIK_CLIENT_NAMESPACE}" get podConfig podconfig -ojson | jq -r '.spec.template.spec.volumes[0].name')"
+	verify_job_pod_values 'k8up.io/owned-by=backup_k8up-backup' .spec.volumes[0].name "${secCont}"
 }

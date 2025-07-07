@@ -80,7 +80,8 @@ func (r *RestoreExecutor) createRestoreObject(ctx context.Context, restore *k8up
 		volumes, volumeMounts := r.volumeConfig(restore)
 		batchJob.Spec.Template.Spec.Volumes = append(batchJob.Spec.Template.Spec.Volumes, volumes...)
 		batchJob.Spec.Template.Spec.Volumes = append(batchJob.Spec.Template.Spec.Volumes, utils.AttachEmptyDirVolumes(r.restore.Spec.Volumes)...)
-		batchJob.Spec.Template.Spec.Containers[0].VolumeMounts = append(volumeMounts, r.attachTLSVolumeMounts()...)
+		batchJob.Spec.Template.Spec.Containers[0].VolumeMounts = append(batchJob.Spec.Template.Spec.Containers[0].VolumeMounts, volumeMounts...)
+		batchJob.Spec.Template.Spec.Containers[0].VolumeMounts = append(batchJob.Spec.Template.Spec.Containers[0].VolumeMounts, r.attachTLSVolumeMounts()...)
 
 		args, argsErr := r.setupArgs(restore)
 		batchJob.Spec.Template.Spec.Containers[0].Args = args
