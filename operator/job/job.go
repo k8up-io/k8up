@@ -94,6 +94,12 @@ func MutateBatchJob(ctx context.Context, batchJob *batchv1.Job, jobObj k8upv1.Jo
 	batchJob.Spec.Template.Spec.Containers[0].Image = cfg.Config.BackupImage
 	batchJob.Spec.Template.Spec.Containers[0].Command = cfg.Config.BackupCommandRestic
 
+	if cfg.Config.BackupImagePullSecret != "" {
+		batchJob.Spec.Template.Spec.ImagePullSecrets = []corev1.LocalObjectReference{
+			{Name: cfg.Config.BackupImagePullSecret},
+		}
+	}
+
 	return controllerruntime.SetControllerReference(jobObj, batchJob, config.Client.Scheme())
 }
 
