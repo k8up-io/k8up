@@ -63,6 +63,14 @@ docker_manifests:
 - name_template: "{{ if not .Prerelease }}quay.io/k8up-io/k8up:latest{{ end }}"
   image_templates: *quay
 
+docker_signs:
+- artifacts: manifests
+  args:
+  - sign
+  - --yes
+  - --oidc-provider=github-actions
+  - "${artifact}"
+
 release:
   prerelease: auto
   extra_files:
