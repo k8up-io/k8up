@@ -30,7 +30,7 @@ TIP: The xref:tutorials/tutorial.adoc[tutorial] gives you a glimpse into K8up. G
 [discrete]
 == Documentation
 
-The documentation is inspired by the https://documentation.divio.com/[Divio's documentation structure]:
+The documentation is inspired by the https://diataxis.fr/[Diátaxis documentation structure]:
 
 Tutorials:: _Learning-oriented_: Simple lessons to learn about K8up.
 
