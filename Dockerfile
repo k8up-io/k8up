@@ -21,7 +21,9 @@ RUN apk add --update --no-cache \
     curl \
     fuse \
     openssh-client \
-    tzdata
+    tzdata \
+    kubectl \
+    jq
 
 ENV RESTIC_BINARY=/usr/local/bin/restic
 
