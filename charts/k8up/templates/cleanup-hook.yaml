@@ -86,13 +86,13 @@ spec:
       containers:
       - name: "{{ .Release.Name }}-cleanup"
         image: "{{ include "cleanupImage" . }}"
-        imagePullPolicy: {{ .Values.cleanup.pullPolicy }}
+        imagePullPolicy: {{ if .Values.cleanup.pullPolicy }}{{ .Values.cleanup.pullPolicy }}{{ else }}{{ .Values.image.pullPolicy }}{{ end }}
         command:
           - sh
           - -c
         args:
           - |
-            #!/bin/bash
+            set -eo pipefail
 
             NAMESPACES=$(kubectl get namespace -ojson | jq -r '.items[].metadata.name')
 

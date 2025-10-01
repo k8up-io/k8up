@@ -10,7 +10,7 @@ image:
   # -- Operator image repository
   repository: k8up-io/k8up
   # -- Operator image tag (version)
-  tag: v2.13.0
+  tag: v2.13.1
 
 imagePullSecrets: []
 serviceAccount:
@@ -151,11 +151,11 @@ resources:
     memory: 128Mi
 
 cleanup:
-  # -- Cleanup-job image pull policy
-  pullPolicy: IfNotPresent
-  # -- Cleanup-job image registry
-  registry: docker.io
-  # -- Cleanup-job image repository
-  repository: bitnami/kubectl
-  # -- Cleanup-job image tag (version)
-  tag: latest
+  # -- Cleanup-job image pull policy *deprecated*. Will default to image.pullPolicy
+  pullPolicy: ""
+  # -- Cleanup-job image registry *deprecated*. Will default to image.registry
+  registry: ""
+  # -- Cleanup-job image repository *deprecated*. Will default to image.repository
+  repository: ""
+  # -- Cleanup-job image tag (version) *deprecated*. Will default to image.tag
+  tag: ""
