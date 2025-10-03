@@ -86,6 +86,6 @@ Cleanup Image
 */}}
 {{- define "cleanupImage" -}}
 {{- with .Values -}}
-{{ if .cleanup.registry }}{{ .cleanup.registry }}/{{ end }}{{ .cleanup.repository }}:{{ .cleanup.tag }}
+{{ if .cleanup.registry }}{{ .cleanup.registry }}{{ else }}{{ .image.registry }}{{ end }}/{{ if .cleanup.repository }}{{ .cleanup.repository }}{{ else }}{{ .image.repository }}{{ end }}:{{ if .cleanup.tag }}{{ .cleanup.tag }}{{ else }}{{ .image.tag }}{{ end }}
 {{- end -}}
 {{- end -}}

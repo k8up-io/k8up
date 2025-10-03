@@ -1,6 +1,6 @@
 # k8up
 
-![Version: 4.8.5](https://img.shields.io/badge/Version-4.8.5-informational?style=flat-square)
+![Version: 4.8.6](https://img.shields.io/badge/Version-4.8.6-informational?style=flat-square)
 
 Kubernetes and OpenShift Backup Operator based on restic
 
@@ -13,7 +13,7 @@ helm repo add k8up-io https://k8up-io.github.io/k8up
 helm install k8up k8up-io/k8up
 ```
 ```bash
-kubectl apply -f https://github.com/k8up-io/k8up/releases/download/k8up-4.8.5/k8up-crd.yaml --server-side
+kubectl apply -f https://github.com/k8up-io/k8up/releases/download/k8up-4.8.6/k8up-crd.yaml --server-side
 ```
 
 <!---
@@ -41,14 +41,14 @@ Document your changes in values.yaml and let `make docs:helm` generate this sect
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | affinity | object | `{}` |  |
-| cleanup.pullPolicy | string | `"IfNotPresent"` | Cleanup-job image pull policy |
-| cleanup.registry | string | `"docker.io"` | Cleanup-job image registry |
-| cleanup.repository | string | `"bitnami/kubectl"` | Cleanup-job image repository |
-| cleanup.tag | string | `"latest"` | Cleanup-job image tag (version) |
+| cleanup.pullPolicy | string | `""` | Cleanup-job image pull policy *deprecated*. Will default to image.pullPolicy |
+| cleanup.registry | string | `""` | Cleanup-job image registry *deprecated*. Will default to image.registry |
+| cleanup.repository | string | `""` | Cleanup-job image repository *deprecated*. Will default to image.repository |
+| cleanup.tag | string | `""` | Cleanup-job image tag (version) *deprecated*. Will default to image.tag |
 | image.pullPolicy | string | `"IfNotPresent"` | Operator image pull policy |
 | image.registry | string | `"ghcr.io"` | Operator image registry |
 | image.repository | string | `"k8up-io/k8up"` | Operator image repository |
-| image.tag | string | `"v2.13.0"` | Operator image tag (version) |
+| image.tag | string | `"v2.13.1"` | Operator image tag (version) |
 | imagePullSecrets | list | `[]` |  |
 | k8up.backupImage.repository | string | `""` | The backup runner image repository. Defaults to `{image.registry}/{image.repository}`. Specify an image repository including registry, e.g. `example.com/repo/image` |
 | k8up.backupImage.tag | string | `""` | The backup runner image tag Defaults to `{image.tag}` |
