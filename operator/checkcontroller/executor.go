@@ -96,6 +96,7 @@ func (c *CheckExecutor) setupEnvVars(ctx context.Context) []corev1.EnvVar {
 	}
 
 	vars.SetString("PROM_URL", cfg.Config.PromURL)
+	vars.SetString("CLUSTER_NAME", cfg.Config.ClusterName)
 
 	err := vars.Merge(executor.DefaultEnv(c.Obj.GetNamespace()))
 	if err != nil {

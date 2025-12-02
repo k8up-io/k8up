@@ -189,6 +189,7 @@ func (b *BackupExecutor) setupEnvVars() ([]corev1.EnvVar, error) {
 
 	vars.SetStringOrDefault("STATS_URL", b.backup.Spec.StatsURL, cfg.Config.GlobalStatsURL)
 	vars.SetStringOrDefault("PROM_URL", b.backup.Spec.PromURL, cfg.Config.PromURL)
+	vars.SetStringOrDefault("CLUSTER_NAME", b.backup.Spec.ClusterName, cfg.Config.ClusterName)
 	vars.SetString("BACKUPCOMMAND_ANNOTATION", cfg.Config.BackupCommandAnnotation)
 	vars.SetString("FILEEXTENSION_ANNOTATION", cfg.Config.FileExtensionAnnotation)
 
