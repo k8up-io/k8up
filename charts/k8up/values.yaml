@@ -159,3 +159,6 @@ cleanup:
   repository: ""
   # -- Cleanup-job image tag (version) *deprecated*. Will default to image.tag
   tag: ""
+
+  # -- Cleanup-job resources
+  resources: {}

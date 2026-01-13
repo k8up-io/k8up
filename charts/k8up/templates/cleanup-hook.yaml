@@ -103,3 +103,7 @@ spec:
             done
         securityContext:
           {{- toYaml .Values.securityContext | nindent 12 }}
+        {{- with .Values.cleanup.resources }}
+        resources:
+          {{- toYaml . | nindent 12 }}
+        {{- end }}

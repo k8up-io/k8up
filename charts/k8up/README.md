@@ -44,6 +44,7 @@ Document your changes in values.yaml and let `make docs:helm` generate this sect
 | cleanup.pullPolicy | string | `""` | Cleanup-job image pull policy *deprecated*. Will default to image.pullPolicy |
 | cleanup.registry | string | `""` | Cleanup-job image registry *deprecated*. Will default to image.registry |
 | cleanup.repository | string | `""` | Cleanup-job image repository *deprecated*. Will default to image.repository |
+| cleanup.resources | object | `{}` | Cleanup-job resources |
 | cleanup.tag | string | `""` | Cleanup-job image tag (version) *deprecated*. Will default to image.tag |
 | image.pullPolicy | string | `"IfNotPresent"` | Operator image pull policy |
 | image.registry | string | `"ghcr.io"` | Operator image registry |
