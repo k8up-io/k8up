@@ -22,6 +22,7 @@ type Client struct {
 	SecretAccessKey string
 	minioClient     *minio.Client
 	bucket          string
+	prefix          string
 	cert            Cert
 }
 
@@ -87,7 +88,7 @@ func (c *Client) Connect(ctx context.Context) error {
 		TLSClientConfig: transportTlsConfig,
 	}
 
-	c.bucket = strings.Replace(u.Path, "/", "", 1)
+	c.bucket, c.prefix = parseBucketAndPrefix(u.Path)
 	c.Endpoint = u.Host
 	mc, err := minio.New(c.Endpoint, &minio.Options{
 		Creds:     credentials.NewStaticV2(c.AccessKeyID, c.SecretAccessKey, ""),
@@ -116,18 +117,18 @@ func (c *Client) createBucket(ctx context.Context) error {
 
 // Upload uploads a io.Reader object to the configured endpoint
 func (c *Client) Upload(ctx context.Context, object UploadObject) error {
-	_, err := c.minioClient.PutObject(ctx, c.bucket, object.Name, object.ObjectStream, -1, minio.PutObjectOptions{})
+	_, err := c.minioClient.PutObject(ctx, c.bucket, c.objectPath(object.Name), object.ObjectStream, -1, minio.PutObjectOptions{})
 	return err
 }
 
 // Get gets a file or returns an error.
 func (c *Client) Get(ctx context.Context, filename string) (*minio.Object, error) {
-	return c.minioClient.GetObject(ctx, c.bucket, filename, minio.GetObjectOptions{})
+	return c.minioClient.GetObject(ctx, c.bucket, c.objectPath(filename), minio.GetObjectOptions{})
 }
 
 // Stat returns metainformation about an object in the repository.
 func (c *Client) Stat(ctx context.Context, filename string) (minio.ObjectInfo, error) {
-	return c.minioClient.StatObject(ctx, c.bucket, filename, minio.StatObjectOptions{})
+	return c.minioClient.StatObject(ctx, c.bucket, c.objectPath(filename), minio.StatObjectOptions{})
 }
 
 // DeleteBucket deletes the main bucket where the client is connected to.
@@ -155,14 +156,17 @@ func (c *Client) deleteBucketByName(ctx context.Context, name string) error {
 	return c.minioClient.RemoveBucket(ctx, name)
 }
 
-// ListObjects lists all objects in the bucket
+// ListObjects lists all objects in the bucket (optionally filtered by prefix)
 func (c *Client) ListObjects(ctx context.Context) ([]minio.ObjectInfo, error) {
 	doneCh := make(chan struct{})
 
 	defer close(doneCh)
 
 	tmpInfos := make([]minio.ObjectInfo, 0)
-	objectCh := c.minioClient.ListObjects(ctx, c.bucket, minio.ListObjectsOptions{Recursive: true})
+	objectCh := c.minioClient.ListObjects(ctx, c.bucket, minio.ListObjectsOptions{
+		Prefix:    c.prefix,
+		Recursive: true,
+	})
 	for object := range objectCh {
 		if object.Err != nil {
 			return nil, object.Err
@@ -171,4 +175,31 @@ func (c *Client) ListObjects(ctx context.Context) ([]minio.ObjectInfo, error) {
 	}
 
 	return tmpInfos, nil
+}
+
+// objectPath returns the full object path by prepending the prefix to the name.
+func (c *Client) objectPath(name string) string {
+	if c.prefix == "" {
+		return name
+	}
+	return c.prefix + "/" + name
+}
+
+// parseBucketAndPrefix extracts the bucket name and optional prefix from a URL path.
+// For path "/bucket", returns ("bucket", "").
+// For path "/bucket/path/to/data", returns ("bucket", "path/to/data").
+func parseBucketAndPrefix(path string) (bucket, prefix string) {
+	// Remove leading slash
+	path = strings.TrimPrefix(path, "/")
+	if path == "" {
+		return "", ""
+	}
+
+	// Split into bucket and prefix
+	parts := strings.SplitN(path, "/", 2)
+	bucket = parts[0]
+	if len(parts) > 1 {
+		prefix = parts[1]
+	}
+	return bucket, prefix
 }
