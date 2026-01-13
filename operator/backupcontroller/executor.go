@@ -312,7 +312,8 @@ func (b *BackupExecutor) startBackup(ctx context.Context) error {
 			b.backup.Spec.AppendEnvFromToContainer(&batchJob.job.Spec.Template.Spec.Containers[0])
 			batchJob.job.Spec.Template.Spec.Volumes = append(batchJob.job.Spec.Template.Spec.Volumes, batchJob.volumes...)
 			batchJob.job.Spec.Template.Spec.Volumes = append(batchJob.job.Spec.Template.Spec.Volumes, utils.AttachEmptyDirVolumes(b.backup.Spec.Volumes)...)
-			batchJob.job.Spec.Template.Spec.Containers[0].VolumeMounts = append(b.newVolumeMounts(batchJob.volumes), b.attachTLSVolumeMounts()...)
+			batchJob.job.Spec.Template.Spec.Containers[0].VolumeMounts = append(batchJob.job.Spec.Template.Spec.Containers[0].VolumeMounts, b.newVolumeMounts(batchJob.volumes)...)
+			batchJob.job.Spec.Template.Spec.Containers[0].VolumeMounts = append(batchJob.job.Spec.Template.Spec.Containers[0].VolumeMounts, b.attachTLSVolumeMounts()...)
 			batchJob.job.Spec.BackoffLimit = ptr.To(int32(cfg.Config.GlobalBackoffLimit))
 
 			batchJob.job.Spec.Template.Spec.Containers[0].Args = b.setupArgs(batchJob.resticArgs)
