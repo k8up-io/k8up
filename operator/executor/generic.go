@@ -6,6 +6,7 @@ package executor
 
 import (
 	"context"
+	"fmt"
 
 	k8upv1 "github.com/k8up-io/k8up/v2/api/v1"
 	"github.com/k8up-io/k8up/v2/operator/executor/cleaner"
@@ -20,11 +21,9 @@ type Generic struct {
 
 // listOldResources retrieves a list of the given resource type in the given namespace and fills the Item property
 // of objList. On errors, the error is being logged and the Scrubbed condition set to False with reason RetrievalFailed.
-func (g *Generic) listOldResources(ctx context.Context, namespace string, objList client.ObjectList) error {
+func (g *Generic) listOldResources(ctx context.Context, namespace string, objList client.ObjectList, ownedBy string) error {
 	log := controllerruntime.LoggerFrom(ctx)
-	err := g.Client.List(ctx, objList, &client.ListOptions{
-		Namespace: namespace,
-	})
+	err := g.Client.List(ctx, objList, client.MatchingLabels{k8upv1.LabelK8upOwnedBy: ownedBy}, client.InNamespace(namespace))
 	if err != nil {
 		log.Error(err, "could not list objects to cleanup old resources")
 		g.SetConditionFalseWithMessage(ctx, k8upv1.ConditionScrubbed, k8upv1.ReasonRetrievalFailed, "could not list objects to cleanup old resources: %v", err)
@@ -40,7 +39,14 @@ type jobObjectList interface {
 }
 
 func (g *Generic) CleanupOldResources(ctx context.Context, typ jobObjectList, namespace string, limits cleaner.GetJobsHistoryLimiter) {
-	err := g.listOldResources(ctx, namespace, typ)
+	// Type assert limits to JobObject since all callers pass the same object for both parameters
+	jobObj, ok := limits.(k8upv1.JobObject)
+	if !ok {
+		g.SetConditionFalseWithMessage(ctx, k8upv1.ConditionScrubbed, k8upv1.ReasonRetrievalFailed, "limits parameter must implement JobObject interface")
+		return
+	}
+	ownedBy := fmt.Sprintf("%s_%s", jobObj.GetType().String(), jobObj.GetName())
+	err := g.listOldResources(ctx, namespace, typ, ownedBy)
 	if err != nil {
 		return
 	}
