@@ -3,7 +3,7 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: 'k8up-executor'
+  name: '{{ include "k8up.fullname" . }}-executor'
   labels:
     {{- include "k8up.labels" . | nindent 4 }}
 rules:
