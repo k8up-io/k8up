@@ -18,7 +18,6 @@ import (
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/utils/ptr"
 	controllerruntime "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -144,49 +143,21 @@ func (b *BackupExecutor) listAndFilterPVCs(ctx context.Context, annotation strin
 		}
 
 		if pod, ok := pvcPodMap[pvc.GetName()]; ok {
-			bi.node = pod.Spec.NodeName
 			bi.tolerations = pod.Spec.Tolerations
 			bi.targetPod = pod.GetName()
 
-			log.V(1).Info("PVC mounted at pod", "pvc", pvc.GetName(), "targetPod", bi.targetPod, "node", bi.node, "tolerations", bi.tolerations)
-		} else if isRWO {
-			pv := &corev1.PersistentVolume{}
-			if err := b.Client.Get(ctx, types.NamespacedName{Name: pvc.Spec.VolumeName}, pv); err != nil {
-				log.Error(err, "unable to get PV, skipping pvc", "pvc", pvc.GetName(), "pv", pvc.Spec.VolumeName)
-				continue
-			}
+			log.V(1).Info("PVC mounted at pod", "pvc", pvc.GetName(), "targetPod", bi.targetPod, "tolerations", bi.tolerations)
+		}
 
-			bi.node = findNode(pv, pvc)
-			if bi.node == "" {
-				log.Info("RWO PVC not bound and no PV node affinity set, adding", "pvc", pvc.GetName(), "affinity", pv.Spec.NodeAffinity)
-			}
-			log.V(1).Info("node found in PV or PVC", "pvc", pvc.GetName(), "node", bi.node)
-		} else {
-			log.Info("RWX PVC with no specific node", "pvc", pvc.GetName())
+		if hostnameAnnotation, ok := pvc.Annotations[k8upv1.AnnotationK8upHostname]; ok {
+			bi.node = hostnameAnnotation
+			log.Info("PVC has hostname annotation, adding to backup item", "pvc", pvc.GetName(), "node", bi.node)
 		}
 
 		backupItems = append(backupItems, bi)
 	}
 
 	return backupItems, nil
-}
-
-// findNode tries to find a PVs NodeAffinity for a specific hostname. If found will return that.
-// If not it will try to return the value of the k8up.io/hostname annotation on the PVC. If this is not set, will return
-// empty string.
-func findNode(pv *corev1.PersistentVolume, pvc corev1.PersistentVolumeClaim) string {
-	hostnameAnnotation := pvc.Annotations[k8upv1.AnnotationK8upHostname]
-	if pv.Spec.NodeAffinity == nil || pv.Spec.NodeAffinity.Required == nil {
-		return hostnameAnnotation
-	}
-	for _, term := range pv.Spec.NodeAffinity.Required.NodeSelectorTerms {
-		for _, matchExpr := range term.MatchExpressions {
-			if matchExpr.Key == corev1.LabelHostname && matchExpr.Operator == corev1.NodeSelectorOpIn {
-				return matchExpr.Values[0]
-			}
-		}
-	}
-	return hostnameAnnotation
 }
 
 func (b *BackupExecutor) startBackup(ctx context.Context) error {
@@ -213,23 +184,23 @@ func (b *BackupExecutor) startBackup(ctx context.Context) error {
 	}
 	backupJobs := map[string]jobItem{}
 	for index, item := range backupItems {
-		jobName := item.node + strings.Join(item.resticArgs, ",")
-		if _, ok := backupJobs[jobName]; !ok {
-			backupJobs[jobName] = jobItem{
-				job:           b.createJob(strconv.Itoa(index), item.node, item.tolerations),
-				targetPods:    make([]string, 0),
-				volumes:       make([]corev1.Volume, 0),
-				resticArgs:    []string(item.resticArgs),
-				skipPreBackup: true,
-			}
+		jobName := strconv.Itoa(index) + strings.Join(item.resticArgs, ",")
+		backupJob := jobItem{
+			job:           b.createJob(strconv.Itoa(index), item.node, item.tolerations),
+			targetPods:    make([]string, 0),
+			volumes:       make([]corev1.Volume, 0),
+			resticArgs:    []string(item.resticArgs),
+			skipPreBackup: true,
 		}
 
-		j := backupJobs[jobName]
 		if item.targetPod != "" {
-			j.targetPods = append(j.targetPods, item.targetPod)
+			backupJob.targetPods = append(backupJob.targetPods, item.targetPod)
 		}
-		j.volumes = append(j.volumes, item.volume)
-		backupJobs[jobName] = j
+		if item.volume.Name != "" {
+			backupJob.volumes = append(backupJob.volumes, item.volume)
+		}
+
+		backupJobs[jobName] = backupJob
 	}
 
 	log := controllerruntime.LoggerFrom(ctx)
