@@ -13,7 +13,7 @@ require (
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/stretchr/testify v1.9.0
 	github.com/urfave/cli/v2 v2.23.7
-	go.uber.org/zap v1.27.0
+	go.uber.org/zap v1.27.1
 	golang.org/x/net v0.23.0
 	k8s.io/api v0.29.2
 	k8s.io/apimachinery v0.29.2
