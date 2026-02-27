@@ -301,12 +301,13 @@ func (b *BackupExecutor) startBackup(ctx context.Context) error {
 					Value: "true",
 				})
 			}
-			// each job sleeps for index seconds to avoid concurrent restic repository creation. Not the prettiest way but it works and a repository
+			// each job sleeps for index * 10 seconds to avoid concurrent restic repository creation. Not the prettiest way but it works and a repository
 			// is created only once usually.
 			if name == "prebackup" || index != 0 {
+				secondsToSleep := time.Duration(index*10) * time.Second
 				batchJob.job.Spec.Template.Spec.Containers[0].Env = append(batchJob.job.Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{
 					Name:  "SLEEP_DURATION",
-					Value: (3 * time.Second).String(),
+					Value: secondsToSleep.String(),
 				})
 			}
 			b.backup.Spec.AppendEnvFromToContainer(&batchJob.job.Spec.Template.Spec.Containers[0])
