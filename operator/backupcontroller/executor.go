@@ -122,7 +122,7 @@ func (b *BackupExecutor) listAndFilterPVCs(ctx context.Context, annotation strin
 
 		bi := backupItem{
 			volume: corev1.Volume{
-				Name: pvc.Name,
+				Name: func(n string) string { if len(n) > 63 { return n[:63] }; return n }(pvc.Name),
 				VolumeSource: corev1.VolumeSource{
 					PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{
 						ClaimName: pvc.Name,
