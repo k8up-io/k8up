@@ -2,7 +2,7 @@ module charts
 
 go 1.22
 
-toolchain go1.22.1
+toolchain go1.26.0
 
 require (
 	github.com/norwoodj/helm-docs v1.13.1
