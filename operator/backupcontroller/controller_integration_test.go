@@ -320,8 +320,15 @@ func (ts *BackupTestSuite) Test_GivenBackupAndMountedRWOPVCOnOneNode_ExpectBacku
 	result := ts.whenReconciling(ts.BackupResource)
 	ts.Assert().GreaterOrEqual(result.RequeueAfter, 30*time.Second)
 
-	job := ts.expectABackupJob()
-	ts.assertJobSpecs(job, nodeName, []corev1.Volume{volumePvc1, volumePvc2}, tolerations, []string{pod1.Name, pod2.Name})
+	jobs := new(batchv1.JobList)
+	err := ts.Client.List(ts.Ctx, jobs, client.InNamespace(ts.NS))
+	ts.Require().NoError(err)
+	ts.Assert().Len(jobs.Items, 2)
+
+	job1 := jobs.Items[0]
+	job2 := jobs.Items[1]
+	ts.assertJobSpecs(&job1, "", []corev1.Volume{volumePvc1}, tolerations, []string{pod1.Name})
+	ts.assertJobSpecs(&job2, "", []corev1.Volume{volumePvc2}, tolerations, []string{pod2.Name})
 }
 
 func (ts *BackupTestSuite) Test_GivenBackupAndMountedRWOPVCOnTwoNodes_ExpectBackupOnTwoNodes() {
@@ -376,8 +383,8 @@ func (ts *BackupTestSuite) Test_GivenBackupAndMountedRWOPVCOnTwoNodes_ExpectBack
 
 	job1 := jobs.Items[0]
 	job2 := jobs.Items[1]
-	ts.assertJobSpecs(&job1, nodeNamePod1, []corev1.Volume{volumePvc1}, tolerationsPod1, []string{pod1.Name})
-	ts.assertJobSpecs(&job2, nodeNamePod2, []corev1.Volume{volumePvc2}, tolerationsPod2, []string{pod2.Name})
+	ts.assertJobSpecs(&job1, "", []corev1.Volume{volumePvc1}, tolerationsPod1, []string{pod1.Name})
+	ts.assertJobSpecs(&job2, "", []corev1.Volume{volumePvc2}, tolerationsPod2, []string{pod2.Name})
 }
 
 func (ts *BackupTestSuite) Test_GivenBackupAndMountedRWOPVCOnOneNodeWithFinishedBackupPod_ExpectTargetNodeExcludesBackup() {
@@ -408,7 +415,7 @@ func (ts *BackupTestSuite) Test_GivenBackupAndMountedRWOPVCOnOneNodeWithFinished
 	ts.Assert().GreaterOrEqual(result.RequeueAfter, 30*time.Second)
 
 	job := ts.expectABackupJob()
-	ts.assertJobSpecs(job, nodeName, []corev1.Volume{volumePvc1}, tolerations, []string{pod1.Name})
+	ts.assertJobSpecs(job, "", []corev1.Volume{volumePvc1}, tolerations, []string{pod1.Name})
 }
 
 func (ts *BackupTestSuite) Test_GivenBackupAndUnmountedRWOPVCOnTwoNodes_ExpectBackupOnTwoNodes() {
@@ -454,8 +461,8 @@ func (ts *BackupTestSuite) Test_GivenBackupAndUnmountedRWOPVCOnTwoNodes_ExpectBa
 
 	job1 := jobs.Items[0]
 	job2 := jobs.Items[1]
-	ts.assertJobSpecs(&job1, nodeNamePv1, []corev1.Volume{volumePvc1}, nil, []string{})
-	ts.assertJobSpecs(&job2, nodeNamePv2, []corev1.Volume{volumePvc2}, nil, []string{})
+	ts.assertJobSpecs(&job1, "", []corev1.Volume{volumePvc1}, nil, []string{})
+	ts.assertJobSpecs(&job2, "", []corev1.Volume{volumePvc2}, nil, []string{})
 }
 
 func (ts *BackupTestSuite) Test_GivenBackupAndUnmountedRWOPVC_ExpectBackup() {
@@ -520,6 +527,35 @@ func (ts *BackupTestSuite) Test_GivenBackupAndRWOPVCWithFinishedPod_ExpectFinish
 	ts.whenReconciling(ts.BackupResource)
 	job := ts.expectABackupJob()
 
+	ts.assertJobSpecs(job, "", []corev1.Volume{volumePvc1}, tolerations, []string{pod1.Name})
+}
+
+func (ts *BackupTestSuite) Test_GivenBackupAndRWOPVCWithAnnotation_ExpectNodeSelector() {
+	pvc1 := ts.newPvc("test-pvc1", corev1.ReadWriteOnce)
+	pvc1.Annotations = map[string]string{
+		"k8up.io/hostname": "worker",
+	}
+	nodeNamePod1 := "worker"
+	volumePvc1 := corev1.Volume{
+		Name: "test-pvc1",
+		VolumeSource: corev1.VolumeSource{
+			PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{
+				ClaimName: pvc1.Name,
+			},
+		},
+	}
+	tolerations := make([]corev1.Toleration, 0)
+	pod1 := ts.newPod("test-pod1", nodeNamePod1, tolerations, []corev1.Volume{volumePvc1})
+
+	ts.EnsureResources(ts.BackupResource, pvc1, pod1)
+
+	pvc1.Status.Phase = corev1.ClaimBound
+	pod1.Status.Phase = corev1.PodRunning
+	ts.UpdateStatus(pvc1, pod1)
+
+	ts.whenReconciling(ts.BackupResource)
+	job := ts.expectABackupJob()
+
 	ts.assertJobSpecs(job, nodeNamePod1, []corev1.Volume{volumePvc1}, tolerations, []string{pod1.Name})
 }
 
@@ -537,6 +573,11 @@ func (ts *BackupTestSuite) assertJobSpecs(job *batchv1.Job, nodeName string, vol
 		ts.Assert().Equal(volume.VolumeSource.PersistentVolumeClaim.ClaimName, job.Spec.Template.Spec.Volumes[i].VolumeSource.PersistentVolumeClaim.ClaimName)
 	}
 
+	if len(targetPods) == 0 {
+		for _, envVar := range job.Spec.Template.Spec.Containers[0].Env {
+			ts.Assert().NotEqual("TARGET_PODS", envVar.Name, "TARGET_PODS environment variable should not be set when there are no target pods")
+		}
+	}
 	if len(targetPods) > 0 {
 		ts.Assert().Contains(job.Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{Name: "TARGET_PODS", Value: strings.Join(targetPods, ",")})
 	}
