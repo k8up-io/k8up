@@ -49,19 +49,19 @@ spec:
                   fieldPath: metadata.namespace
           {{- end }}
           {{- with .Values.k8up.globalResources.requests.cpu }}
-            - name: BACKUP_GLOBALCPU_REQUEST
+            - name: BACKUP_GLOBAL_CPU_REQUEST
               value: {{ . }}
           {{- end }}
           {{- with .Values.k8up.globalResources.requests.memory }}
-            - name: BACKUP_GLOBALMEMORY_REQUEST
+            - name: BACKUP_GLOBAL_MEMORY_REQUEST
               value: {{ . }}
           {{- end }}
           {{- with .Values.k8up.globalResources.limits.cpu }}
-            - name: BACKUP_GLOBALCPU_LIMIT
+            - name: BACKUP_GLOBAL_CPU_LIMIT
               value: {{ . }}
           {{- end }}
           {{- with .Values.k8up.globalResources.limits.memory }}
-            - name: BACKUP_GLOBALMEMORY_LIMIT
+            - name: BACKUP_GLOBAL_MEMORY_LIMIT
               value: {{ . }}
           {{- end }}
           {{- if .Values.k8up.envVars }}
