@@ -82,6 +82,7 @@ Document your changes in values.yaml and let `make docs:helm` generate this sect
 | metrics.serviceMonitor.enabled | bool | `false` | Whether to enable ServiceMonitor manifests for [Prometheus Operator][prometheus-operator] |
 | metrics.serviceMonitor.namespace | string | `""` | If the object should be installed in a different namespace than operator |
 | metrics.serviceMonitor.scrapeInterval | string | `"60s"` | Scrape interval to collect metrics |
+| namespaceOverride | string | `""` | Override the namespace for namespaced resources in this chart. |
 | nodeSelector | object | `{}` |  |
 | podAnnotations | object | `{}` | Annotations to add to the Pod spec. |
 | podSecurityContext | object | `{}` | Security context to add to the Pod spec. |

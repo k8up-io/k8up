@@ -1,5 +1,16 @@
 {{/* vim: set filetype=mustache: */}}
 {{/*
+Allow the release namespace to be overridden for namespaced resources.
+*/}}
+{{- define "k8up.namespace" -}}
+{{- if .Values.namespaceOverride -}}
+{{- .Values.namespaceOverride -}}
+{{- else -}}
+{{- .Release.Namespace -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
 Expand the name of the chart.
 */}}
 {{- define "k8up.name" -}}

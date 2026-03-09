@@ -3,7 +3,7 @@ apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   name: {{ include "k8up.fullname" . }}-monitor
-  namespace: {{ default .Release.Namespace .Values.metrics.serviceMonitor.namespace }}
+  namespace: {{ default (include "k8up.namespace" .) .Values.metrics.serviceMonitor.namespace }}
   labels:
     {{- include "k8up.labels" . | nindent 4 }}
     {{- with .Values.metrics.serviceMonitor.additionalLabels }}
@@ -19,6 +19,6 @@ spec:
   {{- if .Values.metrics.serviceMonitor.namespace }}
   namespaceSelector:
     matchNames:
-      - {{ .Release.Namespace }}
+      - {{ include "k8up.namespace" . }}
   {{- end }}
 {{- end }}

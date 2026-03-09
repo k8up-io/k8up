@@ -2,6 +2,7 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: cleanup-service-account
+  namespace: {{ include "k8up.namespace" . }}
   annotations:
     "helm.sh/hook": post-install,post-upgrade,post-delete
     "helm.sh/hook-weight": "1"
@@ -16,7 +17,6 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: k8up-cleanup-roles
-  namespace: {{ .Release.Namespace }}
   annotations:
     "helm.sh/hook": post-install,post-upgrade,post-delete
     "helm.sh/hook-weight": "2"
@@ -58,7 +58,7 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: cleanup-service-account
-  namespace: {{ .Release.Namespace }}
+  namespace: {{ include "k8up.namespace" . }}
 
 ---
 
@@ -66,6 +66,7 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   name: "{{ .Release.Name }}-cleanup"
+  namespace: {{ include "k8up.namespace" . }}
   labels:
     {{- include "k8up.labels" . | nindent 4 }}
   annotations:
