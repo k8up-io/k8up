@@ -1,3 +1,6 @@
+# -- Override the namespace for namespaced resources in this chart.
+namespaceOverride: ""
+
 # -- How many operator pods should run.
 # Note: Operator features leader election for K8s 1.16 and later, so that only 1 pod is reconciling/scheduling jobs.
 # Follower pods reduce interruption time as they're on hot standby when leader is unresponsive.

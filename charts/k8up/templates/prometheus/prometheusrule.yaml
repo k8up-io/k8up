@@ -3,7 +3,7 @@ apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:
   name: {{ include "k8up.fullname" . }}-rule
-  namespace: {{ default .Release.Namespace .Values.metrics.prometheusRule.namespace }}
+  namespace: {{ default (include "k8up.namespace" .) .Values.metrics.prometheusRule.namespace }}
   labels:
     {{- include "k8up.labels" . | nindent 4 }}
     {{- with .Values.metrics.prometheusRule.additionalLabels }}

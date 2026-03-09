@@ -15,11 +15,11 @@ var (
 )
 
 func Test_ServiceAccount_ShouldNotRender_IfDisabled(t *testing.T) {
-	options := &helm.Options{
+	options := withReleaseNamespace(&helm.Options{
 		SetValues: map[string]string{
 			"serviceAccount.create": "false",
 		},
-	}
+	})
 
 	renderServiceAccount(t, options, true)
 
@@ -27,23 +27,36 @@ func Test_ServiceAccount_ShouldNotRender_IfDisabled(t *testing.T) {
 
 func Test_ServiceAccount_ShouldRender_ByDefault(t *testing.T) {
 	want := releaseName + "-k8up"
-	options := &helm.Options{}
+	options := withReleaseNamespace(&helm.Options{})
 
 	sa := renderServiceAccount(t, options, false)
 	assert.Equal(t, want, sa.Name, "ServiceAccount does use configured name")
+	assert.Equal(t, releaseNamespace, sa.Namespace, "ServiceAccount should render in the configured release namespace by default")
 }
 
 func Test_ServiceAccount_ShouldRender_CustomName(t *testing.T) {
 	want := "test"
-	options := &helm.Options{
+	options := withReleaseNamespace(&helm.Options{
 		SetValues: map[string]string{
 			"serviceAccount.name": want,
 		},
-	}
+	})
 
 	sa := renderServiceAccount(t, options, false)
 
 	assert.Equal(t, want, sa.Name, "ServiceAccount does use configured name")
+}
+
+func Test_ServiceAccount_ShouldRender_OverrideNamespace(t *testing.T) {
+	options := withReleaseNamespace(&helm.Options{
+		SetValues: map[string]string{
+			"namespaceOverride": overrideNamespace,
+		},
+	})
+
+	sa := renderServiceAccount(t, options, false)
+
+	assert.Equal(t, overrideNamespace, sa.Namespace, "ServiceAccount should use the overridden namespace")
 }
 
 func renderServiceAccount(t *testing.T, options *helm.Options, wantErr bool) *corev1.ServiceAccount {

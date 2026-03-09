@@ -15,12 +15,12 @@ var (
 )
 
 func Test_PrometheusRule_GivenDisabled_WhenAdditionalRulesDefined_ThenRenderNoTemplate(t *testing.T) {
-	options := &helm.Options{
+	options := withReleaseNamespace(&helm.Options{
 		SetValues: map[string]string{
 			"metrics.prometheusRule.enabled": "false",
 		},
 		ValuesFiles: []string{"testdata/custom_rules"},
-	}
+	})
 
 	_, err := helm.RenderTemplateE(t, options, helmChartPath, releaseName, tplPrometheusRule)
 	assert.Error(t, err)
@@ -28,12 +28,12 @@ func Test_PrometheusRule_GivenDisabled_WhenAdditionalRulesDefined_ThenRenderNoTe
 
 func Test_PrometheusRule_GivenEnabled_WhenNamespaceDefined_ThenRenderNewNamespace(t *testing.T) {
 	expectedNamespace := "alternative"
-	options := &helm.Options{
+	options := withReleaseNamespace(&helm.Options{
 		SetValues: map[string]string{
 			"metrics.prometheusRule.enabled":   "true",
 			"metrics.prometheusRule.namespace": expectedNamespace,
 		},
-	}
+	})
 
 	output := helm.RenderTemplate(t, options, helmChartPath, releaseName, tplPrometheusRule)
 	rule := monitoringv1.PrometheusRule{}
@@ -42,12 +42,41 @@ func Test_PrometheusRule_GivenEnabled_WhenNamespaceDefined_ThenRenderNewNamespac
 	assert.Equal(t, expectedNamespace, rule.Namespace)
 }
 
+func Test_PrometheusRule_GivenNamespaceOverride_WhenNamespaceUndefined_ThenRenderOverrideNamespace(t *testing.T) {
+	options := withReleaseNamespace(&helm.Options{
+		SetValues: map[string]string{
+			"metrics.prometheusRule.enabled": "true",
+			"namespaceOverride":              overrideNamespace,
+		},
+	})
+
+	output := helm.RenderTemplate(t, options, helmChartPath, releaseName, tplPrometheusRule)
+	rule := monitoringv1.PrometheusRule{}
+	helm.UnmarshalK8SYaml(t, output, &rule)
+
+	assert.Equal(t, overrideNamespace, rule.Namespace)
+}
+
+func Test_PrometheusRule_GivenNoOverride_WhenNamespaceUndefined_ThenRenderReleaseNamespace(t *testing.T) {
+	options := withReleaseNamespace(&helm.Options{
+		SetValues: map[string]string{
+			"metrics.prometheusRule.enabled": "true",
+		},
+	})
+
+	output := helm.RenderTemplate(t, options, helmChartPath, releaseName, tplPrometheusRule)
+	rule := monitoringv1.PrometheusRule{}
+	helm.UnmarshalK8SYaml(t, output, &rule)
+
+	assert.Equal(t, releaseNamespace, rule.Namespace)
+}
+
 func Test_PrometheusRule_GivenEnabled_WhenAdditionalLabelsDefined_ThenRenderMoreLabels(t *testing.T) {
 	expectedLabelKey := "my-custom-label"
 	expectedLabelValue := "my-value"
-	options := &helm.Options{
+	options := withReleaseNamespace(&helm.Options{
 		ValuesFiles: []string{"testdata/labels.yaml"},
-	}
+	})
 
 	output := helm.RenderTemplate(t, options, helmChartPath, releaseName, tplPrometheusRule)
 	rule := monitoringv1.PrometheusRule{}
@@ -57,11 +86,11 @@ func Test_PrometheusRule_GivenEnabled_WhenAdditionalLabelsDefined_ThenRenderMore
 }
 
 func Test_PrometheusRule_GivenEnabled_WhenCreateDefaultRulesEnabled_ThenRenderDefaultAlerts(t *testing.T) {
-	options := &helm.Options{
+	options := withReleaseNamespace(&helm.Options{
 		SetValues: map[string]string{
 			"metrics.prometheusRule.enabled": "true",
 		},
-	}
+	})
 
 	output := helm.RenderTemplate(t, options, helmChartPath, releaseName, tplPrometheusRule)
 	rule := monitoringv1.PrometheusRule{}
@@ -73,12 +102,12 @@ func Test_PrometheusRule_GivenEnabled_WhenCreateDefaultRulesEnabled_ThenRenderDe
 
 func Test_PrometheusRule_GivenEnabled_ConfigureEnabledRules(t *testing.T) {
 	renderWithRulesFor := func(rules []string) []monitoringv1.Rule {
-		options := &helm.Options{
+		options := withReleaseNamespace(&helm.Options{
 			SetValues: map[string]string{
 				"metrics.prometheusRule.enabled":           "true",
 				"metrics.prometheusRule.jobFailedRulesFor": "{" + strings.Join(rules, ",") + "}",
 			},
-		}
+		})
 		output := helm.RenderTemplate(t, options, helmChartPath, releaseName, tplPrometheusRule)
 		rule := monitoringv1.PrometheusRule{}
 		helm.UnmarshalK8SYaml(t, output, &rule)
@@ -92,24 +121,24 @@ func Test_PrometheusRule_GivenEnabled_ConfigureEnabledRules(t *testing.T) {
 }
 
 func Test_PrometheusRule_GivenEnabled_WhenCreateDefaultRulesDisabled_ThenRenderNoTemplate(t *testing.T) {
-	options := &helm.Options{
+	options := withReleaseNamespace(&helm.Options{
 		SetValues: map[string]string{
 			"metrics.prometheusRule.enabled":            "true",
 			"metrics.prometheusRule.createDefaultRules": "false",
 		},
-	}
+	})
 
 	_, err := helm.RenderTemplateE(t, options, helmChartPath, releaseName, tplPrometheusRule)
 	assert.Error(t, err)
 }
 
 func Test_PrometheusRule_GivenEnabled_WhenCreateDefaultRulesDisabledAndAdditionalRulesGiven_ThenRenderCustomRules(t *testing.T) {
-	options := &helm.Options{
+	options := withReleaseNamespace(&helm.Options{
 		SetValues: map[string]string{
 			"metrics.prometheusRule.createDefaultRules": "false",
 		},
 		ValuesFiles: []string{"testdata/custom_rules.yaml"},
-	}
+	})
 
 	output := helm.RenderTemplate(t, options, helmChartPath, releaseName, tplPrometheusRule)
 	rule := monitoringv1.PrometheusRule{}
