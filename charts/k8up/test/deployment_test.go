@@ -20,7 +20,7 @@ func Test_Deployment_ShouldRender_EnvironmentVariables(t *testing.T) {
 	wantVar := "BACKUP_IMAGE"
 	wantTimezone := "Europe/Zurich"
 	wantCpuRequest := "10m"
-	options := &helm.Options{
+	options := withReleaseNamespace(&helm.Options{
 		ValuesFiles: []string{"testdata/deployment_1.yaml"},
 		SetValues: map[string]string{
 			"k8up.backupImage.repository":       wantRepo,
@@ -28,7 +28,7 @@ func Test_Deployment_ShouldRender_EnvironmentVariables(t *testing.T) {
 			"k8up.timezone":                     wantTimezone,
 			"k8up.globalResources.requests.cpu": wantCpuRequest,
 		},
-	}
+	})
 
 	got := renderDeployment(t, options, false)
 
@@ -47,9 +47,9 @@ func Test_Deployment_ShouldRender_EnvironmentVariables(t *testing.T) {
 }
 
 func Test_Deployment_ShouldRender_Affinity(t *testing.T) {
-	options := &helm.Options{
+	options := withReleaseNamespace(&helm.Options{
 		ValuesFiles: []string{"testdata/deployment_1.yaml"},
-	}
+	})
 
 	got := renderDeployment(t, options, false)
 
@@ -60,20 +60,21 @@ func Test_Deployment_ShouldRender_Affinity(t *testing.T) {
 
 func Test_Deployment_ShouldRender_DefaultServiceAccount(t *testing.T) {
 	want := releaseName + "-k8up"
-	options := &helm.Options{}
+	options := withReleaseNamespace(&helm.Options{})
 
 	got := renderDeployment(t, options, false)
 	serviceName := got.Spec.Template.Spec.ServiceAccountName
 	assert.Equal(t, want, serviceName, "Deployment does not render configured serviceName")
+	assert.Equal(t, releaseNamespace, got.Namespace, "Deployment should render in the configured release namespace by default")
 }
 
 func Test_Deployment_ShouldRender_CustomServiceAccount(t *testing.T) {
 	want := "test"
-	options := &helm.Options{
+	options := withReleaseNamespace(&helm.Options{
 		SetValues: map[string]string{
 			"serviceAccount.name": want,
 		},
-	}
+	})
 
 	got := renderDeployment(t, options, false)
 
@@ -81,13 +82,27 @@ func Test_Deployment_ShouldRender_CustomServiceAccount(t *testing.T) {
 	assert.Equal(t, want, serviceName, "Deployment does not render configured serviceName")
 }
 
+func Test_Deployment_ShouldRender_OverrideNamespace(t *testing.T) {
+	options := withReleaseNamespace(&helm.Options{
+		SetValues: map[string]string{
+			"namespaceOverride": overrideNamespace,
+		},
+	})
+
+	got := renderDeployment(t, options, false)
+
+	assert.Equal(t, overrideNamespace, got.Namespace, "Deployment should use the overridden namespace")
+	assert.Equal(t, "BACKUP_OPERATOR_NAMESPACE", got.Spec.Template.Spec.Containers[0].Env[4].Name)
+	assert.Equal(t, "metadata.namespace", got.Spec.Template.Spec.Containers[0].Env[4].ValueFrom.FieldRef.FieldPath)
+}
+
 func Test_Deployment_ShouldRender_Resources(t *testing.T) {
 	want := "1Gi"
-	options := &helm.Options{
+	options := withReleaseNamespace(&helm.Options{
 		SetValues: map[string]string{
 			"resources.limits.memory": want,
 		},
-	}
+	})
 
 	got := renderDeployment(t, options, false)
 	resources := got.Spec.Template.Spec.Containers[0].Resources
@@ -95,7 +110,7 @@ func Test_Deployment_ShouldRender_Resources(t *testing.T) {
 }
 
 func Test_Deployment_ShouldRender_Labels(t *testing.T) {
-	options := &helm.Options{}
+	options := withReleaseNamespace(&helm.Options{})
 
 	got := renderDeployment(t, options, false)
 

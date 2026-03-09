@@ -17,11 +17,11 @@ var (
 
 func Test_Service_WhenServicePortOverridden_ThenRenderNewPort(t *testing.T) {
 	expectedPort := int32(9090)
-	options := &helm.Options{
+	options := withReleaseNamespace(&helm.Options{
 		SetValues: map[string]string{
 			"metrics.service.port": fmt.Sprintf("%d", expectedPort),
 		},
-	}
+	})
 
 	service := renderService(t, options, false)
 
@@ -30,12 +30,12 @@ func Test_Service_WhenServicePortOverridden_ThenRenderNewPort(t *testing.T) {
 
 func Test_Service_GivenTypeNodePort_WhenNodePortDefine_ThenRenderNodePort(t *testing.T) {
 	expectedPort := int32(30090)
-	options := &helm.Options{
+	options := withReleaseNamespace(&helm.Options{
 		SetValues: map[string]string{
 			"metrics.service.nodePort": fmt.Sprintf("%d", expectedPort),
 			"metrics.service.type":     "NodePort",
 		},
-	}
+	})
 
 	service := renderService(t, options, false)
 
@@ -45,13 +45,26 @@ func Test_Service_GivenTypeNodePort_WhenNodePortDefine_ThenRenderNodePort(t *tes
 
 func Test_Service_GivenDefaultValues_ThenRenderMatchingLabelsWithDeployment(t *testing.T) {
 	expectedName := releaseName + "-k8up-metrics"
-	options := &helm.Options{}
+	options := withReleaseNamespace(&helm.Options{})
 
 	service := renderService(t, options, false)
 	deployment := renderDeployment(t, options, false)
 
 	assert.Equal(t, expectedName, service.Name, "Service does not use configured name")
+	assert.Equal(t, releaseNamespace, service.Namespace, "Service should render in the configured release namespace by default")
 	assert.Equal(t, service.Spec.Selector, deployment.Spec.Template.Labels, "Service labels do not match with deployment labels")
+}
+
+func Test_Service_GivenNamespaceOverride_ThenRenderOverrideNamespace(t *testing.T) {
+	options := withReleaseNamespace(&helm.Options{
+		SetValues: map[string]string{
+			"namespaceOverride": overrideNamespace,
+		},
+	})
+
+	service := renderService(t, options, false)
+
+	assert.Equal(t, overrideNamespace, service.Namespace, "Service should use the overridden namespace")
 }
 
 func renderService(t *testing.T, options *helm.Options, wantErr bool) *corev1.Service {

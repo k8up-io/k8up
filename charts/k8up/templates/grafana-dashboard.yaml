@@ -3,7 +3,7 @@ kind: ConfigMap
 apiVersion: v1
 metadata:
   name: {{ include "k8up.fullname" . }}-grafana-dashboard
-  namespace: {{ default .Release.Namespace .Values.metrics.grafanaDashboard.namespace }}
+  namespace: {{ default (include "k8up.namespace" .) .Values.metrics.grafanaDashboard.namespace }}
   labels:
     {{- include "k8up.labels" . | nindent 4 }}
     {{- with .Values.metrics.grafanaDashboard.additionalLabels }}
