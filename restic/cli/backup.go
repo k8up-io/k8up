@@ -129,7 +129,7 @@ func (r *Restic) sendBackupStats(summary logging.BackupSummary, errorCount int, 
 
 // sendSnapshotList sends the current list of snapshots to a webhook and the k8s cluster
 func (r *Restic) sendSnapshotList() {
-	err := r.Snapshots(nil)
+	err := r.Snapshots(nil, nil)
 	if err != nil {
 		r.logger.Error(err, "cannot fetch current snapshot list for webhook")
 	}
@@ -157,7 +157,7 @@ func (r *Restic) sendSnapshotList() {
 
 func (r *Restic) triggerBackup(logger logr.Logger, tags ArrayOpts, opts CommandOptions, data *kubernetes.ExecData) error {
 	if len(tags) > 0 {
-		opts.Args = append(opts.Args, tags.BuildArgs()...)
+		opts.Args = append(opts.Args, tags.BuildArgs("--tag")...)
 	}
 
 	cmd := NewCommand(r.ctx, logger, opts)

@@ -58,7 +58,7 @@ func (r *Restic) Prune(tags ArrayOpts) error {
 	}
 
 	if len(tags) > 0 {
-		opts.Args = append(opts.Args, tags.BuildArgs()...)
+		opts.Args = append(opts.Args, tags.BuildArgs("--tag")...)
 	}
 
 	cmd := NewCommand(r.ctx, prunelogger, opts)

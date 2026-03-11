@@ -90,7 +90,8 @@ type Configuration struct {
 	PruneKeepWithinMonthly string
 	PruneKeepWithinYearly  string
 
-	Tags []string
+	Tags  []string
+	Paths []string
 
 	TargetPods []string
 

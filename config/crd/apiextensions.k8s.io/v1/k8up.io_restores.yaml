@@ -508,6 +508,12 @@ spec:
 
                   Deprecated: Use FailedJobsHistoryLimit and SuccessfulJobsHistoryLimit respectively.
                 type: integer
+              paths:
+                description: Paths is a list of paths that are contained with in a
+                  snapshot and can be filtered by
+                items:
+                  type: string
+                type: array
               podConfigRef:
                 description: |-
                   PodConfigRef describes the pod spec with wich this action shall be executed.

@@ -10,16 +10,16 @@ import (
 
 // Snapshots lists all the snapshots from the repository and saves them in the
 // restic instance for further use.
-func (r *Restic) Snapshots(tags ArrayOpts) error {
-	return r.listSnapshots(tags, false)
+func (r *Restic) Snapshots(tags ArrayOpts, paths ArrayOpts) error {
+	return r.listSnapshots(tags, paths, false)
 }
 
 // LastSnapshots only returns the latests snapshots for a given set of tags.
-func (r *Restic) LastSnapshots(tags ArrayOpts) error {
-	return r.listSnapshots(tags, true)
+func (r *Restic) LastSnapshots(tags ArrayOpts, paths ArrayOpts) error {
+	return r.listSnapshots(tags, paths, true)
 }
 
-func (r *Restic) listSnapshots(tags ArrayOpts, last bool) error {
+func (r *Restic) listSnapshots(tags ArrayOpts, paths ArrayOpts, last bool) error {
 	snaplogger := r.logger.WithName("snapshots")
 
 	snaplogger.Info("getting list of snapshots")
@@ -34,7 +34,11 @@ func (r *Restic) listSnapshots(tags ArrayOpts, last bool) error {
 	}
 
 	if len(tags) > 0 {
-		opts.Args = append(opts.Args, tags.BuildArgs()...)
+		opts.Args = append(opts.Args, tags.BuildArgs("--tag")...)
+	}
+
+	if len(paths) > 0 {
+		opts.Args = append(opts.Args, paths.BuildArgs("--path")...)
 	}
 
 	cmd := NewCommand(r.ctx, snaplogger, opts)
