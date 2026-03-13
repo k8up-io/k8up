@@ -32,6 +32,9 @@ type RestoreSpec struct {
 	SuccessfulJobsHistoryLimit *int `json:"successfulJobsHistoryLimit,omitempty"`
 	// Tags is a list of arbitrary tags that get added to the backup via Restic's tagging system
 	Tags []string `json:"tags,omitempty"`
+	// Delete ensures the state after restoring a snapshot is identical to the snapshot
+	// Deletes files from target if they do not exist in snapshot
+	Delete bool `json:"delete,omitempty"`
 }
 
 // RestoreMethod contains how and where the restore should happen

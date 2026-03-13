@@ -47,6 +47,7 @@ OPTIONS:
    --iExclude pattern [ --iExclude pattern ]                                      In backup, passed to restic: same as --exclude pattern but ignores the casing of filenames [$RESTIC_IEXCLUDE]
    --iExcludeFile pattern [ --iExcludeFile pattern ]                              In backup, passed to restic: same as --exclude-file pattern but ignores the casing of filenames [$RESTIC_IEXCLUDE_FILE]
    --oneFileSystem                                                                In backup, passed to restic: exclude other file systems, don't cross filesystem boundaries and subvolumes (default: false) [$RESTIC_ONE_FILESYSTEM]
+   --delete                                                                       Deletes files from target if they do not exist in snapshot (default: false)
    --keepLatest value                                                             While pruning, keep at the latest snapshot (default: 0) [$KEEP_LAST, $KEEP_LATEST]
    --keepHourly value                                                             While pruning, keep hourly snapshots (default: 0) [$KEEP_HOURLY]
    --keepDaily value                                                              While pruning, keep daily snapshots (default: 0) [$KEEP_DAILY]

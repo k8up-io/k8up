@@ -36,6 +36,7 @@ type RestoreOptions struct {
 	RestoreType   RestoreType
 	RestoreDir    string
 	RestoreFilter string
+	Delete        bool
 	Verify        bool
 	S3Destination S3Bucket
 }
@@ -92,7 +93,7 @@ func (r *Restic) Restore(snapshotID string, options RestoreOptions, tags ArrayOp
 	var stats *RestoreStats
 	switch options.RestoreType {
 	case FolderRestore:
-		err = r.folderRestore(options.RestoreDir, latestSnap, options.RestoreFilter, options.Verify, restorelogger)
+		err = r.folderRestore(options.RestoreDir, latestSnap, options.RestoreFilter, options.Delete, options.Verify, restorelogger)
 		stats = &RestoreStats{
 			RestoreLocation: options.RestoreDir,
 			RestoredFiles:   []string{"not supported for folder restores"},
@@ -144,7 +145,7 @@ func (r *Restic) getLatestSnapshot(snapshotID string, log logr.Logger) (dto.Snap
 	return snapshot, err
 }
 
-func (r *Restic) folderRestore(restoreDir string, snapshot dto.Snapshot, restoreFilter string, verify bool, log logr.Logger) error {
+func (r *Restic) folderRestore(restoreDir string, snapshot dto.Snapshot, restoreFilter string, delete bool, verify bool, log logr.Logger) error {
 	var snap string
 
 	singleFile, err := r.isRestoreSingleFile(log, snapshot)
@@ -173,6 +174,10 @@ func (r *Restic) folderRestore(restoreDir string, snapshot dto.Snapshot, restore
 
 	if verify {
 		args = append(args, "--verify")
+	}
+
+	if delete {
+		args = append(args, "--delete")
 	}
 
 	resticRestoreLogger := log.WithName("restic")

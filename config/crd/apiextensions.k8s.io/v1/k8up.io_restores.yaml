@@ -492,6 +492,11 @@ spec:
                       type: object
                     type: array
                 type: object
+              delete:
+                description: |-
+                  Delete ensures the state after restoring a snapshot is identical to the snapshot
+                  Deletes files from target if they do not exist in snapshot
+                type: boolean
               failedJobsHistoryLimit:
                 description: |-
                   FailedJobsHistoryLimit amount of failed jobs to keep for later analysis.
