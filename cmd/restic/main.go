@@ -53,6 +53,7 @@ var (
 			&cli.StringFlag{Destination: &cfg.Config.BackupFileExtensionAnnotation, Name: "fileExtensionAnnotation", EnvVars: []string{"FILEEXTENSION_ANNOTATION"}, Usage: "Defines the file extension to use for STDOUT backups."},
 			&cli.StringFlag{Destination: &cfg.Config.BackupContainerAnnotation, Name: "backucontainerannotation", EnvVars: []string{"BACKUP_CONTAINERANNOTATION"}, Value: "k8up.io/backupcommand-container", Usage: "set the annotation name that specify the backup container inside the Pod"},
 			&cli.BoolFlag{Destination: &cfg.Config.SkipPreBackup, Name: "skipPreBackup", EnvVars: []string{"SKIP_PREBACKUP"}, Usage: "If the job should skip the backup command and only backup volumes."},
+			&cli.BoolFlag{Destination: &cfg.Config.SkipSnapshotSync, Name: "skipSnapshotSync", EnvVars: []string{"BACKUP_SKIP_SNAPSHOT_SYNC"}, Usage: "If set, skip synchronizing Snapshot custom resources to the cluster after backup or prune operations. Webhook notifications are still sent."},
 
 			&cli.StringFlag{Destination: &cfg.Config.PromURL, Name: "promURL", EnvVars: []string{"PROM_URL"}, Usage: "Sets the URL of a prometheus push gateway to report metrics."},
 			&cli.StringFlag{Destination: &cfg.Config.ClusterName, Name: "clusterName", EnvVars: []string{"CLUSTER_NAME"}, Usage: "Sets the Kubernetes cluster name for grouping metrics in push gateway"},

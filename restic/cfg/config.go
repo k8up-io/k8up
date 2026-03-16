@@ -33,7 +33,8 @@ type Configuration struct {
 	BackupContainerAnnotation     string
 	BackupDir                     string
 
-	SkipPreBackup bool
+	SkipPreBackup    bool
+	SkipSnapshotSync bool
 
 	PromURL     string
 	ClusterName string
