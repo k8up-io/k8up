@@ -60,6 +60,8 @@ type Configuration struct {
 	IExcludeFile      []string
 	OneFileSystem     bool
 
+	RestoreTimeFilter string
+
 	RestoreDir         string
 	RestoreS3Endpoint  string
 	RestoreS3AccessKey string

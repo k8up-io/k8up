@@ -16,7 +16,9 @@ type RestoreSpec struct {
 
 	RestoreMethod *RestoreMethod `json:"restoreMethod,omitempty"`
 	RestoreFilter string         `json:"restoreFilter,omitempty"`
-	Snapshot      string         `json:"snapshot,omitempty"`
+	// Simple filter to define a timestamp (prefix, YYYY-MM-DD hh:mm:ss) for snapshot selection instead of latest (or latest if nothing matches)
+	RestoreTimeFilter string `json:"restoreTimeFilter,omitempty"`
+	Snapshot          string `json:"snapshot,omitempty"`
 	// KeepJobs amount of jobs to keep for later analysis.
 	//
 	// Deprecated: Use FailedJobsHistoryLimit and SuccessfulJobsHistoryLimit respectively.

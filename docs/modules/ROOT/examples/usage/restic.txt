@@ -23,6 +23,7 @@ OPTIONS:
    --backupDir value                                                              Set from which directory the backup should be performed. (default: "/data") [$BACKUP_DIR]
    --restoreDir value                                                             Set to which directory the restore should be performed. (default: "/data") [$RESTORE_DIR]
    --restoreFilter value                                                          Simple filter to define what should get restored. For example the PVC name
+   --restoreTimeFilter value                                                      Simple filter to define a timestamp (prefix, YYYY-MM-DD hh:mm:ss) for snapshot selection instead of latest (or latest if nothing matches)
    --restoreSnap value                                                            Snapshot ID, if empty takes the latest snapshot
    --restoreType value                                                            Type of this restore, 'folder' or 's3'
    --restoreS3AccessKey value                                                     S3 access key used to connect to the S3 endpoint when restoring [$RESTORE_ACCESSKEYID]

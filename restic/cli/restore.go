@@ -33,12 +33,13 @@ type RestoreType string
 
 // RestoreOptions holds options for a single restore, like type and destination.
 type RestoreOptions struct {
-	RestoreType   RestoreType
-	RestoreDir    string
-	RestoreFilter string
-	Delete        bool
-	Verify        bool
-	S3Destination S3Bucket
+	RestoreType       RestoreType
+	RestoreDir        string
+	RestoreFilter     string
+	RestoreTimeFilter string
+	Delete            bool
+	Verify            bool
+	S3Destination     S3Bucket
 }
 
 type S3Bucket struct {
@@ -85,7 +86,7 @@ func (r *Restic) Restore(snapshotID string, options RestoreOptions, tags ArrayOp
 		return err
 	}
 
-	latestSnap, err := r.getLatestSnapshot(snapshotID, restorelogger)
+	latestSnap, err := r.getLatestSnapshot(snapshotID, options.RestoreTimeFilter, restorelogger)
 	if err != nil {
 		return err
 	}
@@ -117,7 +118,7 @@ func (r *Restic) Restore(snapshotID string, options RestoreOptions, tags ArrayOp
 	return err
 }
 
-func (r *Restic) getLatestSnapshot(snapshotID string, log logr.Logger) (dto.Snapshot, error) {
+func (r *Restic) getLatestSnapshot(snapshotID string, timeFilter string, log logr.Logger) (dto.Snapshot, error) {
 	snapshot := dto.Snapshot{}
 
 	if len(r.snapshots) == 0 {
@@ -127,6 +128,20 @@ func (r *Restic) getLatestSnapshot(snapshotID string, log logr.Logger) (dto.Snap
 	}
 
 	if snapshotID == "" {
+		if timeFilter != "" {
+			log.Info("no snapshot defined, but time filter specified; using filter match or latest")
+
+			for i := len(r.snapshots) - 1; i >= 0; i-- {
+				snapshot = r.snapshots[i]
+				timeString := snapshot.Time.String()
+
+				if strings.HasPrefix(timeString, timeFilter) {
+					log.Info("Found snapshot matching timeFilter", "id", snapshot.ID, "created at", timeString)
+					return snapshot, nil
+				}
+			}
+		}
+
 		log.Info("no snapshot defined, using latest one")
 		snapshot = r.snapshots[len(r.snapshots)-1]
 		log.Info("found snapshot", "date", snapshot.Time)
@@ -301,7 +316,7 @@ func (r *Restic) s3Restore(log logr.Logger, s3Options S3Bucket, snapshot dto.Sna
 }
 
 func (r *Restic) s3Transmission(log logr.Logger, stats *RestoreStats, s3writer *io.PipeWriter) error {
-	latestSnap, err := r.getLatestSnapshot(stats.SnapshotID, log)
+	latestSnap, err := r.getLatestSnapshot(stats.SnapshotID, "", log)
 	if err != nil {
 		return err
 	}

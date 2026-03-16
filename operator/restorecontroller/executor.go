@@ -112,6 +112,10 @@ func (r *RestoreExecutor) setupArgs(restore *k8upv1.Restore) ([]string, error) {
 		args = append(args, "-restoreSnap", restore.Spec.Snapshot)
 	}
 
+	if restore.Spec.RestoreTimeFilter != "" {
+		args = append(args, "-restoreTimeFilter", restore.Spec.RestoreTimeFilter)
+	}
+
 	switch {
 	case restore.Spec.RestoreMethod.Folder != nil:
 		args = append(args, "-restoreType", "folder")

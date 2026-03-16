@@ -967,6 +967,11 @@ spec:
                       type: object
                     type: array
                 type: object
+              restoreTimeFilter:
+                description: Simple filter to define a timestamp (prefix, YYYY-MM-DD
+                  hh:mm:ss) for snapshot selection instead of latest (or latest if
+                  nothing matches)
+                type: string
               snapshot:
                 type: string
               successfulJobsHistoryLimit:
