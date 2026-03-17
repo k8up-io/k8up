@@ -35,6 +35,12 @@ var (
 	})
 )
 
+func CreateLabel(namespace string, jobType v1.JobType) {
+	metricsFailureCounter.WithLabelValues(namespace, jobType.String())
+	metricsSuccessCounter.WithLabelValues(namespace, jobType.String())
+	metricsTotalCounter.WithLabelValues(namespace, jobType.String())
+}
+
 func IncFailureCounters(namespace string, jobType v1.JobType) {
 	metricsFailureCounter.WithLabelValues(namespace, jobType.String()).Inc()
 	metricsTotalCounter.WithLabelValues(namespace, jobType.String()).Inc()
