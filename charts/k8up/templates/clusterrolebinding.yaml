@@ -12,5 +12,5 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: {{ include "k8up.serviceAccountName" . }}
-  namespace: {{ .Release.Namespace }}
+  namespace: {{ include "k8up.namespace" . }}
 {{- end }}
