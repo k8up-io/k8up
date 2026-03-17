@@ -5,6 +5,33 @@ metadata:
   name: manager-role
 rules:
 - apiGroups:
+  - ""
+  resources:
+  - events
+  verbs:
+  - create
+  - patch
+- apiGroups:
+  - ""
+  resources:
+  - persistentvolumeclaims
+  - persistentvolumes
+  - pods
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - serviceaccounts
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - watch
+- apiGroups:
   - apps
   resources:
   - deployments
@@ -38,50 +65,17 @@ rules:
   - list
   - update
 - apiGroups:
-  - ""
-  resources:
-  - events
-  verbs:
-  - create
-  - patch
-- apiGroups:
-  - ""
-  resources:
-  - persistentvolumeclaims
-  verbs:
-  - get
-  - list
-  - watch
-- apiGroups:
-  - ""
-  resources:
-  - persistentvolumes
-  verbs:
-  - get
-  - list
-  - watch
-- apiGroups:
-  - ""
-  resources:
-  - pods
-  verbs:
-  - get
-  - list
-  - watch
-- apiGroups:
-  - ""
-  resources:
-  - serviceaccounts
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - watch
-- apiGroups:
   - k8up.io
   resources:
   - archives
+  - backups
+  - checks
+  - effectiveschedules
+  - prebackuppods
+  - prunes
+  - restores
+  - schedules
+  - snapshots
   verbs:
   - create
   - delete
@@ -95,64 +89,24 @@ rules:
   resources:
   - archives/finalizers
   - archives/status
-  verbs:
-  - get
-  - patch
-  - update
-- apiGroups:
-  - k8up.io
-  resources:
-  - backups
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - k8up.io
-  resources:
   - backups/finalizers
   - backups/status
-  verbs:
-  - get
-  - patch
-  - update
-- apiGroups:
-  - k8up.io
-  resources:
-  - checks
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - k8up.io
-  resources:
   - checks/finalizers
   - checks/status
+  - prebackuppods/finalizers
+  - prebackuppods/status
+  - prunes/finalizers
+  - prunes/status
+  - restores/finalizers
+  - restores/status
+  - schedules/finalizers
+  - schedules/status
+  - snapshots/finalizers
+  - snapshots/status
   verbs:
   - get
   - patch
   - update
-- apiGroups:
-  - k8up.io
-  resources:
-  - effectiveschedules
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
 - apiGroups:
   - k8up.io
   resources:
@@ -167,111 +121,6 @@ rules:
   - get
   - list
   - watch
-- apiGroups:
-  - k8up.io
-  resources:
-  - prebackuppods
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - k8up.io
-  resources:
-  - prebackuppods/finalizers
-  - prebackuppods/status
-  verbs:
-  - get
-  - patch
-  - update
-- apiGroups:
-  - k8up.io
-  resources:
-  - prunes
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - k8up.io
-  resources:
-  - prunes/finalizers
-  - prunes/status
-  verbs:
-  - get
-  - patch
-  - update
-- apiGroups:
-  - k8up.io
-  resources:
-  - restores
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - k8up.io
-  resources:
-  - restores/finalizers
-  - restores/status
-  verbs:
-  - get
-  - patch
-  - update
-- apiGroups:
-  - k8up.io
-  resources:
-  - schedules
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - k8up.io
-  resources:
-  - schedules/finalizers
-  - schedules/status
-  verbs:
-  - get
-  - patch
-  - update
-- apiGroups:
-  - k8up.io
-  resources:
-  - snapshots
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - k8up.io
-  resources:
-  - snapshots/finalizers
-  - snapshots/status
-  verbs:
-  - get
-  - patch
-  - update
 - apiGroups:
   - rbac.authorization.k8s.io
   resourceNames:
