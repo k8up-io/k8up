@@ -2,6 +2,7 @@ package reconciler
 
 import (
 	"context"
+	"time"
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	controllerruntime "sigs.k8s.io/controller-runtime"
@@ -59,7 +60,7 @@ func (ctrl *controller[T, L]) Reconcile(ctx context.Context, request controllerr
 	if apierrors.IsConflict(provisionErr) { // ignore "the object has been modified; please apply your changes to the latest version and try again" error, but requeue
 		log := controllerruntime.LoggerFrom(ctx)
 		log.Info("Object has been modified, retrying...", "error", provisionErr.Error())
-		res.Requeue = true
+		res.RequeueAfter = 1 * time.Second
 		return res, nil
 	}
 	return res, provisionErr
