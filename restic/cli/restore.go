@@ -8,9 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"os"
 	"path"
-	"path/filepath"
 	"strings"
 	"time"
 
@@ -147,7 +145,7 @@ func (r *Restic) getLatestSnapshot(snapshotID string, log logr.Logger) (dto.Snap
 }
 
 func (r *Restic) folderRestore(restoreDir string, snapshot dto.Snapshot, restoreFilter string, verify bool, log logr.Logger) error {
-	var linkedDir string
+	var snap string
 
 	singleFile, err := r.isRestoreSingleFile(log, snapshot)
 	if err != nil {
@@ -155,30 +153,20 @@ func (r *Restic) folderRestore(restoreDir string, snapshot dto.Snapshot, restore
 	}
 
 	if !singleFile && cfg.Config.RestoreTrimPath {
-		restoreRoot, err := r.linkRestorePaths(snapshot, restoreDir)
-		if err != nil {
-			return err
-		}
+		restoreRoot := r.trimRestorePath(snapshot)
 
-		defer func(path string) {
-			err := os.RemoveAll(path)
-			if err != nil {
-				log.Error(err, "unable to clean up the files", "path", path)
-			}
-		}(restoreRoot)
-		linkedDir = restoreRoot
+		snap = fmt.Sprintf("%s:%s", snapshot.ID, restoreRoot)
 	} else {
-		linkedDir = restoreDir
+		snap = snapshot.ID
 	}
 
 	log.Info("folder restore",
 		"restoreDir", restoreDir,
 		"trimPath", cfg.Config.RestoreTrimPath,
-		"linkedDir", linkedDir,
 		"restoreFilter", restoreFilter,
 		"snapshotID", snapshot.ID)
 
-	args := []string{snapshot.ID, "--target", linkedDir}
+	args := []string{snap, "--target", restoreDir}
 	if restoreFilter != "" {
 		args = append(args, "--include", restoreFilter)
 	}
@@ -201,37 +189,13 @@ func (r *Restic) folderRestore(restoreDir string, snapshot dto.Snapshot, restore
 	return nil
 }
 
-// linkRestorePaths will trim away the first two levels of the snapshotpath
-// then create the first level as a folder in the temp dir and the second
-// level as a symlink pointing to the mounted volume (usually /restore). It
-// returns that temp path as the string used for the actual restore.This way the
-// root of the backed up PVC will be the root of the restored PVC thus creating
-// a carbon copy of the original and ready to be used again.
-func (r *Restic) linkRestorePaths(snapshot dto.Snapshot, restoreDir string) (string, error) {
+// trimRestorePath will trim away the first two levels of the snapshotpath.
+// Previously k8up did a symlink to the correct path to trim away the full path.
+// However as of restic >= 0.16.0 this won't work anymore, but it added a feature
+// to trim the paths.
+func (r *Restic) trimRestorePath(snapshot dto.Snapshot) string {
 	// restic snapshots only every contain exactly one path
-	snapshotPath := snapshot.Paths[0]
-	splitted := strings.Split(snapshotPath, "/")
-	joined := filepath.Join(splitted[:3]...)
-	restoreRoot := filepath.Join(os.TempDir(), "restore")
-
-	absolute := filepath.Join(restoreRoot, joined)
-	makePath := filepath.Dir(absolute)
-
-	err := os.MkdirAll(restoreDir, os.ModeDir+os.ModePerm)
-	if err != nil {
-		return "", err
-	}
-	err = os.MkdirAll(makePath, os.ModeDir+os.ModePerm)
-	if err != nil {
-		return "", err
-	}
-
-	err = os.Symlink(restoreDir, absolute)
-	if err != nil {
-		return "", err
-	}
-
-	return restoreRoot, nil
+	return snapshot.Paths[0]
 }
 
 func (r *Restic) isRestoreSingleFile(log logr.Logger, snapshot dto.Snapshot) (bool, error) {
