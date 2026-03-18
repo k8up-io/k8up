@@ -962,6 +962,11 @@ spec:
                           type: object
                         type: array
                     type: object
+                  restoreTimeFilter:
+                    description: Simple filter to define a timestamp (prefix, YYYY-MM-DD
+                      hh:mm:ss) for snapshot selection instead of latest (or latest
+                      if nothing matches)
+                    type: string
                   schedule:
                     description: ScheduleDefinition is the actual cron-type expression
                       that defines the interval of the actions.
@@ -5779,6 +5784,11 @@ spec:
                           type: object
                         type: array
                     type: object
+                  restoreTimeFilter:
+                    description: Simple filter to define a timestamp (prefix, YYYY-MM-DD
+                      hh:mm:ss) for snapshot selection instead of latest (or latest
+                      if nothing matches)
+                    type: string
                   schedule:
                     description: ScheduleDefinition is the actual cron-type expression
                       that defines the interval of the actions.

@@ -149,6 +149,8 @@ spec:
         key: password
 ----
 
+To restore from a snapshot older then latest, one can specify `spec.restoreTimeFilter` above, which takes a date string in the form of `YYYY-MM-DD hh:mm:ss` or any prefix of this. This way, the latest snapshot whose timestamp matches this pattern. So for example `2026-03-18` would use the latest snapshot from that day. In the case that no matching snapshot exists, the system will fall back to the default behaviour of using the latest snapshot overall.
+
 === Restore to PVC as non-root user
 
 For some storage volumes it may be necessary to adjust permissions as non-root user, otherwise the restore could fail due to "permission denied" errors.

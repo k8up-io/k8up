@@ -66,6 +66,7 @@ var (
 			&cli.StringFlag{Destination: &cfg.Config.RestoreDir, Name: "restoreDir", EnvVars: []string{restoreDirEnvKey}, Value: "/data", Usage: "Set to which directory the restore should be performed."},
 
 			&cli.StringFlag{Destination: &cfg.Config.RestoreFilter, Name: "restoreFilter", Usage: "Simple filter to define what should get restored. For example the PVC name"},
+			&cli.StringFlag{Destination: &cfg.Config.RestoreTimeFilter, Name: "restoreTimeFilter", Usage: "Simple filter to define a timestamp (prefix, YYYY-MM-DD hh:mm:ss) for snapshot selection instead of latest (or latest if nothing matches)"},
 			&cli.StringFlag{Destination: &cfg.Config.RestoreSnap, Name: "restoreSnap", Usage: "Snapshot ID, if empty takes the latest snapshot"},
 			&cli.StringFlag{Destination: &cfg.Config.RestoreType, Name: restoreTypeArg, Usage: "Type of this restore, 'folder' or 's3'"},
 			&cli.StringFlag{Destination: &cfg.Config.RestoreS3AccessKey, Name: restoreS3AccessKeyIDArg, EnvVars: []string{"RESTORE_ACCESSKEYID"}, Usage: "S3 access key used to connect to the S3 endpoint when restoring"},
@@ -240,11 +241,12 @@ func doRestore(resticCLI *resticCli.Restic) error {
 	}
 
 	restoreOptions := resticCli.RestoreOptions{
-		RestoreType:   resticCli.RestoreType(cfg.Config.RestoreType),
-		RestoreDir:    cfg.Config.RestoreDir,
-		RestoreFilter: cfg.Config.RestoreFilter,
-		Delete:        cfg.Config.Delete,
-		Verify:        cfg.Config.VerifyRestore,
+		RestoreType:       resticCli.RestoreType(cfg.Config.RestoreType),
+		RestoreDir:        cfg.Config.RestoreDir,
+		RestoreFilter:     cfg.Config.RestoreFilter,
+		RestoreTimeFilter: cfg.Config.RestoreTimeFilter,
+		Delete:            cfg.Config.Delete,
+		Verify:            cfg.Config.VerifyRestore,
 		S3Destination: resticCli.S3Bucket{
 			Endpoint:  cfg.Config.RestoreS3Endpoint,
 			AccessKey: cfg.Config.RestoreS3AccessKey,
