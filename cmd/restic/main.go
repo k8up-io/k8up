@@ -92,6 +92,7 @@ var (
 			&cli.StringSliceFlag{Name: "iExclude", EnvVars: []string{"RESTIC_IEXCLUDE"}, Usage: "In backup, passed to restic: same as --exclude `pattern` but ignores the casing of filenames"},
 			&cli.StringSliceFlag{Name: "iExcludeFile", EnvVars: []string{"RESTIC_IEXCLUDE_FILE"}, Usage: "In backup, passed to restic: same as --exclude-file `pattern` but ignores the casing of filenames"},
 			&cli.BoolFlag{Destination: &cfg.Config.OneFileSystem, Name: "oneFileSystem", EnvVars: []string{"RESTIC_ONE_FILESYSTEM"}, Usage: "In backup, passed to restic: exclude other file systems, don't cross filesystem boundaries and subvolumes"},
+			&cli.BoolFlag{Destination: &cfg.Config.Delete, Name: "delete", Usage: "Deletes files from target if they do not exist in snapshot"},
 
 			&cli.IntFlag{Destination: &cfg.Config.PruneKeepLast, Name: "keepLatest", EnvVars: []string{"KEEP_LAST", "KEEP_LATEST"}, Usage: "While pruning, keep at the latest snapshot"},
 			&cli.IntFlag{Destination: &cfg.Config.PruneKeepHourly, Name: "keepHourly", EnvVars: []string{"KEEP_HOURLY"}, Usage: "While pruning, keep hourly snapshots"},
@@ -242,6 +243,7 @@ func doRestore(resticCLI *resticCli.Restic) error {
 		RestoreType:   resticCli.RestoreType(cfg.Config.RestoreType),
 		RestoreDir:    cfg.Config.RestoreDir,
 		RestoreFilter: cfg.Config.RestoreFilter,
+		Delete:        cfg.Config.Delete,
 		Verify:        cfg.Config.VerifyRestore,
 		S3Destination: resticCli.S3Bucket{
 			Endpoint:  cfg.Config.RestoreS3Endpoint,

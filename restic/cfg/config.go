@@ -47,6 +47,7 @@ type Configuration struct {
 	ResticRepository string
 	ResticOptions    string
 
+	Delete            bool
 	Exclude           []string
 	ExcludeCaches     bool
 	ExcludeFile       []string
