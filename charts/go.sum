@@ -136,8 +136,8 @@ github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 h1:Jamvg5psRI
 github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/pquerna/otp v1.2.0 h1:/A3+Jn+cagqayeR3iHs/L62m5ue7710D35zl1zJ1kok=
 github.com/pquerna/otp v1.2.0/go.mod h1:dkJfzwRKNiegxyNb54X/3fLwhCynbMspSyWKnvi1AEg=
-github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.59.2 h1:QCykBFSafyEBIAoajA9m+dqDf4Tt4AFQCcLsC9HQPUQ=
-github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.59.2/go.mod h1:MNl09GdaKb/vE8QdcCWyICDV7XAbGX6gKKQAS43XW1c=
+github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.89.0 h1:nZ9Ov2SbA8pWcyWKpf6AbQipG5Negg5CfDKWOEtnnwc=
+github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.89.0/go.mod h1:IJwk1oNs212afqGbNnE84GAB95OHtJR/BuI1rKESiYk=
 github.com/rogpeppe/go-internal v1.14.1 h1:UQB4HGPB6osV0SQTLymcB4TgvyWu6ZyliaW0tI/otEQ=
 github.com/rogpeppe/go-internal v1.14.1/go.mod h1:MaRKkUm5W0goXpeCfT7UZI6fk/L7L7so1lCWt35ZSgc=
 github.com/russross/blackfriday/v2 v2.0.1/go.mod h1:+Rmxgy9KzJVeS9/2gXHxylqXiyQDYRxCVz55jmeOWTM=
