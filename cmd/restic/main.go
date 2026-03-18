@@ -125,16 +125,16 @@ func resticMain(c *cli.Context) error {
 	resticLog.Info("initializing")
 
 	cfg.Config.Tags = c.StringSlice("tag")
-	cfg.Config.TargetPods = c.StringSlice("targetPods")
+	cfg.Config.TargetPods = cmd.SplitAtComma(c.StringSlice("targetPods"))
 
-	cfg.Config.Exclude = c.StringSlice("exclude")
-	cfg.Config.ExcludeFile = c.StringSlice("excludeFile")
-	cfg.Config.ExcludeIfPresent = c.StringSlice("excludeIfPresent")
-	cfg.Config.FilesFrom = c.StringSlice("filesFrom")
-	cfg.Config.FilesFromRaw = c.StringSlice("filesFromRaw")
-	cfg.Config.FilesFromVerbatim = c.StringSlice("filesFromVerbatim")
-	cfg.Config.IExclude = c.StringSlice("iExclude")
-	cfg.Config.IExcludeFile = c.StringSlice("iExcludeFile")
+	cfg.Config.Exclude = cmd.SplitAtComma(c.StringSlice("exclude"))
+	cfg.Config.ExcludeFile = cmd.SplitAtComma(c.StringSlice("excludeFile"))
+	cfg.Config.ExcludeIfPresent = cmd.SplitAtComma(c.StringSlice("excludeIfPresent"))
+	cfg.Config.FilesFrom = cmd.SplitAtComma(c.StringSlice("filesFrom"))
+	cfg.Config.FilesFromRaw = cmd.SplitAtComma(c.StringSlice("filesFromRaw"))
+	cfg.Config.FilesFromVerbatim = cmd.SplitAtComma(c.StringSlice("filesFromVerbatim"))
+	cfg.Config.IExclude = cmd.SplitAtComma(c.StringSlice("iExclude"))
+	cfg.Config.IExcludeFile = cmd.SplitAtComma(c.StringSlice("iExcludeFile"))
 
 	err := cfg.Config.Validate()
 	if err != nil {
