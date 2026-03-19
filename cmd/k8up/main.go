@@ -67,7 +67,8 @@ func app() *cli.App {
 		Compiled:  compiled,
 		Copyright: "(c) 2021 VSHN AG",
 
-		EnableBashCompletion: true,
+		EnableBashCompletion:      true,
+		DisableSliceFlagSeparator: true,
 
 		Before: before,
 		Flags: []cli.Flag{

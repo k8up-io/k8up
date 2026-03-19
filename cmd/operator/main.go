@@ -97,8 +97,8 @@ func operatorMain(c *cli.Context) error {
 	operatorLog.Info("initializing")
 	ctrl.SetLogger(operatorLog)
 
-	cfg.Config.BackupCommandRestic = c.StringSlice(argCommandRestic)
-	cfg.Config.ResticOptions = strings.Join(c.StringSlice(argResticOptions), ",")
+	cfg.Config.BackupCommandRestic = cmd.SplitAtComma(c.StringSlice(argCommandRestic))
+	cfg.Config.ResticOptions = strings.Join(cmd.SplitAtComma(c.StringSlice(argResticOptions)), ",")
 
 	err := validateQuantityFlags(c)
 	if err != nil {
