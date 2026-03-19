@@ -6,7 +6,7 @@ require (
 	github.com/firepear/qsplit/v2 v2.5.0
 	github.com/go-logr/logr v1.4.3
 	github.com/go-logr/zapr v1.3.0
-	github.com/imdario/mergo v0.3.16
+	github.com/imdario/mergo v1.0.2
 	github.com/minio/minio-go/v7 v7.0.99
 	github.com/prometheus/client_golang v1.23.2
 	github.com/restic/restic v0.18.1
