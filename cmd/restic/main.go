@@ -48,6 +48,7 @@ var (
 			&cli.BoolFlag{Destination: &cfg.Config.DoArchive, Name: "archive", Usage: "Set, if the container should do an archive"},
 
 			&cli.StringSliceFlag{Name: "tag", Usage: "List of tags to consider for given operation"},
+			&cli.StringSliceFlag{Name: "path", Usage: "List of paths a snapshot has to include for given operation"},
 
 			&cli.StringFlag{Destination: &cfg.Config.BackupCommandAnnotation, Name: "backupCommandAnnotation", EnvVars: []string{"BACKUPCOMMAND_ANNOTATION"}, Usage: "Defines the command to invoke when doing a backup via STDOUT."},
 			&cli.StringFlag{Destination: &cfg.Config.BackupFileExtensionAnnotation, Name: "fileExtensionAnnotation", EnvVars: []string{"FILEEXTENSION_ANNOTATION"}, Usage: "Defines the file extension to use for STDOUT backups."},
@@ -126,6 +127,7 @@ func resticMain(c *cli.Context) error {
 	resticLog.Info("initializing")
 
 	cfg.Config.Tags = c.StringSlice("tag")
+	cfg.Config.Paths = cmd.SplitAtComma(c.StringSlice("path"))
 	cfg.Config.TargetPods = cmd.SplitAtComma(c.StringSlice("targetPods"))
 
 	cfg.Config.Exclude = cmd.SplitAtComma(c.StringSlice("exclude"))
@@ -183,7 +185,7 @@ func resticInitialization(resticCLI *resticCli.Restic, mainLogger logr.Logger) e
 
 	// This builds up the cache without any other side effect. So it won't block
 	// during any stdin backups or such.
-	if err := resticCLI.Snapshots(nil); err != nil {
+	if err := resticCLI.Snapshots(nil, nil); err != nil {
 		return fmt.Errorf("failed to list snapshots: %w", err)
 	}
 	return nil
@@ -255,7 +257,7 @@ func doRestore(resticCLI *resticCli.Restic) error {
 		},
 	}
 
-	if err := resticCLI.Restore(cfg.Config.RestoreSnap, restoreOptions, cfg.Config.Tags); err != nil {
+	if err := resticCLI.Restore(cfg.Config.RestoreSnap, restoreOptions, cfg.Config.Tags, cfg.Config.Paths); err != nil {
 		return fmt.Errorf("restore job failed: %w", err)
 	}
 
@@ -280,7 +282,7 @@ func doArchive(resticCLI *resticCli.Restic) error {
 		},
 	}
 
-	if err := resticCLI.Archive(restoreOptions, cfg.Config.Tags); err != nil {
+	if err := resticCLI.Archive(restoreOptions, cfg.Config.Tags, cfg.Config.Paths); err != nil {
 		return fmt.Errorf("archive job failed: %w", err)
 	}
 

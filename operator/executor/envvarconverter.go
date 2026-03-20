@@ -108,11 +108,11 @@ func DefaultEnv(namespace string) EnvVarConverter {
 	return defaults
 }
 
-// BuildTagArgs will prepend "--tag " to every element in the given []string
-func BuildTagArgs(tagList []string) []string {
+// BuildListArgs will prepend the given cliArg space-separated to every element in the given []string
+func BuildListArgs(cliArg string, valueList []string) []string {
 	var args []string
-	for i := range tagList {
-		args = append(args, "--tag", tagList[i])
+	for i := range valueList {
+		args = append(args, cliArg, valueList[i])
 	}
 	return args
 }

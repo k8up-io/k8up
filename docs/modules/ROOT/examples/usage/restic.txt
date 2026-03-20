@@ -13,6 +13,7 @@ OPTIONS:
    --restore                                                                      Set, if the container should attempt a restore (default: false)
    --archive                                                                      Set, if the container should do an archive (default: false)
    --tag value [ --tag value ]                                                    List of tags to consider for given operation
+   --path value [ --path value ]                                                  List of paths a snapshot has to include for given operation
    --backupCommandAnnotation value                                                Defines the command to invoke when doing a backup via STDOUT. [$BACKUPCOMMAND_ANNOTATION]
    --fileExtensionAnnotation value                                                Defines the file extension to use for STDOUT backups. [$FILEEXTENSION_ANNOTATION]
    --backucontainerannotation value                                               set the annotation name that specify the backup container inside the Pod (default: "k8up.io/backupcommand-container") [$BACKUP_CONTAINERANNOTATION]

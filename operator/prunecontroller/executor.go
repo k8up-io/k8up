@@ -73,7 +73,7 @@ func (p *PruneExecutor) jobName() string {
 func (p *PruneExecutor) setupArgs() []string {
 	args := []string{"-varDir", cfg.Config.PodVarDir, "-prune"}
 	if len(p.prune.Spec.Retention.Tags) > 0 {
-		args = append(args, executor.BuildTagArgs(p.prune.Spec.Retention.Tags)...)
+		args = append(args, executor.BuildListArgs("--tag", p.prune.Spec.Retention.Tags)...)
 	}
 	if p.prune.Spec.Backend != nil {
 		args = append(args, utils.AppendTLSOptionsArgs(p.prune.Spec.Backend.TLSOptions)...)

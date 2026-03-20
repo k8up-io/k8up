@@ -19,10 +19,10 @@ func (a *ArrayOpts) String() string {
 	return strings.Join(*a, ", ")
 }
 
-func (a *ArrayOpts) BuildArgs() []string {
+func (a *ArrayOpts) BuildArgs(param string) []string {
 	argList := make([]string, 0)
 	for _, elem := range *a {
-		argList = append(argList, "--tag", elem)
+		argList = append(argList, param, elem)
 	}
 	return argList
 }

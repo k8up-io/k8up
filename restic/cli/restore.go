@@ -70,18 +70,22 @@ type fileNode struct {
 }
 
 // Restore triggers a restore of a snapshot
-func (r *Restic) Restore(snapshotID string, options RestoreOptions, tags ArrayOpts) error {
+func (r *Restic) Restore(snapshotID string, options RestoreOptions, tags ArrayOpts, paths ArrayOpts) error {
 	restorelogger := r.logger.WithName("restore")
 
 	restorelogger.Info("restore initialised")
 
-	if len(tags) > 0 {
+	if len(tags) > 0 && len(paths) > 0 {
+		restorelogger.Info("loading snapshots", "tags", tags.String, "paths", paths.String)
+	} else if len(tags) > 0 {
 		restorelogger.Info("loading snapshots", "tags", tags.String)
+	} else if len(paths) > 0 {
+		restorelogger.Info("loading snapshots", "paths", paths.String)
 	} else {
 		restorelogger.Info("loading all snapshots from repository")
 	}
 
-	err := r.Snapshots(tags)
+	err := r.Snapshots(tags, paths)
 	if err != nil {
 		return err
 	}

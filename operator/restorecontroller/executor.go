@@ -97,7 +97,11 @@ func (r *RestoreExecutor) jobName() string {
 func (r *RestoreExecutor) setupArgs(restore *k8upv1.Restore) ([]string, error) {
 	args := []string{"-varDir", cfg.Config.PodVarDir, "-restore"}
 	if len(restore.Spec.Tags) > 0 {
-		args = append(args, executor.BuildTagArgs(restore.Spec.Tags)...)
+		args = append(args, executor.BuildListArgs("--tag", restore.Spec.Tags)...)
+	}
+
+	if len(restore.Spec.Paths) > 0 {
+		args = append(args, executor.BuildListArgs("--path", restore.Spec.Paths)...)
 	}
 
 	if restore.Spec.RestoreFilter != "" {

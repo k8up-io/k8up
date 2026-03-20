@@ -79,7 +79,7 @@ func (a *ArchiveExecutor) jobName() string {
 func (a *ArchiveExecutor) setupArgs() []string {
 	args := []string{"-varDir", cfg.Config.PodVarDir, "-archive", "-restoreType", "s3"}
 	if a.archive.Spec.RestoreSpec != nil && len(a.archive.Spec.Tags) > 0 {
-		args = append(args, executor.BuildTagArgs(a.archive.Spec.Tags)...)
+		args = append(args, executor.BuildListArgs("--tag", a.archive.Spec.Tags)...)
 	}
 	if a.archive.Spec.Backend != nil {
 		args = append(args, utils.AppendTLSOptionsArgs(a.archive.Spec.Backend.TLSOptions)...)
