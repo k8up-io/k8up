@@ -69,6 +69,7 @@ make chart-docs        # Generate Helm chart documentation
 - PRs should be labeled with one of: `bug`, `enhancement`, `documentation`, `change`, `breaking`, `dependency`
 - Helm chart values must be documented in the format required by [helm-docs](https://github.com/norwoodj/helm-docs#valuesyaml-metadata)
 - If changing chart, bump Chart version if immediate release is planned, and run `make chart-docs`
+- When closing issues as already-implemented, add documentation if the feature wasn't documented
 
 ## Release
 
