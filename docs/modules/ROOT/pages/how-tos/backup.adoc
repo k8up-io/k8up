@@ -190,7 +190,8 @@ spec:
   template:
     spec:
       containers:
-        - env:
+        - name: k8up
+          env:
             - name: FOO
               value: bar
           securityContext:
