@@ -16,13 +16,13 @@ func TestScheduleDefinition_IsNonStandard(t *testing.T) {
 		input    ScheduleDefinition
 		expected bool
 	}{
-		"standard cron":   {input: "*/5 * * * *", expected: false},
-		"@daily":          {input: "@daily", expected: true},
-		"@weekly-random":  {input: "@weekly-random", expected: true},
-		"@hourly-random":  {input: "@hourly-random", expected: true},
-		"empty":           {input: "", expected: false},
-		"just @":          {input: "@", expected: true},
-		"no @ prefix":     {input: "daily", expected: false},
+		"standard cron":  {input: "*/5 * * * *", expected: false},
+		"@daily":         {input: "@daily", expected: true},
+		"@weekly-random": {input: "@weekly-random", expected: true},
+		"@hourly-random": {input: "@hourly-random", expected: true},
+		"empty":          {input: "", expected: false},
+		"just @":         {input: "@", expected: true},
+		"no @ prefix":    {input: "daily", expected: false},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {

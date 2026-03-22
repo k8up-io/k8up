@@ -18,8 +18,8 @@ func TestValidatePrune_NotEnabled(t *testing.T) {
 
 func TestValidatePrune_ValidKeepN(t *testing.T) {
 	c := &Configuration{
-		DoPrune:      true,
-		PruneKeepLast: 5,
+		DoPrune:        true,
+		PruneKeepLast:  5,
 		PruneKeepDaily: 14,
 	}
 	assert.NoError(t, c.Validate())
@@ -27,7 +27,7 @@ func TestValidatePrune_ValidKeepN(t *testing.T) {
 
 func TestValidatePrune_NegativeKeepN(t *testing.T) {
 	c := &Configuration{
-		DoPrune:      true,
+		DoPrune:       true,
 		PruneKeepLast: -1,
 	}
 	err := c.Validate()
@@ -38,7 +38,7 @@ func TestValidatePrune_NegativeKeepN(t *testing.T) {
 
 func TestValidatePrune_ValidKeepWithin(t *testing.T) {
 	c := &Configuration{
-		DoPrune:          true,
+		DoPrune:         true,
 		PruneKeepWithin: "24h",
 	}
 	assert.NoError(t, c.Validate())
@@ -46,7 +46,7 @@ func TestValidatePrune_ValidKeepWithin(t *testing.T) {
 
 func TestValidatePrune_InvalidKeepWithinDuration(t *testing.T) {
 	c := &Configuration{
-		DoPrune:          true,
+		DoPrune:         true,
 		PruneKeepWithin: "not-a-duration",
 	}
 	err := c.Validate()
@@ -56,7 +56,7 @@ func TestValidatePrune_InvalidKeepWithinDuration(t *testing.T) {
 
 func TestValidatePrune_NegativeKeepWithinDuration(t *testing.T) {
 	c := &Configuration{
-		DoPrune:          true,
+		DoPrune:         true,
 		PruneKeepWithin: "-1h",
 	}
 	err := c.Validate()
@@ -66,7 +66,7 @@ func TestValidatePrune_NegativeKeepWithinDuration(t *testing.T) {
 
 func TestValidatePrune_EmptyKeepWithinSkipped(t *testing.T) {
 	c := &Configuration{
-		DoPrune:          true,
+		DoPrune:         true,
 		PruneKeepWithin: "",
 	}
 	assert.NoError(t, c.Validate())
@@ -126,7 +126,7 @@ func TestValidateRestore_S3MissingSecretKey(t *testing.T) {
 
 func TestValidateRestore_FolderValid(t *testing.T) {
 	c := &Configuration{
-		DoRestore:  true,
+		DoRestore:   true,
 		RestoreType: "folder",
 		RestoreDir:  "/restore",
 	}
@@ -135,7 +135,7 @@ func TestValidateRestore_FolderValid(t *testing.T) {
 
 func TestValidateRestore_FolderMissingDir(t *testing.T) {
 	c := &Configuration{
-		DoRestore:  true,
+		DoRestore:   true,
 		RestoreType: "folder",
 	}
 	err := c.Validate()
@@ -145,7 +145,7 @@ func TestValidateRestore_FolderMissingDir(t *testing.T) {
 
 func TestValidateRestore_UnknownType(t *testing.T) {
 	c := &Configuration{
-		DoRestore:  true,
+		DoRestore:   true,
 		RestoreType: "unknown",
 	}
 	err := c.Validate()
