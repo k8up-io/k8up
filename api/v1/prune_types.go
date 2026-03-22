@@ -145,6 +145,9 @@ func (in *PruneSchedule) GetRunnableSpec() *RunnableSpec {
 
 // GetSchedule returns the schedule definition
 func (in *PruneSchedule) GetSchedule() ScheduleDefinition {
+	if in.ScheduleCommon == nil {
+		return ""
+	}
 	return in.Schedule
 }
 

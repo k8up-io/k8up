@@ -140,6 +140,9 @@ func (in *CheckSchedule) GetRunnableSpec() *RunnableSpec {
 
 // GetSchedule returns the schedule definition
 func (in *CheckSchedule) GetSchedule() ScheduleDefinition {
+	if in.ScheduleCommon == nil {
+		return ""
+	}
 	return in.Schedule
 }
 
