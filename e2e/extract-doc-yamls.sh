@@ -50,7 +50,7 @@ for adoc_file in $(find "$docs_dir" -name '*.adoc' | sort); do
             fi
 
             # Skip blocks with YAML ellipsis (...) used as abbreviation
-            if echo "$yaml_buf" | grep -q '^  \.\.\.$'; then
+            if echo "$yaml_buf" | grep -qE '^\s*\.\.\.\s*$'; then
                 continue
             fi
 
