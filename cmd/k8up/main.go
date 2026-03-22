@@ -63,9 +63,10 @@ func app() *cli.App {
 
 	return &cli.App{
 		Name:      "k8up",
+		Usage:     "Kubernetes and OpenShift Backup Operator",
 		Version:   version,
 		Compiled:  compiled,
-		Copyright: "(c) 2021 VSHN AG",
+		Copyright: "(c) K8up Authors",
 
 		EnableBashCompletion:      true,
 		DisableSliceFlagSeparator: true,
