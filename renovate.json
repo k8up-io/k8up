@@ -12,10 +12,39 @@
   ],
   "packageRules": [
     {
+      "description": "Label chart dependency updates",
+      "matchFileNames": ["charts/**"],
+      "addLabels": ["area:chart", "chart:k8up"]
+    },
+    {
+      "description": "Label operator dependency updates",
+      "matchFileNames": ["go.mod", "go.sum"],
+      "addLabels": ["area:operator"]
+    },
+    {
+      "description": "Automerge GitHub Actions (CI-only, no impact on shipped code)",
+      "matchManagers": ["github-actions"],
+      "automerge": true
+    },
+    {
+      "description": "Automerge Docker base image patch/minor updates",
+      "matchDatasources": ["docker"],
+      "matchUpdateTypes": ["patch", "minor"],
+      "automerge": true
+    },
+    {
+      "description": "Automerge low-risk Go dependencies (logging, metrics, test tooling)",
       "matchPackagePatterns": [
         "k8s.io/utils",
         "sigs.k8s.io/controller-runtime/tools/setup-envtest",
-        "github.com/minio/minio-go/v7"
+        "github.com/minio/minio-go/v7",
+        "github.com/go-logr/logr",
+        "github.com/go-logr/zapr",
+        "go.uber.org/zap",
+        "github.com/prometheus/client_golang",
+        "github.com/prometheus-operator/prometheus-operator",
+        "github.com/gruntwork-io/terratest",
+        "github.com/norwoodj/helm-docs"
       ],
       "schedule": [
         "on the first day of the month"
@@ -23,6 +52,14 @@
       "automerge": true
     },
     {
+      "description": "Automerge test tooling",
+      "matchPackagePatterns": [
+        "bats"
+      ],
+      "automerge": true
+    },
+    {
+      "description": "Group and schedule urfave/cli updates (CLI framework, needs review)",
       "matchPackagePatterns": [
         "github.com/urfave/cli/v2"
       ],
