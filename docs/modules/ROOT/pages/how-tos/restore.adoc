@@ -60,15 +60,16 @@ kind: Restore
 metadata:
   name: restore-test
 spec:
-  s3:
-    endpoint: http://localhost:9000
-    bucket: restore
-    accessKeyIDSecretRef:
-      name: backup-credentials
-      key: username
-    secretAccessKeySecretRef:
-      name: backup-credentials
-      key: password
+  restoreMethod:
+    s3:
+      endpoint: http://localhost:9000
+      bucket: restore
+      accessKeyIDSecretRef:
+        name: backup-credentials
+        key: username
+      secretAccessKeySecretRef:
+        name: backup-credentials
+        key: password
   backend:
     repoPasswordSecretRef:
       name: backup-repo
@@ -481,15 +482,15 @@ spec:
   backend:
     s3: {}
 
-  restoreMethod:
-    s3: {}
-
     envFrom:
       - configMapRef:
           name: restore-cert
     volumeMounts:
       - name: ca-tls
         mountPath: /mnt/ca/
+
+  restoreMethod:
+    s3: {}
 
   podSecurityContext:
     fsGroup: 1000
@@ -818,15 +819,15 @@ spec:
   backend:
     s3: {}
 
-  restoreMethod:
-    s3: {}
-
     envFrom:
       - configMapRef:
           name: restore-cert
     volumeMounts:
       - name: client-tls
         mountPath: /mnt/tls/
+
+  restoreMethod:
+    s3: {}
 
   podSecurityContext:
     fsGroup: 1000
