@@ -12,6 +12,25 @@ The command-line tool can be downloaded from the https://github.com/k8up-io/k8up
 
 After installation, run the `k8up --version` command to make sure it is properly installed.
 
+=== Shell Completion
+
+The K8up CLI supports basic bash completion for subcommands.
+To enable it, add the following to your `~/.bashrc`:
+
+[source,bash]
+----
+_k8up_complete() {
+    local cur
+    COMPREPLY=()
+    cur="${COMP_WORDS[COMP_CWORD]}"
+    COMPREPLY=( $(compgen -W "$(k8up --generate-bash-completion)" -- "${cur}") )
+    return 0
+}
+complete -F _k8up_complete k8up
+----
+
+NOTE: This provides completion for subcommands (`operator`, `restic`, `cli`). Flag completion is not supported by the underlying CLI framework (urfave/cli v2).
+
 == Samples
 
 You can find some examples of use of K8up in the `config/samples/` folder of the K8up repository:
