@@ -85,6 +85,8 @@ make chart-docs        # Generate Helm chart documentation
 
 ## Testing
 
+- **Use test-driven development**: write a failing test first, then implement the fix or feature
+- **Bug fixes must include a test** that reproduces the bug before fixing it
 - **Unit tests**: `make test` (standard `go test ./...` with coverage)
 - **Integration tests**: envtest-based, in `envtest/` directory
 - **E2E tests**: BATS/DETIK framework, runs against KIND cluster, in `e2e/` directory
