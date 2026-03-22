@@ -70,6 +70,7 @@ make chart-docs        # Generate Helm chart documentation
 - Helm chart values must be documented in the format required by [helm-docs](https://github.com/norwoodj/helm-docs#valuesyaml-metadata)
 - If changing chart, bump Chart version if immediate release is planned, and run `make chart-docs`
 - When closing issues as already-implemented, add documentation if the feature wasn't documented
+- Always reference related issues in PR descriptions (`Fixes #N` or `Relates-to: #N`)
 
 ## Release
 
