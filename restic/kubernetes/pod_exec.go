@@ -62,22 +62,28 @@ func PodExec(pod BackupPod, log logr.Logger) (*ExecData, error) {
 	var stdoutReader, stdoutWriter = io.Pipe()
 	done := make(chan bool, 1)
 	go func() {
-		err = exec.StreamWithContext(context.Background(), remotecommand.StreamOptions{
+		streamErr := exec.StreamWithContext(context.Background(), remotecommand.StreamOptions{
 			Stdin:  nil,
 			Stdout: stdoutWriter,
 			Stderr: logging.NewErrorWriter(log.WithName(pod.PodName)),
 			Tty:    false,
 		})
 
-		defer stdoutWriter.Close()
-		done <- true
-
-		if err != nil {
-			execLogger.Error(err, "streaming data failed", "namespace", pod.Namespace, "pod", pod.PodName)
-			// we just completely hard fail the whole backup pod
+		// Close the writer before signaling done so that the pipe reader
+		// (restic's stdin) receives all data and an EOF before the backup
+		// command is waited on. Previously, done was signaled before close,
+		// causing a race where restic could finish before all data was
+		// flushed through the pipe, resulting in truncated backups.
+		if streamErr != nil {
+			execLogger.Error(streamErr, "streaming data failed", "namespace", pod.Namespace, "pod", pod.PodName)
+			stdoutWriter.CloseWithError(streamErr)
+			done <- true
+			// Hard fail the backup pod so the Kubernetes Job is marked as failed
 			os.Exit(1)
 			return
 		}
+		stdoutWriter.Close()
+		done <- true
 	}()
 
 	data := &ExecData{
