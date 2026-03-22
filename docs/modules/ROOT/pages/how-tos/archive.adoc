@@ -145,15 +145,15 @@ spec:
   backend:
     s3: {}
 
-  restoreMethod:
-    s3: {}
-
     envFrom:
       - configMapRef:
           name: archive-cert
     volumeMounts:
       - name: ca-tls
         mountPath: /mnt/ca/
+
+  restoreMethod:
+    s3: {}
 
   podSecurityContext:
     fsGroup: 1000
@@ -474,15 +474,15 @@ spec:
   backend:
     s3: {}
 
-  restoreMethod:
-    s3: {}
-
     envFrom:
       - configMapRef:
           name: archive-cert
     volumeMounts:
       - name: client-tls
         mountPath: /mnt/tls/
+
+  restoreMethod:
+    s3: {}
 
   podSecurityContext:
     fsGroup: 1000
