@@ -39,9 +39,14 @@ kind: Schedule
 metadata:
   name: schedule-test
 spec:
-  ...
+  backend:
+    repoPasswordSecretRef:
+      name: backup-repo
+      key: password
   prune:
     schedule: '*/5 * * * *'
+    retention:
+      keepLast: 5
 ----
 This will create a `Prune` object with the resource default applied:
 [source,yaml]
@@ -51,7 +56,6 @@ kind: Prune
 metadata:
   name: schedule-test-prune-qbq2k
 spec:
-  ...
   resources:
     limits:
       memory: 200M
@@ -68,10 +72,13 @@ kind: Schedule
 metadata:
   name: schedule-test
 spec:
+  backend:
+    repoPasswordSecretRef:
+      name: backup-repo
+      key: password
   resourceRequirementsTemplate:
     requests:
       cpu: "50m"
-  ...
   check:
     resources:
       requests:
@@ -80,6 +87,8 @@ spec:
     schedule: '@hourly-random'
   prune:
     schedule: '*/2 * * * *'
+    retention:
+      keepLast: 5
 ----
 Combined with the global memory limit, the `Prune` object will have following resources:
 [source,yaml]
@@ -89,7 +98,6 @@ kind: Prune
 metadata:
   name: schedule-test-prune-qbq2k
 spec:
-  ...
   resources:
     requests:
       cpu: "50m"
@@ -104,7 +112,6 @@ kind: Check
 metadata:
   name: schedule-test-check-q5kae
 spec:
-  ...
   resources:
     requests:
       memory: "64Mi"

@@ -246,9 +246,9 @@ spec:
     - matchExpressions:
       - key: another-label-key
         operator: In
-	values:
-	  - acceptable-value
-	  - another-acceptable-value
+        values:
+          - acceptable-value
+          - another-acceptable-value
   failedJobsHistoryLimit: 2
   successfulJobsHistoryLimit: 2
   backend:
@@ -283,8 +283,8 @@ spec:
         operator: Exists
       - key: another-label-key
         operator: In
-	values:
-	  - acceptable-value
-	  - another-acceptable-value
+        values:
+          - acceptable-value
+          - another-acceptable-value
 ...
 ----
