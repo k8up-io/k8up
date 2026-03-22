@@ -48,6 +48,8 @@ The `jobType` label can be one of: `backup`, `check`, `archive`, `restore`, `pru
 
 When `promURL` is configured (either globally via `BACKUP_PROMURL` or per schedule), each backup job pushes detailed metrics to a Prometheus Pushgateway after completion.
 
+TIP: If you run K8up on multiple clusters pushing to the same Pushgateway, set the `CLUSTER_NAME` environment variable on the K8up deployment to distinguish metrics per cluster. This adds a `cluster` grouping key to all pushed metrics.
+
 === Available Backup Metrics
 
 [cols="2,1,1,3", options="header"]
