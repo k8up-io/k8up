@@ -40,11 +40,7 @@ setup_file() {
 
     for f in "$extracted_dir"/inline-*.yaml; do
         [ -f "$f" ] || continue
-        if ! output=$(kubectl apply --dry-run=server --force-conflicts --server-side -f "$f" 2>&1); then
-            # Ignore namespace-not-found errors (examples reference namespaces not in e2e cluster)
-            if echo "$output" | grep -q 'namespaces.*not found'; then
-                continue
-            fi
+        if ! output=$(kubectl apply --dry-run=server -f "$f" 2>&1); then
             failures=$((failures + 1))
             details="$details\nFAIL: $(basename "$f")\n$output\n"
         fi
