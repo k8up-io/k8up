@@ -55,3 +55,29 @@ spec:
     podConfigRef:
       name: anotherPodConfig
 ----
+
+=== Restricted Pod Security Standard
+
+To make K8up jobs comply with the https://kubernetes.io/docs/concepts/security/pod-security-standards/["restricted" Pod Security Standard], configure both pod and container security contexts via `PodConfig`:
+
+[source,yaml]
+----
+apiVersion: k8up.io/v1
+kind: PodConfig
+metadata:
+  name: restricted-podconfig
+spec:
+  template:
+    spec:
+      containers:
+        - name: k8up
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            capabilities:
+              drop:
+                - ALL
+            seccompProfile:
+              type: RuntimeDefault
+----
