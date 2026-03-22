@@ -27,6 +27,7 @@
 * xref:references/object-specifications.adoc[Object Specifications]
 * xref:references/schedule-specification.adoc[Schedule Specifications]
 * xref:references/status.adoc[Status and Conditions]
+* xref:references/metrics.adoc[Prometheus Metrics]
 
 .Explanation
 * xref:explanations/backup.adoc[Backup Methods]
