@@ -35,7 +35,7 @@ envtest/         # Integration tests using envtest
 - Build: `make build` (binary output: `./k8up`)
 - Main entrypoint: `cmd/k8up/main.go`
 - Linter: `golangci-lint` (config: `.golangci.yml`)
-- Formatting: `gofmt` with tabs
+- Formatting: `gofmt` with tabs — always run `go fmt ./...` before committing
 
 ## Key Commands
 
