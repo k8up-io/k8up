@@ -3,7 +3,7 @@ package executor
 import (
 	"fmt"
 
-	"github.com/imdario/mergo"
+	"dario.cat/mergo"
 	"github.com/k8up-io/k8up/v2/operator/cfg"
 	corev1 "k8s.io/api/core/v1"
 )

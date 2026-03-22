@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	"dario.cat/mergo"
 	"github.com/go-logr/logr"
-	"github.com/imdario/mergo"
 	"github.com/k8up-io/k8up/v2/operator/monitoring"
 	"k8s.io/apimachinery/pkg/util/rand"
 	"k8s.io/utils/strings"
