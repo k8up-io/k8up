@@ -96,6 +96,21 @@ var tests = map[string]struct {
 		},
 		expectedRepositoryString: "s3:https://endpoint/bucket",
 	},
+	"GivenS3BackendWithTrailingSlash_ThenExpectCleanEndpointURL": {
+		givenBackend: &Backend{
+			S3: &S3Spec{
+				Bucket:                   "bucket",
+				Endpoint:                 "https://endpoint/",
+				SecretAccessKeySecretRef: newSecretRef("secret"),
+				AccessKeyIDSecretRef:     newSecretRef("id"),
+			},
+		},
+		expectedVars: map[string]*corev1.EnvVarSource{
+			cfg.AwsAccessKeyIDEnvName:     {SecretKeyRef: newSecretRef("id")},
+			cfg.AwsSecretAccessKeyEnvName: {SecretKeyRef: newSecretRef("secret")},
+		},
+		expectedRepositoryString: "s3:https://endpoint/bucket",
+	},
 	"GivenSwiftBackend_ThenExpectSwiftBucket": {
 		givenBackend: &Backend{
 			Swift: &SwiftSpec{
