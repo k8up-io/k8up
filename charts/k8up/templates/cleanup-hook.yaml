@@ -108,3 +108,15 @@ spec:
         resources:
           {{- toYaml . | nindent 12 }}
         {{- end }}
+      {{- with .Values.cleanup.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.cleanup.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.cleanup.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

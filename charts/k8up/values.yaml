@@ -165,3 +165,12 @@ cleanup:
 
   # -- Cleanup-job resources
   resources: {}
+
+  # -- Cleanup-job node selector
+  nodeSelector: {}
+
+  # -- Cleanup-job tolerations
+  tolerations: []
+
+  # -- Cleanup-job affinity
+  affinity: {}
