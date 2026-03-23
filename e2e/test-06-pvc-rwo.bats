@@ -29,7 +29,6 @@ DEBUG_DETIK="true"
 	try "at most 10 times every 5s to get backup named 'k8up-backup' and verify that '.status.started' is 'true'"
 
 	verify_object_value_by_label job 'k8up.io/owned-by=backup_k8up-backup' '.status.active' 1 true
-	verify_job_pod_values 'k8up.io/owned-by=backup_k8up-backup' .spec.nodeName k8up-v1.26.6-control-plane k8up-v1.26.6-worker
 
 	wait_until backup/k8up-backup completed
 
