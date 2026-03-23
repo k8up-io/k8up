@@ -1,14 +1,10 @@
 name: Lint
 
 on:
-  pull_request:
-    paths-ignore:
-      - 'docs/**'
+  pull_request: {}
   push:
     branches:
     - master
-    paths-ignore:
-      - 'docs/**'
 
 
 jobs:
