@@ -95,6 +95,14 @@ make chart-docs        # Generate Helm chart documentation
   - Requires `node` and `npm`
   - Run specific test: `make e2e-test -e BATS_FILES=test-02-deployment.bats`
 
+## Documentation
+
+- Documentation source lives in `docs/` as AsciiDoc files, structured for [Antora](https://antora.org/)
+- Pushing to this repo triggers a webhook to a VSHN GitLab pipeline that builds and deploys to [docs.k8up.io](https://docs.k8up.io/)
+- K8up shares the same Antora build pipeline as other VSHN documentation repos
+- Preview docs locally with `make docs-preview`
+- Example YAML files in `docs/modules/ROOT/examples/` are included via `include::` directives — keep them valid and up to date
+
 ## Community
 
 - CNCF Slack: `#k8up` channel in [CNCF workspace](https://slack.cncf.io/)
