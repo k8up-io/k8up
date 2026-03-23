@@ -2,6 +2,13 @@
 
 For long-term storage of your backups you may want to use cheaper storage. Even if this is slower to restore, you usually don't need to restore that data frequently, so you save some money.
 
+[IMPORTANT]
+====
+Archives work by exporting existing restic snapshots to a separate storage backend.
+At least one successful backup must exist in the restic repository before an archive job can produce any output.
+If no snapshots exist, the archive job will complete without archiving anything and without reporting an error.
+====
+
 The `Archive` object defines the restore method and back-end required to archive backups of your namespace:
 
 [source,yaml]
