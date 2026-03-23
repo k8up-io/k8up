@@ -21,6 +21,8 @@ Just like for each job type, it's possible to pass custom pod specs to a schedul
 You can either set a `PodConfig` for all jobs in a schedule at once, or for each job individually.
 The `PodConfig` set in the job has precedence over the one in the schedule.
 
+TIP: `PodConfig` supports the full Kubernetes pod spec, including `nodeSelector`, `affinity`, `tolerations`, and `securityContext`. Use it to control where backup jobs run or to configure pod-level security settings.
+
 [source,yaml]
 ----
 apiVersion: k8up.io/v1
@@ -52,4 +54,30 @@ spec:
     # Abridged for readability
     podConfigRef:
       name: anotherPodConfig
+----
+
+=== Restricted Pod Security Standard
+
+To make K8up jobs comply with the https://kubernetes.io/docs/concepts/security/pod-security-standards/["restricted" Pod Security Standard], configure both pod and container security contexts via `PodConfig`:
+
+[source,yaml]
+----
+apiVersion: k8up.io/v1
+kind: PodConfig
+metadata:
+  name: restricted-podconfig
+spec:
+  template:
+    spec:
+      containers:
+        - name: k8up
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            capabilities:
+              drop:
+                - ALL
+            seccompProfile:
+              type: RuntimeDefault
 ----

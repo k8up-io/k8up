@@ -1,0 +1,129 @@
+= Prometheus Metrics Reference
+
+K8up exposes Prometheus metrics for monitoring backup operations. There are two sets of metrics: operator metrics (exposed by the K8up operator pod) and backup metrics (pushed to a Prometheus Pushgateway by each backup job).
+
+== Operator Metrics
+
+The operator exposes metrics on its `/metrics` endpoint (port 8080 by default).
+
+To scrape these metrics with Prometheus Operator, enable `ServiceMonitor` in the Helm chart:
+
+[source,yaml]
+----
+metrics:
+  serviceMonitor:
+    enabled: true
+----
+
+=== Available Operator Metrics
+
+[cols="2,1,1,3", options="header"]
+|===
+| Metric | Type | Labels | Description
+
+| `k8up_jobs_total`
+| Counter
+| `namespace`, `jobType`
+| Total number of jobs run
+
+| `k8up_jobs_successful_counter`
+| Counter
+| `namespace`, `jobType`
+| Total number of jobs that completed successfully
+
+| `k8up_jobs_failed_counter`
+| Counter
+| `namespace`, `jobType`
+| Total number of jobs that failed
+
+| `k8up_schedules_gauge`
+| Gauge
+| `namespace`
+| Number of active schedules managed by the operator
+|===
+
+The `jobType` label can be one of: `backup`, `check`, `archive`, `restore`, `prune`.
+
+== Backup Metrics (Pushgateway)
+
+When `promURL` is configured (either globally via `BACKUP_PROMURL` or per schedule), each backup job pushes detailed metrics to a Prometheus Pushgateway after completion.
+
+TIP: If you run K8up on multiple clusters pushing to the same Pushgateway, set the `CLUSTER_NAME` environment variable on the K8up deployment to distinguish metrics per cluster. This adds a `cluster` grouping key to all pushed metrics.
+
+=== Available Backup Metrics
+
+[cols="2,1,1,3", options="header"]
+|===
+| Metric | Type | Labels | Description
+
+| `k8up_backup_restic_new_files_during_backup`
+| Gauge
+| `pvc`, `namespace`
+| Number of new files backed up
+
+| `k8up_backup_restic_changed_files_during_backup`
+| Gauge
+| `pvc`, `namespace`
+| Number of changed files backed up
+
+| `k8up_backup_restic_unmodified_files_during_backup`
+| Gauge
+| `pvc`, `namespace`
+| Number of files skipped (no modifications)
+
+| `k8up_backup_restic_new_directories_during_backup`
+| Gauge
+| `pvc`, `namespace`
+| Number of new directories backed up
+
+| `k8up_backup_restic_changed_directories_during_backup`
+| Gauge
+| `pvc`, `namespace`
+| Number of changed directories backed up
+
+| `k8up_backup_restic_unmodified_directories_during_backup`
+| Gauge
+| `pvc`, `namespace`
+| Number of directories skipped (no modifications)
+
+| `k8up_backup_restic_data_transferred_during_backup`
+| Gauge
+| `pvc`, `namespace`
+| Amount of data transferred during the backup (bytes)
+
+| `k8up_backup_restic_available_snapshots`
+| Gauge
+| (none)
+| Total number of snapshots available in the repository
+
+| `k8up_backup_restic_last_errors`
+| Gauge
+| `pvc`, `namespace`
+| Number of errors during the last backup or check
+|===
+
+== Useful PromQL Queries
+
+.Failed backups in the last 24 hours
+[source,promql]
+----
+increase(k8up_jobs_failed_counter[24h])
+----
+
+.Backup success rate
+[source,promql]
+----
+k8up_jobs_successful_counter / k8up_jobs_total
+----
+
+.Namespaces with backup errors
+[source,promql]
+----
+k8up_backup_restic_last_errors > 0
+----
+
+.Data transferred per namespace
+[source,promql]
+----
+k8up_backup_restic_data_transferred_during_backup
+----
