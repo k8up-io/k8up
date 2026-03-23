@@ -27,7 +27,6 @@ apiVersion: k8up.io/v1
 kind: PodConfig
 metadata:
   name: podconfig
-  namespace: prod
   annotations:
     test: test
 spec:
@@ -44,7 +43,6 @@ apiVersion: k8up.io/v1
 kind: Schedule
 metadata:
   name: schedule-test
-  namespace: prod
 spec:
   podConfigRef:
     name: podconfig

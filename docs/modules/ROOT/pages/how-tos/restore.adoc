@@ -23,7 +23,6 @@ apiVersion: k8up.io/v1
 kind: Snapshot
 metadata:
   name: 162e7a85
-  namespace: default
 spec:
   date: "2023-03-03T07:34:42Z"
   id: 162e7a85acbc14de93dad31a3699331cb32187ff0d7bd2227b7c4362a1d13a42
@@ -60,15 +59,16 @@ kind: Restore
 metadata:
   name: restore-test
 spec:
-  s3:
-    endpoint: http://localhost:9000
-    bucket: restore
-    accessKeyIDSecretRef:
-      name: backup-credentials
-      key: username
-    secretAccessKeySecretRef:
-      name: backup-credentials
-      key: password
+  restoreMethod:
+    s3:
+      endpoint: http://localhost:9000
+      bucket: restore
+      accessKeyIDSecretRef:
+        name: backup-credentials
+        key: username
+      secretAccessKeySecretRef:
+        name: backup-credentials
+        key: password
   backend:
     repoPasswordSecretRef:
       name: backup-repo
@@ -129,7 +129,6 @@ apiVersion: k8up.io/v1
 kind: Restore
 metadata:
   name: restore-test-mfw
-  namespace: snapshot-test
 spec:
   restoreMethod:
     folder:
@@ -481,15 +480,15 @@ spec:
   backend:
     s3: {}
 
-  restoreMethod:
-    s3: {}
-
     envFrom:
       - configMapRef:
           name: restore-cert
     volumeMounts:
       - name: ca-tls
         mountPath: /mnt/ca/
+
+  restoreMethod:
+    s3: {}
 
   podSecurityContext:
     fsGroup: 1000
@@ -818,15 +817,15 @@ spec:
   backend:
     s3: {}
 
-  restoreMethod:
-    s3: {}
-
     envFrom:
       - configMapRef:
           name: restore-cert
     volumeMounts:
       - name: client-tls
         mountPath: /mnt/tls/
+
+  restoreMethod:
+    s3: {}
 
   podSecurityContext:
     fsGroup: 1000

@@ -3,9 +3,6 @@ kind: Archive
 metadata:
   name: archive-test
 spec:
-  repoPasswordSecretRef:
-    name: backup-repo
-    key: password
   restoreMethod:
     s3:
       endpoint: http://10.144.1.224:9000
@@ -17,6 +14,9 @@ spec:
         name: backup-credentials
         key: password
   backend:
+    repoPasswordSecretRef:
+      name: backup-repo
+      key: password
     s3:
       endpoint: http://10.144.1.224:9000
       bucket: k8up
