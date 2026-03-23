@@ -169,7 +169,7 @@ func (in *BackupSchedule) GetSchedule() ScheduleDefinition {
 	if in.ScheduleCommon == nil {
 		return ""
 	}
-	return in.Schedule
+	return in.ScheduleCommon.Schedule
 }
 
 var (

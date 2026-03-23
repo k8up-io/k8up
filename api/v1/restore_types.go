@@ -147,7 +147,7 @@ func (in *RestoreSchedule) GetSchedule() ScheduleDefinition {
 	if in.ScheduleCommon == nil {
 		return ""
 	}
-	return in.Schedule
+	return in.ScheduleCommon.Schedule
 }
 
 // +kubebuilder:object:root=true
