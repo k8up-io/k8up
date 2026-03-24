@@ -11,6 +11,7 @@ import (
 	"github.com/go-logr/logr"
 	apiv1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/util/httpstream"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/remotecommand"
 
@@ -19,7 +20,6 @@ import (
 
 type ExecData struct {
 	Reader *io.PipeReader
-	Done   chan bool
 }
 
 // PodExec sends the command to the specified pod
@@ -59,18 +59,33 @@ func PodExec(pod BackupPod, log logr.Logger) (*ExecData, error) {
 		return nil, err
 	}
 
+	websocketExec, err := remotecommand.NewWebSocketExecutor(config, "GET", req.URL().String())
+	if err != nil {
+		return nil, err
+	}
+
+	exec, err = remotecommand.NewFallbackExecutor(websocketExec, exec, func(err error) bool {
+		if httpstream.IsUpgradeFailure(err) || httpstream.IsHTTPSProxyError(err) {
+			execLogger.Info("cannot upgrade to websocket, falling back to SPDY streaming")
+			return true
+		}
+
+		return false
+	})
+	if err != nil {
+		return nil, err
+	}
+
 	var stdoutReader, stdoutWriter = io.Pipe()
-	done := make(chan bool, 1)
 	go func() {
-		err = exec.StreamWithContext(context.Background(), remotecommand.StreamOptions{
+		err := exec.StreamWithContext(context.Background(), remotecommand.StreamOptions{
 			Stdin:  nil,
 			Stdout: stdoutWriter,
 			Stderr: logging.NewErrorWriter(log.WithName(pod.PodName)),
 			Tty:    false,
 		})
 
-		defer stdoutWriter.Close()
-		done <- true
+		stdoutWriter.Close()
 
 		if err != nil {
 			execLogger.Error(err, "streaming data failed", "namespace", pod.Namespace, "pod", pod.PodName)
@@ -81,7 +96,6 @@ func PodExec(pod BackupPod, log logr.Logger) (*ExecData, error) {
 	}()
 
 	data := &ExecData{
-		Done:   done,
 		Reader: stdoutReader,
 	}
 
