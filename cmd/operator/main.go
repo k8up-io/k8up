@@ -87,6 +87,7 @@ var (
 			&cli.StringFlag{Destination: &cfg.Config.BackupCheckSchedule, Name: "checkschedule", EnvVars: []string{"BACKUP_CHECKSCHEDULE"}, Value: "0 0 * * 0", Usage: "the default check schedule"},
 			&cli.StringFlag{Destination: &cfg.Config.OperatorNamespace, Name: "operator-namespace", EnvVars: []string{"BACKUP_OPERATOR_NAMESPACE"}, Required: true, Usage: "set the namespace in which the K8up operator itself runs"},
 
+			&cli.BoolFlag{Destination: &cfg.Config.InsecureAallowPodExecSPDYFallback, Name: "insecure-allow-podexec-spdy-fallback", EnvVars: []string{cfg.InsecureAllowPodExecSPDYFallback}, Required: false, Value: false, Usage: "enable fallback to SPDY connections for stdout streaming. CAUTION: might cause silent data corruption, use on own risk!"},
 			&cli.StringFlag{Destination: &cfg.Config.PodVarDir, Name: "vardir", EnvVars: []string{"VAR_DIR"}, Value: "/k8up", Usage: "the var data dir for read/write k8up data or temp file in the backup pod"},
 		},
 	}

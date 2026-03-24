@@ -15,6 +15,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/remotecommand"
 
+	"github.com/k8up-io/k8up/v2/restic/cfg"
 	"github.com/k8up-io/k8up/v2/restic/logging"
 )
 
@@ -54,26 +55,28 @@ func PodExec(pod BackupPod, log logr.Logger) (*ExecData, error) {
 		TTY:       false,
 	}, parameterCodec)
 
-	exec, err := remotecommand.NewSPDYExecutor(config, "POST", req.URL())
+	exec, err := remotecommand.NewWebSocketExecutor(config, "GET", req.URL().String())
 	if err != nil {
 		return nil, err
 	}
 
-	websocketExec, err := remotecommand.NewWebSocketExecutor(config, "GET", req.URL().String())
-	if err != nil {
-		return nil, err
-	}
-
-	exec, err = remotecommand.NewFallbackExecutor(websocketExec, exec, func(err error) bool {
-		if httpstream.IsUpgradeFailure(err) || httpstream.IsHTTPSProxyError(err) {
-			execLogger.Info("cannot upgrade to websocket, falling back to SPDY streaming")
-			return true
+	if cfg.Config.InsecureAllowPodExecSPDYFallback {
+		spdyExec, err := remotecommand.NewSPDYExecutor(config, "POST", req.URL())
+		if err != nil {
+			return nil, err
 		}
 
-		return false
-	})
-	if err != nil {
-		return nil, err
+		exec, err = remotecommand.NewFallbackExecutor(exec, spdyExec, func(err error) bool {
+			if httpstream.IsUpgradeFailure(err) || httpstream.IsHTTPSProxyError(err) {
+				execLogger.Info("cannot upgrade to websocket, falling back to SPDY streaming")
+				return true
+			}
+
+			return false
+		})
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	var stdoutReader, stdoutWriter = io.Pipe()

@@ -118,6 +118,8 @@ var (
 			&cli.PathFlag{Destination: &cfg.Config.CACert, Name: "caCert", EnvVars: []string{caCertFileEnvKey}, Usage: "The certificate authority file path"},
 			&cli.PathFlag{Destination: &cfg.Config.ClientCert, Name: "clientCert", EnvVars: []string{clientCertFileEnvKey}, Usage: "The client certificate file path"},
 			&cli.PathFlag{Destination: &cfg.Config.ClientKey, Name: "clientKey", EnvVars: []string{clientKeyFileEnvKey}, Usage: "The client private key file path"},
+
+			&cli.BoolFlag{Destination: &cfg.Config.InsecureAllowPodExecSPDYFallback, Name: "insecure-allow-podexec-spdy-fallback", EnvVars: []string{cfg.InsecureAallowPodExecSPDYFallback}, Required: false, Value: false, Usage: "enable fallback to SPDY connections for stdout streaming. CAUTION: might cause silent data corruption, use on own risk!"},
 		},
 	}
 )
