@@ -30,6 +30,8 @@ const (
 
 	RestUserEnvName     = "USER"
 	RestPasswordEnvName = "PASSWORD"
+
+	InsecureAllowPodExecSPDYFallback = "INSECURE_ALLOW_PODEXEC_SPDY_FALLBACK"
 )
 
 var (
@@ -82,6 +84,7 @@ type Configuration struct {
 	ClusterName                      string
 	RestartPolicy                    string
 	SkipWithoutAnnotation            bool
+	InsecureAllowPodExecSPDYFallback bool
 
 	// Enabling this will ensure there is only one active controller manager.
 	EnableLeaderElection bool

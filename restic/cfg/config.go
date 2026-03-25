@@ -13,6 +13,8 @@ const (
 	// RestoreTypeFolder indicates that the restore shall be done to a folder,
 	// usually a RWX PVC mounted to the Pod of the restore process.
 	RestoreTypeFolder = "folder"
+
+	InsecureAllowPodExecSPDYFallback = "INSECURE_ALLOW_PODEXEC_SPDY_FALLBACK"
 )
 
 var (
@@ -97,10 +99,11 @@ type Configuration struct {
 
 	SleepDuration time.Duration
 
-	VarDir     string
-	CACert     string
-	ClientCert string
-	ClientKey  string
+	VarDir                           string
+	CACert                           string
+	ClientCert                       string
+	ClientKey                        string
+	InsecureAllowPodExecSPDYFallback bool
 }
 
 // Validate ensures a consistent configuration and returns an error should that not be the case

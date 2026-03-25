@@ -118,6 +118,8 @@ var (
 			&cli.PathFlag{Destination: &cfg.Config.CACert, Name: "caCert", EnvVars: []string{caCertFileEnvKey}, Usage: "The certificate authority file path"},
 			&cli.PathFlag{Destination: &cfg.Config.ClientCert, Name: "clientCert", EnvVars: []string{clientCertFileEnvKey}, Usage: "The client certificate file path"},
 			&cli.PathFlag{Destination: &cfg.Config.ClientKey, Name: "clientKey", EnvVars: []string{clientKeyFileEnvKey}, Usage: "The client private key file path"},
+
+			&cli.BoolFlag{Destination: &cfg.Config.InsecureAllowPodExecSPDYFallback, Name: "insecure-allow-podexec-spdy-fallback", EnvVars: []string{cfg.InsecureAllowPodExecSPDYFallback}, Required: false, Value: false, Usage: "enable fallback to SPDY connections for data streaming used by application aware backups. Might need to be enabled if the cluster has Kubernetes version 1.30 or lower. K8up uses WebSockets by default. CAUTION: Has been observed to cause silent data corruption in some network setups, use at own risk!"},
 		},
 	}
 )

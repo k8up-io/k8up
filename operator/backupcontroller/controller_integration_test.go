@@ -87,7 +87,13 @@ func (ts *BackupTestSuite) Test_GivenBackup_AndCompletedJob_ThenCompleteBackup()
 	ts.UpdateStatus(pvc)
 
 	ts.BackupResource.Status.Started = true
-	backupJob.Status.Conditions = []batchv1.JobCondition{{Type: batchv1.JobComplete, Status: corev1.ConditionTrue}}
+	backupJob.Status.Conditions = []batchv1.JobCondition{
+		{Type: batchv1.JobComplete, Status: corev1.ConditionTrue},
+		{Type: batchv1.JobSuccessCriteriaMet, Status: corev1.ConditionTrue},
+	}
+	now := metav1.Now()
+	backupJob.Status.StartTime = &now
+	backupJob.Status.CompletionTime = &now
 	ts.UpdateStatus(ts.BackupResource, backupJob)
 
 	ts.whenReconciling(ts.BackupResource)
@@ -110,7 +116,12 @@ func (ts *BackupTestSuite) Test_GivenBackup_AndFailedJob_ThenCompleteBackup() {
 	ts.UpdateStatus(pvc)
 
 	ts.BackupResource.Status.Started = true
-	backupJob.Status.Conditions = []batchv1.JobCondition{{Type: batchv1.JobFailed, Status: corev1.ConditionTrue}}
+	backupJob.Status.Conditions = []batchv1.JobCondition{
+		{Type: batchv1.JobFailed, Status: corev1.ConditionTrue},
+		{Type: batchv1.JobFailureTarget, Status: corev1.ConditionTrue},
+	}
+	now := metav1.Now()
+	backupJob.Status.StartTime = &now
 	ts.UpdateStatus(ts.BackupResource, backupJob)
 
 	ts.whenReconciling(ts.BackupResource)

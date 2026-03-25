@@ -165,13 +165,6 @@ func (r *Restic) triggerBackup(logger logr.Logger, tags ArrayOpts, opts CommandO
 
 	cmd.Start()
 
-	// All std* io has to be finished before calling Wait() as it will block
-	// otherwise.
-	if data != nil {
-		// wait for data to finish writing, before waiting for the command
-		<-data.Done
-	}
-
 	cmd.Wait()
 
 	return cmd.FatalError
