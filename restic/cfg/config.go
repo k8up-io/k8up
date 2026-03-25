@@ -14,7 +14,7 @@ const (
 	// usually a RWX PVC mounted to the Pod of the restore process.
 	RestoreTypeFolder = "folder"
 
-	InsecureAallowPodExecSPDYFallback = "INSECURE_ALLOW_PODEXEC_SPDY_FALLBACK"
+	InsecureAllowPodExecSPDYFallback = "INSECURE_ALLOW_PODEXEC_SPDY_FALLBACK"
 )
 
 var (

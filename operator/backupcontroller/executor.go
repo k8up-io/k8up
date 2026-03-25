@@ -302,7 +302,7 @@ func (b *BackupExecutor) startBackup(ctx context.Context) error {
 				})
 			}
 
-			if cfg.Config.InsecureAallowPodExecSPDYFallback {
+			if cfg.Config.InsecureAllowPodExecSPDYFallback {
 				batchJob.job.Spec.Template.Spec.Containers[0].Env = append(batchJob.job.Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{
 					Name:  cfg.InsecureAllowPodExecSPDYFallback,
 					Value: "true",
