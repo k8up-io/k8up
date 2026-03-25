@@ -13,7 +13,7 @@ image:
   # -- Operator image repository
   repository: k8up-io/k8up
   # -- Operator image tag (version)
-  tag: v2.14.0
+  tag: v2.15.0
 
 imagePullSecrets: []
 serviceAccount:
