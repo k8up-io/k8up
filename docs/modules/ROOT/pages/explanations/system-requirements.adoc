@@ -2,7 +2,9 @@
 
 == Supported Kubernetes Versions
 
-K8up (v2 or later) officially only supports recent stable Kubernetes versions.
+K8up (v2 or later) officially only supports recent stable Kubernetes versions with support for WebSocket connections in the API server (`1.31` or later).
+
+Older Kubernetes versions may work by setting `--insecure-allow-podexec-spdy-fallback=true` in the operator, but are not officially supported and support may be removed in future releases.
 
 K8up v1 (not maintained anymore) supports legacy Kubernetes clusters such as OpenShift `3.11` (Kubernetes 1.11).
 
