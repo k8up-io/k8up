@@ -22,7 +22,7 @@ The K8up roadmap is on GitHub, see [Projects -> Roadmap](https://github.com/k8up
 ## Contributing
 
 Every contribution is welcome.
-Please see our [Contribution Guide](https://k8up.io/k8up/about/contribution_guide.html) how to best contribute.
+Please see our [Contribution Guide](https://k8up.io/contrib/) how to best contribute.
 
 ## GitHub Project Administration
 
