@@ -12,10 +12,6 @@ Kubernetes and OpenShift Backup Operator based on restic
 helm repo add k8up-io https://k8up-io.github.io/k8up
 helm install k8up k8up-io/k8up
 ```
-```bash
-kubectl apply -f https://github.com/k8up-io/k8up/releases/download/k8up-4.9.0/k8up-crd.yaml --server-side
-```
-
 <!---
 The README.md file is automatically generated with helm-docs!
 
@@ -24,8 +20,9 @@ Edit the README.gotmpl.md template instead.
 
 ## Handling CRDs
 
-* Always upgrade the CRDs before upgrading the Helm release.
-* Watch out for breaking changes in the K8up release notes.
+Previously, the CRDs had to be installed separately, but they're now included in the Helm chart.
+
+Watch out for breaking changes in the K8up [release notes](https://github.com/k8up-io/k8up/releases).
 
 ## Source Code
 
