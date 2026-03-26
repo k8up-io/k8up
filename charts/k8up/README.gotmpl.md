@@ -1,7 +1,3 @@
-```bash
-kubectl apply -f https://github.com/k8up-io/k8up/releases/download/k8up-{{ template "chart.version" . }}/k8up-crd.yaml --server-side
-```
-
 <!---
 The README.md file is automatically generated with helm-docs!
 
@@ -10,8 +6,9 @@ Edit the README.gotmpl.md template instead.
 
 ## Handling CRDs
 
-* Always upgrade the CRDs before upgrading the Helm release.
-* Watch out for breaking changes in the {{ title .Name }} release notes.
+Previously, the CRDs had to be installed separately, but they're now included in the Helm chart.
+
+Watch out for breaking changes in the {{ title .Name }} [release notes](https://github.com/k8up-io/k8up/releases).
 
 {{ template "chart.sourcesSection" . }}
 
