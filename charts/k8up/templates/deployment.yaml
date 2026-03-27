@@ -65,6 +65,10 @@ spec:
             - name: BACKUP_GLOBAL_MEMORY_LIMIT
               value: {{ . }}
           {{- end }}
+          {{- if include "userDefinedEnvVarKeys" . | contains "BACKUP_PROMURL" | not }}
+            - name: BACKUP_PROMURL
+              value: ""
+          {{- end }}
           {{- if .Values.k8up.envVars }}
             {{- toYaml .Values.k8up.envVars | nindent 12 }}
           {{- end }}
