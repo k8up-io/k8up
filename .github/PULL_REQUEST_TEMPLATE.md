@@ -34,6 +34,10 @@ Do *not* mix code changes with chart changes, it will break the release process.
 Delete the checklist section that doesn't apply to the change.
 
 NOTE:
+CI-only changes (GitHub Actions workflows, linter configs, etc.) do not need
+an area label — the area labels are for code and chart changes only.
+
+NOTE:
 These things are not required to open a PR and can be done afterwards,
 while the PR is open.
 -->
