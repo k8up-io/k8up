@@ -122,7 +122,7 @@ func (b *BackupExecutor) listAndFilterPVCs(ctx context.Context, annotation strin
 
 		bi := backupItem{
 			volume: corev1.Volume{
-				Name: pvc.Name,
+				Name: truncateVolumeName(pvc.Name),
 				VolumeSource: corev1.VolumeSource{
 					PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{
 						ClaimName: pvc.Name,
@@ -377,4 +377,12 @@ func (b *BackupExecutor) attachTLSVolumeMounts() []corev1.VolumeMount {
 	}
 
 	return utils.AttachEmptyDirVolumeMounts(cfg.Config.PodVarDir, &tlsVolumeMounts)
+}
+
+// truncateVolumeName ensures the volume name doesn't exceed the Kubernetes 63-character limit.
+func truncateVolumeName(name string) string {
+	if len(name) > 63 {
+		return name[:63]
+	}
+	return name
 }
