@@ -147,6 +147,9 @@ func (in *S3Spec) String() string {
 
 // RestoreEnvVars returns the env vars for this backend when using Restore jobs.
 func (in *S3Spec) RestoreEnvVars() map[string]*corev1.EnvVar {
+	if in == nil {
+		return nil
+	}
 	vars := make(map[string]*corev1.EnvVar)
 	if in.AccessKeyIDSecretRef != nil {
 		vars[cfg.RestoreS3AccessKeyIDEnvName] = &corev1.EnvVar{
