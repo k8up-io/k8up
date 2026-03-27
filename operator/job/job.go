@@ -7,7 +7,7 @@ import (
 	"crypto/sha256"
 	"fmt"
 
-	"github.com/imdario/mergo"
+	"dario.cat/mergo"
 	k8upv1 "github.com/k8up-io/k8up/v2/api/v1"
 	"github.com/k8up-io/k8up/v2/operator/cfg"
 	"github.com/k8up-io/k8up/v2/operator/monitoring"
