@@ -135,6 +135,7 @@ func (in *S3Spec) String() string {
 	if in.Endpoint != "" {
 		endpoint = in.Endpoint
 	}
+	endpoint = strings.TrimRight(endpoint, "/")
 
 	bucket := cfg.Config.GlobalS3Bucket
 	if in.Bucket != "" {
