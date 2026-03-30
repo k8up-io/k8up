@@ -42,8 +42,10 @@ func Test_Deployment_ShouldRender_EnvironmentVariables(t *testing.T) {
 	assert.Equal(t, "metadata.namespace", envs[4].ValueFrom.FieldRef.FieldPath)
 	assert.Equal(t, "BACKUP_GLOBAL_CPU_REQUEST", envs[5].Name, "Deployment does not use configured Env Name")
 	assert.Equal(t, wantCpuRequest, envs[5].Value, "Deployment does not use configured Env Value")
-	assert.Equal(t, "VARIABLE", envs[6].Name, "Deployment does not use configured Env Name")
-	assert.Equal(t, "VALUE", envs[6].Value, "Deployment does not use configured Env Value")
+	assert.Equal(t, "BACKUP_PROMURL", envs[6].Name, "Deployment does not use configured Env Name")
+	assert.Equal(t, "", envs[6].Value, "Deployment does not use configured Env Value")
+	assert.Equal(t, "VARIABLE", envs[7].Name, "Deployment does not use configured Env Name")
+	assert.Equal(t, "VALUE", envs[7].Value, "Deployment does not use configured Env Value")
 }
 
 func Test_Deployment_ShouldRender_Affinity(t *testing.T) {
