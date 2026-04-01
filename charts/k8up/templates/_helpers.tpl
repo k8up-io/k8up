@@ -100,3 +100,14 @@ Cleanup Image
 {{ if .cleanup.registry }}{{ .cleanup.registry }}{{ else }}{{ .image.registry }}{{ end }}/{{ if .cleanup.repository }}{{ .cleanup.repository }}{{ else }}{{ .image.repository }}{{ end }}:{{ if .cleanup.tag }}{{ .cleanup.tag }}{{ else }}{{ .image.tag }}{{ end }}
 {{- end -}}
 {{- end -}}
+
+{{/*
+User defined envVar keys as space separated list
+*/}}
+{{- define "userDefinedEnvVarKeys" -}}
+{{- $keys := list }}
+{{- range .Values.k8up.envVars }}
+  {{- $keys = append $keys .name }}
+{{- end }}
+{{- $keys | join " " }}
+{{- end -}}
