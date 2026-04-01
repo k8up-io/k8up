@@ -193,6 +193,10 @@ func (b *BackupExecutor) setupEnvVars() ([]corev1.EnvVar, error) {
 	vars.SetString("BACKUPCOMMAND_ANNOTATION", cfg.Config.BackupCommandAnnotation)
 	vars.SetString("FILEEXTENSION_ANNOTATION", cfg.Config.FileExtensionAnnotation)
 
+	if cfg.Config.SkipSnapshotSync {
+		vars.SetString("BACKUP_SKIP_SNAPSHOT_SYNC", "true")
+	}
+
 	err := vars.Merge(executor.DefaultEnv(b.backup.GetNamespace()))
 	if err != nil {
 		return nil, fmt.Errorf("cannot merge environment variables: %w", err)

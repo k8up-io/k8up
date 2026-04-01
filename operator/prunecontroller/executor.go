@@ -136,6 +136,10 @@ func (p *PruneExecutor) setupEnvVars(ctx context.Context, prune *k8upv1.Prune) [
 
 	vars.SetString("PROM_URL", cfg.Config.PromURL)
 
+	if cfg.Config.SkipSnapshotSync {
+		vars.SetString("BACKUP_SKIP_SNAPSHOT_SYNC", "true")
+	}
+
 	err := vars.Merge(executor.DefaultEnv(p.Obj.GetNamespace()))
 	if err != nil {
 		log.Error(err, "error while merging the environment variables", "name", p.Obj.GetName(), "namespace", p.Obj.GetNamespace())
