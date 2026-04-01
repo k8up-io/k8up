@@ -18,6 +18,7 @@ OPTIONS:
    --fileExtensionAnnotation value                                                Defines the file extension to use for STDOUT backups. [$FILEEXTENSION_ANNOTATION]
    --backucontainerannotation value                                               set the annotation name that specify the backup container inside the Pod (default: "k8up.io/backupcommand-container") [$BACKUP_CONTAINERANNOTATION]
    --skipPreBackup                                                                If the job should skip the backup command and only backup volumes. (default: false) [$SKIP_PREBACKUP]
+   --skipSnapshotSync                                                             If set, skip synchronizing Snapshot custom resources to the cluster after backup or prune operations. Webhook notifications are still sent. (default: false) [$BACKUP_SKIP_SNAPSHOT_SYNC]
    --promURL value                                                                Sets the URL of a prometheus push gateway to report metrics. [$PROM_URL]
    --clusterName value                                                            Sets the Kubernetes cluster name for grouping metrics in push gateway [$CLUSTER_NAME]
    --webhookURL value, --statsURL value                                           Sets the URL of a server which will retrieve a webhook after the action completes. [$STATS_URL]
@@ -69,4 +70,5 @@ OPTIONS:
    --caCert value                                                                 The certificate authority file path [$CA_CERT_FILE]
    --clientCert value                                                             The client certificate file path [$CLIENT_CERT_FILE]
    --clientKey value                                                              The client private key file path [$CLIENT_KEY_FILE]
+   --insecure-allow-podexec-spdy-fallback                                         enable fallback to SPDY connections for data streaming used by application aware backups. Might need to be enabled if the cluster has Kubernetes version 1.30 or lower. K8up uses WebSockets by default. CAUTION: Has been observed to cause silent data corruption in some network setups, use at own risk! (default: false) [$INSECURE_ALLOW_PODEXEC_SPDY_FALLBACK]
    --help, -h                                                                     show help (default: false)

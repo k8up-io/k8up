@@ -246,13 +246,13 @@ This is for advanced use-cases only. Please only set this if you know what you'r
 Value must be positive integer if given.
 | *`keepJobs`* __integer__ | KeepJobs amount of jobs to keep for later analysis.
 
-
 Deprecated: Use FailedJobsHistoryLimit and SuccessfulJobsHistoryLimit respectively.
 | *`failedJobsHistoryLimit`* __integer__ | FailedJobsHistoryLimit amount of failed jobs to keep for later analysis.
 KeepJobs is used property is not specified.
 | *`successfulJobsHistoryLimit`* __integer__ | SuccessfulJobsHistoryLimit amount of successful jobs to keep for later analysis.
 KeepJobs is used property is not specified.
 | *`promURL`* __string__ | PromURL sets a prometheus push URL where the backup container send metrics to
+| *`clusterName`* __string__ | ClusterName sets the kubernetes cluster name to send to pushgateway for grouping metrics
 | *`statsURL`* __string__ | StatsURL sets an arbitrary URL where the restic container posts metrics and
 information about the snapshots to. This is in addition to the prometheus
 pushgateway.
@@ -290,13 +290,13 @@ This is for advanced use-cases only. Please only set this if you know what you'r
 Value must be positive integer if given.
 | *`keepJobs`* __integer__ | KeepJobs amount of jobs to keep for later analysis.
 
-
 Deprecated: Use FailedJobsHistoryLimit and SuccessfulJobsHistoryLimit respectively.
 | *`failedJobsHistoryLimit`* __integer__ | FailedJobsHistoryLimit amount of failed jobs to keep for later analysis.
 KeepJobs is used property is not specified.
 | *`successfulJobsHistoryLimit`* __integer__ | SuccessfulJobsHistoryLimit amount of successful jobs to keep for later analysis.
 KeepJobs is used property is not specified.
 | *`promURL`* __string__ | PromURL sets a prometheus push URL where the backup container send metrics to
+| *`clusterName`* __string__ | ClusterName sets the kubernetes cluster name to send to pushgateway for grouping metrics
 | *`statsURL`* __string__ | StatsURL sets an arbitrary URL where the restic container posts metrics and
 information about the snapshots to. This is in addition to the prometheus
 pushgateway.
@@ -371,8 +371,8 @@ This is for advanced use-cases only. Please only set this if you know what you'r
 | *`activeDeadlineSeconds`* __integer__ | ActiveDeadlineSeconds specifies the duration in seconds relative to the startTime that the job may be continuously active before the system tries to terminate it.
 Value must be positive integer if given.
 | *`promURL`* __string__ | PromURL sets a prometheus push URL where the backup container send metrics to
+| *`clusterName`* __string__ | ClusterName sets the kubernetes cluster name to send to pushgateway for grouping metrics
 | *`keepJobs`* __integer__ | KeepJobs amount of jobs to keep for later analysis.
-
 
 Deprecated: Use FailedJobsHistoryLimit and SuccessfulJobsHistoryLimit respectively.
 | *`failedJobsHistoryLimit`* __integer__ | FailedJobsHistoryLimit amount of failed jobs to keep for later analysis.
@@ -408,8 +408,8 @@ This is for advanced use-cases only. Please only set this if you know what you'r
 | *`activeDeadlineSeconds`* __integer__ | ActiveDeadlineSeconds specifies the duration in seconds relative to the startTime that the job may be continuously active before the system tries to terminate it.
 Value must be positive integer if given.
 | *`promURL`* __string__ | PromURL sets a prometheus push URL where the backup container send metrics to
+| *`clusterName`* __string__ | ClusterName sets the kubernetes cluster name to send to pushgateway for grouping metrics
 | *`keepJobs`* __integer__ | KeepJobs amount of jobs to keep for later analysis.
-
 
 Deprecated: Use FailedJobsHistoryLimit and SuccessfulJobsHistoryLimit respectively.
 | *`failedJobsHistoryLimit`* __integer__ | FailedJobsHistoryLimit amount of failed jobs to keep for later analysis.
@@ -738,7 +738,6 @@ Value must be positive integer if given.
 | *`retention`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-retentionpolicy[$$RetentionPolicy$$]__ | Retention sets how many backups should be kept after a forget and prune
 | *`keepJobs`* __integer__ | KeepJobs amount of jobs to keep for later analysis.
 
-
 Deprecated: Use FailedJobsHistoryLimit and SuccessfulJobsHistoryLimit respectively.
 | *`failedJobsHistoryLimit`* __integer__ | FailedJobsHistoryLimit amount of failed jobs to keep for later analysis.
 KeepJobs is used property is not specified.
@@ -774,7 +773,6 @@ This is for advanced use-cases only. Please only set this if you know what you'r
 Value must be positive integer if given.
 | *`retention`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-retentionpolicy[$$RetentionPolicy$$]__ | Retention sets how many backups should be kept after a forget and prune
 | *`keepJobs`* __integer__ | KeepJobs amount of jobs to keep for later analysis.
-
 
 Deprecated: Use FailedJobsHistoryLimit and SuccessfulJobsHistoryLimit respectively.
 | *`failedJobsHistoryLimit`* __integer__ | FailedJobsHistoryLimit amount of failed jobs to keep for later analysis.
@@ -889,9 +887,9 @@ This is for advanced use-cases only. Please only set this if you know what you'r
 Value must be positive integer if given.
 | *`restoreMethod`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-restoremethod[$$RestoreMethod$$]__ | 
 | *`restoreFilter`* __string__ | 
+| *`restoreTimeFilter`* __string__ | Simple filter to define a timestamp (prefix, YYYY-MM-DD hh:mm:ss) for snapshot selection instead of latest (or latest if nothing matches)
 | *`snapshot`* __string__ | 
 | *`keepJobs`* __integer__ | KeepJobs amount of jobs to keep for later analysis.
-
 
 Deprecated: Use FailedJobsHistoryLimit and SuccessfulJobsHistoryLimit respectively.
 | *`failedJobsHistoryLimit`* __integer__ | FailedJobsHistoryLimit amount of failed jobs to keep for later analysis.
@@ -899,6 +897,9 @@ KeepJobs is used property is not specified.
 | *`successfulJobsHistoryLimit`* __integer__ | SuccessfulJobsHistoryLimit amount of successful jobs to keep for later analysis.
 KeepJobs is used property is not specified.
 | *`tags`* __string array__ | Tags is a list of arbitrary tags that get added to the backup via Restic's tagging system
+| *`paths`* __string array__ | Paths is a list of paths that are contained with in a snapshot and can be filtered by
+| *`delete`* __boolean__ | Delete ensures the state after restoring a snapshot is identical to the snapshot
+Deletes files from target if they do not exist in snapshot
 |===
 
 
@@ -931,9 +932,9 @@ This is for advanced use-cases only. Please only set this if you know what you'r
 Value must be positive integer if given.
 | *`restoreMethod`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-restoremethod[$$RestoreMethod$$]__ | 
 | *`restoreFilter`* __string__ | 
+| *`restoreTimeFilter`* __string__ | Simple filter to define a timestamp (prefix, YYYY-MM-DD hh:mm:ss) for snapshot selection instead of latest (or latest if nothing matches)
 | *`snapshot`* __string__ | 
 | *`keepJobs`* __integer__ | KeepJobs amount of jobs to keep for later analysis.
-
 
 Deprecated: Use FailedJobsHistoryLimit and SuccessfulJobsHistoryLimit respectively.
 | *`failedJobsHistoryLimit`* __integer__ | FailedJobsHistoryLimit amount of failed jobs to keep for later analysis.
@@ -941,6 +942,9 @@ KeepJobs is used property is not specified.
 | *`successfulJobsHistoryLimit`* __integer__ | SuccessfulJobsHistoryLimit amount of successful jobs to keep for later analysis.
 KeepJobs is used property is not specified.
 | *`tags`* __string array__ | Tags is a list of arbitrary tags that get added to the backup via Restic's tagging system
+| *`paths`* __string array__ | Paths is a list of paths that are contained with in a snapshot and can be filtered by
+| *`delete`* __boolean__ | Delete ensures the state after restoring a snapshot is identical to the snapshot
+Deletes files from target if they do not exist in snapshot
 |===
 
 
@@ -1152,7 +1156,6 @@ ScheduleSpec defines the schedules for the various job types.
 | *`prune`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-pruneschedule[$$PruneSchedule$$]__ | 
 | *`backend`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-backend[$$Backend$$]__ | 
 | *`keepJobs`* __integer__ | KeepJobs amount of jobs to keep for later analysis.
-
 
 Deprecated: Use FailedJobsHistoryLimit and SuccessfulJobsHistoryLimit respectively.
 | *`failedJobsHistoryLimit`* __integer__ | FailedJobsHistoryLimit amount of failed jobs to keep for later analysis.
