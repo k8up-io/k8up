@@ -1,5 +1,5 @@
 NAME:
-   k8up - A new cli application
+   k8up - Kubernetes and OpenShift Backup Operator
 
 USAGE:
    k8up [global options] command [command options] [arguments...]
@@ -19,4 +19,4 @@ GLOBAL OPTIONS:
    --version, -v           print the version (default: false)
 
 COPYRIGHT:
-   (c) 2021 VSHN AG
+   (c) K8up Authors

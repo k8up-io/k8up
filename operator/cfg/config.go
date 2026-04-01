@@ -84,6 +84,7 @@ type Configuration struct {
 	ClusterName                      string
 	RestartPolicy                    string
 	SkipWithoutAnnotation            bool
+	EnableRelaxedScheduling          bool
 	InsecureAllowPodExecSPDYFallback bool
 
 	// Enabling this will ensure there is only one active controller manager.

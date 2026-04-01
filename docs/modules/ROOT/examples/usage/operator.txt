@@ -47,8 +47,10 @@ OPTIONS:
    --podexecaccountname value, --serviceaccount value  set the service account name that should be used for the pod command execution (default: "pod-executor") [$BACKUP_PODEXECACCOUNTNAME]
    --podexecrolename value                             set the role name that should be used for pod command execution (default: "pod-executor") [$BACKUP_PODEXECROLENAME]
    --enable-leader-election                            enable leader election within the operator Pod (default: enabled) [$BACKUP_ENABLE_LEADER_ELECTION]
+   --enable-relaxed-scheduling                         enable relaxed scheduling of backup jobs relying on the Kubernetes scheduler (default: disabled) [$BACKUP_ENABLE_RELAXED_SCHEDULING]
    --skip-pvcs-without-annotation                      skip selecting PVCs that don't have the BACKUP_ANNOTATION (default: disabled) [$BACKUP_SKIP_WITHOUT_ANNOTATION]
    --checkschedule value                               the default check schedule (default: "0 0 * * 0") [$BACKUP_CHECKSCHEDULE]
    --operator-namespace value                          set the namespace in which the K8up operator itself runs [$BACKUP_OPERATOR_NAMESPACE]
+   --insecure-allow-podexec-spdy-fallback              enable fallback to SPDY connections for data streaming used by application aware backups. Might need to be enabled if the cluster has Kubernetes version 1.30 or lower. K8up uses WebSockets by default. CAUTION: Has been observed to cause silent data corruption in some network setups, use at own risk! (default: false) [$INSECURE_ALLOW_PODEXEC_SPDY_FALLBACK]
    --vardir value                                      the var data dir for read/write k8up data or temp file in the backup pod (default: "/k8up") [$VAR_DIR]
    --help, -h                                          show help (default: false)

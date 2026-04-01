@@ -21,9 +21,9 @@ It does not work in some cases though.
 More precise, it does not work when files are kept open for a long period of time, like databases do.
 It does also not work for content that is not stored in the cluster, like a managed database that is offered by a service provider.
 
-NOTE: If the PVC has the `RWO` access mode, the backup `Pod` needs to be scheduled onto the same node, on which the `Pod` (which uses the respective `PVC`) runs.
+NOTE: If the PVC has the `RWO` access mode, the backup `Pod` needs to be scheduled onto the same node, on which the `Pod` (which uses the respective `PVC`) runs. This happens explicitly or implicitly depending on the backup pod scheduling mode (see: xref:explanations/backup-pod-scheduling.adoc[Backup Pod Scheduling]).
 
-Read xref:references/annotations.adoc[] to learn more about how the backup process can be influenced.
+Read xref:references/annotations.adoc[] to learn more about how the backup process can be influenced and xref:explanations/backup-pod-scheduling.adoc[Backup Pod Scheduling] to learn more about the two backup pod scheduling modes.
 
 == Application-Aware Backups
 

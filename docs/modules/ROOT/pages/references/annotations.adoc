@@ -36,4 +36,10 @@ See xref:references/operator-config-reference.adoc[Operator Configuration refere
 |A string which is valid pod name.
 |`Pod`
 |`BACKUP_CONTAINERANNOTATION`
+
+|`k8up.io/hostname`
+|If defined, the backup pod will be scheduled on this node
+|A string which is a valid node name.
+|`PersistentVolumeClaim`
+|n/a
 |===

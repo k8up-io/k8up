@@ -1,0 +1,25 @@
+= Backup Pod Scheduling
+
+K8up has two scheduling modes for backup pods. Both scheduling modes respect the `k8up.io/hostname` annotation on a PVC (see: xref:references/annotations.adoc[Annotations]).
+
+== Classic Scheduling (default)
+
+K8s does not prevent mounting an RWO PVC to multiple pods, if they are scheduled on the same host.
+K8up uses this fact to provide the ability to back up RWO PVCs.
+
+For a given backup in a namespace K8up will list all the PVCs.
+The PVCs are then grouped depending on their type:
+
+* all RWX PVCs are grouped together
+* RWO PVCs are grouped by k8s node where they are currently mounted
+
+K8up will then deploy backup jobs according to the grouping, a single job for all RWX PVCs and a job for each K8s node.
+The jobs themselves loop over the mounted PVCs and do a file backup via restic.
+
+== Relaxed Scheduling
+
+In the relaxed scheduling mode, the backup pod scheduling is handled by the Kubernetes scheduler. This mode is intended for the use with storage provisioners that handle node affinity and topology well for their provisioned volumes.
+
+For a given backup in a namespace K8up will list all the PVCs and schedule one backup job for each PVC. K8up will not set a node selector for the backup pods unless explicitly requested through the `k8up.io/hostname` annotation on a PVC. This allows the Kubernetes scheduler to more freely select an appropriate node to run the backup on.
+
+Relaxed scheduling can be enabled via the operator flag `--enable-relaxed-scheduling` or environment variable `BACKUP_ENABLE_RELAXED_SCHEDULING` (see: xref:references/operator-config-reference.adoc[Operator Configuration]).

@@ -144,12 +144,15 @@ func (b *BackupExecutor) listAndFilterPVCs(ctx context.Context, annotation strin
 		}
 
 		if pod, ok := pvcPodMap[pvc.GetName()]; ok {
-			bi.node = pod.Spec.NodeName
 			bi.tolerations = pod.Spec.Tolerations
 			bi.targetPod = pod.GetName()
 
+			if !cfg.Config.EnableRelaxedScheduling {
+				bi.node = pod.Spec.NodeName
+			}
+
 			log.V(1).Info("PVC mounted at pod", "pvc", pvc.GetName(), "targetPod", bi.targetPod, "node", bi.node, "tolerations", bi.tolerations)
-		} else if isRWO {
+		} else if !cfg.Config.EnableRelaxedScheduling && isRWO {
 			pv := &corev1.PersistentVolume{}
 			if err := b.Client.Get(ctx, types.NamespacedName{Name: pvc.Spec.VolumeName}, pv); err != nil {
 				log.Error(err, "unable to get PV, skipping pvc", "pvc", pvc.GetName(), "pv", pvc.Spec.VolumeName)
@@ -162,7 +165,12 @@ func (b *BackupExecutor) listAndFilterPVCs(ctx context.Context, annotation strin
 			}
 			log.V(1).Info("node found in PV or PVC", "pvc", pvc.GetName(), "node", bi.node)
 		} else {
-			log.Info("RWX PVC with no specific node", "pvc", pvc.GetName())
+			log.Info("PVC with no specific node", "pvc", pvc.GetName())
+		}
+
+		if hostnameAnnotation, ok := pvc.Annotations[k8upv1.AnnotationK8upHostname]; ok {
+			bi.node = hostnameAnnotation
+			log.Info("PVC has hostname annotation, adding to backup item", "pvc", pvc.GetName(), "node", bi.node)
 		}
 
 		backupItems = append(backupItems, bi)
@@ -213,23 +221,45 @@ func (b *BackupExecutor) startBackup(ctx context.Context) error {
 	}
 	backupJobs := map[string]jobItem{}
 	for index, item := range backupItems {
-		jobName := item.node + strings.Join(item.resticArgs, ",")
-		if _, ok := backupJobs[jobName]; !ok {
-			backupJobs[jobName] = jobItem{
+		if cfg.Config.EnableRelaxedScheduling {
+			// relaxed scheduling: one job per PVC, no node pinning
+			jobName := strconv.Itoa(index) + strings.Join(item.resticArgs, ",")
+			backupJob := jobItem{
 				job:           b.createJob(strconv.Itoa(index), item.node, item.tolerations),
 				targetPods:    make([]string, 0),
 				volumes:       make([]corev1.Volume, 0),
 				resticArgs:    []string(item.resticArgs),
 				skipPreBackup: true,
 			}
-		}
 
-		j := backupJobs[jobName]
-		if item.targetPod != "" {
-			j.targetPods = append(j.targetPods, item.targetPod)
+			if item.targetPod != "" {
+				backupJob.targetPods = append(backupJob.targetPods, item.targetPod)
+			}
+			if item.volume.Name != "" {
+				backupJob.volumes = append(backupJob.volumes, item.volume)
+			}
+
+			backupJobs[jobName] = backupJob
+		} else {
+			// classic scheduling: pin job to node, multiple PVCs on the same node go into the same job
+			jobName := item.node + strings.Join(item.resticArgs, ",")
+			if _, ok := backupJobs[jobName]; !ok {
+				backupJobs[jobName] = jobItem{
+					job:           b.createJob(strconv.Itoa(index), item.node, item.tolerations),
+					targetPods:    make([]string, 0),
+					volumes:       make([]corev1.Volume, 0),
+					resticArgs:    []string(item.resticArgs),
+					skipPreBackup: true,
+				}
+			}
+
+			j := backupJobs[jobName]
+			if item.targetPod != "" {
+				j.targetPods = append(j.targetPods, item.targetPod)
+			}
+			j.volumes = append(j.volumes, item.volume)
+			backupJobs[jobName] = j
 		}
-		j.volumes = append(j.volumes, item.volume)
-		backupJobs[jobName] = j
 	}
 
 	log := controllerruntime.LoggerFrom(ctx)
