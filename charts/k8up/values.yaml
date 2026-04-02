@@ -56,6 +56,10 @@ k8up:
   # -- Specifies whether K8up should ignore PVCs without the backup annotation (by default, `k8up.io/backup`)
   skipWithoutAnnotation: false
 
+  # -- Specifies whether K8up should skip synchronizing Snapshot custom resources to the cluster after backup or prune operations.
+  # When enabled, the operator passes `BACKUP_SKIP_SNAPSHOT_SYNC=true` to backup and prune job pods. Webhook notifications are still sent.
+  skipSnapshotSync: false
+
   # -- Specifies the namespace in which K8up's `EffectiveSchedules` are stored.
   # Defaults to release namespace if left empty.
   operatorNamespace: ""

@@ -15,6 +15,8 @@ TIP: Deploying this configuration also creates a Backup of the current state and
 
 TIP: By default, all PVCs are backed up automatically. Adding the annotation `k8up.io/backup=false` to a PVC object will exclude it from all following backups. Alternatively, you can set the environment variable `BACKUP_SKIP_WITHOUT_ANNOTATION=true` if you want K8up to ignore objects without the annotation.
 
+TIP: By default, K8up synchronizes Snapshot custom resources to the cluster after backup operations. You can disable this globally by setting the operator environment variable `BACKUP_GLOBAL_SKIP_SNAPSHOT_SYNC=true`. Webhook notifications are still sent even when snapshot synchronization is disabled.
+
 == Self-signed issuer and Mutual TLS
 
 If you are using self-signed issuer or using mutual tls for authenticate client, you're able use a volume for mounting cert files into the backup object.

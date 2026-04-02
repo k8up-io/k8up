@@ -61,6 +61,7 @@ Document your changes in values.yaml and let `make docs:helm` generate this sect
 | k8up.globalResources.requests.cpu | string | `""` | Global CPU resource requests applied to jobs. See [supported units][resource-units]. |
 | k8up.globalResources.requests.memory | string | `""` | Global Memory resource requests applied to jobs. See [supported units][resource-units]. |
 | k8up.operatorNamespace | string | `""` | Specifies the namespace in which K8up's `EffectiveSchedules` are stored. Defaults to release namespace if left empty. |
+| k8up.skipSnapshotSync | bool | `false` | Specifies whether K8up should skip synchronizing Snapshot custom resources to the cluster after backup or prune operations. When enabled, the operator passes `BACKUP_SKIP_SNAPSHOT_SYNC=true` to backup and prune job pods. Webhook notifications are still sent. |
 | k8up.skipWithoutAnnotation | bool | `false` | Specifies whether K8up should ignore PVCs without the backup annotation (by default, `k8up.io/backup`) |
 | k8up.timezone | string | `""` | Specifies the timezone K8up is using for scheduling. Empty value defaults to the timezone in which Kubernetes is deployed. Accepts `tz database` compatible entries, e.g. `Europe/Zurich` |
 | metrics.grafanaDashboard.additionalLabels | object | `{}` | Add labels to the Grafana Dashboard object |
