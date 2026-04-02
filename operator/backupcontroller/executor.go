@@ -147,12 +147,15 @@ func (b *BackupExecutor) listAndFilterPVCs(ctx context.Context, annotation strin
 			bi.tolerations = pod.Spec.Tolerations
 			bi.targetPod = pod.GetName()
 
-			if !cfg.Config.EnableRelaxedScheduling {
+			// if an RWO volume is already mounted to a pod, the backup pod is forced to run on the same node
+			// for RWX volumes backup pods are not pinned to a node in relaxed scheduling
+			if isRWO || !cfg.Config.EnableRelaxedScheduling {
 				bi.node = pod.Spec.NodeName
 			}
 
 			log.V(1).Info("PVC mounted at pod", "pvc", pvc.GetName(), "targetPod", bi.targetPod, "node", bi.node, "tolerations", bi.tolerations)
 		} else if !cfg.Config.EnableRelaxedScheduling && isRWO {
+			// if an RWO volume is not mounted to a pod, the Kubernetes scheduler will take the node affinity of the volume into account
 			pv := &corev1.PersistentVolume{}
 			if err := b.Client.Get(ctx, types.NamespacedName{Name: pvc.Spec.VolumeName}, pv); err != nil {
 				log.Error(err, "unable to get PV, skipping pvc", "pvc", pvc.GetName(), "pv", pvc.Spec.VolumeName)

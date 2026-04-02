@@ -380,8 +380,8 @@ func (ts *BackupTestSuite) Test_GivenBackupAndMountedRWOPVCOnOneNode_Relaxed_Exp
 
 	job1 := jobs.Items[0]
 	job2 := jobs.Items[1]
-	ts.assertJobSpecs(&job1, "", []corev1.Volume{volumePvc1}, tolerations, []string{pod1.Name})
-	ts.assertJobSpecs(&job2, "", []corev1.Volume{volumePvc2}, tolerations, []string{pod2.Name})
+	ts.assertJobSpecs(&job1, nodeName, []corev1.Volume{volumePvc1}, tolerations, []string{pod1.Name})
+	ts.assertJobSpecs(&job2, nodeName, []corev1.Volume{volumePvc2}, tolerations, []string{pod2.Name})
 }
 
 func (ts *BackupTestSuite) Test_GivenBackupAndMountedRWOPVCOnTwoNodes_ExpectBackupOnTwoNodes() {
@@ -440,12 +440,71 @@ func (ts *BackupTestSuite) Test_GivenBackupAndMountedRWOPVCOnTwoNodes_ExpectBack
 	ts.assertJobSpecs(&job2, nodeNamePod2, []corev1.Volume{volumePvc2}, tolerationsPod2, []string{pod2.Name})
 }
 
-func (ts *BackupTestSuite) Test_GivenBackupAndMountedRWOPVCOnTwoNodes_Relaxed_ExpectNoNodePinning() {
+func (ts *BackupTestSuite) Test_GivenBackupAndMountedRWOPVCOnTwoNodes_Relaxed_ExpectNodePinning() {
 	cfg.Config.EnableRelaxedScheduling = true
 	defer func() { cfg.Config.EnableRelaxedScheduling = false }()
 
 	pvc1 := ts.newPvc("test-pvc1", corev1.ReadWriteOnce)
 	pvc2 := ts.newPvc("test-pvc2", corev1.ReadWriteOnce)
+	nodeNamePod1 := "worker"
+	nodeNamePod2 := "control-plane"
+	tolerationsPod1 := make([]corev1.Toleration, 0)
+	tolerationsPod2 := []corev1.Toleration{
+		{
+			Key:    "node-role.kubernetes.io/control-plane",
+			Effect: corev1.TaintEffectNoSchedule,
+		},
+		{
+			Key:    "node-role.kubernetes.io/master",
+			Effect: corev1.TaintEffectNoSchedule,
+		},
+	}
+	volumePvc1 := corev1.Volume{
+		Name: "test-pvc1",
+		VolumeSource: corev1.VolumeSource{
+			PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{
+				ClaimName: pvc1.Name,
+			},
+		},
+	}
+	pod1 := ts.newPod("test-pod1", nodeNamePod1, tolerationsPod1, []corev1.Volume{volumePvc1})
+	volumePvc2 := corev1.Volume{
+		Name: "test-pvc2",
+		VolumeSource: corev1.VolumeSource{
+			PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{
+				ClaimName: pvc2.Name,
+			},
+		},
+	}
+	pod2 := ts.newPod("test-pod2", nodeNamePod2, tolerationsPod2, []corev1.Volume{volumePvc2})
+	ts.EnsureResources(ts.BackupResource, pvc1, pvc2, pod1, pod2)
+
+	pvc1.Status.Phase = corev1.ClaimBound
+	pvc2.Status.Phase = corev1.ClaimBound
+	pod1.Status.Phase = corev1.PodRunning
+	pod2.Status.Phase = corev1.PodRunning
+	ts.UpdateStatus(pvc1, pvc2, pod1, pod2)
+
+	result := ts.whenReconciling(ts.BackupResource)
+	ts.Assert().GreaterOrEqual(result.RequeueAfter, 30*time.Second)
+
+	jobs := new(batchv1.JobList)
+	err := ts.Client.List(ts.Ctx, jobs, client.InNamespace(ts.NS))
+	ts.Require().NoError(err)
+	ts.Assert().Len(jobs.Items, 2)
+
+	job1 := jobs.Items[0]
+	job2 := jobs.Items[1]
+	ts.assertJobSpecs(&job1, nodeNamePod1, []corev1.Volume{volumePvc1}, tolerationsPod1, []string{pod1.Name})
+	ts.assertJobSpecs(&job2, nodeNamePod2, []corev1.Volume{volumePvc2}, tolerationsPod2, []string{pod2.Name})
+}
+
+func (ts *BackupTestSuite) Test_GivenBackupAndMountedRWXPVCOnTwoNodes_Relaxed_ExpectNoNodePinning() {
+	cfg.Config.EnableRelaxedScheduling = true
+	defer func() { cfg.Config.EnableRelaxedScheduling = false }()
+
+	pvc1 := ts.newPvc("test-pvc1", corev1.ReadWriteMany)
+	pvc2 := ts.newPvc("test-pvc2", corev1.ReadWriteMany)
 	nodeNamePod1 := "worker"
 	nodeNamePod2 := "control-plane"
 	tolerationsPod1 := make([]corev1.Toleration, 0)
@@ -530,7 +589,7 @@ func (ts *BackupTestSuite) Test_GivenBackupAndMountedRWOPVCOnOneNodeWithFinished
 	ts.assertJobSpecs(job, nodeName, []corev1.Volume{volumePvc1}, tolerations, []string{pod1.Name})
 }
 
-func (ts *BackupTestSuite) Test_GivenBackupAndMountedRWOPVCOnOneNodeWithFinishedBackupPod_Relaxed_ExpectNoNodePinning() {
+func (ts *BackupTestSuite) Test_GivenBackupAndMountedRWOPVCOnOneNodeWithFinishedBackupPod_Relaxed_ExpectNodePinning() {
 	cfg.Config.EnableRelaxedScheduling = true
 	defer func() { cfg.Config.EnableRelaxedScheduling = false }()
 
@@ -561,7 +620,7 @@ func (ts *BackupTestSuite) Test_GivenBackupAndMountedRWOPVCOnOneNodeWithFinished
 	ts.Assert().GreaterOrEqual(result.RequeueAfter, 30*time.Second)
 
 	job := ts.expectABackupJob()
-	ts.assertJobSpecs(job, "", []corev1.Volume{volumePvc1}, tolerations, []string{pod1.Name})
+	ts.assertJobSpecs(job, nodeName, []corev1.Volume{volumePvc1}, tolerations, []string{pod1.Name})
 }
 
 func (ts *BackupTestSuite) Test_GivenBackupAndUnmountedRWOPVCOnTwoNodes_ExpectBackupOnTwoNodes() {
@@ -726,7 +785,7 @@ func (ts *BackupTestSuite) Test_GivenBackupAndRWOPVCWithFinishedPod_ExpectFinish
 	ts.assertJobSpecs(job, nodeNamePod1, []corev1.Volume{volumePvc1}, tolerations, []string{pod1.Name})
 }
 
-func (ts *BackupTestSuite) Test_GivenBackupAndRWOPVCWithFinishedPod_Relaxed_ExpectNoNodePinning() {
+func (ts *BackupTestSuite) Test_GivenBackupAndRWOPVCWithFinishedPod_Relaxed_ExpectNodePinning() {
 	cfg.Config.EnableRelaxedScheduling = true
 	defer func() { cfg.Config.EnableRelaxedScheduling = false }()
 
@@ -755,12 +814,42 @@ func (ts *BackupTestSuite) Test_GivenBackupAndRWOPVCWithFinishedPod_Relaxed_Expe
 	ts.whenReconciling(ts.BackupResource)
 	job := ts.expectABackupJob()
 
-	ts.assertJobSpecs(job, "", []corev1.Volume{volumePvc1}, tolerations, []string{pod1.Name})
+	ts.assertJobSpecs(job, nodeNamePod1, []corev1.Volume{volumePvc1}, tolerations, []string{pod1.Name})
 }
 
 func (ts *BackupTestSuite) Test_GivenBackupAndRWOPVCWithAnnotation_ExpectNodeSelector() {
 	nodeNamePvc1 := "worker-one"
 	pvc1 := ts.newPvc("test-pvc1", corev1.ReadWriteOnce)
+	pvc1.Annotations = map[string]string{
+		"k8up.io/hostname": nodeNamePvc1,
+	}
+	nodeNamePod1 := "worker-two"
+	volumePvc1 := corev1.Volume{
+		Name: "test-pvc1",
+		VolumeSource: corev1.VolumeSource{
+			PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{
+				ClaimName: pvc1.Name,
+			},
+		},
+	}
+	tolerations := make([]corev1.Toleration, 0)
+	pod1 := ts.newPod("test-pod1", nodeNamePod1, tolerations, []corev1.Volume{volumePvc1})
+
+	ts.EnsureResources(ts.BackupResource, pvc1, pod1)
+
+	pvc1.Status.Phase = corev1.ClaimBound
+	pod1.Status.Phase = corev1.PodRunning
+	ts.UpdateStatus(pvc1, pod1)
+
+	ts.whenReconciling(ts.BackupResource)
+	job := ts.expectABackupJob()
+
+	ts.assertJobSpecs(job, nodeNamePvc1, []corev1.Volume{volumePvc1}, tolerations, []string{pod1.Name})
+}
+
+func (ts *BackupTestSuite) Test_GivenBackupAndRWXPVCWithAnnotation_ExpectNodeSelector() {
+	nodeNamePvc1 := "worker-one"
+	pvc1 := ts.newPvc("test-pvc1", corev1.ReadWriteMany)
 	pvc1.Annotations = map[string]string{
 		"k8up.io/hostname": nodeNamePvc1,
 	}

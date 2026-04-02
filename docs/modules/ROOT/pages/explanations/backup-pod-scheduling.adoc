@@ -18,8 +18,8 @@ The jobs themselves loop over the mounted PVCs and do a file backup via restic.
 
 == Relaxed Scheduling
 
-In the relaxed scheduling mode, the backup pod scheduling is handled by the Kubernetes scheduler. This mode is intended for the use with storage provisioners that handle node affinity and topology well for their provisioned volumes.
+In the relaxed scheduling mode, the backup pod scheduling for RWX volumes is handled by the Kubernetes scheduler. This mode is intended for the use with storage provisioners that handle node affinity and topology well for their provisioned volumes.
 
-For a given backup in a namespace K8up will list all the PVCs and schedule one backup job for each PVC. K8up will not set a node selector for the backup pods unless explicitly requested through the `k8up.io/hostname` annotation on a PVC. This allows the Kubernetes scheduler to more freely select an appropriate node to run the backup on.
+For a given backup in a namespace K8up will list all the PVCs and schedule one backup job for each PVC. K8up will only set a node selector for the backup pods covering mounted RWO volumes or if explicitly requested through the `k8up.io/hostname` annotation on a PVC. This allows the Kubernetes scheduler to more freely select an appropriate node to run the backup on.
 
 Relaxed scheduling can be enabled via the operator flag `--enable-relaxed-scheduling` or environment variable `BACKUP_ENABLE_RELAXED_SCHEDULING` (see: xref:references/operator-config-reference.adoc[Operator Configuration]).
