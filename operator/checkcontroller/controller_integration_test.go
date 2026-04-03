@@ -66,7 +66,7 @@ func (ts *CheckTestSuite) TestJobCleanup() {
 	ts.KeepFailed = 2
 
 	createJobs := 6
-	ts.givenCheckResources(createJobs)
+	ts.givenCheckResourcesWithOwnership(createJobs)
 
 	successfulJobs := 2
 	failedJobs := 3
@@ -79,6 +79,7 @@ func (ts *CheckTestSuite) TestJobCleanup() {
 		ts.UpdateStatus(ts.GivenChecks[i])
 	}
 
+	// Reconcile all checks - cleanup will trigger for finished ones
 	ts.whenReconcile()
 	ts.expectCheckCleanup((successfulJobs - ts.KeepSuccessful) + (failedJobs - ts.KeepFailed))
 }
@@ -107,6 +108,32 @@ func (ts *CheckTestSuite) givenCheckResources(amount int) {
 	for i := 0; i < amount; i++ {
 		checkName := ts.CheckBaseName + strconv.Itoa(i)
 		check := NewCheckResource(checkName, ts.NS, ts.KeepFailed, ts.KeepSuccessful)
+		ts.EnsureResources(check)
+		ts.GivenChecks = append(ts.GivenChecks, check)
+		ts.CheckNames = append(ts.CheckNames, checkName)
+	}
+}
+
+// givenCheckResourcesWithOwnership creates check resources with ownership labels for cleanup testing
+func (ts *CheckTestSuite) givenCheckResourcesWithOwnership(amount int) {
+	// Use the first check as the owner for all checks - this simulates all checks being created by the same schedule
+	var ownerCheckName string
+
+	for i := 0; i < amount; i++ {
+		checkName := ts.CheckBaseName + strconv.Itoa(i)
+		check := NewCheckResource(checkName, ts.NS, ts.KeepFailed, ts.KeepSuccessful)
+
+		// Use the first check as the owner for all checks
+		if i == 0 {
+			ownerCheckName = checkName
+		}
+
+		// Add ownership label - all checks are owned by the first check
+		if check.Labels == nil {
+			check.Labels = make(map[string]string)
+		}
+		check.Labels[k8upv1.LabelK8upOwnedBy] = k8upv1.CheckType.String() + "_" + ownerCheckName
+
 		ts.EnsureResources(check)
 		ts.GivenChecks = append(ts.GivenChecks, check)
 		ts.CheckNames = append(ts.CheckNames, checkName)
