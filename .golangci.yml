@@ -11,6 +11,9 @@ linters:
       - linters:
           - staticcheck
         text: 'k8upv1.LegacyScheduleFinalizerName is deprecated: Migrate to ScheduleFinalizerName'
+      - linters:
+          - staticcheck
+        text: 'QF1008'
     paths:
       - third_party$
       - builtin$

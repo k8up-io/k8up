@@ -166,7 +166,10 @@ func (in *BackupSchedule) GetRunnableSpec() *RunnableSpec {
 
 // GetSchedule returns the schedule definition
 func (in *BackupSchedule) GetSchedule() ScheduleDefinition {
-	return in.Schedule
+	if in.ScheduleCommon == nil {
+		return ""
+	}
+	return in.ScheduleCommon.Schedule
 }
 
 var (
