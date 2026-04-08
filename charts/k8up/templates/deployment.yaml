@@ -41,6 +41,8 @@ spec:
               value: "{{ .Values.k8up.enableLeaderElection }}"
             - name: BACKUP_SKIP_WITHOUT_ANNOTATION
               value: "{{ .Values.k8up.skipWithoutAnnotation }}"
+            - name: BACKUP_GLOBAL_SKIP_SNAPSHOT_SYNC
+              value: "{{ .Values.k8up.skipSnapshotSync }}"
             - name: BACKUP_OPERATOR_NAMESPACE
           {{- if .Values.k8up.operatorNamespace }}
               value: "{{ .Values.k8up.operatorNamespace }}"

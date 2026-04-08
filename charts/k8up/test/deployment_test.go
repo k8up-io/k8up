@@ -38,12 +38,13 @@ func Test_Deployment_ShouldRender_EnvironmentVariables(t *testing.T) {
 	assert.Equal(t, "TZ", envs[1].Name)
 	assert.Equal(t, wantTimezone, envs[1].Value)
 	assert.Equal(t, "BACKUP_SKIP_WITHOUT_ANNOTATION", envs[3].Name)
-	assert.Equal(t, "BACKUP_OPERATOR_NAMESPACE", envs[4].Name)
-	assert.Equal(t, "metadata.namespace", envs[4].ValueFrom.FieldRef.FieldPath)
-	assert.Equal(t, "BACKUP_GLOBAL_CPU_REQUEST", envs[5].Name, "Deployment does not use configured Env Name")
-	assert.Equal(t, wantCpuRequest, envs[5].Value, "Deployment does not use configured Env Value")
-	assert.Equal(t, "VARIABLE", envs[6].Name, "Deployment does not use configured Env Name")
-	assert.Equal(t, "VALUE", envs[6].Value, "Deployment does not use configured Env Value")
+	assert.Equal(t, "BACKUP_GLOBAL_SKIP_SNAPSHOT_SYNC", envs[4].Name)
+	assert.Equal(t, "BACKUP_OPERATOR_NAMESPACE", envs[5].Name)
+	assert.Equal(t, "metadata.namespace", envs[5].ValueFrom.FieldRef.FieldPath)
+	assert.Equal(t, "BACKUP_GLOBAL_CPU_REQUEST", envs[6].Name, "Deployment does not use configured Env Name")
+	assert.Equal(t, wantCpuRequest, envs[6].Value, "Deployment does not use configured Env Value")
+	assert.Equal(t, "VARIABLE", envs[7].Name, "Deployment does not use configured Env Name")
+	assert.Equal(t, "VALUE", envs[7].Value, "Deployment does not use configured Env Value")
 }
 
 func Test_Deployment_ShouldRender_Affinity(t *testing.T) {
@@ -92,8 +93,8 @@ func Test_Deployment_ShouldRender_OverrideNamespace(t *testing.T) {
 	got := renderDeployment(t, options, false)
 
 	assert.Equal(t, overrideNamespace, got.Namespace, "Deployment should use the overridden namespace")
-	assert.Equal(t, "BACKUP_OPERATOR_NAMESPACE", got.Spec.Template.Spec.Containers[0].Env[3].Name)
-	assert.Equal(t, "metadata.namespace", got.Spec.Template.Spec.Containers[0].Env[3].ValueFrom.FieldRef.FieldPath)
+	assert.Equal(t, "BACKUP_OPERATOR_NAMESPACE", got.Spec.Template.Spec.Containers[0].Env[4].Name)
+	assert.Equal(t, "metadata.namespace", got.Spec.Template.Spec.Containers[0].Env[4].ValueFrom.FieldRef.FieldPath)
 }
 
 func Test_Deployment_ShouldRender_Resources(t *testing.T) {

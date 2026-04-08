@@ -84,6 +84,7 @@ type Configuration struct {
 	ClusterName                      string
 	RestartPolicy                    string
 	SkipWithoutAnnotation            bool
+	SkipSnapshotSync                 bool
 	EnableRelaxedScheduling          bool
 	InsecureAllowPodExecSPDYFallback bool
 
