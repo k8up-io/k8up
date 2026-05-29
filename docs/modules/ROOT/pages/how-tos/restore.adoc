@@ -41,6 +41,8 @@ kind: Restore
 metadata:
   name: restore-test
 spec:
+  restoreMethod:
+    s3: ...
   snapshot: 162e7a85acbc14de93dad31a3699331cb32187ff0d7bd2227b7c4362a1d13a42
   backend:
     ...
