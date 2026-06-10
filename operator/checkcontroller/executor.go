@@ -107,7 +107,7 @@ func (c *CheckExecutor) setupEnvVars(ctx context.Context) []corev1.EnvVar {
 }
 
 func (c *CheckExecutor) cleanupOldChecks(ctx context.Context, check *k8upv1.Check) {
-	c.CleanupOldResources(ctx, &k8upv1.CheckList{}, check.Namespace, check)
+	c.CleanupOldResources(ctx, &k8upv1.CheckList{}, check)
 }
 
 func (c *CheckExecutor) attachTLSVolumeMounts() []corev1.VolumeMount {
