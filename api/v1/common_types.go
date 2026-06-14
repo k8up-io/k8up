@@ -76,6 +76,9 @@ const (
 	LabelK8upType = "k8up.io/type"
 	// LabelK8upOwnedBy is a label used to indicated which resource owns this resource to make it easy to fetch owned resources.
 	LabelK8upOwnedBy = "k8up.io/owned-by"
+	// LabelK8upScheduleName is the label key that records which Schedule created a job object.
+	// Set by the schedule controller; read by the monitoring package to populate per-schedule metrics.
+	LabelK8upScheduleName = "k8up.io/schedule-name"
 	// Deprecated: LegacyLabelK8upType is the former label key that identified the job type
 	LegacyLabelK8upType = "k8up.syn.tools/type"
 	// LabelManagedBy identifies the tool being used to manage the operation of a resource

@@ -160,6 +160,14 @@ func (s *ScheduleHandler) executeCronSchedule(ctx context.Context, obj k8upv1.Jo
 		log.Error(err, "Could not set controller reference", "type", obj.GetType(), "namespace", obj.GetNamespace(), "name", obj.GetName())
 		return
 	}
+
+	labels := obj.GetLabels()
+	if labels == nil {
+		labels = make(map[string]string)
+	}
+	labels[k8upv1.LabelK8upScheduleName] = s.schedule.Name
+	obj.SetLabels(labels)
+
 	err := s.Client.Create(ctx, obj.DeepCopyObject().(client.Object))
 	if err != nil {
 		log.Error(err, "Could not create new object", "type", obj.GetType(), "namespace", obj.GetNamespace(), "name", obj.GetName())

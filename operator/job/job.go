@@ -135,9 +135,15 @@ func UpdateStatus(ctx context.Context, batchJob *batchv1.Job, obj k8upv1.JobObje
 
 	if HasSucceeded(batchJob.Status.Conditions) {
 		SetSucceeded(ctx, batchJob.Name, batchJob.Namespace, obj.GetType(), &objStatus, message)
+		if scheduleName, ok := obj.GetLabels()[k8upv1.LabelK8upScheduleName]; ok {
+			monitoring.SetScheduleLastJobStatus(batchJob.Namespace, scheduleName, obj.GetType(), true)
+		}
 	}
 	if HasFailed(batchJob.Status.Conditions) {
 		SetFailed(ctx, batchJob.Name, batchJob.Namespace, obj.GetType(), &objStatus, message)
+		if scheduleName, ok := obj.GetLabels()[k8upv1.LabelK8upScheduleName]; ok {
+			monitoring.SetScheduleLastJobStatus(batchJob.Namespace, scheduleName, obj.GetType(), false)
+		}
 	}
 	if HasStarted(batchJob.Status.Conditions) {
 		objStatus.SetStarted(message)
