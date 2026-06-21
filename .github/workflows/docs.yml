@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ contains(github.ref, 'tags') }}
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10
       with:
         fetch-depth: 0
     - name: Configure Git
@@ -24,7 +24,7 @@ jobs:
 
     - name: Parse semver string
       id: semver
-      uses: booxmedialtd/ws-action-parse-semver@v1
+      uses: booxmedialtd/ws-action-parse-semver@3576f3a20a39f8752fe0d8195f5ed384090285dc
       with:
         input_string: ${{ github.ref }}
         version_extractor_regex: '\/v(.*)$'
