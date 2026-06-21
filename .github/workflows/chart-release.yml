@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Download cr
-        uses: giantswarm/install-binary-action@v4.0.0
+        uses: giantswarm/install-binary-action@c94c7adadeb14af4bdbdd601f9a6e7f69638134c
         with:
           binary: cr
           version: "1.4.0"
@@ -21,14 +21,14 @@ jobs:
           smoke_test: "${binary} version"
 
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10
         with:
           fetch-depth: '0'
 
       - name: Determine Go version from go.mod
         run: echo "GO_VERSION=$(go mod edit -json | jq -r .Go)" >> $GITHUB_ENV
 
-      - uses: actions/setup-go@v6
+      - uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c
         with:
           go-version: ${{ env.GO_VERSION }}
 
@@ -62,7 +62,7 @@ jobs:
 
       - name: Build changelog from PRs with labels
         id: build_changelog
-        uses: mikepenz/release-changelog-builder-action@v6
+        uses: mikepenz/release-changelog-builder-action@c9bcd8238b6f41e05561348339429d360b1c0247
         with:
           configuration: ".github/configuration.json"
           ignorePreReleases: true
