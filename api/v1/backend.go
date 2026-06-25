@@ -62,7 +62,6 @@ func (in *Backend) GetCredentialEnv() map[string]*corev1.EnvVarSource {
 // String returns the string representation of the repository. If no repo is
 // defined it'll return empty string.
 func (in *Backend) String() string {
-
 	for _, backend := range in.getSupportedBackends() {
 		if IsNil(backend) {
 			continue
@@ -70,7 +69,6 @@ func (in *Backend) String() string {
 		return backend.String()
 	}
 	return ""
-
 }
 
 // IsBackendEqualTo returns true if the restic repository string is equal to the other's string.
@@ -89,7 +87,7 @@ func (in *Backend) getSupportedBackends() []BackendInterface {
 // IsNil returns true if the given value is nil using reflect.
 func IsNil(v interface{}) bool {
 	// Unfortunately "v == nil" doesn't work with Interfaces, since they are tuples containing type and value.
-	return v == nil || (reflect.ValueOf(v).Kind() == reflect.Ptr && reflect.ValueOf(v).IsNil())
+	return v == nil || (reflect.ValueOf(v).Kind() == reflect.Pointer && reflect.ValueOf(v).IsNil())
 }
 
 func addEnvVarFromSecret(vars map[string]*corev1.EnvVarSource, key string, ref *corev1.SecretKeySelector) {
@@ -202,7 +200,6 @@ func (in *GCSSpec) EnvVars(vars map[string]*corev1.EnvVarSource) map[string]*cor
 	addEnvVarFromSecret(vars, cfg.GcsProjectIDEnvName, in.ProjectIDSecretRef)
 	addEnvVarFromSecret(vars, cfg.GcsAccessTokenEnvName, in.AccessTokenSecretRef)
 	return vars
-
 }
 
 // String returns "gs:bucket:/"
