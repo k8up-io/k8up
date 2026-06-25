@@ -33,7 +33,7 @@ jobs:
             tests: "test-12-annotated-failure.bats test-13-cleanup-empty-jobs.bats test-15-backup-with-selectors.bats"
     name: e2e (${{ matrix.group.name }})
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
 
     - name: Determine Go version from go.mod
       run: echo "GO_VERSION=$(go mod edit -json | jq -r .Go)" >> $GITHUB_ENV
