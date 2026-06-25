@@ -14,7 +14,7 @@ jobs:
       id-token: write # Required for Cosign Keyless OIDC flow
 
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
       with:
         fetch-depth: 0
 
