@@ -153,8 +153,13 @@ func keyOf(schedule *k8upv1.Schedule, jobType k8upv1.JobType) string {
 func (s *ScheduleHandler) executeCronSchedule(ctx context.Context, obj k8upv1.JobObject) {
 	obj.SetNamespace(s.schedule.Namespace)
 	obj.SetName(generateName(obj.GetType(), s.schedule.Name))
-	_ = controllerutil.SetOwnerReference(s.schedule, obj, s.Client.Scheme())
 	log := controllerruntime.LoggerFrom(ctx)
+	// Controller=true is what lets history-limit cleanup scope to siblings of
+	// the same Schedule — see filterByController in operator/executor/generic.go.
+	if err := controllerutil.SetControllerReference(s.schedule, obj, s.Client.Scheme()); err != nil {
+		log.Error(err, "Could not set controller reference", "type", obj.GetType(), "namespace", obj.GetNamespace(), "name", obj.GetName())
+		return
+	}
 	err := s.Client.Create(ctx, obj.DeepCopyObject().(client.Object))
 	if err != nil {
 		log.Error(err, "Could not create new object", "type", obj.GetType(), "namespace", obj.GetNamespace(), "name", obj.GetName())

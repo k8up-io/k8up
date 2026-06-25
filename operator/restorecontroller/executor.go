@@ -61,7 +61,7 @@ func (r *RestoreExecutor) Execute(ctx context.Context) error {
 }
 
 func (r *RestoreExecutor) cleanupOldRestores(ctx context.Context, restore *k8upv1.Restore) {
-	r.CleanupOldResources(ctx, &k8upv1.RestoreList{}, restore.Namespace, restore)
+	r.CleanupOldResources(ctx, &k8upv1.RestoreList{}, restore)
 }
 
 func (r *RestoreExecutor) createRestoreObject(ctx context.Context, restore *k8upv1.Restore) (*batchv1.Job, error) {

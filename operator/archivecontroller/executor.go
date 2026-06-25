@@ -128,7 +128,7 @@ func (a *ArchiveExecutor) setupEnvVars(ctx context.Context, archive *k8upv1.Arch
 }
 
 func (a *ArchiveExecutor) cleanupOldArchives(ctx context.Context, archive *k8upv1.Archive) {
-	a.CleanupOldResources(ctx, &k8upv1.ArchiveList{}, archive.Namespace, archive)
+	a.CleanupOldResources(ctx, &k8upv1.ArchiveList{}, archive)
 }
 
 func (a *ArchiveExecutor) attachTLSVolumeMounts() []corev1.VolumeMount {

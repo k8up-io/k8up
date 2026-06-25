@@ -88,7 +88,7 @@ func (p *PruneExecutor) Exclusive() bool {
 }
 
 func (p *PruneExecutor) cleanupOldPrunes(ctx context.Context, prune *k8upv1.Prune) {
-	p.CleanupOldResources(ctx, &k8upv1.PruneList{}, prune.Namespace, prune)
+	p.CleanupOldResources(ctx, &k8upv1.PruneList{}, prune)
 }
 
 func (p *PruneExecutor) setupEnvVars(ctx context.Context, prune *k8upv1.Prune) []corev1.EnvVar {

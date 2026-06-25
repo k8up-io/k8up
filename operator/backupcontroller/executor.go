@@ -396,7 +396,7 @@ func (b *BackupExecutor) createJob(name, node string, tolerations []corev1.Toler
 }
 
 func (b *BackupExecutor) cleanupOldBackups(ctx context.Context) {
-	b.CleanupOldResources(ctx, &k8upv1.BackupList{}, b.backup.Namespace, b.backup)
+	b.CleanupOldResources(ctx, &k8upv1.BackupList{}, b.backup)
 }
 
 func (b *BackupExecutor) jobName(name string) string {
