@@ -12,12 +12,14 @@ import (
 	k8upv1 "github.com/k8up-io/k8up/v2/api/v1"
 )
 
-const _dataDirName = "k8up-dir"
-const _resticTmpDirName = "restic-tmp-dir"
-const _resticCacheDirName = "restic-cache-dir"
+const (
+	_dataDirName        = "k8up-dir"
+	_resticTmpDirName   = "restic-tmp-dir"
+	_resticCacheDirName = "restic-cache-dir"
+)
 
 func RandomStringGenerator(n int) string {
-	var characters = []rune("abcdefghijklmnopqrstuvwxyz1234567890")
+	characters := []rune("abcdefghijklmnopqrstuvwxyz1234567890")
 	rand.New(rand.NewSource(time.Now().UnixNano()))
 	b := make([]rune, n)
 	for i := range b {
@@ -32,7 +34,7 @@ func ZeroLen(v interface{}) bool {
 	}
 
 	vv := reflect.ValueOf(v)
-	if vv.Kind() == reflect.Ptr {
+	if vv.Kind() == reflect.Pointer {
 		if vv.IsNil() {
 			return true
 		}

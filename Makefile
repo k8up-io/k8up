@@ -155,4 +155,4 @@ $(minio_sentinel): kind-setup
 	@touch $@
 
 $(golangci_bin): | $(go_bin)
-	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b "$(go_bin)"
+	curl -sSfL https://golangci-lint.run/install.sh | sh -s -- -b "$(go_bin)"
