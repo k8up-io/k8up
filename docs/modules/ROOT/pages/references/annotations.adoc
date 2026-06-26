@@ -42,4 +42,10 @@ See xref:references/operator-config-reference.adoc[Operator Configuration refere
 |A string which is a valid node name.
 |`PersistentVolumeClaim`
 |n/a
+
+|`k8up.io/backup-restic-args`
+|Arguments for restic.
+|JSON string array
+|`PersistentVolumeClaim`
+|`BACKUP_RESTICARGSANNOTATION`
 |===
