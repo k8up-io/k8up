@@ -13,8 +13,15 @@ spec:
           command: # Should not be in the final container
             - more
             - foo
+          volumeMounts:
+            - mountPath: /.cache
+              name: cache
           env:
             - name: FOO
               value: bar
           securityContext:
             allowPrivilegeEscalation: true
+      volumes:
+        - name: cache
+          emptyDir:
+            sizeLimit: 100Mi
