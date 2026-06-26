@@ -33,6 +33,11 @@ var (
 	}, []string{
 		"namespace",
 	})
+
+	scheduleLastJobSucceeded = promauto.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "k8up_schedule_last_job_succeeded",
+		Help: "1 if the most recent job triggered by this schedule succeeded, 0 if it failed.",
+	}, []string{"namespace", "schedule", "jobType"})
 )
 
 func IncFailureCounters(namespace string, jobType v1.JobType) {
@@ -53,6 +58,16 @@ func DecRegisteredSchedulesGauge(namespace string) {
 	scheduleGauge.WithLabelValues(namespace).Dec()
 }
 
+// SetScheduleLastJobStatus records whether the last job triggered by a schedule
+// succeeded (1) or failed (0). Call this after each scheduled job completes.
+func SetScheduleLastJobStatus(namespace, scheduleName string, jobType v1.JobType, succeeded bool) {
+	val := 0.0
+	if succeeded {
+		val = 1.0
+	}
+	scheduleLastJobSucceeded.WithLabelValues(namespace, scheduleName, jobType.String()).Set(val)
+}
+
 func init() {
 	// Register custom metrics with the global prometheus registry
 	metrics.Registry.MustRegister(
@@ -60,5 +75,6 @@ func init() {
 		metricsSuccessCounter,
 		metricsTotalCounter,
 		scheduleGauge,
+		scheduleLastJobSucceeded,
 	)
 }
