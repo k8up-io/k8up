@@ -55,8 +55,8 @@ func (a *ArchiveExecutor) Execute(ctx context.Context) error {
 
 		batchJob.Spec.Template.Spec.Containers[0].Env = append(batchJob.Spec.Template.Spec.Containers[0].Env, a.setupEnvVars(ctx, a.archive)...)
 		a.archive.Spec.AppendEnvFromToContainer(&batchJob.Spec.Template.Spec.Containers[0])
-		batchJob.Spec.Template.Spec.Containers[0].VolumeMounts = a.attachTLSVolumeMounts()
-		batchJob.Spec.Template.Spec.Volumes = utils.AttachEmptyDirVolumes(a.archive.Spec.Volumes)
+		batchJob.Spec.Template.Spec.Containers[0].VolumeMounts = append(batchJob.Spec.Template.Spec.Containers[0].VolumeMounts, a.attachTLSVolumeMounts()...)
+		batchJob.Spec.Template.Spec.Volumes = append(batchJob.Spec.Template.Spec.Volumes, utils.AttachEmptyDirVolumes(a.archive.Spec.Volumes)...)
 
 		batchJob.Spec.Template.Spec.Containers[0].Args = a.setupArgs()
 
