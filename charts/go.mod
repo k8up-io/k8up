@@ -4,7 +4,7 @@ go 1.26
 
 require (
 	github.com/norwoodj/helm-docs v1.14.2
-	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.89.0
+	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.92.1
 )
 
 require (
