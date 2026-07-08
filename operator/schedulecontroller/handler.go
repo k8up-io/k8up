@@ -129,6 +129,7 @@ func (s *ScheduleHandler) createJobList(ctx context.Context, sched scheduler.Sch
 		}
 		if !hasSchedule {
 			monitoring.IncRegisteredSchedulesGauge(s.schedule.Namespace)
+			monitoring.CreateLabels(s.schedule.Namespace, jobType)
 		}
 		template := jb.spec.GetDeepCopy()
 		s.mergeWithDefaults(template.GetRunnableSpec())
