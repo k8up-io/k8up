@@ -18,6 +18,46 @@ const (
 	_resticCacheDirName = "restic-cache-dir"
 )
 
+// AppendUniqueVolumeMounts appends mounts to existing, skipping mounts whose
+// mountPath is already taken. Kubernetes requires mountPaths to be unique per
+// container. Existing mounts (e.g. from a PodConfig) win over appended defaults.
+func AppendUniqueVolumeMounts(existing []corev1.VolumeMount, mounts ...corev1.VolumeMount) []corev1.VolumeMount {
+	for _, mount := range mounts {
+		taken := false
+		for _, e := range existing {
+			if e.MountPath == mount.MountPath {
+				taken = true
+				break
+			}
+		}
+
+		if !taken {
+			existing = append(existing, mount)
+		}
+	}
+	return existing
+}
+
+// AppendUniqueVolumes appends volumes to existing, skipping volumes whose name
+// is already taken. Kubernetes requires volume names to be unique per pod.
+// Existing volumes (e.g. from a PodConfig) win over appended defaults.
+func AppendUniqueVolumes(existing []corev1.Volume, volumes ...corev1.Volume) []corev1.Volume {
+	for _, volume := range volumes {
+		taken := false
+		for _, e := range existing {
+			if e.Name == volume.Name {
+				taken = true
+				break
+			}
+		}
+
+		if !taken {
+			existing = append(existing, volume)
+		}
+	}
+	return existing
+}
+
 func RandomStringGenerator(n int) string {
 	characters := []rune("abcdefghijklmnopqrstuvwxyz1234567890")
 	rand.New(rand.NewSource(time.Now().UnixNano()))
