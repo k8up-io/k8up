@@ -236,15 +236,21 @@ given_a_rwo_pvc_subject_in_controlplane_node() {
 }
 
 given_s3_storage() {
-	# Speed this step up
-	(helm -n "${MINIO_NAMESPACE}" list | grep minio >/dev/null) && return
-	helm repo add minio https://charts.min.io/ --force-update
-	helm repo update
-	helm upgrade --install minio \
-		--values definitions/minio/helm.yaml \
-		--create-namespace \
-		--namespace "${MINIO_NAMESPACE}" \
-		minio/minio
+	# Speed this step up: only (re)install when the release is missing.
+	if ! (helm -n "${MINIO_NAMESPACE}" list | grep minio >/dev/null); then
+		helm repo add minio https://charts.min.io/ --force-update
+		helm repo update
+		helm upgrade --install minio \
+			--values definitions/minio/helm.yaml \
+			--create-namespace \
+			--namespace "${MINIO_NAMESPACE}" \
+			minio/minio
+	fi
+
+	# Wait for minio to actually serve, not just for the helm release to exist.
+	# The release can linger from a previous run while its pods are down, which
+	# otherwise surfaces later as "connection refused" in the restic verify pods.
+	kubectl -n "${MINIO_NAMESPACE}" rollout status deployment/minio --timeout=2m
 
 	echo "✅  S3 Storage is ready"
 }

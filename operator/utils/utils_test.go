@@ -671,3 +671,33 @@ func Test_AttachTLSVolumeMounts(t *testing.T) {
 		})
 	}
 }
+
+func Test_AppendUniqueVolumeMounts(t *testing.T) {
+	existing := []corev1.VolumeMount{
+		{Name: "cache", MountPath: "/.cache"},
+	}
+	got := AppendUniqueVolumeMounts(existing,
+		corev1.VolumeMount{Name: "data", MountPath: "/data"},
+		corev1.VolumeMount{Name: "restic-cache-dir", MountPath: "/.cache"},
+	)
+	want := []corev1.VolumeMount{
+		{Name: "cache", MountPath: "/.cache"},
+		{Name: "data", MountPath: "/data"},
+	}
+	assert.Equal(t, want, got)
+}
+
+func Test_AppendUniqueVolumes(t *testing.T) {
+	existing := []corev1.Volume{
+		{Name: "cache", VolumeSource: corev1.VolumeSource{EmptyDir: &corev1.EmptyDirVolumeSource{}}},
+	}
+	got := AppendUniqueVolumes(existing,
+		corev1.Volume{Name: "cache", VolumeSource: corev1.VolumeSource{EmptyDir: &corev1.EmptyDirVolumeSource{}}},
+		corev1.Volume{Name: "data", VolumeSource: corev1.VolumeSource{EmptyDir: &corev1.EmptyDirVolumeSource{}}},
+	)
+	want := []corev1.Volume{
+		{Name: "cache", VolumeSource: corev1.VolumeSource{EmptyDir: &corev1.EmptyDirVolumeSource{}}},
+		{Name: "data", VolumeSource: corev1.VolumeSource{EmptyDir: &corev1.EmptyDirVolumeSource{}}},
+	}
+	assert.Equal(t, want, got)
+}
