@@ -40,8 +40,7 @@ func randomizeSchedule(seed string, originalSchedule k8upv1.ScheduleDefinition) 
 		return k8upv1.ScheduleDefinition(fmt.Sprintf("%d %d * * *", minute, hour)), nil
 	case ScheduleMonthlyRandom:
 		return k8upv1.ScheduleDefinition(fmt.Sprintf("%d %d %d * *", minute, hour, dayOfMonth)), nil
-	case ScheduleAnnuallyRandom:
-	case ScheduleYearlyRandom:
+	case ScheduleAnnuallyRandom, ScheduleYearlyRandom:
 		month := remainderFromModulo(checksum, 12, 1)
 		return k8upv1.ScheduleDefinition(fmt.Sprintf("%d %d %d %d *", minute, hour, dayOfMonth, month)), nil
 	case ScheduleWeeklyRandom:
@@ -50,7 +49,6 @@ func randomizeSchedule(seed string, originalSchedule k8upv1.ScheduleDefinition) 
 	default:
 		return originalSchedule, fmt.Errorf("unrecognized random schedule: '%s'", originalSchedule)
 	}
-	return originalSchedule, nil
 }
 
 // calculateChecksumFromSeed calculates a SHA1 hexadecimal checksum from the given seed.
