@@ -117,7 +117,10 @@ func (in *ArchiveSchedule) GetRunnableSpec() *RunnableSpec {
 
 // GetSchedule returns the schedule definition
 func (in *ArchiveSchedule) GetSchedule() ScheduleDefinition {
-	return in.Schedule
+	if in.ScheduleCommon == nil {
+		return ""
+	}
+	return in.ScheduleCommon.Schedule
 }
 
 var (
