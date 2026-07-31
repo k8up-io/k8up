@@ -85,6 +85,15 @@
       "schedule": [
         "on the first day of the month"
       ]
+    },
+    {
+      "matchManagers": [
+        "github-actions"
+      ],
+      "groupName": "github actions dependencies",
+      "minimumReleaseAge": "7 days",
+      "prCreation": "not-pending",
+      "internalChecksFilter": "strict"
     }
   ],
   "prBodyNotes": [
