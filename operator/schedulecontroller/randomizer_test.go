@@ -72,6 +72,11 @@ func Test_randomizeSchedule_VerifySchedules(t *testing.T) {
 			schedule:         "@yearly-random",
 			expectedSchedule: "52 4 26 5 *",
 		},
+		"WhenScheduleRandomAnnuallyGiven_ThenReturnStableRandomizedSchedule": {
+			// @annually-random is documented as an alias of @yearly-random.
+			schedule:         "@annually-random",
+			expectedSchedule: "52 4 26 5 *",
+		},
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
