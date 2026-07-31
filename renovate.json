@@ -2,7 +2,8 @@
   "extends": [
     "config:base",
     ":gitSignOff",
-    ":disableDependencyDashboard"
+    ":disableDependencyDashboard",
+    "helpers:pinGitHubActionDigests"
   ],
   "labels": [
     "dependency"
@@ -13,23 +14,40 @@
   "packageRules": [
     {
       "description": "Label chart dependency updates",
-      "matchFileNames": ["charts/**"],
-      "addLabels": ["area:chart", "chart:k8up"]
+      "matchFileNames": [
+        "charts/**"
+      ],
+      "addLabels": [
+        "area:chart",
+        "chart:k8up"
+      ]
     },
     {
       "description": "Label operator dependency updates",
-      "matchFileNames": ["go.mod", "go.sum"],
-      "addLabels": ["area:operator"]
+      "matchFileNames": [
+        "go.mod",
+        "go.sum"
+      ],
+      "addLabels": [
+        "area:operator"
+      ]
     },
     {
       "description": "Automerge GitHub Actions (CI-only, no impact on shipped code)",
-      "matchManagers": ["github-actions"],
+      "matchManagers": [
+        "github-actions"
+      ],
       "automerge": true
     },
     {
       "description": "Automerge Docker base image patch/minor updates",
-      "matchDatasources": ["docker"],
-      "matchUpdateTypes": ["patch", "minor"],
+      "matchDatasources": [
+        "docker"
+      ],
+      "matchUpdateTypes": [
+        "patch",
+        "minor"
+      ],
       "automerge": true
     },
     {
@@ -67,6 +85,15 @@
       "schedule": [
         "on the first day of the month"
       ]
+    },
+    {
+      "matchManagers": [
+        "github-actions"
+      ],
+      "groupName": "github actions dependencies",
+      "minimumReleaseAge": "7 days",
+      "prCreation": "not-pending",
+      "internalChecksFilter": "strict"
     }
   ],
   "prBodyNotes": [
