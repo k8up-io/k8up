@@ -14,7 +14,27 @@ spec:
     singular: schedule
   scope: Namespaced
   versions:
-  - name: v1
+  - additionalPrinterColumns:
+    - description: Schedule of the Backup job
+      jsonPath: .spec.backup.schedule
+      name: Backup Schedule
+      type: string
+    - description: Schedule of the Check job
+      jsonPath: .spec.check.schedule
+      name: Check Schedule
+      type: string
+    - description: Schedule of the Prune job
+      jsonPath: .spec.prune.schedule
+      name: Prune Schedule
+      type: string
+    - description: Schedule of the Archive job
+      jsonPath: .spec.archive.schedule
+      name: Archive Schedule
+      type: string
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    name: v1
     schema:
       openAPIV3Schema:
         description: Schedule is the Schema for the schedules API
