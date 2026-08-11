@@ -141,6 +141,8 @@ metrics:
     namespace: ""
     # -- Add labels to the Grafana Dashboard object
     additionalLabels: {}
+    # -- Add annotations to the Grafana Dashboard object
+    additionalAnnotations: {}
 
 rbac:
   # -- Create cluster roles and rolebinding.

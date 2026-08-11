@@ -9,6 +9,10 @@ metadata:
     {{- with .Values.metrics.grafanaDashboard.additionalLabels }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
+  {{- with .Values.metrics.grafanaDashboard.additionalAnnotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
 data:
   grafana-dashboard-k8up.json: |-
     {{`
