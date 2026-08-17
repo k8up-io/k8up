@@ -2,15 +2,15 @@ name: Go Vulnerability Check
 
 on:
   pull_request:
-    paths-ignore:
-      - 'docs/**'
-      - 'charts/**'
+    paths:
+      - '**/go.mod'
+      - '**/go.sum'
   push:
     branches:
       - master
-    paths-ignore:
-      - 'docs/**'
-      - 'charts/**'
+    paths:
+      - '**/go.mod'
+      - '**/go.sum'
   schedule:
     # Run weekly on Monday to catch newly disclosed vulnerabilities
     - cron: '0 8 * * 1'
