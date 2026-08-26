@@ -2,6 +2,7 @@ package prunecontroller
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	k8upv1 "github.com/k8up-io/k8up/v2/api/v1"
@@ -16,6 +17,8 @@ import (
 // PruneReconciler reconciles a Prune object
 type PruneReconciler struct {
 	Kube client.Client
+	// KubeReader performs direct API reads so Secrets only require named GET permissions, not cache list/watch permissions.
+	KubeReader client.Reader
 }
 
 func (r *PruneReconciler) NewObject() *k8upv1.Prune {
@@ -28,6 +31,12 @@ func (r *PruneReconciler) NewObjectList() *k8upv1.PruneList {
 
 func (r *PruneReconciler) Provision(ctx context.Context, obj *k8upv1.Prune) (controllerruntime.Result, error) {
 	log := controllerruntime.LoggerFrom(ctx)
+
+	if obj.Spec.Backend != nil {
+		if err := obj.Spec.Backend.ResolveSecretRefs(ctx, r.KubeReader, obj.GetNamespace(), cfg.Config.RepositorySecretName); err != nil {
+			return controllerruntime.Result{}, fmt.Errorf("resolve backend Secret references: %w", err)
+		}
+	}
 
 	repository := cfg.Config.GetGlobalRepository()
 	if obj.Spec.Backend != nil {

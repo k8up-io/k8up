@@ -116,8 +116,8 @@ func (a *ArchiveExecutor) setupEnvVars(ctx context.Context, archive *k8upv1.Arch
 		for key, value := range archive.Spec.Backend.GetCredentialEnv() {
 			vars.SetEnvVarSource(key, value)
 		}
-		vars.SetString(cfg.ResticRepositoryEnvName, archive.Spec.Backend.String())
 	}
+	vars.SetString(cfg.ResticRepositoryEnvName, a.Repository)
 
 	err := vars.Merge(executor.DefaultEnv(a.Obj.GetNamespace()))
 	if err != nil {

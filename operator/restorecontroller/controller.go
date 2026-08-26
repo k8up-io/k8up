@@ -2,6 +2,7 @@ package restorecontroller
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	k8upv1 "github.com/k8up-io/k8up/v2/api/v1"
@@ -16,6 +17,8 @@ import (
 // RestoreReconciler reconciles a Restore object
 type RestoreReconciler struct {
 	Kube client.Client
+	// KubeReader performs direct API reads so Secrets only require named GET permissions, not cache list/watch permissions.
+	KubeReader client.Reader
 }
 
 func (r *RestoreReconciler) NewObject() *k8upv1.Restore {
@@ -28,6 +31,17 @@ func (r *RestoreReconciler) NewObjectList() *k8upv1.RestoreList {
 
 func (r *RestoreReconciler) Provision(ctx context.Context, obj *k8upv1.Restore) (controllerruntime.Result, error) {
 	log := controllerruntime.LoggerFrom(ctx)
+
+	if obj.Spec.Backend != nil {
+		if err := obj.Spec.Backend.ResolveSecretRefs(ctx, r.KubeReader, obj.GetNamespace(), cfg.Config.RepositorySecretName); err != nil {
+			return controllerruntime.Result{}, fmt.Errorf("resolve backend Secret references: %w", err)
+		}
+	}
+	if obj.Spec.RestoreMethod != nil {
+		if err := obj.Spec.RestoreMethod.S3.ResolveSecretRefs(ctx, r.KubeReader, obj.GetNamespace(), cfg.Config.RepositorySecretName); err != nil {
+			return controllerruntime.Result{}, fmt.Errorf("resolve restore S3 Secret references: %w", err)
+		}
+	}
 
 	repository := cfg.Config.GetGlobalRepository()
 	if obj.Spec.Backend != nil {
