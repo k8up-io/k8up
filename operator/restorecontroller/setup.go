@@ -4,7 +4,7 @@ import (
 	k8upv1 "github.com/k8up-io/k8up/v2/api/v1"
 	"github.com/k8up-io/k8up/v2/operator/reconciler"
 	batchv1 "k8s.io/api/batch/v1"
-	"sigs.k8s.io/controller-runtime"
+	controllerruntime "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 )
 
@@ -16,7 +16,8 @@ import (
 func SetupWithManager(mgr controllerruntime.Manager) error {
 	name := "restore.k8up.io"
 	r := reconciler.NewReconciler[*k8upv1.Restore, *k8upv1.RestoreList](mgr.GetClient(), &RestoreReconciler{
-		Kube: mgr.GetClient(),
+		Kube:       mgr.GetClient(),
+		KubeReader: mgr.GetAPIReader(),
 	})
 	return controllerruntime.NewControllerManagedBy(mgr).
 		For(&k8upv1.Restore{}).

@@ -60,6 +60,10 @@ k8up:
   # When enabled, the operator passes `BACKUP_SKIP_SNAPSHOT_SYNC=true` to backup and prune job pods. Webhook notifications are still sent.
   skipSnapshotSync: false
 
+  # -- Specifies the name of the Secret that contains repository configuration values (e.g. S3 endpoint and bucket).
+  # Defaults to `k8up-repo` if left empty.
+  repositorySecretName: ""
+
   # -- Specifies the namespace in which K8up's `EffectiveSchedules` are stored.
   # Defaults to release namespace if left empty.
   operatorNamespace: ""

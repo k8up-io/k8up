@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	k8upv1 "github.com/k8up-io/k8up/v2/api/v1"
+	"github.com/k8up-io/k8up/v2/operator/cfg"
 	"github.com/k8up-io/k8up/v2/operator/job"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -134,7 +135,11 @@ func TestRestore_setupEnvVars(t *testing.T) {
 
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			e := NewRestoreExecutor(*newConfig())
+			repository := cfg.Config.GetGlobalRepository()
+			if tt.GivenResource.Spec.Backend != nil {
+				repository = tt.GivenResource.Spec.Backend.String()
+			}
+			e := NewRestoreExecutor(job.NewConfig(nil, tt.GivenResource, repository))
 			envVars := e.setupEnvVars(context.TODO(), tt.GivenResource)
 
 			actualEnvVars, actualSecretKeyRefs := extractVarsAndSecretRefs(envVars)
