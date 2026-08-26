@@ -19,6 +19,7 @@ $(rbac_gen_tgt):
 	@yq -i e '.metadata.name="{{ include \"k8up.fullname\" . }}-manager", del(.metadata.creationTimestamp)' $@
 	@yq -i e '.metadata.labels.replace="LABELS"' $@
 	@$(sed) -e 's/replace: LABELS/{{- include "k8up.labels" . | nindent 4 }}/g' $@
+	@$(sed) -e 's/- k8up-repo/- {{ .Values.k8up.repositorySecretName | default "k8up-repo" }}/g' $@
 	@$(sed) -e '1s/^/{{- if .Values.rbac.create -}}\n/' $@
 	@$(sed) -e '$$a{{- end -}}' $@
 
