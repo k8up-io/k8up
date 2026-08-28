@@ -1,10 +1,15 @@
 package v1
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 
 	"github.com/k8up-io/k8up/v2/operator/cfg"
 )
@@ -153,6 +158,32 @@ func Test_Backend_GetCredentialEnv(t *testing.T) {
 			assert.Equal(t, tt.expectedVars, result)
 		})
 	}
+}
+
+func TestBackend_ResolveSecretRefs(t *testing.T) {
+	const (
+		namespace  = "backup"
+		secretName = "k8up-repo"
+	)
+	scheme := runtime.NewScheme()
+	require.NoError(t, corev1.AddToScheme(scheme))
+	reader := fake.NewClientBuilder().WithScheme(scheme).WithObjects(&corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: secretName},
+		Data: map[string][]byte{
+			"endpoint": []byte("https://endpoint"),
+			"bucket":   []byte("bucket"),
+		},
+	}).Build()
+
+	backend := &Backend{S3: &S3Spec{
+		EndpointSecretKey: "endpoint",
+		BucketSecretKey:   "bucket",
+	}}
+
+	err := backend.ResolveSecretRefs(context.Background(), reader, namespace, secretName)
+
+	require.NoError(t, err)
+	assert.Equal(t, "s3:https://endpoint/bucket", backend.String())
 }
 
 func newSecretRef(name string) *corev1.SecretKeySelector {

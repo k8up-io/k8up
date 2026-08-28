@@ -10,7 +10,7 @@ linters:
     rules:
       - linters:
           - staticcheck
-        text: 'k8upv1.LegacyScheduleFinalizerName is deprecated: Migrate to ScheduleFinalizerName'
+        text: 'LegacyScheduleFinalizerName is deprecated: Migrate to ScheduleFinalizerName'
     paths:
       - third_party$
       - builtin$
