@@ -1,11 +1,13 @@
 package v1
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 	"strings"
 
 	corev1 "k8s.io/api/core/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/k8up-io/k8up/v2/operator/cfg"
 )
@@ -71,6 +73,14 @@ func (in *Backend) String() string {
 	return ""
 }
 
+// ResolveSecretRefs resolves Secret-backed repository fields in place.
+func (in *Backend) ResolveSecretRefs(ctx context.Context, reader client.Reader, namespace, secretName string) error {
+	if in == nil || in.S3 == nil {
+		return nil
+	}
+	return in.S3.ResolveSecretRefs(ctx, reader, namespace, secretName)
+}
+
 // IsBackendEqualTo returns true if the restic repository string is equal to the other's string.
 // If other is nil, it returns false.
 func (in *Backend) IsBackendEqualTo(other *Backend) bool {
@@ -98,6 +108,14 @@ func addEnvVarFromSecret(vars map[string]*corev1.EnvVarSource, key string, ref *
 	}
 }
 
+func secretValue(secret *corev1.Secret, key, field string) (string, error) {
+	value, ok := secret.Data[key]
+	if !ok {
+		return "", fmt.Errorf("secret %s/%s has no key %q for %s", secret.Namespace, secret.Name, key, field)
+	}
+	return string(value), nil
+}
+
 type LocalSpec struct {
 	MountPath string `json:"mountPath,omitempty"`
 }
@@ -114,9 +132,45 @@ func (in *LocalSpec) String() string {
 
 type S3Spec struct {
 	Endpoint                 string                    `json:"endpoint,omitempty"`
+	EndpointSecretKey        string                    `json:"endpointSecretKey,omitempty"`
 	Bucket                   string                    `json:"bucket,omitempty"`
+	BucketSecretKey          string                    `json:"bucketSecretKey,omitempty"`
 	AccessKeyIDSecretRef     *corev1.SecretKeySelector `json:"accessKeyIDSecretRef,omitempty"`
 	SecretAccessKeySecretRef *corev1.SecretKeySelector `json:"secretAccessKeySecretRef,omitempty"`
+}
+
+// ResolveSecretRefs replaces configured endpoint and bucket Secret references
+// with their values before the repository string is used to create a Job.
+func (in *S3Spec) ResolveSecretRefs(ctx context.Context, reader client.Reader, namespace, secretName string) error {
+	if in == nil || (in.EndpointSecretKey == "" && in.BucketSecretKey == "") {
+		return nil
+	}
+
+	secret := &corev1.Secret{}
+	if err := reader.Get(ctx, client.ObjectKey{Namespace: namespace, Name: secretName}, secret); err != nil {
+		return fmt.Errorf("get repository Secret %s/%s: %w", namespace, secretName, err)
+	}
+
+	endpoint := in.Endpoint
+	if in.EndpointSecretKey != "" {
+		var err error
+		endpoint, err = secretValue(secret, in.EndpointSecretKey, "S3 endpoint")
+		if err != nil {
+			return err
+		}
+	}
+	bucket := in.Bucket
+	if in.BucketSecretKey != "" {
+		var err error
+		bucket, err = secretValue(secret, in.BucketSecretKey, "S3 bucket")
+		if err != nil {
+			return err
+		}
+	}
+
+	in.Endpoint = endpoint
+	in.Bucket = bucket
+	return nil
 }
 
 // EnvVars returns the env vars for this backend.

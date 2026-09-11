@@ -5,6 +5,8 @@ on:
   push:
     branches:
     - master
+env:
+  GOTOOLCHAIN: 'auto'
 
 
 jobs:
@@ -13,13 +15,7 @@ jobs:
     steps:
     - uses: actions/checkout@v7
 
-    - name: Determine Go version from go.mod
-      run: echo "GO_VERSION=$(go mod edit -json | jq -r .Go)" >> $GITHUB_ENV
-
     - uses: actions/setup-go@v6
-      with:
-        go-version: ${{ env.GO_VERSION }}
-
 
     - name: Run linters
       run: make lint

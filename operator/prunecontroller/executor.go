@@ -131,8 +131,8 @@ func (p *PruneExecutor) setupEnvVars(ctx context.Context, prune *k8upv1.Prune) [
 		for key, value := range prune.Spec.Backend.GetCredentialEnv() {
 			vars.SetEnvVarSource(key, value)
 		}
-		vars.SetString(cfg.ResticRepositoryEnvName, prune.Spec.Backend.String())
 	}
+	vars.SetString(cfg.ResticRepositoryEnvName, p.Repository)
 
 	vars.SetString("PROM_URL", cfg.Config.PromURL)
 

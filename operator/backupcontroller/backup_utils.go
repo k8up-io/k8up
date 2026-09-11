@@ -183,8 +183,8 @@ func (b *BackupExecutor) setupEnvVars() ([]corev1.EnvVar, error) {
 			for key, value := range b.backup.Spec.Backend.GetCredentialEnv() {
 				vars.SetEnvVarSource(key, value)
 			}
-			vars.SetString(cfg.ResticRepositoryEnvName, b.backup.Spec.Backend.String())
 		}
+		vars.SetString(cfg.ResticRepositoryEnvName, b.Repository)
 	}
 
 	vars.SetStringOrDefault("STATS_URL", b.backup.Spec.StatsURL, cfg.Config.GlobalStatsURL)
