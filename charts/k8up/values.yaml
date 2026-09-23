@@ -87,6 +87,17 @@ podSecurityContext: {}
 # -- Container security context
 securityContext: {}
 
+# -- Readiness probe for the operator container. The operator only serves
+# the Prometheus endpoint, so /metrics doubles as the readiness check.
+# Set to null to disable the probe.
+readinessProbe:
+  httpGet:
+    path: /metrics
+    port: http
+  initialDelaySeconds: 10
+  periodSeconds: 10
+  timeoutSeconds: 3
+
 # -- The name of the priority class to use.
 priorityClassName: ""
 
