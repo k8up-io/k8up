@@ -55,8 +55,7 @@ $(minio_pid): minio-download
 	@while ! curl --silent "http://$(minio_address)" > /dev/null; do echo "Waiting for server http://$(minio_address) to become ready"; sleep 0.5; done
 
 $(minio_path): | $(go_bin)
-	curl $(curl_args) --output "$@" "$(minio_url)"
-	chmod +x "$@"
+	GOBIN="$(go_bin)" $(GO_EXEC) install github.com/minio/minio@$(minio_version)
 	"$@" --version
 
 $(restic_path): | $(go_bin)

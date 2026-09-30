@@ -28,4 +28,5 @@ minio_config ?= $(integrationtest_dir)/minio.d/config
 minio_root_user ?= accesskey
 minio_root_password ?= secretkey
 minio_pid ?= $(integrationtest_dir)/minio.pid
-minio_url ?= https://dl.min.io/server/minio/release/$(os)-$(arch)/minio
+# MinIO no longer publishes community binaries, so the server is built from the last tagged source release.
+minio_version ?= RELEASE.2025-10-15T17-29-55Z
