@@ -1,0 +1,2 @@
+= OpenSearch
+:page-layout: opensearch
