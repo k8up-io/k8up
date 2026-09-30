@@ -18,6 +18,9 @@ This will be built up when time comes.
 * Nicolas Bigler <nicolas.bigler@vshn.ch> ([TheBigLee](https://github.com/TheBigLee))
 * Łukasz Widera <lukasz.widera@vshn.ch> ([wejdross](https://github.com/wejdross))
 * Gabriel Saratura <gabriel.saratura@vshn.ch> ([zugao](https://github.com/zugao))
+* Aarno Aukia <aarno.aukia@vshn.ch> ([arska](https://github.com/arska))
+* Sebastian Widmer <sebastian.widmer@vshn.ch> ([bastjan](https://github.com/bastjan))
+* Liene Luksika <liene.luksika@vshn.ch> ([lieneluksika](https://github.com/lieneluksika))
 
 We also document the list of maintainers in the [GitHub team "Maintainer"](https://github.com/orgs/k8up-io/teams/maintainer/members).
 
