@@ -131,3 +131,30 @@ func renderDeployment(t *testing.T, options *helm.Options, wantErr bool) *appv1.
 	helm.UnmarshalK8SYaml(t, output, &deployment)
 	return &deployment
 }
+
+func Test_Deployment_ShouldRender_ReadinessProbe(t *testing.T) {
+	options := withReleaseNamespace(&helm.Options{})
+
+	got := renderDeployment(t, options, false)
+
+	probe := got.Spec.Template.Spec.Containers[0].ReadinessProbe
+	require.NotNil(t, probe, "Deployment should render a readiness probe by default")
+	assert.Equal(t, "/metrics", probe.HTTPGet.Path)
+	assert.Equal(t, "http", probe.HTTPGet.Port.String())
+	assert.EqualValues(t, 10, probe.InitialDelaySeconds)
+	assert.EqualValues(t, 10, probe.PeriodSeconds)
+	assert.EqualValues(t, 3, probe.TimeoutSeconds)
+}
+
+func Test_Deployment_ShouldNotRender_ReadinessProbe_WhenDisabled(t *testing.T) {
+	options := withReleaseNamespace(&helm.Options{
+		SetValues: map[string]string{
+			"readinessProbe": "null",
+		},
+	})
+
+	got := renderDeployment(t, options, false)
+
+	probe := got.Spec.Template.Spec.Containers[0].ReadinessProbe
+	assert.Nil(t, probe, "Deployment should not render a readiness probe when set to null")
+}

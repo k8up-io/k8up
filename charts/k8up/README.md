@@ -90,6 +90,7 @@ Document your changes in values.yaml and let `make docs:helm` generate this sect
 | priorityClassName | string | `""` | The name of the priority class to use. |
 | rbac.create | bool | `true` | Create cluster roles and rolebinding. May need elevated permissions to create cluster roles and -bindings. |
 | replicaCount | int | `1` | How many operator pods should run. Note: Operator features leader election for K8s 1.16 and later, so that only 1 pod is reconciling/scheduling jobs. Follower pods reduce interruption time as they're on hot standby when leader is unresponsive. |
+| readinessProbe | object | `{"httpGet":{"path":"/metrics","port":"http"},"initialDelaySeconds":10,"periodSeconds":10,"timeoutSeconds":3}` | Readiness probe for the operator container. The operator only serves the Prometheus endpoint, so /metrics doubles as the readiness check. Set to null to disable. |
 | resources.limits.memory | string | `"256Mi"` | Memory limit of K8up operator. See [supported units][resource-units]. |
 | resources.requests.cpu | string | `"20m"` | CPU request of K8up operator. See [supported units][resource-units]. |
 | resources.requests.memory | string | `"128Mi"` | Memory request of K8up operator. See [supported units][resource-units]. |
