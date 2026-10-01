@@ -81,7 +81,7 @@ mc() {
 	kubectl run "$podname" \
 		--restart Never \
 		--namespace "${DETIK_CLIENT_NAMESPACE-"k8up-system"}" \
-		--image "minio/mc" \
+		--image "ghcr.io/vshn/minio:RELEASE.2025-09-07T16-13-09Z" \
 		--image-pull-policy "IfNotPresent" \
 		--env "MC_HOST_minio=http://minioadmin:minioadmin@minio.minio-e2e.svc.cluster.local:9000" \
 		--pod-running-timeout 60s \

@@ -55,8 +55,9 @@ $(minio_pid): minio-download
 	@while ! curl --silent "http://$(minio_address)" > /dev/null; do echo "Waiting for server http://$(minio_address) to become ready"; sleep 0.5; done
 
 $(minio_path): | $(go_bin)
-	curl $(curl_args) --output "$@" "$(minio_url)"
-	chmod +x "$@"
+	id=$$(docker create --platform linux/$(arch) "$(minio_image)") && \
+		docker cp "$$id:/usr/bin/minio" "$@"; \
+		status=$$?; docker rm "$$id" > /dev/null; exit $$status
 	"$@" --version
 
 $(restic_path): | $(go_bin)

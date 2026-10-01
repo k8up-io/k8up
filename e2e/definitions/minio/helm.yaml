@@ -1,3 +1,11 @@
+# MinIO no longer publishes images on quay.io or Docker Hub. VSHN's image ships
+# both the server and the mc client (with sh), so it serves as image and mcImage.
+image:
+  repository: ghcr.io/vshn/minio
+  tag: RELEASE.2025-09-07T16-13-09Z
+mcImage:
+  repository: ghcr.io/vshn/minio
+  tag: RELEASE.2025-09-07T16-13-09Z
 replicas: 1
 mode: standalone
 resources:

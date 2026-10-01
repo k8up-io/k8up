@@ -28,4 +28,6 @@ minio_config ?= $(integrationtest_dir)/minio.d/config
 minio_root_user ?= accesskey
 minio_root_password ?= secretkey
 minio_pid ?= $(integrationtest_dir)/minio.pid
-minio_url ?= https://dl.min.io/server/minio/release/$(os)-$(arch)/minio
+# MinIO no longer publishes community binaries; the linux/amd64 server binary is
+# copied out of VSHN's MinIO image (needs Docker, as on the CI runners).
+minio_image ?= ghcr.io/vshn/minio:RELEASE.2025-09-07T16-13-09Z
