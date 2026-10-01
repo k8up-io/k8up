@@ -16,8 +16,6 @@ This will be built up when time comes.
 * Tobias Brunner <tobias.brunner@vshn.ch> ([tobru](https://github.com/tobru))
 * Simon Beck <simon.beck@vshn.ch> ([Kidswiss](https://github.com/Kidswiss))
 * Nicolas Bigler <nicolas.bigler@vshn.ch> ([TheBigLee](https://github.com/TheBigLee))
-* Łukasz Widera <lukasz.widera@vshn.ch> ([wejdross](https://github.com/wejdross))
-* Gabriel Saratura <gabriel.saratura@vshn.ch> ([zugao](https://github.com/zugao))
 * Aarno Aukia <aarno.aukia@vshn.ch> ([arska](https://github.com/arska))
 * Sebastian Widmer <sebastian.widmer@vshn.ch> ([bastjan](https://github.com/bastjan))
 * Liene Luksika <liene.luksika@vshn.ch> ([lieneluksika](https://github.com/lieneluksika))
@@ -30,4 +28,5 @@ We currently do not have nominated reviewers, we'll build them up when time come
 
 ## Emeritus maintainers
 
-As of today, we don't have any emeritus maintainers yet.
+* Łukasz Widera <lukasz.widera@vshn.ch> ([wejdross](https://github.com/wejdross))
+* Gabriel Saratura <gabriel.saratura@vshn.ch> ([zugao](https://github.com/zugao))
