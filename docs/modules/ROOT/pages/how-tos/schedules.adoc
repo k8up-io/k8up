@@ -22,6 +22,7 @@ You can either set a `PodConfig` for all jobs in a schedule at once, or for each
 The `PodConfig` set in the job has precedence over the one in the schedule.
 
 TIP: `PodConfig` supports the full Kubernetes pod spec, including `nodeSelector`, `affinity`, `tolerations`, and `securityContext`. Use it to control where backup jobs run or to configure pod-level security settings.
+Note that the CRD requires a `containers` entry, and that a `containers` entry replaces the generated container; see xref:how-tos/backup.adoc[Customize Pod Spec] for what that means for resources.
 
 [source,yaml]
 ----

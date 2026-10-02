@@ -175,6 +175,13 @@ These are the fields you can't override:
 * container name
 * args
 
+[NOTE]
+====
+The `PodConfig` template is merged into the generated pod with mergo: maps like `nodeSelector` are merged key-wise, but lists are replaced wholesale.
+A `containers` entry therefore _replaces_ the generated container instead of merging with it.
+Resources from a `Schedule`'s `resourceRequirementsTemplate` (see xref:how-tos/manage-pod-resources.adoc[How to Manage pod resources]) are dropped unless the `PodConfig` restates them, and a second container entry is not supported.
+====
+
 The podSpec has to be created via a separate object of the type `PodConfig`.
 Any annotations and labels set on the `PodConfig` will also be applied to the pod.
 Any fields on the `PodConfig` object has precedence over settings specified in the job.
