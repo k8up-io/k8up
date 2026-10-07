@@ -50,3 +50,10 @@ e2e/debug
 .config/
 .kube/
 .npm/
+
+# Claude Code - local/personal settings (not shared with team)
+.claude/settings.local.json
+
+# Claude Code - session and cache data
+.claude/todos.md
+.claude/todos.local.md
