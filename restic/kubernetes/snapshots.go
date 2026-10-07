@@ -98,9 +98,14 @@ func filterAndConvert(list []dto.Snapshot, namespace, repository string) *k8upv1
 			continue
 		}
 
+		name := snapshot.ID
+		if len(name) > 8 {
+			name = name[:8]
+		}
+
 		finalList.Items = append(finalList.Items, k8upv1.Snapshot{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      snapshot.ID[:8],
+				Name:      name,
 				Namespace: namespace,
 			},
 			Spec: k8upv1.SnapshotSpec{

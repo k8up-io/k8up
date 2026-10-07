@@ -1,0 +1,40 @@
+name: Fuzz
+
+on:
+  pull_request:
+    paths-ignore:
+      - 'docs/**'
+      - 'charts/**'
+  schedule:
+    # Nightly at 04:00 UTC (06:00 CEST) with longer fuzz duration
+    - cron: '0 4 * * *'
+
+jobs:
+  fuzz:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        fuzz-target:
+          - { package: ./restic/kubernetes/, func: FuzzFilterAndConvert }
+          - { package: ./restic/logging/, func: FuzzBackupOutputParser }
+          - { package: ./operator/utils/, func: FuzzJsonArgsArrayUnmarshalJSON }
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Determine Go version from go.mod
+        run: echo "GO_VERSION=$(go mod edit -json | jq -r .Go)" >> $GITHUB_ENV
+
+      - uses: actions/setup-go@v6
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Set fuzz duration
+        run: |
+          if [ "${{ github.event_name }}" = "schedule" ]; then
+            echo "FUZZ_TIME=5m" >> $GITHUB_ENV
+          else
+            echo "FUZZ_TIME=60s" >> $GITHUB_ENV
+          fi
+
+      - name: Run fuzz test
+        run: go test ${{ matrix.fuzz-target.package }} -fuzz=${{ matrix.fuzz-target.func }} -fuzztime=$FUZZ_TIME
