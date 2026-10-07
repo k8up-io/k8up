@@ -30,8 +30,8 @@ include Makefile.restic-integration.mk envtest/integration.mk
 go_build ?= $(GO_EXEC) build -o $(BIN_FILENAME) $(K8UP_MAIN_GO)
 
 .PHONY: test
-test: ## Run tests
-	$(GO_EXEC) test ./... -coverprofile cover.out
+test: ## Run tests, generate coverage profile and JUnit XML report
+	$(GO_EXEC) run gotest.tools/gotestsum@latest --junitfile unit-tests.xml -- ./... -coverprofile cover.out
 
 .PHONY: build
 build: generate fmt vet $(BIN_FILENAME) docs-update-usage ## Build manager binary
