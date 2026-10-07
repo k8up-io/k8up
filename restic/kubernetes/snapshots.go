@@ -2,6 +2,8 @@ package kubernetes
 
 import (
 	"context"
+	"net/url"
+	"strings"
 
 	"github.com/go-logr/logr"
 	k8upv1 "github.com/k8up-io/k8up/v2/api/v1"
@@ -10,11 +12,48 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+// sanitizeRepositoryURL removes credentials from repository URLs.
+// For example, "rest:https://user:pass@host/path" becomes "rest:https://***:***@host/path".
+func sanitizeRepositoryURL(repo string) string {
+	if repo == "" {
+		return repo
+	}
+
+	// Restic repository URLs have a scheme prefix like "rest:", "s3:", "azure:", etc.
+	// Split off the restic prefix to parse the actual URL.
+	prefix := ""
+	rest := repo
+	if idx := strings.Index(repo, ":"); idx > 0 {
+		candidate := repo[:idx]
+		// Check if it looks like a restic scheme (not a Windows drive letter or URL scheme)
+		if candidate == "rest" || candidate == "s3" || candidate == "azure" || candidate == "swift" || candidate == "b2" || candidate == "gs" {
+			prefix = repo[:idx+1]
+			rest = repo[idx+1:]
+		}
+	}
+
+	parsed, err := url.Parse(rest)
+	if err != nil || parsed.User == nil {
+		return repo
+	}
+
+	// Replace credentials with redacted placeholder
+	_, hasPassword := parsed.User.Password()
+	if hasPassword {
+		parsed.User = url.UserPassword("redacted", "redacted")
+	} else {
+		parsed.User = url.User("redacted")
+	}
+
+	return prefix + parsed.String()
+}
+
 // SyncSnapshotList will take a k8upv1.SnapshotList and apply them to the k8s cluster.
 // It will remove any snapshots on the cluster that are not present in the list.
 func SyncSnapshotList(ctx context.Context, list []dto.Snapshot, namespace, repository string, l logr.Logger) error {
 
-	newList := filterAndConvert(list, namespace, repository)
+	sanitizedRepo := sanitizeRepositoryURL(repository)
+	newList := filterAndConvert(list, namespace, sanitizedRepo)
 	oldList := &k8upv1.SnapshotList{}
 
 	kube, err := NewTypedClient(l)
