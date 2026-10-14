@@ -26,6 +26,14 @@ rules:
       - watch
   - apiGroups:
       - ""
+    resourceNames:
+      - {{ .Values.k8up.repositorySecretName | default "k8up-repo" }}
+    resources:
+      - secrets
+    verbs:
+      - get
+  - apiGroups:
+      - ""
     resources:
       - serviceaccounts
     verbs:

@@ -390,7 +390,11 @@ spec:
                         x-kubernetes-map-type: atomic
                       bucket:
                         type: string
+                      bucketSecretKey:
+                        type: string
                       endpoint:
+                        type: string
+                      endpointSecretKey:
                         type: string
                       secretAccessKeySecretRef:
                         description: SecretKeySelector selects a key of a Secret.

@@ -185,8 +185,8 @@ func (r *RestoreExecutor) setupEnvVars(ctx context.Context, restore *k8upv1.Rest
 		for key, value := range restore.Spec.Backend.GetCredentialEnv() {
 			vars.SetEnvVarSource(key, value)
 		}
-		vars.SetString(cfg.ResticRepositoryEnvName, restore.Spec.Backend.String())
 	}
+	vars.SetString(cfg.ResticRepositoryEnvName, r.Repository)
 
 	err := vars.Merge(executor.DefaultEnv(r.Obj.GetNamespace()))
 	if err != nil {

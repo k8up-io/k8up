@@ -91,8 +91,8 @@ func (c *CheckExecutor) setupEnvVars(ctx context.Context) []corev1.EnvVar {
 			for key, value := range c.check.Spec.Backend.GetCredentialEnv() {
 				vars.SetEnvVarSource(key, value)
 			}
-			vars.SetString(cfg.ResticRepositoryEnvName, c.check.Spec.Backend.String())
 		}
+		vars.SetString(cfg.ResticRepositoryEnvName, c.Repository)
 	}
 
 	vars.SetString("PROM_URL", cfg.Config.PromURL)
