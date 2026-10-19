@@ -2,6 +2,7 @@ package checkcontroller
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	k8upv1 "github.com/k8up-io/k8up/v2/api/v1"
@@ -16,6 +17,8 @@ import (
 // CheckReconciler reconciles a Check object
 type CheckReconciler struct {
 	Kube client.Client
+	// KubeReader performs direct API reads so Secrets only require named GET permissions, not cache list/watch permissions.
+	KubeReader client.Reader
 }
 
 func (r *CheckReconciler) NewObject() *k8upv1.Check {
@@ -28,6 +31,12 @@ func (r *CheckReconciler) NewObjectList() *k8upv1.CheckList {
 
 func (r *CheckReconciler) Provision(ctx context.Context, obj *k8upv1.Check) (controllerruntime.Result, error) {
 	log := controllerruntime.LoggerFrom(ctx)
+
+	if obj.Spec.Backend != nil {
+		if err := obj.Spec.Backend.ResolveSecretRefs(ctx, r.KubeReader, obj.GetNamespace(), cfg.Config.RepositorySecretName); err != nil {
+			return controllerruntime.Result{}, fmt.Errorf("resolve backend Secret references: %w", err)
+		}
+	}
 
 	repository := cfg.Config.GetGlobalRepository()
 	if obj.Spec.Backend != nil {

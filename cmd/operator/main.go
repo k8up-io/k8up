@@ -57,6 +57,7 @@ var (
 			&cli.StringFlag{Destination: &cfg.Config.GlobalRestoreS3SecretAccessKey, Name: "globalrestores3secretaccesskey", EnvVars: []string{"BACKUP_GLOBALRESTORES3SECRETACCESSKEY"}, Usage: "set the global restore S3 SecretAccessKey for restores"},
 
 			&cli.StringFlag{Destination: &cfg.Config.GlobalRepoPassword, Name: "globalrepopassword", EnvVars: []string{"BACKUP_GLOBALREPOPASSWORD"}, Usage: "set the restic repository password to be used globally"},
+			&cli.StringFlag{Destination: &cfg.Config.RepositorySecretName, Name: "repository-secret-name", EnvVars: []string{"BACKUP_REPOSITORY_SECRET_NAME"}, Value: "k8up-repo", Usage: "set the name of the Secret that contains repository configuration values (e.g. S3 endpoint and bucket)"},
 			&cli.StringFlag{Destination: &cfg.Config.GlobalAccessKey, Name: "globalaccesskeyid", EnvVars: []string{"BACKUP_GLOBALACCESSKEYID"}, Usage: "set the S3 access key id to be used globally"},
 			&cli.StringFlag{Destination: &cfg.Config.GlobalSecretAccessKey, Name: "globalsecretaccesskey", EnvVars: []string{"BACKUP_GLOBALSECRETACCESSKEY"}, Usage: "set the S3 secret access key to be used globally"},
 			&cli.StringFlag{Destination: &cfg.Config.GlobalS3Bucket, Name: "globals3bucket", EnvVars: []string{"BACKUP_GLOBALS3BUCKET"}, Usage: "set the S3 bucket to be used globally"},
