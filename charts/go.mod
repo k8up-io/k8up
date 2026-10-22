@@ -1,6 +1,6 @@
 module charts
 
-go 1.26
+go 1.26.10
 
 require (
 	github.com/norwoodj/helm-docs v1.14.2
