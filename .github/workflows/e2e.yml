@@ -33,12 +33,12 @@ jobs:
             tests: "test-12-annotated-failure.bats test-13-cleanup-empty-jobs.bats test-15-backup-with-selectors.bats"
     name: e2e (${{ matrix.group.name }})
     steps:
-    - uses: actions/checkout@v7
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
     - name: Determine Go version from go.mod
       run: echo "GO_VERSION=$(go mod edit -json | jq -r .Go)" >> $GITHUB_ENV
 
-    - uses: actions/setup-go@v6
+    - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
       with:
         go-version: ${{ env.GO_VERSION }}
 
@@ -59,7 +59,7 @@ jobs:
         kubectl get events -A --sort-by='.lastTimestamp' | tail -20 || true
 
     - name: Publish Test Report
-      uses: mikepenz/action-junit-report@v6
+      uses: mikepenz/action-junit-report@6ef3fdcfcd5f0b5d14df3e659ef19b8c6820f93d # v6
       if: success() || failure()
       with:
         report_paths: '**/e2e/report.xml'
