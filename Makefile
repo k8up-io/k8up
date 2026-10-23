@@ -81,10 +81,10 @@ deploy: kind-load-image install ## Deploy controller in the configured Kubernete
 .PHONY: generate
 generate: ## Generate manifests e.g. CRD, RBAC etc.
 	# Generate code
-	$(GO_EXEC) run sigs.k8s.io/controller-tools/cmd/controller-gen object:headerFile=".github/boilerplate.go.txt" paths="./..."
+	$(GO_EXEC) run sigs.k8s.io/controller-tools/cmd/controller-gen object:headerFile=".github/boilerplate.go.txt" paths="./api/..." paths="./operator/..."
 	# Generate CRDs
-	$(GO_EXEC) run sigs.k8s.io/controller-tools/cmd/controller-gen rbac:roleName=manager-role webhook paths="./..." output:crd:artifacts:config=$(CRD_ROOT_DIR)/v1 crd:crdVersions=v1
-	$(GO_EXEC) run sigs.k8s.io/controller-tools/cmd/controller-gen rbac:roleName=manager-role webhook paths="./..." output:crd:artifacts:config=charts/k8up/crds crd:crdVersions=v1
+	$(GO_EXEC) run sigs.k8s.io/controller-tools/cmd/controller-gen rbac:roleName=manager-role webhook paths="./api/..." paths="./operator/..." output:crd:artifacts:config=$(CRD_ROOT_DIR)/v1 crd:crdVersions=v1
+	$(GO_EXEC) run sigs.k8s.io/controller-tools/cmd/controller-gen rbac:roleName=manager-role webhook paths="./api/..." paths="./operator/..." output:crd:artifacts:config=charts/k8up/crds crd:crdVersions=v1
 
 .PHONY: crd
 crd: generate ## Generate CRD to file
