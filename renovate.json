@@ -33,6 +33,20 @@
       ]
     },
     {
+      "description": "Chart testing dependencies (CI-only, no impact on shipped code)",
+      "groupName": "Chart testing dependencies",
+      "matchFileNames": [
+        "charts/go.mod",
+        "charts/go.sum"
+      ],
+      "vulnerabilityAlerts": {
+        "enabled": false
+      },
+      "schedule": [
+        "on the first day of the month"
+      ]
+    },
+    {
       "description": "Automerge GitHub Actions (CI-only, no impact on shipped code)",
       "matchManagers": [
         "github-actions"
