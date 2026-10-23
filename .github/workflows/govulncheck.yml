@@ -15,21 +15,35 @@ on:
     # Run weekly on Monday to catch newly disclosed vulnerabilities
     - cron: '0 8 * * 1'
 
+permissions:
+  contents: read
+  security-events: write
+
 jobs:
   govulncheck:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
-      - name: Determine Go version from go.mod
-        run: echo "GO_VERSION=$(go mod edit -json | jq -r .Go)" >> $GITHUB_ENV
-
       - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
         with:
-          go-version: ${{ env.GO_VERSION }}
+          go-version-file: go.mod
+          cache: false
 
-      - name: Install govulncheck
-        run: go install golang.org/x/vuln/cmd/govulncheck@latest
+      - name: Run govulncheck and save to file
+        run: go run golang.org/x/vuln/cmd/govulncheck@latest -format sarif ./... > govulncheck.sarif
 
-      - name: Run govulncheck
-        run: govulncheck ./...
+      - name: Deduplicate SARIF stacks
+        # Work around https://github.com/golang/go/issues/81953.
+        # SARIF requires unique stacks within each result.
+        run: |
+          jq '(.runs[]?.tool.driver.rules[]?.properties.tags) |= (. // [] | unique)
+            | (.runs[]?.results[]? | select(.stacks) | .stacks) |= unique' \
+            govulncheck.sarif > govulncheck-normalized.sarif
+          mv govulncheck-normalized.sarif govulncheck.sarif
+
+      - name: Upload SARIF File
+        uses: github/codeql-action/upload-sarif@8aad20d150bbac5944a9f9d289da16a4b0d87c1e # v4.36.2
+        with:
+          sarif_file: govulncheck.sarif
+          category: govulncheck
