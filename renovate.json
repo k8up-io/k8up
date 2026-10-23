@@ -39,9 +39,6 @@
         "charts/go.mod",
         "charts/go.sum"
       ],
-      "vulnerabilityAlerts": {
-        "enabled": false
-      },
       "schedule": [
         "on the first day of the month"
       ]
