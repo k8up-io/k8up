@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - 'docs/**'
+      - 'e2e/extract-doc-yamls.sh'
   push:
     branches:
     - master
@@ -27,3 +28,47 @@ jobs:
 
     - name: Run linters
       run: make docs-check
+
+  validate-yaml-examples:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v6
+
+    - name: Create KIND cluster for CRD validation
+      uses: helm/kind-action@v1
+      with:
+        install_only: true
+
+    - name: Create cluster and install CRDs
+      run: |
+        kind create cluster --name docs-validation
+        kubectl apply --server-side -f config/crd/apiextensions.k8s.io/v1/
+
+    - name: Extract YAML blocks from docs
+      run: bash e2e/extract-doc-yamls.sh docs/modules/ROOT/pages /tmp/k8up-doc-yamls
+
+    - name: Validate standalone example files
+      run: |
+        failed=0
+        for f in docs/modules/ROOT/examples/*.yaml docs/modules/ROOT/examples/tutorial/*.yaml; do
+          [ -f "$f" ] || continue
+          if ! output=$(kubectl apply --dry-run=server -f "$f" 2>&1); then
+            echo "FAIL: $f"
+            echo "$output"
+            failed=$((failed + 1))
+          fi
+        done
+        [ "$failed" -eq 0 ] || exit 1
+
+    - name: Validate inline YAML examples
+      run: |
+        failed=0
+        for f in /tmp/k8up-doc-yamls/inline-*.yaml; do
+          [ -f "$f" ] || continue
+          if ! output=$(kubectl apply --dry-run=server -f "$f" 2>&1); then
+            echo "FAIL: $(basename "$f")"
+            echo "$output"
+            failed=$((failed + 1))
+          fi
+        done
+        [ "$failed" -eq 0 ] || exit 1
