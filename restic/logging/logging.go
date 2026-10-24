@@ -65,6 +65,8 @@ type BackupError struct {
 		Op   string `json:"Op"`
 		Path string `json:"Path"`
 		Err  int    `json:"Err"`
+		// Message is used instead of Op/Path/Err by restic >= 0.17.
+		Message string `json:"message"`
 	} `json:"error"`
 	During string `json:"during"`
 	Item   string `json:"item"`
@@ -153,7 +155,7 @@ func (b *BackupOutputParser) out(s string) {
 	switch envelope.MessageType {
 	case "error":
 		b.errorCount++
-		b.log.Error(fmt.Errorf("error occurred during backup"), envelope.Item+" during "+envelope.During+" "+envelope.Error.Op)
+		b.log.Error(fmt.Errorf("error occurred during backup"), envelope.Item+" during "+envelope.During+" "+envelope.Error.Op+envelope.Error.Message)
 	case "status":
 		b.percentageFunc(b.log, envelope.PercentDone)
 	case "summary":
