@@ -397,8 +397,6 @@ spec:
                       endpointSecretKey:
                         type: string
                       path:
-                        description: Path is an optional prefix inside the bucket under which
-                          the repository is stored.
                         type: string
                       secretAccessKeySecretRef:
                         description: SecretKeySelector selects a key of a Secret.
