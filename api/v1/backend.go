@@ -135,6 +135,7 @@ type S3Spec struct {
 	EndpointSecretKey        string                    `json:"endpointSecretKey,omitempty"`
 	Bucket                   string                    `json:"bucket,omitempty"`
 	BucketSecretKey          string                    `json:"bucketSecretKey,omitempty"`
+	Path                     string                    `json:"path,omitempty"`
 	AccessKeyIDSecretRef     *corev1.SecretKeySelector `json:"accessKeyIDSecretRef,omitempty"`
 	SecretAccessKeySecretRef *corev1.SecretKeySelector `json:"secretAccessKeySecretRef,omitempty"`
 }
@@ -180,7 +181,7 @@ func (in *S3Spec) EnvVars(vars map[string]*corev1.EnvVarSource) map[string]*core
 	return vars
 }
 
-// String returns "s3:endpoint/bucket".
+// String returns "s3:endpoint/bucket", followed by "/path" if a path is set.
 // If endpoint or bucket are empty, it uses their global setting accordingly.
 func (in *S3Spec) String() string {
 	endpoint := cfg.Config.GlobalS3Endpoint
@@ -194,7 +195,11 @@ func (in *S3Spec) String() string {
 		bucket = in.Bucket
 	}
 
-	return fmt.Sprintf("s3:%v/%v", endpoint, bucket)
+	repository := fmt.Sprintf("s3:%v/%v", endpoint, bucket)
+	if path := strings.Trim(in.Path, "/"); path != "" {
+		repository += "/" + path
+	}
+	return repository
 }
 
 // RestoreEnvVars returns the env vars for this backend when using Restore jobs.
@@ -236,8 +241,12 @@ func (in *S3Spec) RestoreEnvVars() map[string]*corev1.EnvVar {
 		endpoint = cfg.Config.GlobalRestoreS3Endpoint
 	}
 
+	restoreEndpoint := fmt.Sprintf("%v/%v", endpoint, bucket)
+	if path := strings.Trim(in.Path, "/"); path != "" {
+		restoreEndpoint += "/" + path
+	}
 	vars[cfg.RestoreS3EndpointEnvName] = &corev1.EnvVar{
-		Value: fmt.Sprintf("%v/%v", endpoint, bucket),
+		Value: restoreEndpoint,
 	}
 
 	return vars

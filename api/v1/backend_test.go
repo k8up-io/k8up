@@ -116,6 +116,53 @@ var tests = map[string]struct {
 		},
 		expectedRepositoryString: "s3:https://endpoint/bucket",
 	},
+	"GivenS3BackendWithPath_ThenExpectS3EndpointURLWithBucketAndPath": {
+		givenBackend: &Backend{
+			S3: &S3Spec{
+				Bucket:                   "bucket",
+				Endpoint:                 "https://endpoint",
+				Path:                     "path/to/my/folder",
+				SecretAccessKeySecretRef: newSecretRef("secret"),
+				AccessKeyIDSecretRef:     newSecretRef("id"),
+			},
+		},
+		expectedVars: map[string]*corev1.EnvVarSource{
+			cfg.AwsAccessKeyIDEnvName:     {SecretKeyRef: newSecretRef("id")},
+			cfg.AwsSecretAccessKeyEnvName: {SecretKeyRef: newSecretRef("secret")},
+		},
+		expectedRepositoryString: "s3:https://endpoint/bucket/path/to/my/folder",
+	},
+	"GivenS3BackendWithPathInBucket_ThenExpectS3EndpointURLWithBucketAndPath": {
+		givenBackend: &Backend{
+			S3: &S3Spec{
+				Bucket:                   "server1/path/to/my/folder",
+				Endpoint:                 "https://endpoint",
+				SecretAccessKeySecretRef: newSecretRef("secret"),
+				AccessKeyIDSecretRef:     newSecretRef("id"),
+			},
+		},
+		expectedVars: map[string]*corev1.EnvVarSource{
+			cfg.AwsAccessKeyIDEnvName:     {SecretKeyRef: newSecretRef("id")},
+			cfg.AwsSecretAccessKeyEnvName: {SecretKeyRef: newSecretRef("secret")},
+		},
+		expectedRepositoryString: "s3:https://endpoint/server1/path/to/my/folder",
+	},
+	"GivenS3BackendWithSurroundingSlashesInPath_ThenExpectCleanPath": {
+		givenBackend: &Backend{
+			S3: &S3Spec{
+				Bucket:                   "bucket",
+				Endpoint:                 "https://endpoint",
+				Path:                     "/path/",
+				SecretAccessKeySecretRef: newSecretRef("secret"),
+				AccessKeyIDSecretRef:     newSecretRef("id"),
+			},
+		},
+		expectedVars: map[string]*corev1.EnvVarSource{
+			cfg.AwsAccessKeyIDEnvName:     {SecretKeyRef: newSecretRef("id")},
+			cfg.AwsSecretAccessKeyEnvName: {SecretKeyRef: newSecretRef("secret")},
+		},
+		expectedRepositoryString: "s3:https://endpoint/bucket/path",
+	},
 	"GivenSwiftBackend_ThenExpectSwiftBucket": {
 		givenBackend: &Backend{
 			Swift: &SwiftSpec{
