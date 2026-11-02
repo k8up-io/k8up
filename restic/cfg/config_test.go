@@ -163,3 +163,12 @@ func TestValidateRestore_TypeCaseInsensitive(t *testing.T) {
 	}
 	assert.NoError(t, c.Validate())
 }
+
+func TestValidate_PromFormat(t *testing.T) {
+	for _, format := range []string{"", PromFormatProtobuf, PromFormatText} {
+		c := &Configuration{PromFormat: format}
+		assert.NoError(t, c.Validate(), format)
+	}
+	c := &Configuration{PromFormat: "json"}
+	assert.EqualError(t, c.Validate(), "the prometheus push format must be either 'protobuf' or 'text', but was set to 'json'")
+}
