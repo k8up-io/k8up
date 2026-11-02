@@ -4,6 +4,8 @@ import (
 	"testing"
 
 	corev1 "k8s.io/api/core/v1"
+
+	"github.com/k8up-io/k8up/v2/operator/cfg"
 )
 
 func TestEnvVarConverter_Merge(t *testing.T) {
@@ -48,5 +50,20 @@ func TestEnvVarConverter_Merge(t *testing.T) {
 	}
 	if v["newsource"].envVarSource.SecretKeyRef.Key != "original" {
 		t.Error("nomergesource should have been merged in.")
+	}
+}
+
+func TestDefaultEnv_PromFormat(t *testing.T) {
+	defer func(format string) { cfg.Config.PromFormat = format }(cfg.Config.PromFormat)
+
+	cfg.Config.PromFormat = ""
+	if _, ok := DefaultEnv("ns").Vars["PROM_FORMAT"]; ok {
+		t.Error("PROM_FORMAT should not be set without a configured format.")
+	}
+
+	cfg.Config.PromFormat = "text"
+	v, ok := DefaultEnv("ns").Vars["PROM_FORMAT"]
+	if !ok || *v.stringEnv != "text" {
+		t.Error("PROM_FORMAT should be set to the configured format.")
 	}
 }

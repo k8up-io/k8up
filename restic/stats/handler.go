@@ -9,7 +9,9 @@ import (
 	"github.com/go-logr/logr"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/push"
+	"github.com/prometheus/common/expfmt"
 
+	"github.com/k8up-io/k8up/v2/restic/cfg"
 	"github.com/k8up-io/k8up/v2/restic/cli"
 )
 
@@ -21,16 +23,18 @@ var _ cli.StatsHandler = &Handler{}
 
 type Handler struct {
 	promURL      string
+	promFormat   string
 	promHostname string
 	webhookURL   string
 	clusterName  string
 	log          logr.Logger
 }
 
-func NewHandler(promURL, clusterName, promHostname, webhookURL string, log logr.Logger) *Handler {
+func NewHandler(promURL, promFormat, clusterName, promHostname, webhookURL string, log logr.Logger) *Handler {
 	return &Handler{
 		promHostname: promHostname,
 		promURL:      promURL,
+		promFormat:   promFormat,
 		webhookURL:   webhookURL,
 		clusterName:  clusterName,
 		log:          log.WithName("statsHandler"),
@@ -56,9 +60,14 @@ func (h *Handler) SendPrometheus(promStats cli.PrometheusProvider) error {
 }
 
 func (h *Handler) updatePrometheus(collector prometheus.Collector) error {
-	return push.New(h.promURL, subsystem).Collector(collector).
-		Grouping("instance", h.promHostname).Grouping("cluster", h.clusterName).
-		Add()
+	pusher := push.New(h.promURL, subsystem).Collector(collector).
+		Grouping("instance", h.promHostname).Grouping("cluster", h.clusterName)
+	// The push gateway accepts protobuf, which the pusher uses by default, but other
+	// Prometheus-compatible receivers may only accept the text format.
+	if h.promFormat == cfg.PromFormatText {
+		pusher = pusher.Format(expfmt.NewFormat(expfmt.TypeTextPlain))
+	}
+	return pusher.Add()
 }
 
 func (h *Handler) SendWebhook(hook cli.WebhookProvider) error {

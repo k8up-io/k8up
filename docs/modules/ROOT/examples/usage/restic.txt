@@ -20,6 +20,7 @@ OPTIONS:
    --skipPreBackup                                                                If the job should skip the backup command and only backup volumes. (default: false) [$SKIP_PREBACKUP]
    --skipSnapshotSync                                                             If set, skip synchronizing Snapshot custom resources to the cluster after backup or prune operations. Webhook notifications are still sent. (default: false) [$BACKUP_SKIP_SNAPSHOT_SYNC]
    --promURL value                                                                Sets the URL of a prometheus push gateway to report metrics. [$PROM_URL]
+   --promFormat value                                                             Sets the format in which metrics are pushed to the prometheus push gateway, either 'protobuf' or 'text' (default: protobuf). [$PROM_FORMAT]
    --clusterName value                                                            Sets the Kubernetes cluster name for grouping metrics in push gateway [$CLUSTER_NAME]
    --webhookURL value, --statsURL value                                           Sets the URL of a server which will retrieve a webhook after the action completes. [$STATS_URL]
    --backupDir value                                                              Set from which directory the backup should be performed. (default: "/data") [$BACKUP_DIR]

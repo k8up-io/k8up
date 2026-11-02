@@ -104,6 +104,9 @@ func DefaultEnv(namespace string) EnvVarConverter {
 	if cfg.Config.ResticOptions != "" {
 		defaults.SetString(cfg.ResticOptionsEnvName, cfg.Config.ResticOptions)
 	}
+	if cfg.Config.PromFormat != "" {
+		defaults.SetString("PROM_FORMAT", cfg.Config.PromFormat)
+	}
 
 	return defaults
 }
