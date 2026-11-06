@@ -90,7 +90,7 @@ func (c *Client) Connect(ctx context.Context) error {
 	c.bucket = strings.Replace(u.Path, "/", "", 1)
 	c.Endpoint = u.Host
 	mc, err := minio.New(c.Endpoint, &minio.Options{
-		Creds:     credentials.NewStaticV2(c.AccessKeyID, c.SecretAccessKey, ""),
+		Creds:     credentials.NewStaticV4(c.AccessKeyID, c.SecretAccessKey, ""),
 		Secure:    ssl,
 		Transport: TransportRoundTripper,
 	})
