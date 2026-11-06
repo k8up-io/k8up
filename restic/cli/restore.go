@@ -210,7 +210,7 @@ func (r *Restic) folderRestore(restoreDir string, snapshot dto.Snapshot, restore
 	cmd := NewCommand(r.ctx, log, opts)
 	cmd.Run()
 
-	return nil
+	return cmd.FatalError
 }
 
 // trimRestorePath will trim away the first two levels of the snapshotpath.
