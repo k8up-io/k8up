@@ -46,8 +46,8 @@ func TestBufferedPipe_WriteBlocksWhenFullAndResumes(t *testing.T) {
 	}()
 
 	select {
-	case <-done:
-		t.Fatal("Write finished although the buffer is smaller than the data")
+	case err := <-done:
+		t.Fatalf("Write finished (err: %v) although the buffer is smaller than the data", err)
 	case <-time.After(100 * time.Millisecond):
 	}
 
