@@ -2,7 +2,10 @@
 ! Attention !
 #####################
 
-This Helm chart does not include CRDs.
-Please make sure you have installed or upgraded the necessary CRDs as instructed in the Chart README.
+This Helm chart includes the K8up CRDs in its crds/ directory.
+Helm installs them on the first `helm install`, but it never upgrades or deletes CRDs.
+When you upgrade K8up, apply the CRDs of the new version yourself:
+
+  kubectl apply --server-side -f https://github.com/k8up-io/k8up/releases/download/{{ .Values.image.tag }}/k8up-crd.yaml
 
 #####################

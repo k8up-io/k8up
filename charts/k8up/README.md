@@ -22,6 +22,13 @@ Edit the README.gotmpl.md template instead.
 
 Previously, the CRDs had to be installed separately, but they're now included in the Helm chart.
 
+Helm installs the CRDs from the chart's `crds/` directory on the first `helm install` only; it does not upgrade or delete them.
+When upgrading K8up, apply the CRDs of the new version first:
+
+```bash
+kubectl apply --server-side -f https://github.com/k8up-io/k8up/releases/download/<version>/k8up-crd.yaml
+```
+
 Watch out for breaking changes in the K8up [release notes](https://github.com/k8up-io/k8up/releases).
 
 ## Source Code
