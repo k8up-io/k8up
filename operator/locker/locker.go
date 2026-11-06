@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"time"
 
+	"github.com/go-logr/logr"
 	k8upv1 "github.com/k8up-io/k8up/v2/api/v1"
 	"github.com/k8up-io/k8up/v2/operator/job"
 	batchv1 "k8s.io/api/batch/v1"
@@ -14,19 +16,31 @@ import (
 
 var repositoryLockers = sync.Map{}
 
+// startupGracePeriod is how long a batch Job without any ready Pod still counts as using the repository.
+//
+// The Job controller counts a Pod as active from the moment it's created, also while it's Pending.
+// A Pod that never starts (unschedulable, image pull back-off, unbound PVC, its node switched off) would therefore hold the repository forever
+// and defer every other job on it.
+// Within the grace period a Pod that is still being scheduled or pulling its image is treated like a running one,
+// so that an exclusive job doesn't start right underneath a backup that is about to begin.
+var startupGracePeriod = 10 * time.Minute
+
+// nowFn returns the current time, but allows unit testing with a fixed clock.
+var nowFn = time.Now
+
 // Locker is used to synchronize different controllers that operate on the same Restic repository.
 type Locker interface {
 	// TryRun attempts to run a non-exclusive Restic job.
 	// The given runnable is executed if:
-	//   - concurrency limit for the same type of job is not yet reached
-	//   - and no other exclusive job is running (batch Job with Active pods > 0)
+	//   - concurrency limit for the same type of job is not yet reached (batch Jobs with Active pods, including Pending ones)
+	//   - and no other exclusive job is using the repository (see isUsingRepository)
 	//
 	// The given runnable runs synchronously within a locked mutex, so it should be as short as possible as it blocks other runnables.
 	// It returns false with nil error if the preconditions aren't met, false with an error if preconditions cannot be determined, or true with the error returned by the runnable.
 	TryRun(ctx context.Context, config job.Config, concurrencyLimit int, runnable func(ctx context.Context) error) (bool, error)
 
 	// TryRunExclusively attempts to run an exclusive Restic job.
-	// The given runnable is executed if there are no other jobs running (batch Job with Active pods == 0).
+	// The given runnable is executed if no other job is using the repository (see isUsingRepository).
 	//
 	// The given runnable runs synchronously within a locked mutex, so it should be as short as possible as it blocks other runnables.
 	// It returns false with nil error if the precondition isn't met, false with an error if precondition cannot be determined, or true with the error returned by the runnable.
@@ -59,10 +73,12 @@ func (l *lockerImpl) TryRun(ctx context.Context, config job.Config, concurrencyL
 		return false, fmt.Errorf("cannot determine if jobs are running: %w", err)
 	}
 
+	now := nowFn()
 	reached := isConcurrencyLimitReached(runningJobs, config.Obj.GetType(), concurrencyLimit)
-	shouldRun := !isExclusiveJobRunning(runningJobs) && !reached
+	shouldRun := !isExclusiveJobRunning(runningJobs, now) && !reached
 
 	if shouldRun {
+		logStalledJobs(log, exclusiveJobs(runningJobs), now)
 		return true, runnable(ctx)
 	}
 	return false, nil
@@ -82,20 +98,65 @@ func (l *lockerImpl) TryRunExclusively(ctx context.Context, runnable func(ctx co
 		return false, err
 	}
 
-	if len(running) == 0 {
-		return true, runnable(ctx)
+	now := nowFn()
+	for _, batchJob := range running {
+		if isUsingRepository(batchJob, now) {
+			return false, nil
+		}
 	}
-	return false, nil
+	logStalledJobs(log, running, now)
+	return true, runnable(ctx)
 }
 
-// isExclusiveJobRunning will return true if there's currently an exclusive job running.
-func isExclusiveJobRunning(jobs []batchv1.Job) bool {
-	for _, batchJob := range jobs {
-		if batchJob.Status.Active > 0 && batchJob.Labels[job.K8upExclusive] == "true" {
+// isUsingRepository returns true if the given batch Job is considered to be working on the repository.
+// That's the case if the Job has a ready Pod, or if it has an active Pod and was started less than startupGracePeriod ago.
+// If the cluster doesn't report ready Pods (status.ready is nil), any active Pod counts.
+func isUsingRepository(batchJob batchv1.Job, now time.Time) bool {
+	if batchJob.Status.Active == 0 {
+		return false
+	}
+	if batchJob.Status.Ready == nil || *batchJob.Status.Ready > 0 {
+		return true
+	}
+	if batchJob.Status.StartTime == nil {
+		return true
+	}
+	return now.Sub(batchJob.Status.StartTime.Time) < startupGracePeriod
+}
+
+// isExclusiveJobRunning will return true if there's currently an exclusive job using the repository.
+func isExclusiveJobRunning(jobs []batchv1.Job, now time.Time) bool {
+	for _, batchJob := range exclusiveJobs(jobs) {
+		if isUsingRepository(batchJob, now) {
 			return true
 		}
 	}
 	return false
+}
+
+// exclusiveJobs returns the jobs that are labeled as exclusive.
+func exclusiveJobs(jobs []batchv1.Job) []batchv1.Job {
+	filtered := make([]batchv1.Job, 0)
+	for _, batchJob := range jobs {
+		if batchJob.Labels[job.K8upExclusive] == "true" {
+			filtered = append(filtered, batchJob)
+		}
+	}
+	return filtered
+}
+
+// logStalledJobs logs the jobs that have active Pods but aren't considered to be using the repository anymore,
+// so that it's visible why a job started while another one is still pending.
+func logStalledJobs(log logr.Logger, jobs []batchv1.Job, now time.Time) {
+	stalled := make([]string, 0)
+	for _, batchJob := range jobs {
+		if batchJob.Status.Active > 0 && !isUsingRepository(batchJob, now) {
+			stalled = append(stalled, batchJob.Namespace+"/"+batchJob.Name)
+		}
+	}
+	if len(stalled) > 0 {
+		log.Info("Ignoring jobs whose pods didn't become ready within the startup grace period", "jobs", stalled, "gracePeriod", startupGracePeriod.String())
+	}
 }
 
 // isConcurrencyLimitReached returns true if the cluster-wide amount of jobs by type is greater or equal the given jobLimit.
