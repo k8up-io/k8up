@@ -380,6 +380,7 @@ Settings:
 
 * `endpoint`: http(s) endpoint of the S3 instance
 * `bucket`: name of the bucket that should be used
+* `path`: optional path prefix inside the bucket under which the repository is stored
 * `accessKeyIDSecretRef`: Kubernetes secret reference containing the the Access Key ID
 * `secretAccessKeySecretRef`: Kubernetes secret reference containing the Secret Access Key
 

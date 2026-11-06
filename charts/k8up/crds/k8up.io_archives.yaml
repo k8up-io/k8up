@@ -389,6 +389,8 @@ spec:
                         type: string
                       endpointSecretKey:
                         type: string
+                      path:
+                        type: string
                       secretAccessKeySecretRef:
                         description: SecretKeySelector selects a key of a Secret.
                         properties:
@@ -882,6 +884,8 @@ spec:
                       endpoint:
                         type: string
                       endpointSecretKey:
+                        type: string
+                      path:
                         type: string
                       secretAccessKeySecretRef:
                         description: SecretKeySelector selects a key of a Secret.
