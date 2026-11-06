@@ -57,6 +57,7 @@ var (
 			&cli.BoolFlag{Destination: &cfg.Config.SkipSnapshotSync, Name: "skipSnapshotSync", EnvVars: []string{"BACKUP_SKIP_SNAPSHOT_SYNC"}, Usage: "If set, skip synchronizing Snapshot custom resources to the cluster after backup or prune operations. Webhook notifications are still sent."},
 
 			&cli.StringFlag{Destination: &cfg.Config.PromURL, Name: "promURL", EnvVars: []string{"PROM_URL"}, Usage: "Sets the URL of a prometheus push gateway to report metrics."},
+			&cli.StringFlag{Destination: &cfg.Config.PromFormat, Name: "promFormat", EnvVars: []string{"PROM_FORMAT"}, Usage: "Sets the format in which metrics are pushed to the prometheus push gateway, either 'protobuf' or 'text' (default: protobuf)."},
 			&cli.StringFlag{Destination: &cfg.Config.ClusterName, Name: "clusterName", EnvVars: []string{"CLUSTER_NAME"}, Usage: "Sets the Kubernetes cluster name for grouping metrics in push gateway"},
 			&cli.StringFlag{Destination: &cfg.Config.WebhookURL, Name: "webhookURL", Aliases: []string{"statsURL"}, EnvVars: []string{"STATS_URL"}, Usage: "Sets the URL of a server which will retrieve a webhook after the action completes."},
 
@@ -149,7 +150,7 @@ func resticMain(c *cli.Context) error {
 	ctx, cancel := context.WithCancel(c.Context)
 	cancelOnTermination(cancel, resticLog)
 
-	statHandler := stats.NewHandler(cfg.Config.PromURL, cfg.Config.ClusterName, cfg.Config.Hostname, cfg.Config.WebhookURL, resticLog)
+	statHandler := stats.NewHandler(cfg.Config.PromURL, cfg.Config.PromFormat, cfg.Config.ClusterName, cfg.Config.Hostname, cfg.Config.WebhookURL, resticLog)
 
 	resticCLI := resticCli.New(ctx, resticLog.WithName("restic"), statHandler)
 

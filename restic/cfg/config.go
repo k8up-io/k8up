@@ -2,6 +2,7 @@ package cfg
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 	"time"
 )
@@ -15,6 +16,11 @@ const (
 	RestoreTypeFolder = "folder"
 
 	InsecureAllowPodExecSPDYFallback = "INSECURE_ALLOW_PODEXEC_SPDY_FALLBACK"
+
+	// PromFormatProtobuf pushes metrics to the prometheus push gateway in the protobuf format.
+	PromFormatProtobuf = "protobuf"
+	// PromFormatText pushes metrics to the prometheus push gateway in the text format.
+	PromFormatText = "text"
 )
 
 var (
@@ -39,6 +45,7 @@ type Configuration struct {
 	SkipSnapshotSync bool
 
 	PromURL     string
+	PromFormat  string
 	ClusterName string
 	WebhookURL  string
 
@@ -113,6 +120,9 @@ func (c *Configuration) Validate() error {
 	}
 	if err := c.validatePrune(); err != nil {
 		return err
+	}
+	if !slices.Contains([]string{"", PromFormatProtobuf, PromFormatText}, c.PromFormat) {
+		return fmt.Errorf("the prometheus push format must be either '%s' or '%s', but was set to '%s'", PromFormatProtobuf, PromFormatText, c.PromFormat)
 	}
 
 	return nil
