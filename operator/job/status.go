@@ -63,11 +63,14 @@ func (c *Config) patchConditions(ctx context.Context, conditionStatus metav1.Con
 func (c *Config) SetStarted(ctx context.Context, message string, args ...interface{}) {
 	log := controllerruntime.LoggerFrom(ctx)
 
+	// The patch base has to be captured before the status is changed,
+	// otherwise the computed merge patch is empty and nothing gets persisted.
+	patch := client.MergeFrom(c.Obj.DeepCopyObject().(client.Object))
+
 	status := c.Obj.GetStatus()
 	status.SetStarted(fmt.Sprintf(message, args...))
 	c.Obj.SetStatus(status)
 
-	patch := client.MergeFrom(c.Obj.DeepCopyObject().(client.Object))
 	err := c.Client.Status().Patch(ctx, c.Obj, patch)
 	if err != nil {
 		if errors.IsNotFound(err) {
@@ -81,11 +84,14 @@ func (c *Config) SetStarted(ctx context.Context, message string, args ...interfa
 func (c *Config) SetFinished(ctx context.Context, namespace, name string) {
 	log := controllerruntime.LoggerFrom(ctx)
 
+	// The patch base has to be captured before the status is changed,
+	// otherwise the computed merge patch is empty and nothing gets persisted.
+	patch := client.MergeFrom(c.Obj.DeepCopyObject().(client.Object))
+
 	status := c.Obj.GetStatus()
 	status.SetFinished(fmt.Sprintf("the Job '%s/%s' ended", namespace, name))
 	c.Obj.SetStatus(status)
 
-	patch := client.MergeFrom(c.Obj.DeepCopyObject().(client.Object))
 	err := c.Client.Status().Patch(ctx, c.Obj, patch)
 	if err != nil {
 		if errors.IsNotFound(err) {
