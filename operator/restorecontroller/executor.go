@@ -65,6 +65,10 @@ func (r *RestoreExecutor) cleanupOldRestores(ctx context.Context, restore *k8upv
 }
 
 func (r *RestoreExecutor) createRestoreObject(ctx context.Context, restore *k8upv1.Restore) (*batchv1.Job, error) {
+	if err := validateRestoreMethod(restore); err != nil {
+		return nil, err
+	}
+
 	batchJob := &batchv1.Job{}
 	batchJob.Name = r.jobName()
 	batchJob.Namespace = restore.Namespace
@@ -89,6 +93,15 @@ func (r *RestoreExecutor) createRestoreObject(ctx context.Context, restore *k8up
 	})
 
 	return batchJob, err
+}
+
+// validateRestoreMethod returns an error if the given restore doesn't define where to restore to.
+func validateRestoreMethod(restore *k8upv1.Restore) error {
+	method := restore.Spec.RestoreMethod
+	if method == nil || (method.Folder == nil && method.S3 == nil) {
+		return fmt.Errorf("no restore method defined on '%v/%v', set either 'spec.restoreMethod.folder' or 'spec.restoreMethod.s3'", restore.Namespace, restore.Name)
+	}
+	return nil
 }
 
 func (r *RestoreExecutor) jobName() string {

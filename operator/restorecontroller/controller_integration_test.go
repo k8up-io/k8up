@@ -8,6 +8,7 @@ import (
 
 	"github.com/stretchr/testify/suite"
 	batchv1 "k8s.io/api/batch/v1"
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	controllerruntime "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -36,6 +37,16 @@ func (ts *RestoreTestSuite) TestReconciliation() {
 	ts.expectAJobEventually()
 }
 
+func (ts *RestoreTestSuite) TestReconciliation_WithoutRestoreMethod() {
+	ts.givenRestoreResourceWithoutRestoreMethod()
+
+	result := ts.whenReconcile()
+
+	ts.Assert().GreaterOrEqual(result.RequeueAfter, 30*time.Second)
+	ts.expectNoJob()
+	ts.expectRestoreMethodErrorCondition()
+}
+
 func (ts *RestoreTestSuite) BeforeTest(suiteName, testName string) {
 	ts.RestoreName = "restore-integration-test"
 }
@@ -62,6 +73,12 @@ func (ts *RestoreTestSuite) givenRestoreResource() {
 	ts.EnsureResources(ts.GivenRestore)
 }
 
+func (ts *RestoreTestSuite) givenRestoreResourceWithoutRestoreMethod() {
+	ts.GivenRestore = NewRestoreResource(ts.RestoreName, ts.NS)
+	ts.GivenRestore.Spec.RestoreMethod = nil
+	ts.EnsureResources(ts.GivenRestore)
+}
+
 func (ts *RestoreTestSuite) whenReconcile() controllerruntime.Result {
 	controller := RestoreReconciler{
 		Kube: ts.Client,
@@ -82,4 +99,22 @@ func (ts *RestoreTestSuite) expectAJobEventually() {
 	ts.T().Logf("%d Jobs found", jobsLen)
 
 	ts.Assert().Len(jobs.Items, 1)
+}
+
+func (ts *RestoreTestSuite) expectNoJob() {
+	jobs := new(batchv1.JobList)
+	ts.FetchResources(jobs, client.InNamespace(ts.NS))
+
+	ts.Assert().Empty(jobs.Items)
+}
+
+func (ts *RestoreTestSuite) expectRestoreMethodErrorCondition() {
+	restore := &k8upv1.Restore{}
+	ts.FetchResource(client.ObjectKeyFromObject(ts.GivenRestore), restore)
+
+	readyCond := meta.FindStatusCondition(restore.Status.Conditions, k8upv1.ConditionReady.String())
+	ts.Require().NotNil(readyCond)
+	ts.Assert().Equal(metav1.ConditionFalse, readyCond.Status)
+	ts.Assert().Equal(k8upv1.ReasonCreationFailed.String(), readyCond.Reason)
+	ts.Assert().Contains(readyCond.Message, "no restore method defined")
 }
