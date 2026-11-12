@@ -48,6 +48,20 @@ var tests = map[string]struct {
 		},
 		expectedRepositoryString: "azure:container:foo",
 	},
+	"GivenAzureBackendWithSASToken_ThenExpectSASEnvVar": {
+		givenBackend: &Backend{
+			Azure: &AzureSpec{
+				Container:            "container",
+				AccountNameSecretRef: newSecretRef("name"),
+				AccountSASSecretRef:  newSecretRef("sas"),
+			},
+		},
+		expectedVars: map[string]*corev1.EnvVarSource{
+			cfg.AzureAccountEnvName:    {SecretKeyRef: newSecretRef("name")},
+			cfg.AzureAccountSASEnvName: {SecretKeyRef: newSecretRef("sas")},
+		},
+		expectedRepositoryString: "azure:container:/",
+	},
 	"GivenB2Backend_ThenExpectB2BucketAndPath": {
 		givenBackend: &Backend{
 			B2: &B2Spec{
