@@ -392,6 +392,7 @@ Settings:
 * `path`: path inside the container, will default to "/" if omitted
 * `accountNameSecretRef`: Kubernetes secret reference containing the account name
 * `accountKeySecretRef`: Kubernetes secret reference containing the account key
+* `accountSASSecretRef`: Kubernetes secret reference containing a shared access signature (SAS) token, which can be used instead of the account key to limit access to the container
 
 === GCS
 

@@ -21,6 +21,7 @@ const (
 
 	AzureAccountEnvName    = "AZURE_ACCOUNT_NAME"
 	AzureAccountKeyEnvName = "AZURE_ACCOUNT_KEY"
+	AzureAccountSASEnvName = "AZURE_ACCOUNT_SAS"
 
 	GcsProjectIDEnvName   = "GOOGLE_PROJECT_ID"
 	GcsAccessTokenEnvName = "GOOGLE_ACCESS_TOKEN"

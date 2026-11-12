@@ -275,11 +275,15 @@ type AzureSpec struct {
 	Path                 string                    `json:"path,omitempty"`
 	AccountNameSecretRef *corev1.SecretKeySelector `json:"accountNameSecretRef,omitempty"`
 	AccountKeySecretRef  *corev1.SecretKeySelector `json:"accountKeySecretRef,omitempty"`
+	// AccountSASSecretRef references a secret containing a shared access signature (SAS) token.
+	// It can be used instead of AccountKeySecretRef to limit access to the backup container.
+	AccountSASSecretRef *corev1.SecretKeySelector `json:"accountSASSecretRef,omitempty"`
 }
 
 // EnvVars returns the env vars for this backend.
 func (in *AzureSpec) EnvVars(vars map[string]*corev1.EnvVarSource) map[string]*corev1.EnvVarSource {
 	addEnvVarFromSecret(vars, cfg.AzureAccountKeyEnvName, in.AccountKeySecretRef)
+	addEnvVarFromSecret(vars, cfg.AzureAccountSASEnvName, in.AccountSASSecretRef)
 	addEnvVarFromSecret(vars, cfg.AzureAccountEnvName, in.AccountNameSecretRef)
 	return vars
 }
