@@ -70,10 +70,16 @@ func (b *BackupExecutor) generateDeployments(ctx context.Context, templates []k8
 
 	for _, template := range templates {
 
-		template.Spec.Pod.Annotations = map[string]string{
-			cfg.Config.BackupCommandAnnotation: template.Spec.BackupCommand,
-			cfg.Config.FileExtensionAnnotation: template.Spec.FileExtension,
+		// Keep the labels and annotations the user set on the pod template, for
+		// example for a sidecar injector, and add K8up's own on top. K8up's win
+		// on a clash, since the backup command and the selector depend on them.
+		annotations := maps.Clone(template.Spec.Pod.Annotations)
+		if annotations == nil {
+			annotations = map[string]string{}
 		}
+		annotations[cfg.Config.BackupCommandAnnotation] = template.Spec.BackupCommand
+		annotations[cfg.Config.FileExtensionAnnotation] = template.Spec.FileExtension
+		template.Spec.Pod.Annotations = annotations
 
 		podLabels := map[string]string{
 			"k8up.io/backupCommandPod": "true",
@@ -81,7 +87,12 @@ func (b *BackupExecutor) generateDeployments(ctx context.Context, templates []k8
 			"k8up.io/ownerBackupUID":   string(b.Obj.GetUID()),
 		}
 
-		template.Spec.Pod.Labels = podLabels
+		templateLabels := maps.Clone(template.Spec.Pod.Labels)
+		if templateLabels == nil {
+			templateLabels = map[string]string{}
+		}
+		maps.Copy(templateLabels, podLabels)
+		template.Spec.Pod.Labels = templateLabels
 
 		deployment := &appsv1.Deployment{
 			ObjectMeta: metav1.ObjectMeta{
