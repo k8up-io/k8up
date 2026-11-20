@@ -40,7 +40,8 @@ func SyncSnapshotList(ctx context.Context, list []dto.Snapshot, namespace, repos
 // createNewSnapshots is a wrapper for the diff function to correctly pass the right order and function
 func createNewSnapshots(ctx context.Context, newList, oldList *k8upv1.SnapshotList, kube client.Client) error {
 	return diff(newList, oldList, func(snap k8upv1.Snapshot) error {
-		return kube.Create(ctx, &snap)
+		// A concurrent backup pod may have created the same snapshot since we listed the cluster.
+		return client.IgnoreAlreadyExists(kube.Create(ctx, &snap))
 	})
 }
 
