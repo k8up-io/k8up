@@ -82,6 +82,7 @@ type Configuration struct {
 	PodExecRoleName                  string
 	PodFilter                        string
 	PromURL                          string
+	PromFormat                       string
 	ClusterName                      string
 	RestartPolicy                    string
 	RepositorySecretName             string

@@ -106,7 +106,7 @@ func initTest(t *testing.T) *testEnvironment {
 	}
 
 	mainLogger := zapr.NewLogger(zaptest.NewLogger(t))
-	statHandler := stats.NewHandler(cfg.Config.PromURL, cfg.Config.ClusterName, cfg.Config.Hostname, cfg.Config.WebhookURL, mainLogger)
+	statHandler := stats.NewHandler(cfg.Config.PromURL, cfg.Config.PromFormat, cfg.Config.ClusterName, cfg.Config.Hostname, cfg.Config.WebhookURL, mainLogger)
 	resticCli := cli.New(ctx, mainLogger, statHandler)
 
 	cleanupDirs(t)
