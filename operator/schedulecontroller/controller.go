@@ -6,6 +6,7 @@ import (
 	k8upv1 "github.com/k8up-io/k8up/v2/api/v1"
 	"github.com/k8up-io/k8up/v2/operator/cfg"
 	"github.com/k8up-io/k8up/v2/operator/job"
+	"github.com/k8up-io/k8up/v2/operator/monitoring"
 	"github.com/k8up-io/k8up/v2/operator/scheduler"
 	controllerruntime "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -43,6 +44,9 @@ func (r *ScheduleReconciler) Provision(ctx context.Context, schedule *k8upv1.Sch
 func (r *ScheduleReconciler) Deprovision(ctx context.Context, obj *k8upv1.Schedule) (controllerruntime.Result, error) {
 	for _, jobType := range []k8upv1.JobType{k8upv1.PruneType, k8upv1.ArchiveType, k8upv1.RestoreType, k8upv1.BackupType, k8upv1.CheckType} {
 		key := keyOf(obj, jobType)
+		if scheduler.GetScheduler().HasSchedule(key) {
+			monitoring.DecRegisteredSchedulesGauge(obj.Namespace)
+		}
 		scheduler.GetScheduler().RemoveSchedule(ctx, key)
 	}
 	controllerutil.RemoveFinalizer(obj, k8upv1.ScheduleFinalizerName)
