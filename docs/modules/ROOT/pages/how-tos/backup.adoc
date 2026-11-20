@@ -165,6 +165,7 @@ spec:
         defaultMode: 420
 ----
 
+[#customize_pod_spec]
 == Customize Pod Spec
 You can override most of the fields in the podSpec for the backup jobs.
 
@@ -177,8 +178,24 @@ These are the fields you can't override:
 
 The podSpec has to be created via a separate object of the type `PodConfig`.
 Any annotations and labels set on the `PodConfig` will also be applied to the pod.
-Any fields on the `PodConfig` object has precedence over settings specified in the job.
+Fields set on the `PodConfig` object take precedence over settings specified in the job.
 For example, if the job has `podSecurityContext` set and the `PodConfig` has it set as well, then the setting from the `PodConfig` will override the setting in the job definition.
+
+[IMPORTANT]
+====
+K8up merges the `PodConfig` template into the generated pod field by field, but it doesn't merge lists: a list set in the `PodConfig` replaces the generated one, and a list you leave out or set to `[]` keeps it.
+Maps such as `nodeSelector` are merged key by key.
+K8up adds its own `env`, `envFrom`, `volumes` and `volumeMounts` after the merge, so these combine with yours.
+
+* A `containers` entry replaces the generated container.
+K8up sets the fields listed above again, but the resources it computed for the job (see xref:how-tos/manage-pod-resources.adoc[How to Manage pod resources]) are lost unless the entry sets `resources` itself.
+Only the first entry becomes the K8up container; any further entry is added to the pod as written.
+* Backup jobs copy the tolerations of the pod that mounts the PVC.
+A `tolerations` list in the `PodConfig` replaces them, so repeat them if that pod runs on a tainted node.
+
+To set only pod-level fields such as `nodeSelector`, use `containers: []`.
+The CRD requires the field, and an empty list keeps the generated container.
+====
 
 [source,yaml]
 ----
