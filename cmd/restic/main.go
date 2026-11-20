@@ -60,7 +60,7 @@ var (
 			&cli.StringFlag{Destination: &cfg.Config.ClusterName, Name: "clusterName", EnvVars: []string{"CLUSTER_NAME"}, Usage: "Sets the Kubernetes cluster name for grouping metrics in push gateway"},
 			&cli.StringFlag{Destination: &cfg.Config.WebhookURL, Name: "webhookURL", Aliases: []string{"statsURL"}, EnvVars: []string{"STATS_URL"}, Usage: "Sets the URL of a server which will retrieve a webhook after the action completes."},
 
-			&cli.StringFlag{Destination: &cfg.Config.Hostname, Name: "hostname", EnvVars: []string{"HOSTNAME"}, Usage: "Sets the hostname to use in reports.", Hidden: true, Required: true},
+			&cli.StringFlag{Destination: &cfg.Config.Hostname, Name: "hostname", EnvVars: []string{"HOSTNAME"}, Usage: "Sets the hostname to use in reports. Filled in from the HOSTNAME environment variable, which Kubernetes sets to the pod name.", Required: true},
 			&cli.StringFlag{Destination: &cfg.Config.KubeConfig, Name: "kubeconfig", EnvVars: []string{"KUBECONFIG"}, Usage: "Overwrite the default kubernetes config to use.", Hidden: true, Value: clientcmd.RecommendedHomeFile},
 
 			&cli.StringFlag{Destination: &cfg.Config.BackupDir, Name: "backupDir", EnvVars: []string{backupDirEnvKey}, Value: "/data", Usage: "Set from which directory the backup should be performed."},
