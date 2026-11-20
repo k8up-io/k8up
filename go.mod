@@ -21,7 +21,10 @@ require (
 	sigs.k8s.io/controller-tools v0.20.1
 )
 
-require github.com/zeebo/xxh3 v1.1.0 // indirect
+require (
+	github.com/kylelemons/godebug v1.1.0 // indirect
+	github.com/zeebo/xxh3 v1.1.0 // indirect
+)
 
 require (
 	dario.cat/mergo v1.0.2

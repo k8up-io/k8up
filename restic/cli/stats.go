@@ -30,6 +30,7 @@ type RawMetrics struct {
 	ChangedDirs           float64  `json:"changed_dirs"`
 	UnmodifiedDirs        float64  `json:"unmodified_dirs"`
 	DataTransferred       float64  `json:"data_transferred"`
+	TotalBytesProcessed   float64  `json:"total_bytes_processed"`
 	MountedPVCs           []string `json:"mounted_PVCs"`
 	availableSnapshots    float64
 	Folder                string
@@ -45,15 +46,16 @@ type BackupStats struct {
 }
 
 type PromMetrics struct {
-	Errors             *prometheus.GaugeVec
-	AvailableSnapshots prometheus.Gauge
-	NewFiles           *prometheus.GaugeVec
-	ChangedFiles       *prometheus.GaugeVec
-	UnmodifiedFiles    *prometheus.GaugeVec
-	NewDirs            *prometheus.GaugeVec
-	ChangedDirs        *prometheus.GaugeVec
-	UnmodifiedDirs     *prometheus.GaugeVec
-	DataTransferred    *prometheus.GaugeVec
+	Errors              *prometheus.GaugeVec
+	AvailableSnapshots  prometheus.Gauge
+	NewFiles            *prometheus.GaugeVec
+	ChangedFiles        *prometheus.GaugeVec
+	UnmodifiedFiles     *prometheus.GaugeVec
+	NewDirs             *prometheus.GaugeVec
+	ChangedDirs         *prometheus.GaugeVec
+	UnmodifiedDirs      *prometheus.GaugeVec
+	DataTransferred     *prometheus.GaugeVec
+	TotalBytesProcessed *prometheus.GaugeVec
 }
 
 func newPromMetrics() *PromMetrics {
@@ -64,15 +66,16 @@ func newPromMetrics() *PromMetrics {
 	}
 
 	return &PromMetrics{
-		Errors:             errorsGaugeVec(labels),
-		AvailableSnapshots: availableSnapshotsGauge(),
-		NewFiles:           newFilesGaugeVec(labels),
-		ChangedFiles:       changedFiledGaugeVec(labels),
-		UnmodifiedFiles:    unmodifiedFilesGaugeVec(labels),
-		NewDirs:            newDirsGaugeVec(labels),
-		ChangedDirs:        changedDirsGaugeVec(labels),
-		UnmodifiedDirs:     unmodifiedDirsGaugeVec(labels),
-		DataTransferred:    dataTransferredGaugeVec(labels),
+		Errors:              errorsGaugeVec(labels),
+		AvailableSnapshots:  availableSnapshotsGauge(),
+		NewFiles:            newFilesGaugeVec(labels),
+		ChangedFiles:        changedFiledGaugeVec(labels),
+		UnmodifiedFiles:     unmodifiedFilesGaugeVec(labels),
+		NewDirs:             newDirsGaugeVec(labels),
+		ChangedDirs:         changedDirsGaugeVec(labels),
+		UnmodifiedDirs:      unmodifiedDirsGaugeVec(labels),
+		DataTransferred:     dataTransferredGaugeVec(labels),
+		TotalBytesProcessed: totalBytesProcessedGaugeVec(labels),
 	}
 }
 
@@ -82,6 +85,15 @@ func dataTransferredGaugeVec(labels []string) *prometheus.GaugeVec {
 		Subsystem: prometheusSubsystem,
 		Name:      "data_transferred_during_backup",
 		Help:      "Amount of data transferred during last backup",
+	}, labels)
+}
+
+func totalBytesProcessedGaugeVec(labels []string) *prometheus.GaugeVec {
+	return prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Namespace: prometheusNamespace,
+		Subsystem: prometheusSubsystem,
+		Name:      "total_bytes_processed_during_backup",
+		Help:      "Total size in bytes of the data read during the last backup",
 	}, labels)
 }
 
@@ -175,6 +187,7 @@ func (r *Restic) parseSummary(summary logging.BackupSummary, errorCount int, fol
 		BackupEndTimestamp:    float64(endTimestamp),
 		runningBackupDuration: summary.TotalDuration,
 		DataTransferred:       float64(summary.DataAdded),
+		TotalBytesProcessed:   float64(summary.TotalBytesProcessed),
 		ID:                    summary.SnapshotID,
 	}
 }
@@ -190,6 +203,8 @@ func (r *RawMetrics) prometheus() *PromMetrics {
 	metrics.NewFiles.WithLabelValues(r.Folder, r.hostname).Set(r.NewFiles)
 	metrics.UnmodifiedDirs.WithLabelValues(r.Folder, r.hostname).Set(r.UnmodifiedDirs)
 	metrics.UnmodifiedFiles.WithLabelValues(r.Folder, r.hostname).Set(r.UnmodifiedFiles)
+	metrics.DataTransferred.WithLabelValues(r.Folder, r.hostname).Set(r.DataTransferred)
+	metrics.TotalBytesProcessed.WithLabelValues(r.Folder, r.hostname).Set(r.TotalBytesProcessed)
 
 	return metrics
 }
@@ -214,6 +229,7 @@ func (p *PromMetrics) ToProm() []prometheus.Collector {
 		p.ChangedDirs,
 		p.UnmodifiedDirs,
 		p.DataTransferred,
+		p.TotalBytesProcessed,
 	}
 }
 
