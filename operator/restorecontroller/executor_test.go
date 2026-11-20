@@ -263,3 +263,39 @@ func TestRestore_args(t *testing.T) {
 		})
 	}
 }
+
+func TestRestore_validateRestoreMethod(t *testing.T) {
+	tests := map[string]struct {
+		GivenRestoreMethod *k8upv1.RestoreMethod
+		ExpectError        bool
+	}{
+		"givenNoRestoreMethod_whenValidate_expectError": {
+			GivenRestoreMethod: nil,
+			ExpectError:        true,
+		},
+		"givenEmptyRestoreMethod_whenValidate_expectError": {
+			GivenRestoreMethod: &k8upv1.RestoreMethod{},
+			ExpectError:        true,
+		},
+		"givenS3RestoreMethod_whenValidate_expectNoError": {
+			GivenRestoreMethod: newS3RestoreResource().Spec.RestoreMethod,
+		},
+		"givenFolderRestoreMethod_whenValidate_expectNoError": {
+			GivenRestoreMethod: newFolderRestoreResource().Spec.RestoreMethod,
+		},
+	}
+
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			restore := &k8upv1.Restore{Spec: k8upv1.RestoreSpec{RestoreMethod: tt.GivenRestoreMethod}}
+
+			err := validateRestoreMethod(restore)
+
+			if tt.ExpectError {
+				assert.ErrorContains(t, err, "no restore method defined")
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
