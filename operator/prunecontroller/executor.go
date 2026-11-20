@@ -107,7 +107,8 @@ func (p *PruneExecutor) setupEnvVars(ctx context.Context, prune *k8upv1.Prune) [
 
 	if prune.Spec.Retention.KeepDaily > 0 {
 		vars.SetString("KEEP_DAILY", strconv.Itoa(prune.Spec.Retention.KeepDaily))
-	} else {
+	} else if !hasKeepPolicy(prune.Spec.Retention) {
+		// Only fall back to the default if no other keep policy has been configured.
 		vars.SetString("KEEP_DAILY", "14")
 	}
 
@@ -146,6 +147,17 @@ func (p *PruneExecutor) setupEnvVars(ctx context.Context, prune *k8upv1.Prune) [
 	}
 
 	return vars.Convert()
+}
+
+// hasKeepPolicy returns true if at least one of the keep* fields of the given retention policy is set.
+func hasKeepPolicy(retention k8upv1.RetentionPolicy) bool {
+	return retention.KeepLast > 0 ||
+		retention.KeepHourly > 0 ||
+		retention.KeepDaily > 0 ||
+		retention.KeepWeekly > 0 ||
+		retention.KeepMonthly > 0 ||
+		retention.KeepYearly > 0 ||
+		len(retention.KeepTags) > 0
 }
 
 func (p *PruneExecutor) attachTLSVolumeMounts() []corev1.VolumeMount {
