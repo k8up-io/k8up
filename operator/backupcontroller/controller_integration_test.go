@@ -149,6 +149,7 @@ func (ts *BackupTestSuite) Test_GivenBackupWithSecurityContext_ExpectBackupJobWi
 	ts.Assert().NotNil(backupJob.Spec.Template.Spec.SecurityContext)
 	ts.Assert().Equal(*ts.BackupResource.Spec.PodSecurityContext, *backupJob.Spec.Template.Spec.SecurityContext)
 	ts.Assert().Equal(int64(500), *backupJob.Spec.ActiveDeadlineSeconds)
+	ts.Assert().Equal(int64(500), *backupJob.Spec.Template.Spec.ActiveDeadlineSeconds)
 }
 
 func (ts *BackupTestSuite) Test_GivenBackupWithTlsOptions_ExpectBackupJobWithTlsOptions() {

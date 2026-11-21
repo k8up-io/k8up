@@ -16,6 +16,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/utils/ptr"
 	controllerruntime "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -55,6 +56,14 @@ func MutateBatchJob(ctx context.Context, batchJob *batchv1.Job, jobObj k8upv1.Jo
 	})
 
 	batchJob.Spec.ActiveDeadlineSeconds = config.Obj.GetActiveDeadlineSeconds()
+	// The Job controller doesn't copy the deadline to its pods, and resource
+	// quotas decide whether a pod is terminating from the pod's own
+	// activeDeadlineSeconds. Set it on the template too, so the pods count
+	// against Terminating quotas instead of NotTerminating ones. It gets its
+	// own copy, since merging a PodConfig writes through this pointer.
+	if deadline := config.Obj.GetActiveDeadlineSeconds(); deadline != nil {
+		batchJob.Spec.Template.Spec.ActiveDeadlineSeconds = ptr.To(*deadline)
+	}
 	batchJob.Spec.Template.Labels = labels.Merge(batchJob.Spec.Template.Labels, labels.Set{
 		K8uplabel: "true",
 	})
