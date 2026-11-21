@@ -224,6 +224,7 @@ func defaultConfiguration() *cfg.Configuration {
 		BackupAnnotation:                 "k8up.io/backup",
 		BackupCommandAnnotation:          "k8up.io/backupcommand",
 		FileExtensionAnnotation:          "k8up.io/file-extension",
+		FileNameAnnotation:               "k8up.io/file-name",
 		BackupResticArgsAnnotation:       "k8up.io/backup-restic-args",
 		ServiceAccount:                   "pod-executor",
 		BackupCheckSchedule:              "0 0 * * 0",

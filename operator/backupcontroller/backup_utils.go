@@ -192,6 +192,7 @@ func (b *BackupExecutor) setupEnvVars() ([]corev1.EnvVar, error) {
 	vars.SetStringOrDefault("CLUSTER_NAME", b.backup.Spec.ClusterName, cfg.Config.ClusterName)
 	vars.SetString("BACKUPCOMMAND_ANNOTATION", cfg.Config.BackupCommandAnnotation)
 	vars.SetString("FILEEXTENSION_ANNOTATION", cfg.Config.FileExtensionAnnotation)
+	vars.SetString("FILENAME_ANNOTATION", cfg.Config.FileNameAnnotation)
 
 	if cfg.Config.SkipSnapshotSync {
 		vars.SetString("BACKUP_SKIP_SNAPSHOT_SYNC", "true")

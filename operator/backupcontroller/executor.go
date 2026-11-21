@@ -269,7 +269,7 @@ func (b *BackupExecutor) startBackup(ctx context.Context) error {
 	// validating that the correct backup annotations exist is already handled in the restic module
 	// we only need to pass it a list of pods it should go through
 
-	podLister := kubernetes.NewPodLister(ctx, b.Client, cfg.Config.BackupCommandAnnotation, "", "", b.backup.Namespace, nil, false, log)
+	podLister := kubernetes.NewPodLister(ctx, b.Client, cfg.Config.BackupCommandAnnotation, "", "", "", b.backup.Namespace, nil, false, log)
 	viableBackupPods, err := podLister.ListPods()
 	if err != nil {
 		log.Error(err, "could not list pods", "namespace", b.backup.Namespace)

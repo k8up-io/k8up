@@ -33,6 +33,7 @@ type Configuration struct {
 	BackupCommandAnnotation       string
 	BackupFileExtensionAnnotation string
 	BackupContainerAnnotation     string
+	BackupFileNameAnnotation      string
 	BackupDir                     string
 
 	SkipPreBackup    bool
