@@ -12,6 +12,20 @@ Kubernetes and OpenShift Backup Operator based on restic
 helm repo add k8up-io https://k8up-io.github.io/k8up
 helm install k8up k8up-io/k8up
 ```
+
+The chart is also published to an OCI registry:
+
+```bash
+helm install k8up oci://ghcr.io/k8up-io/k8up-chart/k8up
+```
+
+The OCI chart is signed with [Cosign](https://docs.sigstore.dev/) (keyless). To verify the signature:
+
+```bash
+cosign verify ghcr.io/k8up-io/k8up-chart/k8up:<version> \
+  --certificate-identity-regexp '^https://github\.com/k8up-io/k8up/\.github/workflows/chart-release\.yml@refs/tags/' \
+  --certificate-oidc-issuer https://token.actions.githubusercontent.com
+```
 <!---
 The README.md file is automatically generated with helm-docs!
 
