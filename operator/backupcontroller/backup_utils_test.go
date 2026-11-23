@@ -2,6 +2,7 @@ package backupcontroller
 
 import (
 	"testing"
+	"strings"
 
 	v1 "github.com/k8up-io/k8up/v2/api/v1"
 	"github.com/k8up-io/k8up/v2/operator/cfg"
@@ -76,6 +77,31 @@ func TestBackupExecutor_setupEnvVars(t *testing.T) {
 			for _, expectedEnv := range tt.expectedEnvVars {
 				assert.Contains(t, result, expectedEnv)
 			}
+		})
+	}
+}
+
+func TestTruncateVolumeName(t *testing.T) {
+	tests := map[string]struct {
+		input    string
+		expected string
+	}{
+		"short name": {
+			input:    "my-pvc",
+			expected: "my-pvc",
+		},
+		"exactly 63 chars": {
+			input:    strings.Repeat("a", 63),
+			expected: strings.Repeat("a", 63),
+		},
+		"over 63 chars": {
+			input:    strings.Repeat("a", 100),
+			expected: strings.Repeat("a", 63),
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, truncateVolumeName(tc.input))
 		})
 	}
 }
