@@ -22,6 +22,7 @@ OPTIONS:
    --promURL value                                                                Sets the URL of a prometheus push gateway to report metrics. [$PROM_URL]
    --clusterName value                                                            Sets the Kubernetes cluster name for grouping metrics in push gateway [$CLUSTER_NAME]
    --webhookURL value, --statsURL value                                           Sets the URL of a server which will retrieve a webhook after the action completes. [$STATS_URL]
+   --hostname value                                                               Sets the hostname to use in reports. Filled in from the HOSTNAME environment variable, which Kubernetes sets to the pod name. [$HOSTNAME]
    --backupDir value                                                              Set from which directory the backup should be performed. (default: "/data") [$BACKUP_DIR]
    --restoreDir value                                                             Set to which directory the restore should be performed. (default: "/data") [$RESTORE_DIR]
    --restoreFilter value                                                          Simple filter to define what should get restored. For example the PVC name
