@@ -22,6 +22,7 @@ require (
 )
 
 require (
+	github.com/kylelemons/godebug v1.1.0 // indirect
 	github.com/zeebo/xxh3 v1.1.0 // indirect
 	gopkg.in/ini.v1 v1.67.3 // indirect
 )
