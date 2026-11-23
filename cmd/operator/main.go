@@ -39,6 +39,7 @@ var (
 			&cli.StringFlag{Destination: &cfg.Config.BackupAnnotation, Name: "annotation", EnvVars: []string{"BACKUP_ANNOTATION"}, Value: "k8up.io/backup", Usage: "the annotation to be used for filtering"},
 			&cli.StringFlag{Destination: &cfg.Config.BackupCommandAnnotation, Name: "backupcommandannotation", EnvVars: []string{"BACKUP_BACKUPCOMMANDANNOTATION"}, Value: "k8up.io/backupcommand", Usage: "set the annotation name that identify the backup commands on Pods"},
 			&cli.StringFlag{Destination: &cfg.Config.FileExtensionAnnotation, Name: "fileextensionannotation", EnvVars: []string{"BACKUP_FILEEXTENSIONANNOTATION"}, Value: "k8up.io/file-extension", Usage: "set the annotation name where the file extension is stored for backup commands"},
+			&cli.StringFlag{Destination: &cfg.Config.FileNameAnnotation, Name: "filenameannotation", EnvVars: []string{"BACKUP_FILENAMEANNOTATION"}, Value: "k8up.io/file-name", Usage: "set the annotation name where the file name is stored for backup commands"},
 			&cli.StringFlag{Destination: &cfg.Config.BackupResticArgsAnnotation, Name: "backupresticargsannotation", EnvVars: []string{"BACKUP_RESTICARGSANNOTATION"}, Value: "k8up.io/backup-restic-args", Usage: "set the annotation name to be used to modify restic wrapper call args on backup (e.g. to add excludes)"},
 
 			&cli.IntFlag{Destination: &cfg.Config.GlobalKeepJobs, Hidden: true, Name: "globalkeepjobs", EnvVars: []string{"BACKUP_GLOBALKEEPJOBS"}, Value: -1, DefaultText: "unlimited", Usage: "set the number of old jobs to keep when cleaning up, applies to all job types"},

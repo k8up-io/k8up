@@ -31,6 +31,13 @@ See xref:references/operator-config-reference.adoc[Operator Configuration refere
 |`Pod`
 |`BACKUP_FILEEXTENSIONANNOTATION`
 
+|`k8up.io/file-name`
+|The name of the file the output of the `k8up.io/backupcommand` annotation is stored under in the snapshot, without the file extension.
+ Defaults to `<namespace>-<container>`, so set it when several pods in a namespace run their backup command in containers of the same name.
+|A file name without `/`, for example `orders-db`.
+|`Pod`
+|`BACKUP_FILENAMEANNOTATION`
+
 |`k8up.io/backupcommand-container`
 |Specify in which container inside pod backup should be done
 |A string which is valid pod name.

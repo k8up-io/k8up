@@ -29,6 +29,9 @@ But it should work with any command that has the ability to output the backup to
 
 TIP: By default, all PVCs are backed up automatically. If you are using Application-Aware Backups and want to skip backing up any related PVCs, adding the annotation `k8up.io/backup=false` to a PVC object will exclude it from all following backups. Alternatively, you can set the environment variable `BACKUP_SKIP_WITHOUT_ANNOTATION=true` if you want K8up to ignore objects without the annotation.
 
+TIP: The output is stored in the snapshot as `<namespace>-<container>` plus the file extension.
+If several pods in the same namespace run their backup command in containers of the same name, for example two PostgreSQL deployments, add `k8up.io/file-name: orders-db` to each so their files can be told apart.
+
 == PostgreSQL
 
 Note that the PostgreSQL image used requires the utility `pg_dump`.

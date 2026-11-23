@@ -3,6 +3,7 @@ package kubernetes
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/go-logr/logr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -15,6 +16,7 @@ type PodLister struct {
 	backupCommandAnnotation   string
 	backupContainerAnnotation string
 	fileExtensionAnnotation   string
+	fileNameAnnotation        string
 	k8scli                    client.Client
 	err                       error
 	namespace                 string
@@ -31,10 +33,29 @@ type BackupPod struct {
 	ContainerName string
 	Namespace     string
 	FileExtension string
+	// FileName replaces the default <namespace>-<container> name of the
+	// backed up file when set.
+	FileName string
+}
+
+// StdinFilename returns the file name the output of the backup command is
+// stored under in the snapshot, without the file extension. It defaults to
+// /<namespace>-<container>, which is the same for every pod of a namespace
+// that runs its command in a container of the same name, so the file name
+// annotation lets those snapshots be told apart.
+func (b BackupPod) StdinFilename(namespace string) (string, error) {
+	name := strings.TrimSpace(b.FileName)
+	if name == "" {
+		return fmt.Sprintf("/%s-%s", namespace, b.ContainerName), nil
+	}
+	if strings.Contains(name, "/") || name == "." || name == ".." {
+		return "", fmt.Errorf("invalid file name %q for pod %s: it can't contain \"/\" or be \".\" or \"..\"", b.FileName, b.PodName)
+	}
+	return "/" + name, nil
 }
 
 // NewPodLister returns a PodLister configured to find the defined annotations.
-func NewPodLister(ctx context.Context, k8cli client.Client, backupCommandAnnotation, fileExtensionAnnotation, backupContainerAnnotation, namespace string, targetPods []string, skipPreBackup bool, log logr.Logger) *PodLister {
+func NewPodLister(ctx context.Context, k8cli client.Client, backupCommandAnnotation, fileExtensionAnnotation, fileNameAnnotation, backupContainerAnnotation, namespace string, targetPods []string, skipPreBackup bool, log logr.Logger) *PodLister {
 	tp := make(map[string]struct{})
 	for _, name := range targetPods {
 		tp[name] = struct{}{}
@@ -44,6 +65,7 @@ func NewPodLister(ctx context.Context, k8cli client.Client, backupCommandAnnotat
 		backupCommandAnnotation:   backupCommandAnnotation,
 		backupContainerAnnotation: backupContainerAnnotation,
 		fileExtensionAnnotation:   fileExtensionAnnotation,
+		fileNameAnnotation:        fileNameAnnotation,
 		k8scli:                    k8cli,
 		namespace:                 namespace,
 		targetPods:                tp,
@@ -95,6 +117,7 @@ func (p *PodLister) ListPods() ([]BackupPod, error) {
 		if command, ok := annotations[p.backupCommandAnnotation]; ok {
 
 			fileExtension := annotations[p.fileExtensionAnnotation]
+			fileName := annotations[p.fileNameAnnotation]
 
 			owner := pod.OwnerReferences
 			var firstOwnerID string
@@ -113,6 +136,7 @@ func (p *PodLister) ListPods() ([]BackupPod, error) {
 					ContainerName: execInContainer,
 					Namespace:     p.namespace,
 					FileExtension: fileExtension,
+					FileName:      fileName,
 				})
 			}
 		}

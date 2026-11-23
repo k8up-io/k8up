@@ -52,6 +52,7 @@ var (
 
 			&cli.StringFlag{Destination: &cfg.Config.BackupCommandAnnotation, Name: "backupCommandAnnotation", EnvVars: []string{"BACKUPCOMMAND_ANNOTATION"}, Usage: "Defines the command to invoke when doing a backup via STDOUT."},
 			&cli.StringFlag{Destination: &cfg.Config.BackupFileExtensionAnnotation, Name: "fileExtensionAnnotation", EnvVars: []string{"FILEEXTENSION_ANNOTATION"}, Usage: "Defines the file extension to use for STDOUT backups."},
+			&cli.StringFlag{Destination: &cfg.Config.BackupFileNameAnnotation, Name: "fileNameAnnotation", EnvVars: []string{"FILENAME_ANNOTATION"}, Value: "k8up.io/file-name", Usage: "Defines the annotation that sets the file name to use for STDOUT backups instead of <namespace>-<container>."},
 			&cli.StringFlag{Destination: &cfg.Config.BackupContainerAnnotation, Name: "backucontainerannotation", EnvVars: []string{"BACKUP_CONTAINERANNOTATION"}, Value: "k8up.io/backupcommand-container", Usage: "set the annotation name that specify the backup container inside the Pod"},
 			&cli.BoolFlag{Destination: &cfg.Config.SkipPreBackup, Name: "skipPreBackup", EnvVars: []string{"SKIP_PREBACKUP"}, Usage: "If the job should skip the backup command and only backup volumes."},
 			&cli.BoolFlag{Destination: &cfg.Config.SkipSnapshotSync, Name: "skipSnapshotSync", EnvVars: []string{"BACKUP_SKIP_SNAPSHOT_SYNC"}, Usage: "If set, skip synchronizing Snapshot custom resources to the cluster after backup or prune operations. Webhook notifications are still sent."},
@@ -318,7 +319,7 @@ func backupAnnotatedPods(ctx context.Context, resticCLI *resticCli.Restic, mainL
 	if err != nil {
 		return fmt.Errorf("could not create kubernetes client: %w", err)
 	}
-	podLister := kubernetes.NewPodLister(ctx, k8cli, cfg.Config.BackupCommandAnnotation, cfg.Config.BackupFileExtensionAnnotation, cfg.Config.BackupContainerAnnotation, cfg.Config.Hostname, cfg.Config.TargetPods, cfg.Config.SkipPreBackup, mainLogger)
+	podLister := kubernetes.NewPodLister(ctx, k8cli, cfg.Config.BackupCommandAnnotation, cfg.Config.BackupFileExtensionAnnotation, cfg.Config.BackupFileNameAnnotation, cfg.Config.BackupContainerAnnotation, cfg.Config.Hostname, cfg.Config.TargetPods, cfg.Config.SkipPreBackup, mainLogger)
 	podList, err := podLister.ListPods()
 	if err != nil {
 		mainLogger.Error(err, "could not list pods", "namespace", cfg.Config.Hostname)
@@ -339,7 +340,10 @@ func backupAnnotatedPod(pod kubernetes.BackupPod, mainLogger logr.Logger, hostna
 	if err != nil {
 		return fmt.Errorf("error occurred during data stream from k8s: %w", err)
 	}
-	filename := fmt.Sprintf("/%s-%s", hostname, pod.ContainerName)
+	filename, err := pod.StdinFilename(hostname)
+	if err != nil {
+		return err
+	}
 	err = resticCLI.StdinBackup(data, filename, pod.FileExtension, cfg.Config.Tags)
 	if err != nil {
 		return fmt.Errorf("backup commands failed: %w", err)

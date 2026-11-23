@@ -16,6 +16,7 @@ OPTIONS:
    --path value [ --path value ]                                                  List of paths a snapshot has to include for given operation
    --backupCommandAnnotation value                                                Defines the command to invoke when doing a backup via STDOUT. [$BACKUPCOMMAND_ANNOTATION]
    --fileExtensionAnnotation value                                                Defines the file extension to use for STDOUT backups. [$FILEEXTENSION_ANNOTATION]
+   --fileNameAnnotation value                                                     Defines the annotation that sets the file name to use for STDOUT backups instead of <namespace>-<container>. (default: "k8up.io/file-name") [$FILENAME_ANNOTATION]
    --backucontainerannotation value                                               set the annotation name that specify the backup container inside the Pod (default: "k8up.io/backupcommand-container") [$BACKUP_CONTAINERANNOTATION]
    --skipPreBackup                                                                If the job should skip the backup command and only backup volumes. (default: false) [$SKIP_PREBACKUP]
    --skipSnapshotSync                                                             If set, skip synchronizing Snapshot custom resources to the cluster after backup or prune operations. Webhook notifications are still sent. (default: false) [$BACKUP_SKIP_SNAPSHOT_SYNC]
