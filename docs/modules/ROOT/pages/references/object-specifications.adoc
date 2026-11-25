@@ -111,6 +111,7 @@ This will restore the latest snapshot from `\http://10.144.1.224:9000` to the PV
 * `restoreMethod`: is either `s3` or `folder`. For s3 please see `backend` for `folder` you just need to provide a valid claim name as shown in the example above
 * `restoreFilter`: a filter passed to the underlying Restic, which will be used. Please consult the https://restic.readthedocs.io/en/latest/050_restore.html[Restic docs] for valid path filters.
 * `snapshot`: valid snapshot ID that should get restored. If not provided, the most recent one will be restored.
+* `verify`: if `true`, restic reads back the restored files and compares them to the snapshot (`restic restore --verify`). The restore fails if the verification does not pass. Only applies to restores to a `folder`.
 * `keepJobs`: amount of jobs that should be left after cleanup, for example how many job/pod objects should be left after they finished.
 Deprecated, use `failedJobsHistoryLimit` and `successfulJobsHistoryLimit` instead.
 Only applicable when used within a <<Schedule, schedule>>.

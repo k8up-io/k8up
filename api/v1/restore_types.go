@@ -39,6 +39,11 @@ type RestoreSpec struct {
 	// Delete ensures the state after restoring a snapshot is identical to the snapshot
 	// Deletes files from target if they do not exist in snapshot
 	Delete bool `json:"delete,omitempty"`
+	// Verify makes restic read back the restored files and compare them to the snapshot.
+	// The Restore only succeeds if the verification passes.
+	// Only applies to restores to a folder.
+	// +optional
+	Verify bool `json:"verify,omitempty"`
 }
 
 // RestoreMethod contains how and where the restore should happen
