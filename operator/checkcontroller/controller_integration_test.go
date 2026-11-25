@@ -160,3 +160,36 @@ func (ts *CheckTestSuite) Test_GivenCheckWithMutualTlsOptions_ExpectCheckJobWith
 	checkJob := ts.expectACheckJob()
 	ts.assertCheckMutualTlsVolumeAndMutualTlsOptions(checkJob)
 }
+
+func (ts *CheckTestSuite) TestReadDataSubsetValidation() {
+	tests := map[string]struct {
+		value       string
+		expectValid bool
+	}{
+		"fraction":             {value: "1/8", expectValid: true},
+		"percentage":           {value: "10%", expectValid: true},
+		"decimalPercentage":    {value: "2.5%", expectValid: true},
+		"size":                 {value: "500M", expectValid: true},
+		"sizeInGigabytes":      {value: "2G", expectValid: true},
+		"bytes":                {value: "1048576", expectValid: true},
+		"unknownUnit":          {value: "10X", expectValid: false},
+		"injectedFlag":         {value: "--no-lock", expectValid: false},
+		"fractionWithoutTotal": {value: "1/", expectValid: false},
+		"text":                 {value: "all", expectValid: false},
+	}
+
+	i := 0
+	for name, tc := range tests {
+		i++
+		check := NewCheckResource("check-subset-"+strconv.Itoa(i), ts.NS, 1, 1)
+		check.Spec.ReadDataSubset = tc.value
+
+		err := ts.Client.Create(ts.Ctx, check)
+
+		if tc.expectValid {
+			ts.Assert().NoError(err, name)
+		} else {
+			ts.Assert().Error(err, name)
+		}
+	}
+}

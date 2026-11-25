@@ -75,6 +75,9 @@ func (c *CheckExecutor) jobName() string {
 
 func (c *CheckExecutor) setupArgs() []string {
 	args := []string{"-varDir", cfg.Config.PodVarDir, "-check"}
+	if c.check.Spec.ReadDataSubset != "" {
+		args = append(args, "-readDataSubset", c.check.Spec.ReadDataSubset)
+	}
 	if c.check.Spec.Backend != nil {
 		args = append(args, utils.AppendTLSOptionsArgs(c.check.Spec.Backend.TLSOptions)...)
 	}

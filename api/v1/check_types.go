@@ -22,6 +22,16 @@ type CheckSpec struct {
 	// +optional
 	ClusterName string `json:"clusterName,omitempty"`
 
+	// ReadDataSubset limits how much of the repository's pack data `restic check` reads back and verifies,
+	// instead of only checking the repository structure.
+	// It is passed to `restic check --read-data-subset` and is either a fraction `n/t`
+	// (for example `1/8` reads one of eight evenly sized parts of the data), a percentage (for example `10%`)
+	// or an amount of data (for example `500M` or `2G`).
+	// If unset, no pack data is read.
+	// +kubebuilder:validation:Pattern=`^([0-9]+/[0-9]+|[0-9]+(\.[0-9]+)?%|[0-9]+(\.[0-9]+)?[bBkKmMgGtT]?)$`
+	// +optional
+	ReadDataSubset string `json:"readDataSubset,omitempty"`
+
 	// KeepJobs amount of jobs to keep for later analysis.
 	//
 	// Deprecated: Use FailedJobsHistoryLimit and SuccessfulJobsHistoryLimit respectively.
