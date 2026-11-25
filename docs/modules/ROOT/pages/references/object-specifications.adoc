@@ -122,6 +122,7 @@ Defaults to 3.
 Only applicable when used within a <<Schedule, schedule>>.
 * `tags`: list of tags to be considered for the restore. They're ignored if a snapshot ID is provided.
 * `activeDeadlineSeconds`: specifies the duration in seconds relative to the startTime that the job may be continuously active before the system tries to terminate it.
+* `backoffLimit`: number of times the job's pod is retried before the job, and with it the object, is marked as failed. Retries are delayed exponentially, so a low value reports a failure sooner. If not set, the Kubernetes default of 6 applies (for backups, the operator's `--global-backoff-limit`).
 
 == Archive
 
@@ -214,6 +215,7 @@ Only applicable when used within a <<Schedule, schedule>>.
 * `statsURL`: will send a JSON webhook containing backup information information to this endpoint. Can be used to gather a list with available backups.
 * `tags`: list of tags to be added to the backup. Can be used in restores and archives again.
 * `activeDeadlineSeconds`: specifies the duration in seconds relative to the startTime that the job may be continuously active before the system tries to terminate it.
+* `backoffLimit`: number of times the job's pod is retried before the job, and with it the object, is marked as failed. Retries are delayed exponentially, so a low value reports a failure sooner. If not set, the Kubernetes default of 6 applies (for backups, the operator's `--global-backoff-limit`).
 
 == Check
 
@@ -257,6 +259,7 @@ Only applicable when used within a <<Schedule, schedule>>.
 Defaults to 3.
 Only applicable when used within a <<Schedule, schedule>>.
 * `activeDeadlineSeconds`: specifies the duration in seconds relative to the startTime that the job may be continuously active before the system tries to terminate it.
+* `backoffLimit`: number of times the job's pod is retried before the job, and with it the object, is marked as failed. Retries are delayed exponentially, so a low value reports a failure sooner. If not set, the Kubernetes default of 6 applies (for backups, the operator's `--global-backoff-limit`).
 
 == Prune
 
@@ -307,6 +310,7 @@ Only applicable when used within a <<Schedule, schedule>>.
 Defaults to 3.
 Only applicable when used within a <<Schedule, schedule>>.
 * `activeDeadlineSeconds`: specifies the duration in seconds relative to the startTime that the job may be continuously active before the system tries to terminate it.
+* `backoffLimit`: number of times the job's pod is retried before the job, and with it the object, is marked as failed. Retries are delayed exponentially, so a low value reports a failure sooner. If not set, the Kubernetes default of 6 applies (for backups, the operator's `--global-backoff-limit`).
 
 === Retention
 

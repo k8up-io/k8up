@@ -64,6 +64,10 @@ func MutateBatchJob(ctx context.Context, batchJob *batchv1.Job, jobObj k8upv1.Jo
 	if deadline := config.Obj.GetActiveDeadlineSeconds(); deadline != nil {
 		batchJob.Spec.Template.Spec.ActiveDeadlineSeconds = ptr.To(*deadline)
 	}
+	// The backoff limit gets its own copy of the value as well; unset keeps the Kubernetes default.
+	if limit := config.Obj.GetBackoffLimit(); limit != nil {
+		batchJob.Spec.BackoffLimit = ptr.To(*limit)
+	}
 	batchJob.Spec.Template.Labels = labels.Merge(batchJob.Spec.Template.Labels, labels.Set{
 		K8uplabel: "true",
 	})

@@ -173,6 +173,11 @@ func (s *Schedule) GetActiveDeadlineSeconds() *int64 {
 	return nil
 }
 
+// GetBackoffLimit implements JobObject
+func (s *Schedule) GetBackoffLimit() *int32 {
+	return nil
+}
+
 // GetFailedJobsHistoryLimit returns failed jobs history limit.
 // Returns KeepJobs if unspecified.
 func (s *Schedule) GetFailedJobsHistoryLimit() *int {

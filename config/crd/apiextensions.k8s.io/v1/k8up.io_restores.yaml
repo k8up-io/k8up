@@ -524,6 +524,15 @@ spec:
                       type: object
                     type: array
                 type: object
+              backoffLimit:
+                description: |-
+                  BackoffLimit specifies the number of times the job's pod is retried before the job is marked as failed.
+                  Every failed attempt is retried with an exponentially increasing delay, so a low value makes a failing action report
+                  its failure sooner.
+                  If unset, the Kubernetes default of 6 applies (for backups, the operator's global backoff limit).
+                format: int32
+                minimum: 0
+                type: integer
               delete:
                 description: |-
                   Delete ensures the state after restoring a snapshot is identical to the snapshot

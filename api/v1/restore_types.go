@@ -98,6 +98,11 @@ func (r *Restore) GetActiveDeadlineSeconds() *int64 {
 	return r.Spec.ActiveDeadlineSeconds
 }
 
+// GetBackoffLimit implements JobObject
+func (r *Restore) GetBackoffLimit() *int32 {
+	return r.Spec.BackoffLimit
+}
+
 // GetFailedJobsHistoryLimit returns failed jobs history limit.
 // Returns KeepJobs if unspecified.
 func (r *Restore) GetFailedJobsHistoryLimit() *int {

@@ -244,6 +244,10 @@ This is for advanced use-cases only. Please only set this if you know what you'r
 | *`volumes`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-runnablevolumespec[$$RunnableVolumeSpec$$]__ | Volumes List of volumes that can be mounted by containers belonging to the pod.
 | *`activeDeadlineSeconds`* __integer__ | ActiveDeadlineSeconds specifies the duration in seconds relative to the startTime that the job may be continuously active before the system tries to terminate it.
 Value must be positive integer if given.
+| *`backoffLimit`* __integer__ | BackoffLimit specifies the number of times the job's pod is retried before the job is marked as failed.
+Every failed attempt is retried with an exponentially increasing delay, so a low value makes a failing action report
+its failure sooner.
+If unset, the Kubernetes default of 6 applies (for backups, the operator's global backoff limit).
 | *`keepJobs`* __integer__ | KeepJobs amount of jobs to keep for later analysis.
 
 Deprecated: Use FailedJobsHistoryLimit and SuccessfulJobsHistoryLimit respectively.
@@ -288,6 +292,10 @@ This is for advanced use-cases only. Please only set this if you know what you'r
 | *`volumes`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-runnablevolumespec[$$RunnableVolumeSpec$$]__ | Volumes List of volumes that can be mounted by containers belonging to the pod.
 | *`activeDeadlineSeconds`* __integer__ | ActiveDeadlineSeconds specifies the duration in seconds relative to the startTime that the job may be continuously active before the system tries to terminate it.
 Value must be positive integer if given.
+| *`backoffLimit`* __integer__ | BackoffLimit specifies the number of times the job's pod is retried before the job is marked as failed.
+Every failed attempt is retried with an exponentially increasing delay, so a low value makes a failing action report
+its failure sooner.
+If unset, the Kubernetes default of 6 applies (for backups, the operator's global backoff limit).
 | *`keepJobs`* __integer__ | KeepJobs amount of jobs to keep for later analysis.
 
 Deprecated: Use FailedJobsHistoryLimit and SuccessfulJobsHistoryLimit respectively.
@@ -370,6 +378,10 @@ This is for advanced use-cases only. Please only set this if you know what you'r
 | *`volumes`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-runnablevolumespec[$$RunnableVolumeSpec$$]__ | Volumes List of volumes that can be mounted by containers belonging to the pod.
 | *`activeDeadlineSeconds`* __integer__ | ActiveDeadlineSeconds specifies the duration in seconds relative to the startTime that the job may be continuously active before the system tries to terminate it.
 Value must be positive integer if given.
+| *`backoffLimit`* __integer__ | BackoffLimit specifies the number of times the job's pod is retried before the job is marked as failed.
+Every failed attempt is retried with an exponentially increasing delay, so a low value makes a failing action report
+its failure sooner.
+If unset, the Kubernetes default of 6 applies (for backups, the operator's global backoff limit).
 | *`promURL`* __string__ | PromURL sets a prometheus push URL where the backup container send metrics to
 | *`clusterName`* __string__ | ClusterName sets the kubernetes cluster name to send to pushgateway for grouping metrics
 | *`keepJobs`* __integer__ | KeepJobs amount of jobs to keep for later analysis.
@@ -407,6 +419,10 @@ This is for advanced use-cases only. Please only set this if you know what you'r
 | *`volumes`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-runnablevolumespec[$$RunnableVolumeSpec$$]__ | Volumes List of volumes that can be mounted by containers belonging to the pod.
 | *`activeDeadlineSeconds`* __integer__ | ActiveDeadlineSeconds specifies the duration in seconds relative to the startTime that the job may be continuously active before the system tries to terminate it.
 Value must be positive integer if given.
+| *`backoffLimit`* __integer__ | BackoffLimit specifies the number of times the job's pod is retried before the job is marked as failed.
+Every failed attempt is retried with an exponentially increasing delay, so a low value makes a failing action report
+its failure sooner.
+If unset, the Kubernetes default of 6 applies (for backups, the operator's global backoff limit).
 | *`promURL`* __string__ | PromURL sets a prometheus push URL where the backup container send metrics to
 | *`clusterName`* __string__ | ClusterName sets the kubernetes cluster name to send to pushgateway for grouping metrics
 | *`keepJobs`* __integer__ | KeepJobs amount of jobs to keep for later analysis.
@@ -735,6 +751,10 @@ This is for advanced use-cases only. Please only set this if you know what you'r
 | *`volumes`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-runnablevolumespec[$$RunnableVolumeSpec$$]__ | Volumes List of volumes that can be mounted by containers belonging to the pod.
 | *`activeDeadlineSeconds`* __integer__ | ActiveDeadlineSeconds specifies the duration in seconds relative to the startTime that the job may be continuously active before the system tries to terminate it.
 Value must be positive integer if given.
+| *`backoffLimit`* __integer__ | BackoffLimit specifies the number of times the job's pod is retried before the job is marked as failed.
+Every failed attempt is retried with an exponentially increasing delay, so a low value makes a failing action report
+its failure sooner.
+If unset, the Kubernetes default of 6 applies (for backups, the operator's global backoff limit).
 | *`retention`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-retentionpolicy[$$RetentionPolicy$$]__ | Retention sets how many backups should be kept after a forget and prune
 | *`keepJobs`* __integer__ | KeepJobs amount of jobs to keep for later analysis.
 
@@ -771,6 +791,10 @@ This is for advanced use-cases only. Please only set this if you know what you'r
 | *`volumes`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-runnablevolumespec[$$RunnableVolumeSpec$$]__ | Volumes List of volumes that can be mounted by containers belonging to the pod.
 | *`activeDeadlineSeconds`* __integer__ | ActiveDeadlineSeconds specifies the duration in seconds relative to the startTime that the job may be continuously active before the system tries to terminate it.
 Value must be positive integer if given.
+| *`backoffLimit`* __integer__ | BackoffLimit specifies the number of times the job's pod is retried before the job is marked as failed.
+Every failed attempt is retried with an exponentially increasing delay, so a low value makes a failing action report
+its failure sooner.
+If unset, the Kubernetes default of 6 applies (for backups, the operator's global backoff limit).
 | *`retention`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-retentionpolicy[$$RetentionPolicy$$]__ | Retention sets how many backups should be kept after a forget and prune
 | *`keepJobs`* __integer__ | KeepJobs amount of jobs to keep for later analysis.
 
@@ -885,6 +909,10 @@ This is for advanced use-cases only. Please only set this if you know what you'r
 | *`volumes`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-runnablevolumespec[$$RunnableVolumeSpec$$]__ | Volumes List of volumes that can be mounted by containers belonging to the pod.
 | *`activeDeadlineSeconds`* __integer__ | ActiveDeadlineSeconds specifies the duration in seconds relative to the startTime that the job may be continuously active before the system tries to terminate it.
 Value must be positive integer if given.
+| *`backoffLimit`* __integer__ | BackoffLimit specifies the number of times the job's pod is retried before the job is marked as failed.
+Every failed attempt is retried with an exponentially increasing delay, so a low value makes a failing action report
+its failure sooner.
+If unset, the Kubernetes default of 6 applies (for backups, the operator's global backoff limit).
 | *`restoreMethod`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-restoremethod[$$RestoreMethod$$]__ | 
 | *`restoreFilter`* __string__ | 
 | *`restoreTimeFilter`* __string__ | Simple filter to define a timestamp (prefix, YYYY-MM-DD hh:mm:ss) for snapshot selection instead of latest (or latest if nothing matches)
@@ -930,6 +958,10 @@ This is for advanced use-cases only. Please only set this if you know what you'r
 | *`volumes`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-runnablevolumespec[$$RunnableVolumeSpec$$]__ | Volumes List of volumes that can be mounted by containers belonging to the pod.
 | *`activeDeadlineSeconds`* __integer__ | ActiveDeadlineSeconds specifies the duration in seconds relative to the startTime that the job may be continuously active before the system tries to terminate it.
 Value must be positive integer if given.
+| *`backoffLimit`* __integer__ | BackoffLimit specifies the number of times the job's pod is retried before the job is marked as failed.
+Every failed attempt is retried with an exponentially increasing delay, so a low value makes a failing action report
+its failure sooner.
+If unset, the Kubernetes default of 6 applies (for backups, the operator's global backoff limit).
 | *`restoreMethod`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-restoremethod[$$RestoreMethod$$]__ | 
 | *`restoreFilter`* __string__ | 
 | *`restoreTimeFilter`* __string__ | Simple filter to define a timestamp (prefix, YYYY-MM-DD hh:mm:ss) for snapshot selection instead of latest (or latest if nothing matches)
@@ -1005,6 +1037,10 @@ This is for advanced use-cases only. Please only set this if you know what you'r
 | *`volumes`* __xref:{anchor_prefix}-github-com-k8up-io-k8up-v2-api-v1-runnablevolumespec[$$RunnableVolumeSpec$$]__ | Volumes List of volumes that can be mounted by containers belonging to the pod.
 | *`activeDeadlineSeconds`* __integer__ | ActiveDeadlineSeconds specifies the duration in seconds relative to the startTime that the job may be continuously active before the system tries to terminate it.
 Value must be positive integer if given.
+| *`backoffLimit`* __integer__ | BackoffLimit specifies the number of times the job's pod is retried before the job is marked as failed.
+Every failed attempt is retried with an exponentially increasing delay, so a low value makes a failing action report
+its failure sooner.
+If unset, the Kubernetes default of 6 applies (for backups, the operator's global backoff limit).
 |===
 
 
