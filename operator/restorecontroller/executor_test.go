@@ -78,6 +78,12 @@ func newFolderRestoreResource() *k8upv1.Restore {
 	}
 }
 
+func newVerifiedFolderRestoreResource() *k8upv1.Restore {
+	restore := newFolderRestoreResource()
+	restore.Spec.Verify = true
+	return restore
+}
+
 func newFilteredFolderRestoreResource() *k8upv1.Restore {
 	return &k8upv1.Restore{
 		Spec: k8upv1.RestoreSpec{
@@ -238,6 +244,10 @@ func TestRestore_args(t *testing.T) {
 		"givenFolderRestoreResource_whenArgs_expectFolderRestoreType": {
 			GivenResource: newFolderRestoreResource(),
 			ExpectedArgs:  []string{"-varDir", "/k8up", "-restore", "-restoreType", "folder"},
+		},
+		"givenFolderRestoreResourceWithVerify_whenArgs_expectVerifyRestoreFlag": {
+			GivenResource: newVerifiedFolderRestoreResource(),
+			ExpectedArgs:  []string{"-varDir", "/k8up", "-restore", "-verifyRestore", "-restoreType", "folder"},
 		},
 		"givenFolderRestoreResourceWithAdditionalArguments_whenBuildRestoreObject_expectJobResource": {
 			GivenResource: newFilteredFolderRestoreResource(),
