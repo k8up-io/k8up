@@ -257,6 +257,9 @@ Only applicable when used within a <<Schedule, schedule>>.
 Defaults to 3.
 Only applicable when used within a <<Schedule, schedule>>.
 * `activeDeadlineSeconds`: specifies the duration in seconds relative to the startTime that the job may be continuously active before the system tries to terminate it.
+* `readDataSubset`: makes the check read back and verify part of the repository's pack data (`restic check --read-data-subset`), instead of only checking the repository structure.
+Either a fraction `n/t` (for example `1/8` verifies one of eight parts, so that eight runs cover all the data), a percentage (for example `10%`) or an amount of data (for example `500M` or `2G`).
+If not set, no pack data is read.
 
 == Prune
 

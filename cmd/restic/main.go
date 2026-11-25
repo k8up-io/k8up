@@ -43,6 +43,7 @@ var (
 		Action:      resticMain,
 		Flags: []cli.Flag{
 			&cli.BoolFlag{Destination: &cfg.Config.DoCheck, Name: "check", Usage: "Set, if the container should do a check"},
+			&cli.StringFlag{Destination: &cfg.Config.CheckReadDataSubset, Name: "readDataSubset", Usage: "Passed to 'restic check --read-data-subset' (e.g. '1/8', '10%' or '500M'), only for checks"},
 			&cli.BoolFlag{Destination: &cfg.Config.DoPrune, Name: "prune", Usage: "Set, if the container should do a prune"},
 			&cli.BoolFlag{Destination: &cfg.Config.DoRestore, Name: "restore", Usage: "Set, if the container should attempt a restore"},
 			&cli.BoolFlag{Destination: &cfg.Config.DoArchive, Name: "archive", Usage: "Set, if the container should do an archive"},
@@ -233,7 +234,7 @@ func doPrune(resticCLI *resticCli.Restic) error {
 
 func doCheck(resticCLI *resticCli.Restic) error {
 	if cfg.Config.DoCheck {
-		if err := resticCLI.Check(); err != nil {
+		if err := resticCLI.Check(cfg.Config.CheckReadDataSubset); err != nil {
 			return fmt.Errorf("check job failed: %w", err)
 		}
 	}

@@ -30,6 +30,9 @@ type Configuration struct {
 	DoRestore bool
 	DoArchive bool
 
+	// CheckReadDataSubset is passed to "restic check --read-data-subset" if not empty.
+	CheckReadDataSubset string
+
 	BackupCommandAnnotation       string
 	BackupFileExtensionAnnotation string
 	BackupContainerAnnotation     string

@@ -409,6 +409,12 @@ This is for advanced use-cases only. Please only set this if you know what you'r
 Value must be positive integer if given.
 | *`promURL`* __string__ | PromURL sets a prometheus push URL where the backup container send metrics to
 | *`clusterName`* __string__ | ClusterName sets the kubernetes cluster name to send to pushgateway for grouping metrics
+| *`readDataSubset`* __string__ | ReadDataSubset limits how much of the repository's pack data `restic check` reads back and verifies,
+instead of only checking the repository structure.
+It is passed to `restic check --read-data-subset` and is either a fraction `n/t`
+(for example `1/8` reads one of eight evenly sized parts of the data), a percentage (for example `10%`)
+or an amount of data (for example `500M` or `2G`).
+If unset, no pack data is read.
 | *`keepJobs`* __integer__ | KeepJobs amount of jobs to keep for later analysis.
 
 Deprecated: Use FailedJobsHistoryLimit and SuccessfulJobsHistoryLimit respectively.
