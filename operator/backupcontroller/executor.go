@@ -356,7 +356,9 @@ func (b *BackupExecutor) startBackup(ctx context.Context) error {
 			batchJob.job.Spec.Template.Spec.Volumes = utils.AppendUniqueVolumes(batchJob.job.Spec.Template.Spec.Volumes, utils.AttachEmptyDirVolumes(b.backup.Spec.Volumes)...)
 			batchJob.job.Spec.Template.Spec.Containers[0].VolumeMounts = utils.AppendUniqueVolumeMounts(batchJob.job.Spec.Template.Spec.Containers[0].VolumeMounts, b.newVolumeMounts(batchJob.volumes)...)
 			batchJob.job.Spec.Template.Spec.Containers[0].VolumeMounts = utils.AppendUniqueVolumeMounts(batchJob.job.Spec.Template.Spec.Containers[0].VolumeMounts, b.attachTLSVolumeMounts()...)
-			batchJob.job.Spec.BackoffLimit = ptr.To(int32(cfg.Config.GlobalBackoffLimit))
+			if b.backup.GetBackoffLimit() == nil {
+				batchJob.job.Spec.BackoffLimit = ptr.To(int32(cfg.Config.GlobalBackoffLimit))
+			}
 
 			batchJob.job.Spec.Template.Spec.Containers[0].Args = b.setupArgs(batchJob.resticArgs)
 

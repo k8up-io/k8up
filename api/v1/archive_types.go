@@ -71,6 +71,11 @@ func (a *Archive) GetActiveDeadlineSeconds() *int64 {
 	return a.Spec.ActiveDeadlineSeconds
 }
 
+// GetBackoffLimit implements JobObject
+func (a *Archive) GetBackoffLimit() *int32 {
+	return a.Spec.BackoffLimit
+}
+
 // GetFailedJobsHistoryLimit returns failed jobs history limit.
 // Returns KeepJobs if unspecified.
 func (a *Archive) GetFailedJobsHistoryLimit() *int {

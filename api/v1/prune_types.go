@@ -99,6 +99,11 @@ func (p *Prune) GetActiveDeadlineSeconds() *int64 {
 	return p.Spec.ActiveDeadlineSeconds
 }
 
+// GetBackoffLimit implements JobObject
+func (p *Prune) GetBackoffLimit() *int32 {
+	return p.Spec.BackoffLimit
+}
+
 // GetFailedJobsHistoryLimit returns failed jobs history limit.
 // Returns KeepJobs if unspecified.
 func (p *Prune) GetFailedJobsHistoryLimit() *int {

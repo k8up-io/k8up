@@ -21,6 +21,8 @@ type JobObject interface {
 	GetPodSecurityContext() *corev1.PodSecurityContext
 	// GetActiveDeadlineSeconds returns the specified active deadline seconds timeout.
 	GetActiveDeadlineSeconds() *int64
+	// GetBackoffLimit returns the specified backoff limit, or nil if the default applies.
+	GetBackoffLimit() *int32
 	// GetPodConfig returns the defined PodSpec
 	GetPodConfig(context.Context, client.Client) (*PodConfig, error)
 }

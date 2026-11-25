@@ -27,6 +27,14 @@ type RunnableSpec struct {
 	// ActiveDeadlineSeconds specifies the duration in seconds relative to the startTime that the job may be continuously active before the system tries to terminate it.
 	// Value must be positive integer if given.
 	ActiveDeadlineSeconds *int64 `json:"activeDeadlineSeconds,omitempty"`
+
+	// BackoffLimit specifies the number of times the job's pod is retried before the job is marked as failed.
+	// Every failed attempt is retried with an exponentially increasing delay, so a low value makes a failing action report
+	// its failure sooner.
+	// If unset, the Kubernetes default of 6 applies (for backups, the operator's global backoff limit).
+	// +kubebuilder:validation:Minimum=0
+	// +optional
+	BackoffLimit *int32 `json:"backoffLimit,omitempty"`
 }
 
 type RunnableVolumeSpec struct {
